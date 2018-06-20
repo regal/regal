@@ -29,11 +29,11 @@ import {EventFunction, track} from '../../src/event';
 // Pipe to HIT
 
 //** 3 HIT */
-// Args: source (ICanHit), target (ITargetable), object (IHitObject)
+// Args: source (ICanHit), target (IHittable)
 // Pipe to DAMAGE
 
 //** 4 DAMAGE */
-// Args: subject (IDamageable), damage (int)
+// Args: subject (IHittable), damage (int)
 // Pipe to DEATH
 
 //** 5 DEATH */
@@ -56,28 +56,47 @@ import {EventFunction, track} from '../../src/event';
 // Args: subject (ICanFall)
 // END
 
-interface INamed {
-    name: string;
-}
-
-interface ICanAttack extends INamed {
-    
-}
-
-interface IAttackable extends INamed {
-
-}
-
 enum DamageType {
     MELEE
 }
 
-interface IAttackObject extends INamed {
+enum DieBehavior {
+    DROP_ALL
+}
+
+
+interface INamed {
+    name: string;
+}
+
+interface ICanHit extends INamed {
+    damage: number;
+    hitVerb: string;
+}
+
+interface ICanAttack extends INamed {
+    canAttack: boolean;
+}
+
+interface IHittable extends INamed {
+    health: number;
+    defense: number;
+}
+
+interface IAttackable extends IHittable {
+    canBlock: boolean;
+}
+
+interface ICanDie extends INamed {
+    dieBehaivor: DieBehavior;
+}
+
+interface IAttackObject extends ICanHit {
     damageType: DamageType;
     attackVerb: string;
 }
 
-class NamedInstance implements INamed {
+class GameObject implements INamed {
     name: string;
 
     constructor(name: string) {
@@ -85,15 +104,62 @@ class NamedInstance implements INamed {
     }
 }
 
-class MeleeWeapon extends NamedInstance implements IAttackObject {
+class MeleeWeapon extends GameObject implements IAttackObject {
     damageType = DamageType.MELEE;
     attackVerb = "swing";
+    hitVerb = "strike";
+
+    damage: number;
+
+    constructor(name: string, damage: number) {
+        super(name);
+        this.damage = damage;
+    }
 }
 
-const sword: MeleeWeapon = new MeleeWeapon("Broadsword");
+const sword: MeleeWeapon = new MeleeWeapon("Broadsword", 15);
 
 const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject) =>
     track("ATTACK", game => {
-        game.output.push(`${attacker.name} ${object.attackVerb}s ${object.name} at ${target.name}.`);
+
+        if (attacker.canAttack) {
+
+            if (target.canBlock) {
+                game.output.push(`${target.name} blocks ${attacker.name}'s ${object.name}.`);
+                return game;
+            } 
+            else {
+                game.output.push(`${attacker.name} ${object.attackVerb}s their ${object.name} at ${target.name}.`);
+                return hit(object, target) (game);
+            }
+
+        }
+
+        game.output.push(`${attacker.name} attempts to ${object.attackVerb} their ${object.name}, but fails.`);
+        return game;
+});
+
+const hit = (source: ICanHit, target: IHittable) =>
+    track("HIT", game => {
+        const damageAmount = source.damage - target.defense;
+
+        game.output.push(`${source.name} ${source.hitVerb}s ${target.name}`);
+        return damage(target, damageAmount) (game); //todo
+});
+
+const damage = (subject: IHittable & ICanDie, damage: number) =>
+    track("DAMAGE", game => {
+        subject.health = Math.max(subject.health - damage, 0);
+
+        game.output.push(`${subject.name} takes ${damage} damage, reducing its health to ${subject.health}.`);
+
+        if (subject.health == 0) {
+            return death(subject) (game);
+        }
+        return game;
+});
+
+const death = (subject: ICanDie) =>
+    track("DEATH", game => {
         return game;
 });
