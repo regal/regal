@@ -55,3 +55,45 @@ import {EventFunction, track} from '../../src/event';
 //** 9 Land[orc] */
 // Args: subject (ICanFall)
 // END
+
+interface INamed {
+    name: string;
+}
+
+interface ICanAttack extends INamed {
+    
+}
+
+interface IAttackable extends INamed {
+
+}
+
+enum DamageType {
+    MELEE
+}
+
+interface IAttackObject extends INamed {
+    damageType: DamageType;
+    attackVerb: string;
+}
+
+class NamedInstance implements INamed {
+    name: string;
+
+    constructor(name: string) {
+        this.name = name;
+    }
+}
+
+class MeleeWeapon extends NamedInstance implements IAttackObject {
+    damageType = DamageType.MELEE;
+    attackVerb = "swing";
+}
+
+const sword: MeleeWeapon = new MeleeWeapon("Broadsword");
+
+const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject) =>
+    track("ATTACK", game => {
+        game.output.push(`${attacker.name} ${object.attackVerb}s ${object.name} at ${target.name}.`);
+        return game;
+});
