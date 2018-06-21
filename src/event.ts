@@ -6,4 +6,6 @@ export const track = (name: string, func: EventFunction): EventFunction =>
     (game: GameInstance) => {
         game.events.push(name);
         return func(game);
-    };
+};
+
+export const noop = () => (game: GameInstance) => game;

@@ -1,7 +1,7 @@
 {
   "name": "regal",
   "version": "0.1.0",
-  "description": "The functional game framework for everyone.",
+  "description": "The portable game framework for everyone.",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

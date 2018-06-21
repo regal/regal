@@ -1,5 +1,5 @@
 import {GameInstance} from '../../src/gameInstance';
-import {EventFunction, track} from '../../src/event';
+import {EventFunction, track, noop} from '../../src/event';
 
 // 1. INPUT causes ATTACK
 // 2. ATTACK causes HIT
@@ -147,14 +147,29 @@ const hit = (source: ICanHit, target: IHittable) =>
         return damage(target, damageAmount) (game); //todo
 });
 
-const damage = (subject: IHittable & ICanDie, damage: number) =>
+const damage = (subject: IHittable, damage: number) =>
     track("DAMAGE", game => {
         subject.health = Math.max(subject.health - damage, 0);
 
         game.output.push(`${subject.name} takes ${damage} damage, reducing its health to ${subject.health}.`);
 
+        let doIfCanDie = function(obj: any, positiveFunc: (x: ICanDie) => any) {
+            if ((<ICanDie>obj).dieBehaivor !== undefined) {
+                return positiveFunc(<ICanDie>obj);
+            }
+        }
+
+        let doIfType = function<T, U>(obj: any, typeName: string, acceptFunc: (x: T) => U, defaultFunc: (x: any) => U) {
+            if (typeof obj === typeName) {
+                return acceptFunc(<T>obj);
+            } else {
+                return defaultFunc(obj);
+            }
+        }
+
         if (subject.health == 0) {
-            return death(subject) (game);
+            // return doIfCanDie(subject, death) (game);
+            return doIfType(subject, "ICanDie", death, noop) (game);
         }
         return game;
 });
