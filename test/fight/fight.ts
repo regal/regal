@@ -1,5 +1,5 @@
 import {GameInstance} from '../../src/gameInstance';
-import {EventFunction, track, noop} from '../../src/event';
+import {EventFunction, on, noop, doIfType} from '../../src/event';
 
 // 1. INPUT causes ATTACK
 // 2. ATTACK causes HIT
@@ -120,7 +120,7 @@ class MeleeWeapon extends GameObject implements IAttackObject {
 const sword: MeleeWeapon = new MeleeWeapon("Broadsword", 15);
 
 const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject) =>
-    track("ATTACK", game => {
+    on("ATTACK", game => {
 
         if (attacker.canAttack) {
 
@@ -132,7 +132,6 @@ const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject
                 game.output.push(`${attacker.name} ${object.attackVerb}s their ${object.name} at ${target.name}.`);
                 return hit(object, target) (game);
             }
-
         }
 
         game.output.push(`${attacker.name} attempts to ${object.attackVerb} their ${object.name}, but fails.`);
@@ -140,41 +139,27 @@ const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject
 });
 
 const hit = (source: ICanHit, target: IHittable) =>
-    track("HIT", game => {
+    on("HIT", game => {
         const damageAmount = source.damage - target.defense;
 
         game.output.push(`${source.name} ${source.hitVerb}s ${target.name}`);
-        return damage(target, damageAmount) (game); //todo
+        return damage(target, damageAmount) (game);
 });
 
 const damage = (subject: IHittable, damage: number) =>
-    track("DAMAGE", game => {
+    on("DAMAGE", game => {
         subject.health = Math.max(subject.health - damage, 0);
 
         game.output.push(`${subject.name} takes ${damage} damage, reducing its health to ${subject.health}.`);
 
-        let doIfCanDie = function(obj: any, positiveFunc: (x: ICanDie) => any) {
-            if ((<ICanDie>obj).dieBehaivor !== undefined) {
-                return positiveFunc(<ICanDie>obj);
-            }
-        }
-
-        let doIfType = function<T, U>(obj: any, typeName: string, acceptFunc: (x: T) => U, defaultFunc: (x: any) => U) {
-            if (typeof obj === typeName) {
-                return acceptFunc(<T>obj);
-            } else {
-                return defaultFunc(obj);
-            }
-        }
-
         if (subject.health == 0) {
-            // return doIfCanDie(subject, death) (game);
             return doIfType(subject, "ICanDie", death, noop) (game);
         }
         return game;
 });
 
 const death = (subject: ICanDie) =>
-    track("DEATH", game => {
+    on("DEATH", game => {
+
         return game;
 });
