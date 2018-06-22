@@ -207,7 +207,7 @@ const hit = (source: ICanHit, target: IHittable) =>
     on("HIT", game => {
         const damageAmount = source.damage - target.defense;
 
-        game.output.push(`${source.name} ${source.hitVerb}s ${target.name}`);
+        game.output.push(`${source.name} ${source.hitVerb}s ${target.name}.`);
         return damage(target, damageAmount) (game);
 });
 
@@ -217,7 +217,7 @@ const damage = (subject: IHittable, damage: number) =>
 
         game.output.push(`${subject.name} takes ${damage} damage, reducing its health to ${subject.health}.`);
 
-        if (subject.health == 0) {
+        if (subject.health === 0) {
             return ifType(subject, "ICanDie", death, noop) (game);
         }
         return game;
@@ -257,7 +257,18 @@ const fall = (subject: IPhysical) =>
 
 // GAME //
 
-const sword: MeleeWeapon = new MeleeWeapon("Broadsword", 15);
-const armor: Armor = new Armor("Rusted armor");
+const knightArmor = new Armor("Shining armor");
+const sword = new MeleeWeapon("Broadsword", 15);
+const knight = Creature.Human("Knight", [knightArmor, sword]);
+
+const orcArmor = new Armor("Rusted armor");
+const club = new MeleeWeapon("Club", 5);
+const orc = Creature.Orc("Orc", [orcArmor, club]);
+
+const game = new GameInstance();
 
 console.log("Hello, World!");
+
+attack(knight, orc, sword) (game);
+attack(knight, orc, sword) (game);
+console.log(game);

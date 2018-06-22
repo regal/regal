@@ -11,6 +11,8 @@ export const on = (name: string, func: EventFunction): EventFunction =>
 export const noop = () => (game: GameInstance) => game;
 
 export const ifType = function<T, U>(obj: any, typeName: string, acceptFunc: (x: T) => U, defaultFunc: (x: any) => U) {
+    console.log(typeof obj);
+    console.log(typeName);
     if (typeof obj === typeName) {
         return acceptFunc(<T>obj);
     } else {
