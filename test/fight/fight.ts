@@ -263,7 +263,7 @@ const death = (subject: ICanDie) =>
 const drop = (subject: ICanHold, target: IHoldable) =>
     on("DROP", game => {
         game.output.push(`${subject.name} drops their ${target.name}.`);
-        return isPhysical(target) ? queue(fall(target))(game) : game;
+        return isPhysical(target) ? queue(fall(target)) (game) : game;
 });
 
 const fall = (subject: IPhysical) =>
