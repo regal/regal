@@ -10,10 +10,11 @@ export const on = (name: string, func: EventFunction): EventFunction =>
 
 export const noop = () => (game: GameInstance) => game;
 
-export const pipe = (...funcs: EventFunction[]): EventFunction => funcs.reduce((f, g) => (game: GameInstance) => g(f(game))); //todo
+export const pipe = (...funcs: EventFunction[]): EventFunction =>
+    (!funcs || funcs.length === 0) ? noop() : funcs.reduce((f, g) => (game: GameInstance) => g(f(game)));
 
 export const queue = (...funcs: EventFunction[]) => {
-    if (!funcs || funcs.length == 0) {
+    if (!funcs || funcs.length === 0) {
         return noop();
     } else {
         return pipe(...funcs); //todo
