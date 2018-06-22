@@ -259,3 +259,5 @@ const fall = (subject: IPhysical) =>
 
 const sword: MeleeWeapon = new MeleeWeapon("Broadsword", 15);
 const armor: Armor = new Armor("Rusted armor");
+
+console.log("Hello, World!");
