@@ -232,4 +232,8 @@ console.log("Hello, World!");
 attack(knight, orc, sword) (game);
 attack(orc, knight, club) (game);
 attack(knight, orc, sword) (game);
+
+while (game.queue.length > 0) {
+    game.queue.shift() (game); //todo make queue more elegant
+}
 console.log(game);

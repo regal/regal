@@ -13,10 +13,13 @@ export const noop = () => (game: GameInstance) => game;
 export const pipe = (...funcs: EventFunction[]): EventFunction =>
     (!funcs || funcs.length === 0) ? noop() : funcs.reduce((f, g) => (game: GameInstance) => g(f(game)));
 
-export const queue = (...funcs: EventFunction[]) => {
+export const queue = (...funcs: EventFunction[]): EventFunction => {
     if (!funcs || funcs.length === 0) {
         return noop();
     } else {
-        return pipe(...funcs); //todo
+        return (game: GameInstance) => {
+            game.queue.push(...funcs);
+            return game;
+        };
     }
 };
