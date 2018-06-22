@@ -210,7 +210,7 @@ const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject
         if (attacker.canAttack) {
 
             if (target.canBlock) {
-                game.output.push(`${target.name} blocks ${attacker.name}'s ${object.name}.`);
+                game.output.push(`${attacker.name} attempts to ${object.attackVerb} their ${object.name} at ${target.name}, who blocks it.`);
                 return game;
             } 
             else {
@@ -288,5 +288,6 @@ const game = new GameInstance();
 console.log("Hello, World!");
 
 attack(knight, orc, sword) (game);
+attack(orc, knight, club) (game);
 attack(knight, orc, sword) (game);
 console.log(game);
