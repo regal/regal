@@ -188,6 +188,20 @@ class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, I
     }
 }
 
+// TYPECHECKS //
+
+function canDie(obj: any): obj is ICanDie {
+    return (<ICanDie>obj).dieBehaviors !== undefined;
+}
+
+function canHold(obj: any): obj is ICanHold {
+    return (<ICanHold>obj).items !== undefined;
+}
+
+function isPhysical(obj: any): obj is IPhysical {
+    return (<IPhysical>obj).weight !== undefined;
+}
+
 // EVENTS //
 
 const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject) =>
@@ -223,33 +237,23 @@ const damage = (subject: IHittable, damage: number) =>
 
         game.output.push(`${subject.name} takes ${damage} damage, reducing its health to ${subject.health}.`);
 
-        if (subject.health === 0 && subject.hasOwnProperty("dieBehaviors")) {
-            return death(<any>subject) (game); //todo this is a horrible hack
-            // return ifType(subject, "ICanDie", death, noop) (game);
+        if (subject.health === 0 && canDie(subject)) {
+            return death(subject) (game);
         }
         return game;
 });
 
-const death = (subject: ICanDie & ICanHold & IPhysical) =>
+const death = (subject: ICanDie) =>
     on("DEATH", game => {
         game.output.push(`${subject.name} dies!`);
 
         let events = [];
 
-        // const holdSubject: ICanHold = tryCast(subject, "ICanHold");
-        // if (holdSubject && subject.dieBehaivors.includes(DieBehavior.DROP_ALL)) {
-        //     events = events.concat(holdSubject.items.map(item => drop(holdSubject, item)));
-        // }
-
-        if (subject.dieBehaviors.includes(DieBehavior.DROP_ALL) && subject.hasOwnProperty("items")) {
+        if (subject.dieBehaviors.includes(DieBehavior.DROP_ALL) && canHold(subject)) {
             events = events.concat(subject.items.map(item => drop(subject, item)))
         }
 
-        // const fallSubject: IPhysical = tryCast(subject, "IPhysical");
-        // if (fallSubject && subject.dieBehaivors.includes(DieBehavior.FALL)) {
-        //     events.push(fall(fallSubject));
-        // }
-        if (subject.dieBehaviors.includes(DieBehavior.FALL) && subject.hasOwnProperty("weight")) {
+        if (subject.dieBehaviors.includes(DieBehavior.FALL) && isPhysical(subject)) {
             events.push(fall(subject));
         }
 
@@ -259,9 +263,7 @@ const death = (subject: ICanDie & ICanHold & IPhysical) =>
 const drop = (subject: ICanHold, target: IHoldable) =>
     on("DROP", game => {
         game.output.push(`${subject.name} drops their ${target.name}.`);
-        console.log(target);
-        // return ifType(target, "IPhysical", (obj: IPhysical) => queue(fall(obj)), noop) (game);
-        return target.hasOwnProperty("weight") ? queue(fall(<any>target))(game) : game;
+        return isPhysical(target) ? queue(fall(target))(game) : game;
 });
 
 const fall = (subject: IPhysical) =>
