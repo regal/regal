@@ -1,5 +1,5 @@
-import {GameInstance} from '../../src/gameInstance';
-import {EventFunction, on, noop, ifType} from '../../src/event';
+import { GameInstance } from '../../src/gameInstance';
+import { EventFunction, on, noop, ifType, tryCast, queue } from '../../src/event';
 
 // 1. INPUT causes ATTACK
 // 2. ATTACK causes HIT
@@ -56,12 +56,16 @@ import {EventFunction, on, noop, ifType} from '../../src/event';
 // Args: subject (ICanFall)
 // END
 
+
+
+// AGENTS //
+
 enum DamageType {
     MELEE
 }
 
 enum DieBehavior {
-    DROP_ALL
+    DROP_ALL, FALL
 }
 
 enum HoldableType {
@@ -97,7 +101,7 @@ interface IAttackable extends IHittable {
 
 // Agent that can die.
 interface ICanDie extends INamed {
-    dieBehaivor: DieBehavior;
+    dieBehaivors: DieBehavior[];
 }
 
 // Agent that can be used by an `ICanAttack` agent to attack an `IAttackable` agent.
@@ -152,7 +156,7 @@ class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, I
     canBlock: boolean;
     health: number;
     defense: number;
-    dieBehaivor: DieBehavior;
+    dieBehaivors: DieBehavior[];
     items: IHoldable[];
 
     static Orc(name: string, items: IHoldable[]): Creature {
@@ -161,7 +165,7 @@ class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, I
         c.canBlock = false;
         c.health = 25;
         c.defense = 1;
-        c.dieBehaivor = DieBehavior.DROP_ALL;
+        c.dieBehaivors = [DieBehavior.DROP_ALL, DieBehavior.FALL];
         c.items = items;
         return c;
     }
@@ -172,14 +176,13 @@ class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, I
         c.canBlock = true;
         c.health = 50;
         c.defense = 10;
-        c.dieBehaivor = DieBehavior.DROP_ALL;
+        c.dieBehaivors = [DieBehavior.DROP_ALL, DieBehavior.FALL];
         c.items = items;
         return c;
     }
 }
 
-const sword: MeleeWeapon = new MeleeWeapon("Broadsword", 15);
-const armor: Armor = new Armor("Rusted armor");
+// EVENTS //
 
 const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject) =>
     on("ATTACK", game => {
@@ -226,15 +229,33 @@ const death = (subject: ICanDie) =>
 
         let events: EventFunction[];
 
-        if (subject.dieBehaivor === DieBehavior.DROP_ALL) {
-            return ifType(subject, "ICanHold", (sub: ICanHold) => queue(sub.items.map(item => drop(sub, item))), noop) (game);
+        const holdSubject: ICanHold = tryCast(subject, "ICanHold");
+        if (holdSubject && subject.dieBehaivors.includes(DieBehavior.DROP_ALL)) {
+            events = events.concat(holdSubject.items.map(item => drop(holdSubject, item)));
         }
-        return game;
-});
 
-const queue = (funcs: EventFunction[]) => noop(); //todo
+        const fallSubject: IPhysical = tryCast(subject, "IPhysical");
+        if (fallSubject && subject.dieBehaivors.includes(DieBehavior.FALL)) {
+            events.push(fall(fallSubject));
+        }
+
+        return queue(...events) (game);
+});
 
 const drop = (subject: ICanHold, target: IHoldable) =>
     on("DROP", game => {
+        game.output.push(`${subject.name} drops their ${target.name}.`);
+        return ifType(target, "IPhysical", (obj: IPhysical) => queue(fall(obj)), noop) (game);
+});
+
+const fall = (subject: IPhysical) =>
+    on("FALL", game => {
+        const loudness = (subject.weight > 10) ? 'deafening' : 'loud';
+        game.output.push(`${subject.name} hits the ground with a ${loudness} thud.`);
         return game;
 });
+
+// GAME //
+
+const sword: MeleeWeapon = new MeleeWeapon("Broadsword", 15);
+const armor: Armor = new Armor("Rusted armor");
