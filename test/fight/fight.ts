@@ -1,5 +1,6 @@
 import { GameInstance } from '../../src/gameInstance';
-import { EventFunction, on, noop, ifType, tryCast, queue } from '../../src/event';
+import { EventFunction, on, queue } from '../../src/event';
+// import { EventFunction, on, noop, ifType, tryCast, queue } from '../../src/event';
 
 // 1. INPUT causes ATTACK
 // 2. ATTACK causes HIT
@@ -101,7 +102,7 @@ interface IAttackable extends IHittable {
 
 // Agent that can die.
 interface ICanDie extends INamed {
-    dieBehaivors: DieBehavior[];
+    dieBehaviors: DieBehavior[];
 }
 
 // Agent that can be used by an `ICanAttack` agent to attack an `IAttackable` agent.
@@ -133,11 +134,12 @@ class GameObject implements INamed {
     }
 }
 
-class MeleeWeapon extends GameObject implements IAttackObject, IHoldable {
+class MeleeWeapon extends GameObject implements IAttackObject, IHoldable, IPhysical {
     damageType = DamageType.MELEE;
     attackVerb = "swing";
     hitVerb = "strike";
     holdableType = HoldableType.HANDHELD;
+    weight = 5;
 
     damage: number;
 
@@ -147,17 +149,19 @@ class MeleeWeapon extends GameObject implements IAttackObject, IHoldable {
     }
 }
 
-class Armor extends GameObject implements IHoldable {
+class Armor extends GameObject implements IHoldable, IPhysical {
     holdableType: HoldableType.ARMOR;
+    weight = 8;
 }
 
-class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, ICanHold {
+class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, ICanHold, IPhysical {
     canAttack: boolean;
     canBlock: boolean;
     health: number;
     defense: number;
-    dieBehaivors: DieBehavior[];
+    dieBehaviors: DieBehavior[];
     items: IHoldable[];
+    weight: number;
 
     static Orc(name: string, items: IHoldable[]): Creature {
         const c = new Creature(name);
@@ -165,8 +169,9 @@ class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, I
         c.canBlock = false;
         c.health = 25;
         c.defense = 1;
-        c.dieBehaivors = [DieBehavior.DROP_ALL, DieBehavior.FALL];
+        c.dieBehaviors = [DieBehavior.DROP_ALL, DieBehavior.FALL];
         c.items = items;
+        c.weight = 15;
         return c;
     }
 
@@ -176,8 +181,9 @@ class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, I
         c.canBlock = true;
         c.health = 50;
         c.defense = 10;
-        c.dieBehaivors = [DieBehavior.DROP_ALL, DieBehavior.FALL];
+        c.dieBehaviors = [DieBehavior.DROP_ALL, DieBehavior.FALL];
         c.items = items;
+        c.weight = 20;
         return c;
     }
 }
@@ -217,26 +223,34 @@ const damage = (subject: IHittable, damage: number) =>
 
         game.output.push(`${subject.name} takes ${damage} damage, reducing its health to ${subject.health}.`);
 
-        if (subject.health === 0) {
-            return ifType(subject, "ICanDie", death, noop) (game);
+        if (subject.health === 0 && subject.hasOwnProperty("dieBehaviors")) {
+            return death(<any>subject) (game); //todo this is a horrible hack
+            // return ifType(subject, "ICanDie", death, noop) (game);
         }
         return game;
 });
 
-const death = (subject: ICanDie) =>
+const death = (subject: ICanDie & ICanHold & IPhysical) =>
     on("DEATH", game => {
         game.output.push(`${subject.name} dies!`);
 
-        let events: EventFunction[];
+        let events = [];
 
-        const holdSubject: ICanHold = tryCast(subject, "ICanHold");
-        if (holdSubject && subject.dieBehaivors.includes(DieBehavior.DROP_ALL)) {
-            events = events.concat(holdSubject.items.map(item => drop(holdSubject, item)));
+        // const holdSubject: ICanHold = tryCast(subject, "ICanHold");
+        // if (holdSubject && subject.dieBehaivors.includes(DieBehavior.DROP_ALL)) {
+        //     events = events.concat(holdSubject.items.map(item => drop(holdSubject, item)));
+        // }
+
+        if (subject.dieBehaviors.includes(DieBehavior.DROP_ALL) && subject.hasOwnProperty("items")) {
+            events = events.concat(subject.items.map(item => drop(subject, item)))
         }
 
-        const fallSubject: IPhysical = tryCast(subject, "IPhysical");
-        if (fallSubject && subject.dieBehaivors.includes(DieBehavior.FALL)) {
-            events.push(fall(fallSubject));
+        // const fallSubject: IPhysical = tryCast(subject, "IPhysical");
+        // if (fallSubject && subject.dieBehaivors.includes(DieBehavior.FALL)) {
+        //     events.push(fall(fallSubject));
+        // }
+        if (subject.dieBehaviors.includes(DieBehavior.FALL) && subject.hasOwnProperty("weight")) {
+            events.push(fall(subject));
         }
 
         return queue(...events) (game);
@@ -245,7 +259,9 @@ const death = (subject: ICanDie) =>
 const drop = (subject: ICanHold, target: IHoldable) =>
     on("DROP", game => {
         game.output.push(`${subject.name} drops their ${target.name}.`);
-        return ifType(target, "IPhysical", (obj: IPhysical) => queue(fall(obj)), noop) (game);
+        console.log(target);
+        // return ifType(target, "IPhysical", (obj: IPhysical) => queue(fall(obj)), noop) (game);
+        return target.hasOwnProperty("weight") ? queue(fall(<any>target))(game) : game;
 });
 
 const fall = (subject: IPhysical) =>
