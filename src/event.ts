@@ -10,7 +10,7 @@ export const on = (name: string, func: EventFunction): EventFunction =>
 
 export const noop = () => (game: GameInstance) => game;
 
-export const doIfType = function<T, U>(obj: any, typeName: string, acceptFunc: (x: T) => U, defaultFunc: (x: any) => U) {
+export const ifType = function<T, U>(obj: any, typeName: string, acceptFunc: (x: T) => U, defaultFunc: (x: any) => U) {
     if (typeof obj === typeName) {
         return acceptFunc(<T>obj);
     } else {

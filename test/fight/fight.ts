@@ -1,5 +1,5 @@
 import {GameInstance} from '../../src/gameInstance';
-import {EventFunction, on, noop, doIfType} from '../../src/event';
+import {EventFunction, on, noop, ifType} from '../../src/event';
 
 // 1. INPUT causes ATTACK
 // 2. ATTACK causes HIT
@@ -64,36 +64,61 @@ enum DieBehavior {
     DROP_ALL
 }
 
+enum HoldableType {
+    HANDHELD, ARMOR
+}
 
+// Agent with a name.
 interface INamed {
     name: string;
 }
 
+// Agent that can damage another agent.
 interface ICanHit extends INamed {
     damage: number;
     hitVerb: string;
 }
 
+// Agent that can initiate an attack with another agent.
 interface ICanAttack extends INamed {
     canAttack: boolean;
 }
 
+// Agent that can be hit by an `ICanHit` agent.
 interface IHittable extends INamed {
     health: number;
     defense: number;
 }
 
+// Agent that can be attacked by an `ICanAttack` agent.
 interface IAttackable extends IHittable {
     canBlock: boolean;
 }
 
+// Agent that can die.
 interface ICanDie extends INamed {
     dieBehaivor: DieBehavior;
 }
 
+// Agent that can be used by an `ICanAttack` agent to attack an `IAttackable` agent.
 interface IAttackObject extends ICanHit {
     damageType: DamageType;
     attackVerb: string;
+}
+
+// Agent that can hold one or more `IHoldable` agents.
+interface ICanHold extends INamed {
+    items: IHoldable[];
+}
+
+// Agent that can be held by an `ICanHold` agent.
+interface IHoldable extends INamed {
+    holdableType: HoldableType;
+}
+
+// Agent that is affected by gravity.
+interface IPhysical extends INamed {
+    weight: number;
 }
 
 class GameObject implements INamed {
@@ -104,10 +129,11 @@ class GameObject implements INamed {
     }
 }
 
-class MeleeWeapon extends GameObject implements IAttackObject {
+class MeleeWeapon extends GameObject implements IAttackObject, IHoldable {
     damageType = DamageType.MELEE;
     attackVerb = "swing";
     hitVerb = "strike";
+    holdableType = HoldableType.HANDHELD;
 
     damage: number;
 
@@ -117,7 +143,43 @@ class MeleeWeapon extends GameObject implements IAttackObject {
     }
 }
 
+class Armor extends GameObject implements IHoldable {
+    holdableType: HoldableType.ARMOR;
+}
+
+class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, ICanHold {
+    canAttack: boolean;
+    canBlock: boolean;
+    health: number;
+    defense: number;
+    dieBehaivor: DieBehavior;
+    items: IHoldable[];
+
+    static Orc(name: string, items: IHoldable[]): Creature {
+        const c = new Creature(name);
+        c.canAttack = true;
+        c.canBlock = false;
+        c.health = 25;
+        c.defense = 1;
+        c.dieBehaivor = DieBehavior.DROP_ALL;
+        c.items = items;
+        return c;
+    }
+
+    static Human(name: string, items: IHoldable[]): Creature {
+        const c = new Creature(name);
+        c.canAttack = true;
+        c.canBlock = true;
+        c.health = 50;
+        c.defense = 10;
+        c.dieBehaivor = DieBehavior.DROP_ALL;
+        c.items = items;
+        return c;
+    }
+}
+
 const sword: MeleeWeapon = new MeleeWeapon("Broadsword", 15);
+const armor: Armor = new Armor("Rusted armor");
 
 const attack = (attacker: ICanAttack, target: IAttackable, object: IAttackObject) =>
     on("ATTACK", game => {
@@ -153,13 +215,26 @@ const damage = (subject: IHittable, damage: number) =>
         game.output.push(`${subject.name} takes ${damage} damage, reducing its health to ${subject.health}.`);
 
         if (subject.health == 0) {
-            return doIfType(subject, "ICanDie", death, noop) (game);
+            return ifType(subject, "ICanDie", death, noop) (game);
         }
         return game;
 });
 
 const death = (subject: ICanDie) =>
     on("DEATH", game => {
+        game.output.push(`${subject.name} dies!`);
 
+        let events: EventFunction[];
+
+        if (subject.dieBehaivor === DieBehavior.DROP_ALL) {
+            return ifType(subject, "ICanHold", (sub: ICanHold) => queue(sub.items.map(item => drop(sub, item))), noop) (game);
+        }
+        return game;
+});
+
+const queue = (funcs: EventFunction[]) => noop(); //todo
+
+const drop = (subject: ICanHold, target: IHoldable) =>
+    on("DROP", game => {
         return game;
 });
