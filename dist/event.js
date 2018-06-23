@@ -17,3 +17,9 @@ exports.queue = (...funcs) => {
         };
     }
 };
+exports.runQueue = (game) => {
+    while (game.queue.length > 0) {
+        game = game.queue.shift()(game);
+    }
+    return game;
+};
