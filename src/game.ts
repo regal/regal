@@ -9,13 +9,23 @@ export enum ErrorCode {
 export class RegalError extends Error {
     code: ErrorCode;
 
-    constructor(code: ErrorCode, message?: string) {
+    constructor(code: ErrorCode, message: string = "") {
         super(`Code: ${code}, Message: ${message}`);
         Object.setPrototypeOf(this, new.target.prototype);
         this.code = code;
     }
 }
 
-export let onGameStart = (): GameInstance => {
-    throw new RegalError(ErrorCode.NOT_YET_IMPLEMENTED, "onGameStart has not been implemented.")
+export class Game {
+
+    static _onGameStart = (): GameInstance => {
+        throw new RegalError(ErrorCode.NOT_YET_IMPLEMENTED, "onGameStart has not been implemented.")
+    }
+    static get onGameStart() {
+        return this._onGameStart;
+    }
+    static set onGameStart(startFunc: () => GameInstance) {
+        this._onGameStart = startFunc;
+    }
+
 }

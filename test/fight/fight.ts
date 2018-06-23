@@ -1,5 +1,6 @@
 import { GameInstance } from '../../src/gameInstance';
 import { EventFunction, on, queue } from '../../src/event';
+import { Game } from '../../src/game';
 
 // AGENTS //
 
@@ -217,23 +218,29 @@ const fall = (subject: IPhysical) =>
 
 // GAME //
 
-const knightArmor = new Armor("Shining armor");
-const sword = new MeleeWeapon("Broadsword", 15);
-const knight = Creature.Human("Knight", [knightArmor, sword]);
+export const init = () => {
 
-const orcArmor = new Armor("Rusted armor");
-const club = new MeleeWeapon("Club", 5);
-const orc = Creature.Orc("Orc", [orcArmor, club]);
+    Game.onGameStart = () => {
+        const game = new GameInstance();
 
-const game = new GameInstance();
+        const knightArmor = new Armor("Shining armor");
+        const sword = new MeleeWeapon("Broadsword", 15);
+        const knight = Creature.Human("Knight", [knightArmor, sword]);
 
-console.log("Hello, World!");
+        const orcArmor = new Armor("Rusted armor");
+        const club = new MeleeWeapon("Club", 5);
+        const orc = Creature.Orc("Orc", [orcArmor, club]);
 
-attack(knight, orc, sword) (game);
-attack(orc, knight, club) (game);
-attack(knight, orc, sword) (game);
+        game.state = {knight, orc}
+        game.output.push("The knight and orc are in a standoff, sizing each other up.")
 
-while (game.queue.length > 0) {
-    game.queue.shift() (game); //todo make queue more elegant
+        return game;
+    }
+
+    console.log("Fight initialized.");
 }
-console.log(game);
+
+// while (game.queue.length > 0) {
+//     game.queue.shift() (game); //todo make queue more elegant
+// }
+// console.log(game);
