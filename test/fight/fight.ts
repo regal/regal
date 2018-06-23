@@ -273,7 +273,8 @@ export const init = () => {
                     break;
 
                 default:
-                    throw new RegalError(ErrorCode.INVALID_INPUT, "Input command not recognized.");
+                    game.output.push("Sorry, that input doesn't make sense.");
+                    return game;
             }
 
             return runQueue(event(game)); // Execute all events in queue after the initial event
