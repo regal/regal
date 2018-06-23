@@ -1,5 +1,5 @@
 import { GameInstance } from "./gameInstance";
-import { RegalError, ErrorCode } from "./game";
+import { RegalError, ErrorCode, onGameStart } from "./game";
 
 export enum RequestType {
     USER_INPUT = "User Input",
@@ -27,7 +27,8 @@ export const play = (request: Request): Response => {
             throw new RegalError(ErrorCode.NOT_YET_IMPLEMENTED);
 
         case RequestType.START:
-            return {game: new GameInstance(), output: ["Hello!"]};
+            const game = onGameStart();
+            return { game, output: game.output };
 
         default:
             throw new RegalError(ErrorCode.INVALID_INPUT);
