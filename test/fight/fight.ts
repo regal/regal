@@ -1,6 +1,6 @@
 import { GameInstance } from '../../src/gameInstance';
-import { EventFunction, on, queue } from '../../src/event';
-import { Game } from '../../src/game';
+import { EventFunction, on, queue, runQueue } from '../../src/event';
+import { Game, RegalError, ErrorCode } from '../../src/game';
 
 // AGENTS //
 
@@ -30,6 +30,7 @@ interface ICanHit extends INamed {
 // Agent that can initiate an attack with another agent.
 interface ICanAttack extends INamed {
     canAttack: boolean;
+    equippedWeapon: IAttackObject;
 }
 
 // Agent that can be hit by an `ICanHit` agent.
@@ -49,7 +50,7 @@ interface ICanDie extends INamed {
 }
 
 // Agent that can be used by an `ICanAttack` agent to attack an `IAttackable` agent.
-interface IAttackObject extends ICanHit {
+interface IAttackObject extends ICanHit, IHoldable {
     damageType: DamageType;
     attackVerb: string;
 }
@@ -98,6 +99,7 @@ class Armor extends GameObject implements IHoldable, IPhysical {
 }
 
 class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, ICanHold, IPhysical {
+    name: string;
     canAttack: boolean;
     canBlock: boolean;
     health: number;
@@ -105,6 +107,15 @@ class Creature extends GameObject implements ICanAttack, IAttackable, ICanDie, I
     dieBehaviors: DieBehavior[];
     items: IHoldable[];
     weight: number;
+    equippedWeapon: IAttackObject;
+
+    equip(weapon: IAttackObject) {
+        if (!this.items.includes(weapon)) {
+            this.items.push(weapon);
+        }
+
+        this.equippedWeapon = weapon;
+    }
 
     static Orc(name: string, items: IHoldable[]): Creature {
         const c = new Creature(name);
@@ -218,6 +229,15 @@ const fall = (subject: IPhysical) =>
 
 // GAME //
 
+interface FightState {
+    knight: Creature;
+    orc: Creature;
+}
+
+const checkState = (state: any): state is FightState => {
+    return (<FightState>state).knight !== undefined;
+}
+
 export const init = () => {
 
     Game.onGameStart = () => {
@@ -226,21 +246,42 @@ export const init = () => {
         const knightArmor = new Armor("Shining armor");
         const sword = new MeleeWeapon("Broadsword", 15);
         const knight = Creature.Human("Knight", [knightArmor, sword]);
+        knight.equip(sword);
 
         const orcArmor = new Armor("Rusted armor");
         const club = new MeleeWeapon("Club", 5);
         const orc = Creature.Orc("Orc", [orcArmor, club]);
+        orc.equip(club);
 
-        game.state = {knight, orc}
+        game.state = {knight, orc} as FightState;
         game.output.push("The knight and orc are in a standoff, sizing each other up.")
 
         return game;
     }
 
+    Game.onUserInput = (content: string, game: GameInstance) => {
+        if (checkState(game.state)) {
+            let event: EventFunction;
+
+            switch (content.toLowerCase()) {
+                case "knight":
+                    event = attack(game.state.knight, game.state.orc, game.state.knight.equippedWeapon);
+                    break;
+
+                case "orc":
+                    event = attack(game.state.orc, game.state.knight, game.state.orc.equippedWeapon);
+                    break;
+
+                default:
+                    throw new RegalError(ErrorCode.INVALID_INPUT, "Input command not recognized.");
+            }
+
+            return runQueue(event(game)); // Execute all events in queue after the initial event
+        } 
+        else {
+            throw new RegalError(ErrorCode.INVALID_STATE, "Input state is not of the correct form.")
+        }
+    };
+
     console.log("Fight initialized.");
 }
-
-// while (game.queue.length > 0) {
-//     game.queue.shift() (game); //todo make queue more elegant
-// }
-// console.log(game);
