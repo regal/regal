@@ -8,3 +8,7 @@ Regal is an upcoming project designed to make it easy for game developers to wri
 The term **Regal** can either refer to the TypeScript library included in this repository or the entire Regal Framework as a whole, which will include a set of additional projects.
 
 Regal is currently in version 0.1.0 and is not yet recommended for use.
+
+## Author
+
+Joe Cowman ([jcowman2](https://github.com/jcowman2))
