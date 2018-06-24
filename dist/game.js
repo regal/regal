@@ -15,6 +15,14 @@ class RegalError extends Error {
     }
 }
 exports.RegalError = RegalError;
+class GameInstance {
+    constructor() {
+        this.events = [];
+        this.output = [];
+        this.queue = [];
+    }
+}
+exports.GameInstance = GameInstance;
 class Game {
     static get onGameStart() {
         return this._onGameStart;

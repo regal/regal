@@ -1,5 +1,4 @@
-import { GameInstance } from "./gameInstance";
-import { RegalError, ErrorCode, Game } from "./game";
+import { RegalError, ErrorCode, Game, GameInstance } from "./game";
 
 export enum RequestType {
     USER_INPUT = "User Input",

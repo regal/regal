@@ -1,4 +1,4 @@
-import { GameInstance } from "./gameInstance";
+import { EventFunction } from "./event";
 
 export enum ErrorCode {
     OK,
@@ -14,6 +14,19 @@ export class RegalError extends Error {
         super(`Code: ${code}, Message: ${message}`);
         Object.setPrototypeOf(this, new.target.prototype);
         this.code = code;
+    }
+}
+
+export class GameInstance {
+    events: string[];
+    output: string[];
+    queue: EventFunction[];
+    state: any;
+
+    constructor() {
+        this.events = [];
+        this.output = [];
+        this.queue = [];
     }
 }
 

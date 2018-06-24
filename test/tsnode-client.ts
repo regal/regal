@@ -1,6 +1,6 @@
 import * as readline from "readline";
 import * as Api from "../src/api";
-import { GameInstance } from "../src/gameInstance";
+import { GameInstance } from "../src/game";
 
 declare const process: any;
 

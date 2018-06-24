@@ -1,4 +1,4 @@
-import { GameInstance } from './gameInstance';
+import { GameInstance } from './game';
 export declare type EventFunction = (x: GameInstance) => GameInstance;
 export declare const on: (name: string, func: EventFunction) => EventFunction;
 export declare const noop: () => (game: GameInstance) => GameInstance;

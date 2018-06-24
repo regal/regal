@@ -1,4 +1,4 @@
-import {GameInstance} from './gameInstance';
+import { GameInstance } from './game';
 
 export type EventFunction = (x: GameInstance) => GameInstance;
 

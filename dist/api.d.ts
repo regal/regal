@@ -1,4 +1,4 @@
-import { GameInstance } from "./gameInstance";
+import { GameInstance } from "./game";
 export declare enum RequestType {
     USER_INPUT = "User Input",
     ALARM = "Alarm",

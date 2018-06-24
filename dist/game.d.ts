@@ -1,4 +1,4 @@
-import { GameInstance } from "./gameInstance";
+import { EventFunction } from "./event";
 export declare enum ErrorCode {
     OK = 0,
     NOT_YET_IMPLEMENTED = 1,
@@ -8,6 +8,13 @@ export declare enum ErrorCode {
 export declare class RegalError extends Error {
     code: ErrorCode;
     constructor(code: ErrorCode, message?: string);
+}
+export declare class GameInstance {
+    events: string[];
+    output: string[];
+    queue: EventFunction[];
+    state: any;
+    constructor();
 }
 export declare class Game {
     private static _onGameStart;

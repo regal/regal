@@ -1,6 +1,5 @@
-import { GameInstance } from '../../src/gameInstance';
 import { EventFunction, on, queue, runQueue } from '../../src/event';
-import { Game, RegalError, ErrorCode } from '../../src/game';
+import { Game, GameInstance, RegalError, ErrorCode } from '../../src/game';
 
 // AGENTS //
 
