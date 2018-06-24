@@ -8,6 +8,10 @@
   },
   "author": "Joe Cowman",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/regal/regal"
+  },
   "dependencies": {
     "typescript": "^2.9.2"
   },
