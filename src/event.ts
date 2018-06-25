@@ -25,8 +25,14 @@ export const queue = (...funcs: EventFunction[]): EventFunction => {
 };
 
 export const runQueue = (game: GameInstance): GameInstance => {
-    while (game.queue.length > 0) {
-        game = game.queue.shift() (game);
+    if (game) {
+        const queue = game.queue;
+        while (queue.length > 0) {
+            const event = queue.shift();
+            if (event) {
+                game = event(game);
+            }
+        }
     }
     return game;
 }
