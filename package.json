@@ -2,10 +2,6 @@
   "name": "regal",
   "version": "0.1.0",
   "description": "The adaptable game framework for everyone.",
-  "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "Joe Cowman <joe.r.cowman@gmail.com> (http://joecowman.com)",
   "license": "MIT",
   "repository": {
@@ -13,11 +9,23 @@
     "url": "https://github.com/regal/regal"
   },
   "homepage": "https://github.com/regal/regal",
-  "bugs" : {
+  "bugs": {
     "url": "https://github.com/regal/regal/issues"
   },
   "keywords": [
-    "game", "game framework", "game development", "gamedev", "typescript"
+    "game",
+    "game framework",
+    "game development",
+    "gamedev",
+    "typescript"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "dist/"
   ],
   "dependencies": {
     "typescript": "^2.9.2"
