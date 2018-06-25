@@ -12,6 +12,13 @@
     "type": "git",
     "url": "https://github.com/regal/regal"
   },
+  "homepage": "https://github.com/regal/regal",
+  "bugs" : {
+    "url": "https://github.com/regal/regal/issues"
+  },
+  "keywords": [
+    "game", "game framework", "game development", "gamedev", "typescript"
+  ],
   "dependencies": {
     "typescript": "^2.9.2"
   },
