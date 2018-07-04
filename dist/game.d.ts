@@ -1,4 +1,5 @@
 import { EventFunction } from "./event";
+import { Agent } from "./agent";
 export declare enum ErrorCode {
     OK = 0,
     NOT_YET_IMPLEMENTED = 1,
@@ -14,11 +15,18 @@ export declare class GameInstance {
     output: string[];
     queue: EventFunction[];
     state: any;
-    constructor();
+    agents: Map<number, object>;
+    private _maxInstanceId;
+    readonly maxInstanceId: number;
+    nextInstanceId(): number;
 }
 export declare class Game {
     private static _onGameStart;
     static onGameStart: () => GameInstance;
     private static _onUserInput;
     static onUserInput: (content: string, game: GameInstance) => GameInstance;
+    private static _maxPrefabId;
+    private static _prefabMap;
+    static addPrefab(prefab: Agent): number;
+    static getPrefab(prefabId: number): Agent;
 }

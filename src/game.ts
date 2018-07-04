@@ -23,7 +23,9 @@ export class GameInstance {
     output: string[] = [];
     queue: EventFunction[] = [];
 
-    state = new Map<number, object>();
+    state: any;
+
+    agents = new Map<number, object>();
 
     private _maxInstanceId: number = 0;
     get maxInstanceId(): number {

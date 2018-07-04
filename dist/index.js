@@ -8,3 +8,4 @@ exports.Api = Api;
 const Event = require("./event");
 exports.Event = Event;
 __export(require("./game"));
+__export(require("./agent"));
