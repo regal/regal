@@ -217,6 +217,7 @@ const death = (subject: ICanDie) =>
 
 const drop = (subject: ICanHold, target: IHoldable) =>
     on("DROP", game => {
+        subject.items = subject.items.filter(item => item.name !== target.name); // TODO: fix list mutability issues
         game.output.push(`${subject.name} drops their ${target.name}.`);
         return isPhysical(target) ? queue(fall(target)) (game) : game;
 });
@@ -293,54 +294,4 @@ export const init = () => {
             throw new RegalError(ErrorCode.INVALID_STATE, "Input state is not of the correct form.")
         }
     };
-
 }
-
-// export const init = () => {
-
-//     Game.onGameStart = () => {
-//         const game = new GameInstance();
-
-//         const knightArmor = new Armor("Shining armor");
-//         const sword = new MeleeWeapon("Broadsword", 15);
-//         const knight = Creature.Human("Knight", [knightArmor, sword]);
-//         knight.equip(sword);
-
-//         const orcArmor = new Armor("Rusted armor");
-//         const club = new MeleeWeapon("Club", 5);
-//         const orc = Creature.Orc("Orc", [orcArmor, club]);
-//         orc.equip(club);
-
-//         game.state = {knight, orc} as FightState;
-//         game.output.push("The knight and orc are in a standoff, sizing each other up.")
-
-//         return game;
-//     }
-
-//     Game.onUserInput = (content: string, game: GameInstance) => {
-//         if (checkState(game.state)) {
-//             let event: EventFunction;
-
-//             switch (content.toLowerCase()) {
-//                 case "knight":
-//                     event = attack(game.state.knight, game.state.orc, game.state.knight.equippedWeapon);
-//                     break;
-
-//                 case "orc":
-//                     event = attack(game.state.orc, game.state.knight, game.state.orc.equippedWeapon);
-//                     break;
-
-//                 default:
-//                     game.output.push("Sorry, that input doesn't make sense.");
-//                     return game;
-//             }
-
-//             return runQueue(event(game)); // Execute all events in queue after the initial event
-//         } 
-//         else {
-//             throw new RegalError(ErrorCode.INVALID_STATE, "Input state is not of the correct form.")
-//         }
-//     };
-
-//     console.log("Fight initialized.");
-// }

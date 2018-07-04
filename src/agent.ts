@@ -58,6 +58,8 @@ export class Agent {
         const instance = new Proxy(<any>{
             [prefabId]: this[prefabId],
             [instanceId]: insId,
+
+            // TODO: register contained agents
         }, 
         {
             get: (instance: this, property: PropertyKey) => {
