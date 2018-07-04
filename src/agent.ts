@@ -65,14 +65,15 @@ export class Agent {
 
             get: (instance: this, property: PropertyKey) => {
                 const prefab = Game.getPrefab(Reflect.get(instance, prefabId));
-                console.log(property.toString());
 
-                // Temporary workaround for toJSON
+                // JSON workaround
                 if (property.toString() === "toJSON") { 
-                    const result = JSON.parse(JSON.stringify(prefab)); //todo fix hack
-                    for (let key in result) {
-                        result[key] = prefab[key];
+                    const result = {};
+                    for (let key in prefab) {
+                        result[key] = (key in instance) ? instance[key] : prefab[key];
                     }
+                    result["prefabId"] = instance[prefabId];
+                    result["instanceId"] = instance[instanceId];
                     return () => result;
                 }
 
@@ -140,4 +141,9 @@ export class Agent {
 const game = new GameInstance();
 const lars_fab = new Agent("lars").prefab();
 const lars_ins = lars_fab.register(game);
+lars_ins.name = "jim";
+const lars_ins2 = lars_fab.register(game);
+lars_ins2.name = "blorp";
+console.log(JSON.stringify(lars_fab, null, 2));
 console.log(JSON.stringify(lars_ins, null, 2));
+console.log(JSON.stringify(lars_ins2, null, 2));
