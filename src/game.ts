@@ -1,4 +1,5 @@
 import { EventFunction } from "./event";
+import { Agent } from "./agent";
 
 export enum ErrorCode {
     OK,
@@ -18,15 +19,19 @@ export class RegalError extends Error {
 }
 
 export class GameInstance {
-    events: string[];
-    output: string[];
-    queue: EventFunction[];
+    events: string[] = [];
+    output: string[] = [];
+    queue: EventFunction[] = [];
+
     state: any;
 
-    constructor() {
-        this.events = [];
-        this.output = [];
-        this.queue = [];
+    private _maxInstanceId: number = 0;
+    get maxInstanceId(): number {
+        return this._maxInstanceId;
+    }
+    nextInstanceId(): number {
+        this._maxInstanceId += 1;
+        return this._maxInstanceId;
     }
 }
 
@@ -50,6 +55,20 @@ export class Game {
     }
     static set onUserInput(inputFunc: (content: string, game: GameInstance) => GameInstance) {
         this._onUserInput = inputFunc;
+    }
+
+    private static _maxPrefabId = 0;
+    private static _prefabMap = new Map<number, Agent>();
+    static addPrefab(prefab: Agent): number {
+        this._maxPrefabId++;
+        this._prefabMap.set(this._maxPrefabId, prefab);
+        return this._maxPrefabId;
+    }
+    static getPrefab(prefabId: number): Agent {
+        if (this._prefabMap.has(prefabId)) {
+            return this._prefabMap.get(prefabId);
+        }
+        throw new RegalError(ErrorCode.INVALID_INPUT, `Prefab id ${prefabId} does not exist.`);
     }
 
 }

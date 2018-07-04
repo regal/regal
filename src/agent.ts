@@ -1,4 +1,4 @@
-import { RegalError, ErrorCode, GameInstance } from "./game";
+import { RegalError, ErrorCode, GameInstance, Game } from "./game";
 
 const uidGenerator = {
     _uid: 0,
@@ -8,20 +8,23 @@ const uidGenerator = {
     }
 }
 
-export const prefabbed = Symbol("prefabbed");
-export const uid = Symbol("uid");
+export const isPrefab = Symbol("isPrefab");
+export const instanceId = Symbol("instanceId");
+export const prefabId = Symbol("prefabId");
 export const agent = Symbol("agent");
 
 export class Agent {
-    [prefabbed]: boolean = false;
-    [uid]: number = -1;
+    [prefabId]: number = -1;
+    [instanceId]: number = -1;
 
     constructor(public name: string) {
         return new Proxy(this, {
             get: (target: this, property: PropertyKey) => {
                 if (property in target) {
-                    if (property === uid && !target[prefabbed]) {
-                        throw new RegalError(ErrorCode.INVALID_STATE, `uid only exists on prefabbed Agents.`);
+                    if (property === prefabId && !target[isPrefab]) {
+                        throw new RegalError(ErrorCode.INVALID_STATE, `${target.constructor.name} has no prefabId, as it is not associated with a prefab.`);
+                    } else if (property === instanceId && target[instanceId] <= 0) {
+                        throw new RegalError(ErrorCode.INVALID_STATE, `${target.constructor.name} has no instanceId.`);
                     }
                 }
                 return Reflect.get(target, property);
@@ -29,36 +32,44 @@ export class Agent {
         })
     }
 
+    get [isPrefab](): boolean {
+        return this[prefabId] > 0;
+    }
+
     prefab(): this {
-        if (this[prefabbed]) {
+        if (this[isPrefab]) {
             throw new RegalError(ErrorCode.INVALID_STATE, "Agent is already a prefab.");
         }
 
-        this[prefabbed] = true;
-        this[uid] = uidGenerator.next();
+        this[prefabId] = Game.addPrefab(this);
 
         return new Proxy(this, {
-            get: (target: this, property: PropertyKey) => {
-                return Reflect.get(target, property);
-            },
+            // get: (target: this, property: PropertyKey) => {
+            //     return Reflect.get(target, property);
+            // },
 
             set: (target: this, property: PropertyKey, value: any) => {
-                throw new RegalError(ErrorCode.INVALID_STATE, `Could not set property <${target.constructor.name}>.<${property.toString()}>. A prefab's properties cannot be set.`);
+                throw new RegalError(ErrorCode.INVALID_STATE, `Could not set property ${target.constructor.name}.<${property.toString()}>. A prefab's properties cannot be set.`);
             }
         });
     }
 
     register(game: GameInstance): this {
         return new Proxy(<any>{
-            [agent]: this
+            [instanceId]: game.nextInstanceId(),
             // todo add support for json.stringify
         }, 
         {
             get: (target: this, property: PropertyKey) => {
-                return Reflect.get(target[agent], property); // todo
+                // if (property in target) {
+                //     if (property === instanceId) {
+                //         return target[instanceId];
+                //     }
+                // }
+                return Reflect.get(Game.getPrefab(target[instanceId]), property); // todo
             },
             set: (target: this, property: PropertyKey, value: any) => {
-                const pTarget = <this>target[agent];
+                const pTarget = Game.getPrefab(target[instanceId]);
                 game.output.push(`Set <${property.toString()}> from <${pTarget[property]}> to <${value}>`); // todo
                 return true;
             }
