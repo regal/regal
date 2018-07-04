@@ -11,7 +11,7 @@ export class RegalError extends Error {
     code: ErrorCode;
 
     constructor(code: ErrorCode, message: string = "") {
-        super(`Code: ${code}, Message: ${message}`);
+        super(`RegalError (${code}) ${message}`);
         Object.setPrototypeOf(this, new.target.prototype);
         this.code = code;
     }

@@ -1,7 +1,7 @@
-# Agent Spec
+# Agent Spec (WIP)
 
 ## Requirements
-1. All agent state must be kept within the scope of the GameInstance and it's EventFunction chain. Thus, there shall be no side effects to any objects in the global scope.
+1. All agent state must be kept within the scope of the GameInstance and its EventFunction chain. Thus, there shall be no side effects to any objects in the global scope.
 2. Changes to agent state are tracked within the GameInstance, along with the EventFunction in which they occurred, recorded as a series of commands that can be reversed.
 3. The GameInstance state shall contain only the properties of agents that have changed from their original values. For example: if there is a complex Agent prefab with many properties, but only one of such properties is changed by the GameInstance, then only that property with its new value shall be stored in the GameInstance's state.
 4. A reference to an Agent within an EventFunction shall first check the GameInstance's state for a modified property value before referring to the prefab. If a modified property exists, it shall be used instead of the prefab's property. This calculation shall be entirely hidden from the user.
@@ -12,7 +12,6 @@
 ### Agent class
 ```ts
 class Agent {
-    constructor(public name: string, public description: string) {}
     get uid() : number { /* ... */ }
     prefab() : this { /* ... */ }
     register(game: GameInstance) : this { /* ... */ }
@@ -22,9 +21,7 @@ class Agent {
 ### Example user-defined Agent subclass
 ```ts
 class Dummy extends Agent {
-    constructor(name: string, description: string, public health: number) {
-        super(name, description);
-    }
+    constructor(public name: string, public description: string, public health: number) {}
 }
 ```
 
