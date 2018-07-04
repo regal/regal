@@ -64,15 +64,26 @@ export class Agent {
             // TODO: add support for json.stringify
 
             get: (instance: this, property: PropertyKey) => {
+                const prefab = Game.getPrefab(Reflect.get(instance, prefabId));
+                console.log(property.toString());
+
+                // Temporary workaround for toJSON
+                if (property.toString() === "toJSON") { 
+                    const result = JSON.parse(JSON.stringify(prefab)); //todo fix hack
+                    for (let key in result) {
+                        result[key] = prefab[key];
+                    }
+                    return () => result;
+                }
 
                 // If a modified property exists in the instance, return it.
-                if (property in instance) {
+                else if (property in instance) {
                     return Reflect.get(instance, property);
                 } 
                 
                 // Otherwise, retrieve the property from the prefab.
                 else {
-                    const prefab = Game.getPrefab(Reflect.get(instance, prefabId));
+                    console.log(property.toString());
                     return Reflect.get(prefab, property);
                 }
             },
@@ -128,16 +139,5 @@ export class Agent {
 
 const game = new GameInstance();
 const lars_fab = new Agent("lars").prefab();
-const lars = lars_fab.register(game);
-console.log(lars.name);
-lars.name = "jimmy";
-lars["boos"]  = "hey";
-console.log(lars.name);
-console.log(lars["boos"]);
-console.log(JSON.stringify(lars_fab, null, 2));
-console.log(JSON.stringify([...game.state], null, 2));
-lars.name = "lars";
-console.log(JSON.stringify([...game.state], null, 2));
-delete lars["boos"];
-console.log(JSON.stringify([...game.state], null, 2));
-console.log(JSON.stringify(lars, null, 2));
+const lars_ins = lars_fab.register(game);
+console.log(JSON.stringify(lars_ins, null, 2));
