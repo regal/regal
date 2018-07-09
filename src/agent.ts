@@ -8,9 +8,15 @@ const uidGenerator = {
     }
 }
 
+export const prefabId = Symbol("prefabId");
 export const isPrefab = Symbol("isPrefab");
 export const instanceId = Symbol("instanceId");
-export const prefabId = Symbol("prefabId");
+export const isInstance = Symbol("isInstance");
+
+
+const isAgentPrefab = (obj: any): obj is Agent => {
+    return (<Agent>obj)[isPrefab] === true;
+}
 
 export class Agent {
     [prefabId]: number = -1;
@@ -37,6 +43,10 @@ export class Agent {
         return this[prefabId] > 0;
     }
 
+    get [isInstance](): boolean {
+        return this[instanceId] > 0;
+    }
+
     prefab(): this {
         if (this[isPrefab]) {
             throw new RegalError(ErrorCode.INVALID_STATE, "Agent is already a prefab.");
@@ -53,14 +63,37 @@ export class Agent {
     }
 
     register(game: GameInstance): this {
+        console.log(`Registering ${this.constructor.name}`);
         const insId = game.nextInstanceId();
 
-        const instance = new Proxy(<any>{
+        const proxyObject = <any>{
             [prefabId]: this[prefabId],
             [instanceId]: insId,
 
-            // TODO: register contained agents
-        }, 
+            // TODO: register contained agents -- work out system for prefabId vs instanceId
+        };
+
+        for (let property in this) {
+            const pVal = this[property];
+
+            if (isAgentPrefab(pVal)) {
+                if (pVal[isInstance]) {
+                    console.log("is instance");
+                }
+                proxyObject[property] = pVal[isInstance] ? game.agents.get(pVal[instanceId]) : pVal.register(game);
+            }
+
+            if (pVal instanceof Array && pVal.every(isAgentPrefab)) {
+                proxyObject[property] = pVal.map(prefab => {
+                    if (prefab[instanceId]) {
+                        console.log("is instance");
+                    }
+                    return prefab[isInstance] ? game.agents.get(prefab[instanceId]) : prefab.register(game)
+                });
+            }
+        }
+
+        const instance = new Proxy(proxyObject, 
         {
             get: (instance: this, property: PropertyKey) => {
                 const prefab = Game.getPrefab(Reflect.get(instance, prefabId));
