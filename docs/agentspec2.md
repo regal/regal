@@ -78,7 +78,7 @@ The `register` method returns the object that it's called on, so we can chain it
 const waterBucket = new Bucket(5, "water", true).register(game);
 ```
 
-Registering an agent adds it to the GameInstance's `agent` map. At this point, the `agent` map would look something like this:
+Registering an agent adds it to the GameInstance's `agents` map. At this point, the `agents` map would look something like this:
 
 ```ts
 game.agents === {
@@ -177,7 +177,7 @@ const waterBoy = new BucketHolder("Water Boy", waterBucket).register(game);
 waterBucket[ID] === 1;
 ```
 
-If a sub-level agent is already registered, its pre-existing agent will be used instead. This allows for multiple references to the same agent.
+If a sub-level agent is already registered, its pre-existing agent ID will be used instead of generating a new one. This allows for multiple references to the same agent.
 
 ```ts
 const waterBucket = new Bucket(5, "water", true);
@@ -201,7 +201,7 @@ game.agents === {
 }
 ```
 
-Agents can also contain arrays of other agents. Much like agents that are properties of other agents, agents within lists can be registered when their top-level agent is registered or before.
+Agents can also contain arrays of other agents. Much like agents that are properties of other agents, agents within arrays can be registered either when their top-level agent is registered, or before.
 
 ```ts
 class MultiBucketHolder extends Agent {
