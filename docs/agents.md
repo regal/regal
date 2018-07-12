@@ -392,7 +392,7 @@ class Bar extends Agent {
 
 const game = new GameInstance();
 const foo = new Foo(undefined).register(game);
-top.a = new Bar("test"); // Implicitly registers the Bar instance
+foo.a = new Bar("test"); // Implicitly registers the Bar instance
 ```
 
 4. The agent is part of an array that is assigned to a property of a previously registered agent.
