@@ -1,4 +1,4 @@
-# Agent Spec (WIP)
+# Agent Spec (OUTDATED)
 
 To reduce the amount of duplicate data stored in the state of each GameInstance, Regal offers "prefabs." Prefabs are pre-defined objects that can be referenced to by GameInstances. By using prefabs, a game developer can generate game data without having to store it in the instance state. All Agent classes and subclasses can be converted to prefabs.
 
