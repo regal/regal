@@ -437,7 +437,7 @@ const game = new GameInstance();
 const foo = new Foo([]).register(game);
 
 const bar = new Bar("test");
-foo.a.push(bar1); // Implicitly registers bar
+foo.a.push(bar); // Implicitly registers bar
 ```
 
 6. The agent is assigned to a reference within the GameInstance's `state` property.
@@ -468,7 +468,7 @@ game.state.fighters += knight; // Registers armor, broadsword, and knight!
 
 In addition to agents, the GameInstance's `state` object can contain primitives (like `string`, `number`, and `boolean`) and arrays. That's because `state` is actually (*gasp!*) itself an agent.
 
-This can be useful for storing instance state-specific values:
+This can be useful for storing instance-state-specific values:
 
 ```ts
 game.state.livesRemaining = 15;
@@ -480,15 +480,15 @@ Or arrays of agents:
 game.state.enemies = [orc1, orc2, jimCarrey];
 ```
 
-As with any agent, `state` can contain objects that don't inherit from `Agent`, but it's not recommended because you'll miss out on the benefits of using agents.
+As with any agent, `state` can contain objects that don't inherit from `Agent`, but it's usually not recommended because you'll miss out on the benefits of using agents.
 
 ## Benefits of Using Agents
 
 Agents were designed to provide a common way to track and manage every change that happens within a game's state.
 
-Pretend you have a complex game with hundreds of EventFunctions and dozens of classes, all of which are plain JavaScript objects. Consider the following three scenarios:
+Imagine you have a complex game with hundreds of EventFunctions and dozens of classes, all of which are plain JavaScript objects. Consider the following three scenarios:
 
-1. When the player enters a command, such as "throw football", your game crashes -- but only sometimes. After spending hours debugging, you manage to reproduce the bug: at some point, the player's football became `undefined`. It must've been a side effect of another command, but you have no way of knowing which.
+1. When the player enters a command, such as "throw ball", your game crashes -- but only sometimes. After spending hours debugging, you manage to reproduce the bug: at some point, the player's ball became `undefined`. It must've been a side effect of another command, but you have no way of knowing which.
 
 2. The player enters the command "fire blaster at ship". Your game parses the command and executes the `fire` event, which decrements the player's ammo, increases the player's sharpshooting skill, and queues a `hit` event on the ship. By the time the `hit` occurs, however, the reference to the ship no longer exists (probably due to a bug in your code). This reports an error to the player and asks them to try again, but now the state was already modified by the illegal command.
 
@@ -542,11 +542,69 @@ game.events === [
 ];
 ```
 
-Every change made to any agent registered within a GameInstance is recorded like this in the `events` array. This is extremely helpful for debugging.
+Every change made to any agent registered within a GameInstance is recorded as an `EventRecord` in the `events` array. This is extremely helpful for debugging.
 
-For more information, see the `GameInstance.events` specification page.
+For more information, see the `GameInstance.events` and `EventRecord` documentation pages.
 
-### Transactions and Immutability with Agents
+### Event Sourcing with Agents
+
+Changes made to agents are just recorded in the `events` array -- that's the *only* place that changes are made. That's because the GameInstance's state is actually immutable. Let's emphasize this:
+
+**The GameInstance's state is immutable.**
+
+This immutability is designed to be transparent, so it may not be immediately obvious. Regal uses a concept called *event sourcing*, which is the practice of storing state as a sequence of events. The process goes like this:
+
+1. A GameInstance with zero or more registered agents is received.
+
+2. When one of these agents is "modified," the change is actually stored as an `EventRecord` in `GameInstance.events`. The agent remains unchanged.
+
+```ts
+const damage = event("DAMAGE", game => {
+    game.player.health -= 10;
+    game.player.isMad = true;
+
+    game.events === [
+        {
+            id: 1, // Event ID
+            name: "DAMAGE",
+            changes: [
+                {
+                    agent: 1, // Agent ID
+                    property: "health",
+                    action: "MOD",
+                    start: 88,
+                    end: 78
+                },
+                {
+                    agent: 1,
+                    property: "isMod",
+                    action: "MOD",
+                    start: false,
+                    end: true
+                }
+            ]
+        }
+    ];
+    
+    game.player.health === 88; // FALSE! Why??
+});
+```
+
+Because we've learned that agents are immutable, we would expect that `game.player.health` would be equal to `88`, since that was its original value. However, this is not the case! Here's why:
+
+3. When a registered agent's property is accessed, Regal calculates the value based on the changes that have occurred. In the example above, Regal would scan `GameInstance.events` for the most recent change to `game.player.health` and return `ChangeRecord.end`, which is `78`.
+
+4. Once a game cycle is completed, the `GameInstance` has a collection of `EventRecord`s that reflects all the changes that were made during the cycle. Just before returning to the client, Regal *collapses* the events. This is the process of building a new instance state--with the new values--from the events.
+
+Event sourcing solves issue (2) from the start of this section. Regal uses an immutable instance state and waits to build the updated state until the end of a successful game cycle, so runtime errors won't corrupt your game data.
+
+### Undoing Operations
+
+The event sourcing model makes it very easy rollback changes as well. This feature is supported natively in Regal with the `Game.undo` function.
+
+(TBA)
+
+### Optimizations
 
 (TBA)
 
