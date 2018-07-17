@@ -782,7 +782,7 @@ const goNorth = (roomData: RoomData, roomContents: RoomContents) =>
 });
 ```
 
-Remember, `RoomContents` doesn't have any knowledge of adjacent rooms? We'd have to workaround this somehow, maybe through using a lookup table:
+Remember, `RoomContents` doesn't have any knowledge of adjacent rooms. We'd have to work around this somehow, maybe through using a lookup table:
 
 ```ts
 const roomDataMap = new Map<String, RoomContents>();
@@ -937,7 +937,7 @@ attic.description = "A dusty old attic. The cobwebs are as thick as cotton, and 
 game.agents === {}; // All of attic's properties are equal to their original values, so our instance state is empty!
 ```
 
-Because static agents' original definitions are stored in the game itself, a `GameInstance` only needs to store any modifications made to it. This saves us from needing to include unnecessary data in the instance state.
+Because static agents' original definitions are stored in the core game code, a `GameInstance` only needs to store any modifications made to them. This saves us from needing to include unnecessary data in the instance state.
 
 And don't forget, static agents *are agents*! We still get all the benefits (event sourcing, change tracking, undoing) of nonstatic agents.
 
