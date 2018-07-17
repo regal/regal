@@ -92,7 +92,7 @@ game.agents === {
 
 Wait, where did that 1 come from? When you register an agent, it is given a unique numeric ID. This is what Regal uses to track your agents.
 
-Agents can only be registered once*, so an agent can have only one ID. Attempting to re-register an agent throws an error.
+Agents can only be registered once, so an agent can have only one ID. Attempting to re-register an agent throws an error.
 
 ```ts
 const waterBucket = new Bucket(5, "water", true).register(game); // OK
@@ -128,8 +128,6 @@ waterBucket[ID] === undefined;
 waterBucket.register(game);
 waterbucket[ID] === 1;
 ```
-
-_*See **Static Agents**._
 
 ## Complex Agents
 
@@ -577,7 +575,7 @@ const damage = event("DAMAGE", game => {
                 },
                 {
                     agent: 1,
-                    property: "isMod",
+                    property: "isMad",
                     action: "MOD",
                     start: false,
                     end: true
@@ -602,12 +600,357 @@ Event sourcing solves issue (2) from the start of this section. Regal uses an im
 
 The event sourcing model makes it very easy rollback changes as well. This feature is supported natively in Regal with the `Game.undo` function.
 
-(TBA)
+`Game.undo(game: GameInstance, count: number)` rolls back `count` number of game cycles on `game`. Remember, a game cycle refers to all the effects caused by a single user's command.
+
+```ts
+let game = Game.start();
+
+game = Game.play(game, "fire at ship");
+game = Game.play(game, "jump overboard");
+
+game = Game.undo(game, 1); // Rolls back game to before "jump overboard"
+```
+
+`Game.undo` does not delete events from a game's history. Instead, it appends new events that reverse the changes.
+
+For more information, see the documentation page for `Game.undo`.
 
 ### Optimizations
 
-(TBA)
+Although event sourcing is a nice mental model, it would be inefficient if we had to rebuild every event in the history of your game whenever you want to access an agent. Therefore, Regal is optimized to store event history in a better structure for quick access.
+
+`GameInstance.diff` is used internally to track changes to agents within the context of a single game cycle. It is structured something like this:
+
+```ts
+game.diff === {
+    1: { // Agent ID
+        "health": [
+            {
+                id: 1, // Event ID
+                action: "MOD",
+                start: 88,
+                end: 78
+            }
+        ],
+        "isMad": [
+            {
+                id: 1,
+                action: "MOD",
+                start: false,
+                end: true
+            }
+        ]
+    }
+}
+```
+
+When `GameInstance.events` is referenced, the event list is actually constructed lazily based on the data in `GameInstance.diff`. Therefore, we can balance the convenient event sourcing model with improved performance.
 
 ## Static Agents
 
-(TBA)
+Sometimes, you may have an agent with a lot of data that is never (or rarely) modified. Let's start with an example:
+
+### Introducing Static Agents: An Example
+
+Here is a standard `Room` class model, like you might use in an Interactive Fiction game.
+
+```ts
+class Room extends Agent {
+    constructor(
+        public name: string, 
+        public description: string, 
+        public north: Room,
+        public east: Room,
+        public south: Room,
+        public west: Room,
+        public contents: Agent[]
+    ) {
+        super();
+    }
+}
+```
+
+An instantiation might go like this (assuming that we have other agents already).
+
+```ts
+const attic = new Room(
+    "Attic",
+    "A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.",
+    northAttic,
+    stairsDown,
+    southRoof,
+    westRoof,
+    [ rat, book ]
+);
+```
+
+Now, look at what happens when we register the agent.
+
+```ts
+attic.register(game);
+
+game.agents === {
+    1: {
+        name: "Attic",
+        description: "A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.",
+        north: 2,
+        east: 3,
+        south: 4,
+        west: 5,
+        contents: [ 6, 7 ]
+    },
+    // ... Agents 2-7
+};
+```
+
+Imagine if we have hundreds of objects like this, all stored in `game.agents`. This is a LOT of data to be transferring back and forth every game cycle, especially since the only property on the `Room` class that we'll probably ever want to modify is `contents`.
+
+### A Naive Solution
+
+One solution is to separate the `Room` class into two classes: one for immutable data and one for mutable data. That might look something like this:
+
+```ts
+class RoomData { // Notice: We're not extending agent!
+    constructor(
+        public name: string,
+        public description: string,
+        public north: RoomData,
+        public east: RoomData,
+        public south: RoomData,
+        public west: RoomData
+    ) {}
+}
+
+class RoomContents extends Agent {
+    constructor(public name: string, public contents: Agent[]) {
+        super();
+    }
+}
+
+const atticData = new RoomData(
+    "Attic",
+    "A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.",
+    northAtticData,
+    stairsDownData,
+    southRoofData,
+    westRoofData,
+);
+
+const atticContents = new RoomContents("Attic", [ rat, book ]);
+```
+
+By separating *instance-specific state* and *constant game data*, we've made registering the agents nicer:
+
+```ts
+atticContents.register(game);
+
+game.agents === {
+    1: {
+        name: "Attic"
+        contents: [ 2, 3 ]
+    },
+    // ... Agents 2-3
+};
+```
+
+However, picture trying to use this model in an `EventFunction`. We would have to pass both the `RoomData` and `RoomContents` objects.
+
+```ts
+const describeRoom = (roomData: RoomData, roomContents: RoomContents) =>
+    event("DESCRIBE ROOM", game => {
+        game.output.write(
+            roomData.name,
+            roomData.description,
+            `${roomData.north.name} is north, ${roomData.east.name} is east, ${roomData.south.name} is south, and ${roomData.west.name} is west.`
+        );
+
+        for (let o in roomContents.contents) {
+            game.output.write(`A ${o.name} is here.`);
+        }
+
+        return game;
+});
+```
+
+This might not seem like a big deal...until we need to reference a `RoomContents` from a `RoomData` object.
+
+```ts
+const goNorth = (roomData: RoomData, roomContents: RoomContents) =>
+    event("GO NORTH", game => {
+        game.output.write("You go north.");
+        return describe(roomData.north, roomContents.north) (game); // ERROR: roomContents.north does not exist!
+});
+```
+
+Remember, `RoomContents` doesn't have any knowledge of adjacent rooms? We'd have to workaround this somehow, maybe through using a lookup table:
+
+```ts
+const roomDataMap = new Map<String, RoomContents>();
+roomDataMap.set("ATTIC", atticData);
+
+const describeRoom = (roomContents: RoomContents) =>
+    event("DESCRIBE ROOM", game => {
+        const roomData = roomDataMap.get(roomContents.name);
+        if (roomData === undefined) {
+            // throw error
+        }
+        // ...
+});
+
+const goNorth = (roomContents: RoomContents) =>
+    event("GO NORTH", game => {
+        const roomData = roomDataMap.get(roomContents.name);
+        if (roomData === undefined) {
+            // throw error
+        }
+        // ...
+});
+```
+
+This is getting pretty nasty. We've had to add a lot of extra boilerplate and error checking, not to mention the problems that might arise if you have two rooms with the same name.
+
+Luckly, there is another option.
+
+### Static Agents to the Rescue
+
+Static agents solve the problem of trying to balance data-heavy objects with Regal's agent-based model.
+
+Static agents are pre-defined objects that are used to store game data without having to store it in the instance state. They are defined at the game's *load time*, rather than during its *runtime*.
+
+Static agents are declared with the `Agent.static()` method. Here's how we would declare the `attic` agent statically:
+
+```ts
+const attic = new Room(
+    "Attic",
+    "A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.",
+    northAttic,
+    stairsDown,
+    southRoof,
+    westRoof,
+    [ rat, book ]
+).static();
+```
+
+Now, when we register our agent:
+
+```ts
+attic.register(game);
+
+game.agents === {}; // Empty!
+```
+
+Nothing is stored in our game's instance state! But events like this still work fine:
+
+```ts
+const describeRoom = (room: Room) =>
+    event("DESCRIBE ROOM", game => {
+        game.output.write(
+            room.name,
+            room.description,
+            `${room.north.name} is north, ${room.east.name} is east, ${room.south.name} is south, and ${room.west.name} is west.`
+        );
+
+        for (let o in room.contents) {
+            game.output.write(`A ${o.name} is here.`);
+        }
+
+        return game;
+});
+
+const goNorth = (room: Room) =>
+    event("GO NORTH", game => {
+        game.output.write("You go north.");
+        return describe(room.north) (game);
+});
+
+game = goNorth(southRoof) (game);
+game.output === [
+    "You go north.",
+    "Attic",
+    "A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.",
+    "North Attic is north, Stairs are east, South Roof is south, and West Roof is west.",
+    "A rat is here.",
+    "A book is here."
+];
+```
+
+Static agents allow us to keep our references simple without needing to store unchanging data in the instance state.
+
+But what about the data that we want to change? Say we have a `PICKUP` event, like this:
+
+```ts
+const pickup = (room: Room, item: Item) =>
+    event("PICKUP", game => {
+        const index = room.contents.findIndex(roomItem => _.isEqual(roomItem, item)); // Don't worry about this too much...we're just trying to check if the item is in the room
+
+        if (index < 0) {
+            // ... handle error if the item isn't in the room
+        }
+
+        room.contents.splice(index); // Remove the item from the room
+        game.playerHolding = item;
+
+        return game;
+});
+```
+
+Watch what happens when we try and modify a static agent's state:
+
+```ts
+game = pickup(attic, book) (game);
+game.agents === {
+    1: {
+        contents: [ 2 ]
+    }
+};
+```
+
+Instead of being empty, `game.agents` now has an entry for `attic` (whose ID is 1). It's not a complete object, though -- Regal just stores the properties that differ from the static agent's.
+
+We could modify the description of `attic` in some event, and it would be added to `game.agents`:
+
+```ts
+// in some event
+attic.description = "The best room ever!";
+
+game.agents === {
+    1: {
+        description: "The best room ever!";
+        contents: [ 2 ]
+    }
+};
+``` 
+
+If we change the value of a modfied static agent's property back to its original value, it will be removed from `game.agents`.
+
+```ts
+attic.contents.push(book); // Set attic.contents to its original value
+
+game.agents === {
+    1: {
+        description: "The best room ever!";
+    }
+};
+
+attic.description = "A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.";
+
+game.agents === {}; // All of attic's properties are equal to their original values, so our instance state is empty!
+```
+
+Because static agents' original definitions are stored in the game itself, a `GameInstance` only needs to store any modifications made to it. This saves us from needing to include unnecessary data in the instance state.
+
+And don't forget, static agents *are agents*! We still get all the benefits (event sourcing, change tracking, undoing) of nonstatic agents.
+
+This is the power of static agents. 
+
+### Registering Static Agents
+
+Static agents handle registration a little differently than their nonstatic counterparts.
+
+When `Agent.static` is called on an agent, it is added to an internal static agent registry that is managed by the game. When a `GameInstance` is instantiated, (such as when `Game.start` is called), every static agent in the registry is registered with the instance.
+
+Thus, there is never a need to call `Agent.register` on a static agent. In fact, doing so will throw a `RegalError`, because the agent will have already been registered.
+
+Static agents can be composed of other static agents, and nonstatic agents can be added as properties of static agents at runtime (and vice versa). See **Complex Agents** and **Implicit Registration** for more details.
+
+As a side note, you may notice when registering nonstatic agents that their agent IDs might start at a higher number than you expect. This is because every static agent in the game's registry gets a reserved agent ID in the order that they were declared. So, if you have 10 static agents, the first nonstatic agent you register will have 11 as its agent ID.
