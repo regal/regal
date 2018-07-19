@@ -2,7 +2,7 @@
 
 Games built on the Regal Framework consist of two main parts: *Event Functions* and *Agents*. Whereas Event Functions can be thought to describe any change that occurs within your game, Agents are the objects on which the changes take place.
 
-Every object that is specific to a game's state -- weapons, players, trees, mountains, even intangible state like score -- is considered an agent.
+Every object that is contained in a game's state -- weapons, players, trees, mountains, even intangible state like score -- is considered an agent.
 
 ## The `Agent` Class
 
