@@ -116,7 +116,7 @@ class Agent {
 
 **2.5.5** If `register` is called on an agent that already has an `ID`, the following error shall be thrown: `RegalError: Cannot register an agent that already has an ID.`
 
-**2.5.6** `Agent.register` shall return the object on which the method is called.
+**2.5.6** `Agent.register` shall return a proxy to the object on which the method is called §(Agent-3.3), which is the same type as that object.
 
 **2.5.7** `Agent.register` modifies the object on which it is called. Since the method requires a reference to a game instance, it must never be called outside of a game cycle.
 
@@ -142,25 +142,59 @@ class Agent {
 
 ## 3 Agent Registration
 
-Introduction (TBA)
+A game's instance state is composed of agents.
+
+For agents to be used within a GameInstance, they must first be registered. This section describes that process.
 
 ### 3.1 Definitions
 
-(TBA)
+**3.1.1** *Unregistered* and *registered* shall describe an agent before and after its `register` method has been called, respectively.
+
+**3.1.2** *Explicit registration* refers to registering an agent by calling its `register` method. §(Agent-3.3)
+
+**3.1.3** *Implicit registration* refers to registering an agent by invoking some operation which eventually registers the agent explicitly. §(Agent-3.4)
+
+**3.1.4** `GameInstance.agents` and the game instance's *agents* or *agents map* shall refer to the collection of agents stored by a game instance. §(Agent-3.2.1)
+
+**3.1.5** `GameInstance.state` refers to the object used within a game instance to manage references to agents. §(Agent-3.2.2, Agent-3.5)
+
+**3.1.6** The phrase "next available agent ID" refers to the next lowest positive integer that is not already assigned to a registered agent.
+
+**3.1.7** `AgentProxy` refers to an object that contains traps for all gets and sets to an agent's properties. §(Agent-5.3)
 
 ### 3.2 Schemas
 
-(TBA)
+**3.2.1** `GameInstance` shall contain a public property `agents` that is of type `Map<number, object>`.
+
+**3.2.2** `GameInstance` shall contain a public property `state` that is of type `any`.
+
+**3.2.3** The propeties `agents` and `state` of `GameInstance` shall be managed entirely by `Agent` operations.
 
 ### 3.3 Explicit Registration
 
-(TBA)
+**3.3.1** An agent is registered with a game instance explicitly by calling the agent's `register` method with the game instance provided as the method's argument.
+
+**3.3.2** Registering an agent with a game instance shall perform the following steps:
+
+* **3.3.2.1** Check if the game instance is undefined. If so, throw an error. §(Agent-2.5.4)
+
+* **3.3.2.2** Check if the agent has already been registered. If so, throw an error. §(Agent-2.5.5)
+
+* **3.3.2.3** Set the agent's `_game` property equal to the game instance.
+
+* **3.3.2.4** Set the agent's `ID` property equal to the next available agent ID.
+
+* **3.3.2.5** Construct a new Proxy using the agent and `AgentProxy`, hereafter referred to as the proxy.
+
+* **3.3.2.6** Add the proxy to `GameInstance.agents`, with the key being the agent's `ID`.
+
+* **3.3.2.7** Return the proxy.
 
 ### 3.4 Implicit Registration
 
 (TBA)
 
-### 3.5 Referencing Agents within `GameInstance.state`
+### 3.5 `GameInstance.state`
 
 (TBA)
 
