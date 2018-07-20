@@ -64,7 +64,6 @@ class Agent {
     register(game: GameInstance): this
 
     static(): this
-
 }
 ```
 
@@ -124,17 +123,17 @@ class Agent {
 
 **2.6.1** `Agent.static` shall refer to the `static` method contained by objects that are of class `Agent` or a subclass.
 
-**2.6.2** `Agent.static` shall create a reference to a static version of the agent on which the method is called. For details on static agents, see §(Agent-TBA).
+**2.6.2** `Agent.static` shall create a reference to a static version of the agent on which the method is called. For details on static agents, see §(Agent-TBD).
 
 **2.6.3** `Agent.static` shall take no arguments.
 
-**2.6.4** The object returned by `Agent.static` shall be the same type as the object on which the method was called, but it shall not be the same object. §(Agent-TBA)
+**2.6.4** The object returned by `Agent.static` shall be the same type as the object on which the method was called, but it shall not be the same object. §(Agent-TBD)
 
 **2.6.5** If `static` is called on an agent that has already been made static, the following error shall be thrown: `RegalError: Cannot create two static versions of the same agent.`
 
 **2.6.6** If `static` is called on an agent that has already been registered, the following error shall be thrown: `RegalError: Cannot create a static version of an agent that has already been registered.`
 
-**2.6.7** All static agents must be created when the game is constructed §(Agent-TBA). Therefore, `Agent.static` must never be called inside of a game cycle.
+**2.6.7** All static agents must be created when the game is constructed §(Agent-TBD). Therefore, `Agent.static` must never be called inside of a game cycle.
 
 ### 2.7 `Agent` Private Properties
 
@@ -156,13 +155,29 @@ For agents to be used within a GameInstance, they must first be registered. This
 
 **3.1.4** `GameInstance.agents` and the game instance's *agents* or *agents map* shall refer to the collection of agents stored by a game instance. §(Agent-3.2.1)
 
-**3.1.5** `GameInstance.state` refers to the object used within a game instance to manage references to agents. §(Agent-3.2.2, Agent-3.5)
+**3.1.5** `GameInstance.state` refers to the object used within a GameInstance to manage references to agents. §(Agent-3.2.2, Agent-3.5)
 
-**3.1.6** The phrase "next available agent ID" refers to the next lowest positive integer that is not already assigned to a registered agent.
+**3.1.6** The phrase "next available agent ID" refers to the next lowest positive nonzero integer that is not already the ID of a registered agent or reserved in the static agent registry. §(Agent-4.1.4)
 
-**3.1.7** `AgentProxy` refers to an object that contains traps for all gets and sets to an agent's properties. §(Agent-5.3)
+**3.1.7** `AgentProxyHandler` refers to the handler object that contains traps to proxy all gets and sets to an agent's properties. §(Agent-5.3)
 
-### 3.2 Schemas
+**3.1.8** An agent `B` is considered to be *managed* by another agent `A` if either: 
+
+1. `B` is a contained in a property of `A`, or
+
+2. `B` is contained in an array that is a property of `A`. 
+
+In describing these situations, agent `A` is often called the *parent*, *managing*, or *top-level* agent.
+
+**3.1.9** An agent `B` is considered to *become managed* by an already-registered agent `A` if either:
+
+1. `B` is assigned to a property of `A`, 
+
+2. `B` is included in an array that is assigned to a property of `A`, or
+
+3. `B` is added to an array that is a property of `A`.
+
+### 3.2 `GameInstance` Property Ownership
 
 **3.2.1** `GameInstance` shall contain a public property `agents` that is of type `Map<number, object>`.
 
@@ -176,60 +191,170 @@ For agents to be used within a GameInstance, they must first be registered. This
 
 **3.3.2** Registering an agent with a game instance shall perform the following steps:
 
-* **3.3.2.1** Check if the game instance is undefined. If so, throw an error. §(Agent-2.5.4)
+1. Check if the game instance is undefined. If so, throw an error. §(Agent-2.5.4)
 
-* **3.3.2.2** Check if the agent has already been registered. If so, throw an error. §(Agent-2.5.5)
+2. Check if the agent has already been registered. If so, throw an error. §(Agent-2.5.5)
 
-* **3.3.2.3** Set the agent's `_game` property equal to the game instance.
+3. Set the agent's `_game` property equal to the game instance.
 
-* **3.3.2.4** Set the agent's `ID` property equal to the next available agent ID.
+4. Set the agent's `ID` property equal to the next available agent ID.
 
-* **3.3.2.5** Construct a new Proxy using the agent and `AgentProxy`, hereafter referred to as the proxy.
+5. Register every agent that is managed by the agent. §(Agent-3.3.3)
 
-* **3.3.2.6** Add the proxy to `GameInstance.agents`, with the key being the agent's `ID`.
+6. Construct a new Proxy, hereafter referred to as the proxy, using the agent and `AgentProxyHandler` as its handler.
 
-* **3.3.2.7** Return the proxy.
+7. Add the proxy to `GameInstance.agents`, with the key being the agent's `ID`.
+
+8. Return the proxy.
+
+**3.3.3** Registering an agent shall recursively attempt to register all agents that are *managed* by that agent §(Agent-3.1.8). For each of these managed agents, the library shall:
+
+1. If the managed agent's `ID` is undefined, execute the managed agent's `register` method.
+
+2. Replace the parent agent's reference to the managed agent with the managed agent's `ID`. §(Agent-3.3.4)
+
+**3.3.4** Registered agents shall not contain object references to their managed registered agents. Instead, these references (both as property values and elements in array properties) shall be replaced by each managed agent's `ID`. §(Agent-3.3.3)
 
 ### 3.4 Implicit Registration
 
-(TBA)
+There shall exist several *implicit registration* operations that invoke an agent's `register` method as a consequence of their function. The operations that implicitly register an agent include:
+
+**3.4.1** The agent is managed by a managing agent when the managing agent is registered. §(Agent-3.3.3)
+
+**3.4.2** The agent becomes managed §(Agent-3.1.9) by an already-registered agent.
+
+**3.4.3** The agent becomes managed by `GameInstance.state`. §(Agent-3.5.7)
 
 ### 3.5 `GameInstance.state`
 
-(TBA)
+**3.5.1** `GameInstance.state` is a reserved agent stored within the game instance to help the developer keep references to their agents. In this section, the shorthand `state` will be used.
+
+**3.5.2** `state` shall be registered when the `GameInstance` is instantiated at the start of the game.
+
+**3.5.3** `state` shall always be assigned the `ID` zero.
+
+**3.5.4** `state` shall be typed as `any` so the developer can use the dot operator followed by any property name without triggering TypeScript errors.
+
+**3.5.5** The developer may access any property within `state` by using a single dot operator followed by any name.
+
+**3.5.6** The developer can set any property within `state` to be any type.
+
+**3.5.7** Because `state` is a registered agent, agents shall be registered implicitly when they are assigned to a property of `state` or otherwise become managed by `state`. §(Agent-3.1.9, Agent-3.4.3)
+
+**3.5.8** If the developer attempts to get a property `PROPERTY` from `state` that doesn't exist, the following error shall be thrown: `RegalError: State does not contain property <PROPERTY>.`
+
+**3.5.9** Control of get and set access to `state`'s properties shall be managed by an additional proxy handler that is added to the agent before it is registered at the start of the game.
 
 ## 4 Static Agents
 
-Introduction (TBA)
+Static agents are agents that are defined at the game's *load time* rather than its *runtime*. They are useful for rarely-modified data that do not need to be stored in the instance state.
 
 ### 4.1 Definitions
 
-(TBA)
+**4.1.1.** *Static agent* refers to the object that is generated after an agent's `static` method is invoked.
 
-### 4.2 Schemas
+**4.1.2** A game's *load time* refers to the initial execution of the game's source code when it is loaded by a Regal client. This includes the definition of all event functions, classes, API assignments, and static agents. There is no concept of a game instance at this stage.
 
-(TBA)
+**4.1.3** A game's *runtime* refers to the execution of some set of event functions during a game cycle. Most of the operations in this stage involve some operation on a game instance.
 
-### 4.3 Usage
+**4.1.4** The *static agent registry*, or `StaticAgentRegistry`, is a map used internally to manage references to static agents.
 
-(TBA)
+**4.1.5** `StaticAgentProxyHandler` refers to the handler object that contains proxy traps for all gets and sets to a static agent's properties. §(Agent-TBD)
+
+### 4.2 Creating Static Agents (TBD)
+
+**4.2.1** `StaticAgentRegistry` shall instantiated at a game's load time as an object of type `Map<number, Agent>` before any static agents are declared.
+
+**4.2.2** An agent shall be made *static* by invocation of its `static` method. This process shall involve the following steps:
+
+1. If the agent already has an `ID`, do the following:
+
+    1. If the `ID` exists in `StaticAgentRegistry`, throw the following error: `RegalError: Cannot create two static versions of the same agent.`
+
+    2. If the `ID` does not exist in `StaticAgentRegistry`, throw the following error: `RegalError: Cannot create a static version of an agent that has already been registered.`
+
+2. Otherwise, set the agent's `ID` to be the next available agent ID.
+
+3. Construct a Proxy from the agent and `StaticAgentProxyHandler`.
+
+4. Add the proxy to the `StaticAgentRegistry`, with the key being the agent's `ID`.
+
+5. Return the proxy.
+
+**4.2.3** On a game instance's initial game cycle, every static agent in `StaticAgentRegistry` shall be registered with the game instance.
 
 ## 5 Agent Behavior
 
-Introduction (TBA)
+Introduction (TBD)
 
 ### 5.1 Definitions
 
-(TBA)
+(TBD)
 
 ### 5.2 Schemas
 
-(TBA)
+**5.2.1** `PropertyOperation` is an enum used to describe additions, modifications, or deletions of agent properties. It has the following values:
+
+1. `ADDED`: This property was added to the agent with the specified value.
+
+2. `MODIFIED`: This property existed on the agent already and was modified to the specified value.
+
+3. `DELETED`: This property was removed from the agent.
+
+
+**5.2.2** `PropertyChange<T>` is a class used to describe a single operation on an agent's property. It is parameterized to the type of the property. Its schema is defined as follows:
+
+1. `public id: number`: The numeric id of the event during which the change took place.
+
+2. `public op: PropertyOperation`: The operation that took place on the property. §(Agent-5.2.1)
+
+3. `public init?: T`: The initial value of the property before the operation. Will be undefined if `op` is `ADDED`.
+
+4. `public final?: T` The final value of the property after the operation. Will be undefined if `op` is `REMOVED`.
+
+**5.2.3** `AgentRecord<T>` is a type used to describe the changes made to an agent's properties over one or more events, parameterized to the agent's type. `AgentRecord` objects contain zero or more of their agent's keys, each assigned to an array of `PropertyChange` objects of that property's type.
+
+Example `AgentRecord`:
+
+```ts
+{
+    "propertyA" : [
+        {
+            id: 2,
+            action: PropertyOperation.MODIFIED,
+            init: "intermediateValue",
+            final: "finalValue"
+        },
+        {
+            id: 1,
+            action: PropertyOperation.MODIFIED,
+            init: "startValue",
+            final: "intermediateValue"
+        }
+    ],
+
+    "propertyB" : [
+        {
+            id: 2,
+            action: PropertyOperation.DELETED,
+            init: "someValue"
+        },
+        {
+            id: 1,
+            action: PropertyOperation.ADDED,
+            final: "someValue"
+        }
+    ]
+}
+```
+
+(TBD)
+
 
 ### 5.3 Change Tracking
 
-(TBA)
+(TBD)
 
 ### 5.4 Event Sourcing
 
-(TBA)
+(TBD)

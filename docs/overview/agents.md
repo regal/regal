@@ -286,7 +286,7 @@ game.state.bucket.contents === "water";
 If `state` doesn't contain the key, a RegalError will be thrown.
 
 ```ts
-const bucket = game.state.buckte; // throws RegalError: "State does not contain member <buckte>."
+const bucket = game.state.buckte; // throws RegalError: "State does not contain property <buckte>."
 ```
 
 By using `state`, we can solve the problem with references that was presented earlier:

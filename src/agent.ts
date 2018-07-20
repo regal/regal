@@ -159,4 +159,3 @@ export class Agent {
 }
 
 const game = new GameInstance();
-
