@@ -28,7 +28,8 @@
     "dist/"
   ],
   "dependencies": {
-    "typescript": "^2.9.2"
+    "typescript": "^2.9.2",
+    "util": "^0.11.0"
   },
   "devDependencies": {
     "readline": "^1.3.0",

@@ -1,4 +1,5 @@
 import { EventFunction } from "./event";
+import { InstanceAgents, InstanceDiff } from "./agent";
 
 export enum ErrorCode {
     OK,
@@ -20,6 +21,14 @@ export class GameInstance {
     events: string[] = [];
     output: string[] = [];
     queue: EventFunction[] = [];
+
+    agents: InstanceAgents;
+    diff: InstanceDiff;
+
+    constructor() {
+        this.agents = new InstanceAgents(this);
+        this.diff = new InstanceDiff();
+    }
 }
 
 export class Game {
