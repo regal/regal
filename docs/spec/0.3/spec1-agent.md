@@ -261,7 +261,7 @@ Static agents are agents that are defined at the game's *load time* rather than 
 
 **4.1.5** `StaticAgentProxyHandler` refers to the handler object that contains proxy traps for all gets and sets to a static agent's properties. §(Agent-TBD)
 
-### 4.2 Creating Static Agents (TBD)
+### 4.2 Creating Static Agents
 
 **4.2.1** `StaticAgentRegistry` shall instantiated at a game's load time as an object of type `Map<number, Agent>` before any static agents are declared.
 
@@ -281,11 +281,23 @@ Static agents are agents that are defined at the game's *load time* rather than 
 
 5. Return the proxy.
 
-**4.2.3** On a game instance's initial game cycle, every static agent in `StaticAgentRegistry` shall be registered with the game instance.
+### 4.3 Static Agent Usage
 
-## 5 Agent Behavior
+**4.3.1** Static agents must be registered just like their nonstatic counterparts. However, registering a static agent shall not modify `GameInstance.agents`.
 
-Introduction (TBD)
+**4.3.2** `GameInstance.agents` shall only contain the properties of static agents that differ in the instance state from their original definitions.
+
+**4.3.3** If a property of a static agent is modified, that property shall be added to `GameInstance.agents` on the object at the agent's `ID` key.
+
+**4.3.4** If a property of a static agent that was modified is changed to its original value, that property shall be removed from `GameInstance.agents` on the object at the agent's `ID` key.
+
+**4.3.5** When the developer accesses a property of a static agent, the library shall first check if a modified version of that property exists in `GameInstance.agents`. If so, that value shall be returned. Otherwise, the original value shall be returned.
+
+## 5 Agents and Immutability
+
+Every game's instance state is immutable. The agent system was designed around this immutability, which makes managing changes to a game's instance state very convenient.
+
+This section describes the implementation of this immutability as well as the effects.
 
 ### 5.1 Definitions
 
@@ -301,18 +313,23 @@ Introduction (TBD)
 
 3. `DELETED`: This property was removed from the agent.
 
+**5.2.2** `PropertyChange` is a class used to describe a single operation on an agent's property. Its schema is defined as follows:
 
-**5.2.2** `PropertyChange<T>` is a class used to describe a single operation on an agent's property. It is parameterized to the type of the property. Its schema is defined as follows:
+1. `public eventId?: number`: The numeric id of the event during which the change took place. Will be undefined if defined elsewhere.
 
-1. `public id: number`: The numeric id of the event during which the change took place.
+2. `public eventName?: string`: The name of the event during which the change took place. Will be undefined if defined elsewhere.
 
-2. `public op: PropertyOperation`: The operation that took place on the property. §(Agent-5.2.1)
+2. `public agentId?: number`: The numeric id of the agent on which the change took place. Will be undefined if defined elsewhere.
 
-3. `public init?: T`: The initial value of the property before the operation. Will be undefined if `op` is `ADDED`.
+3. `public op: PropertyOperation`: The operation that took place on the property. §(Agent-5.2.1)
 
-4. `public final?: T` The final value of the property after the operation. Will be undefined if `op` is `REMOVED`.
+4. `public init?: any`: The initial value of the property before the operation. Will be undefined if `op` is `ADDED`.
 
-**5.2.3** `AgentRecord<T>` is a type used to describe the changes made to an agent's properties over one or more events, parameterized to the agent's type. `AgentRecord` objects contain zero or more of their agent's keys, each assigned to an array of `PropertyChange` objects of that property's type.
+5. `public final?: any` The final value of the property after the operation. Will be undefined if `op` is `REMOVED`.
+
+6. `public property?: string` The name of the property that was modified. Will be undefined if defined elsewhere.
+
+**5.2.3** `AgentRecord` is a class used to describe the changes made to an agent's properties over one or more events. `AgentRecord` objects contain zero or more of their agent's keys, each assigned to an array of `PropertyChange` objects of that property's type.
 
 Example `AgentRecord`:
 
@@ -320,13 +337,15 @@ Example `AgentRecord`:
 {
     "propertyA" : [
         {
-            id: 2,
+            eventId: 2,
+            eventName: "EVENT TWO",
             action: PropertyOperation.MODIFIED,
             init: "intermediateValue",
             final: "finalValue"
         },
         {
-            id: 1,
+            eventId: 1,
+            eventName: "EVENT ONE",
             action: PropertyOperation.MODIFIED,
             init: "startValue",
             final: "intermediateValue"
@@ -335,12 +354,14 @@ Example `AgentRecord`:
 
     "propertyB" : [
         {
-            id: 2,
+            eventId: 2,
+            eventName: "EVENT TWO",
             action: PropertyOperation.DELETED,
             init: "someValue"
         },
         {
-            id: 1,
+            eventId: 1,
+            eventName: "EVENT ONE",
             action: PropertyOperation.ADDED,
             final: "someValue"
         }
@@ -348,10 +369,39 @@ Example `AgentRecord`:
 }
 ```
 
-(TBD)
+**5.2.4** `EventRecord` is a class used to describe every change that took place in a game's instance state as a result of one event. Its schema is defined as follows:
 
+1. `id: number` The numeric id of the event.
 
-### 5.3 Change Tracking
+2. `name: string` The name of the event.
+
+3. `changes: PropertyChange[]` The array of property changes that occurred during this event.
+
+Example `EventRecord`:
+
+```ts
+{
+    id: 2,
+    name: "EVENT TWO",
+    changes: [
+        {
+            agentId: 1,
+            property: "propertyA",
+            action: PropertyOperation.MODIFIED,
+            init: "intermediateValue",
+            final: "finalValue"
+        },
+        {
+            agentId: 1,
+            property: "propertyB",
+            action: PropertyOperation.DELETED,
+            init: "someValue"
+        }
+    ]
+}
+```
+
+### 5.3 Proxying and Managing Changes
 
 (TBD)
 
