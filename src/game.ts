@@ -1,5 +1,5 @@
 import { EventFunction, InstanceEvents } from "./event";
-import { InstanceAgents } from "./agent";
+import { InstanceAgents, InstanceState } from "./agent";
 
 export enum ErrorCode {
     OK,
@@ -23,10 +23,12 @@ export class GameInstance {
 
     events: InstanceEvents;
     agents: InstanceAgents;
+    state: any;
 
     constructor() {
         this.events = new InstanceEvents();
         this.agents = new InstanceAgents();
+        this.state = new InstanceState(this);
     }
 
 }

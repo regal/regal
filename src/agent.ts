@@ -87,7 +87,11 @@ export class InstanceAgents {
     agentCount: number = 0;
 
     getNextAgentId(): number {
-        return this.agentCount + 1;
+        let i = 0;
+        while (this.hasOwnProperty(i)) {
+            i++;
+        }
+        return i;
     }
 
     addAgent(agent: Agent, event: Event): void {
@@ -122,6 +126,7 @@ export class InstanceAgents {
         return value;
     }
 
+    // TODO: Register agents within arrays
     setAgentProperty(agentId: number, property: PropertyKey, value: any, event: Event): boolean {
         if (!this.hasOwnProperty(agentId)) {
             throw new RegalError(`No agent with ID <${agentId}> exists in the instance.`);
@@ -207,20 +212,11 @@ export class AgentRecord {
     }
 }
 
-// TODO
 export class InstanceState extends Agent {
 
-    constructor(public game: GameInstance) {
+    constructor(game: GameInstance) {
         super();
-        this.id = 0;
-    }
-
-    register(game: GameInstance): undefined {
-        throw new RegalError("InstanceState is a reserved agent and cannot be registered.");
-    }
-
-    static(): undefined {
-        throw new RegalError("InstanceState is a reserved agent and cannot be made static.");
+        return this.register(game, 0);
     }
 
 }
@@ -243,7 +239,9 @@ lars["self"].name = "Hoo woopdee";
 lars["friend"] = new Dummy("Jeff", 15);
 myGame.events.push("edit friend");
 lars["friend"].health = 99;
+myGame.state.myLars = lars;
+myGame.state.zoop = true;
 
 console.log(inspect(myGame, {depth: Infinity}));
 
-console.log(lars.name);
+console.log(myGame.state.myLars.name);
