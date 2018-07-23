@@ -103,7 +103,7 @@ export class Agent {
 //     }
 // };
 
-export class InstanceAgents extends Agent {
+export class InstanceAgents {
 
     agentCount: number = 1;
 
@@ -160,37 +160,55 @@ export class InstanceDiff {
 
     setAgentProperty(agent: Agent, propertyKey: PropertyKey, value: any): boolean {
 
-        const initialValue = agent.game.agents.getAgentProperty(agent, propertyKey);
+        // ** This block works... just trying to refactor **
 
-        // If the value is being set to what it already is, do nothing.
-        if (agent.game.agents.getAgentProperty(agent, propertyKey) === value) {
-            return true;
-        }
+        // // If the value is being set to what it already is, do nothing.
+        // if (agent.game.agents.getAgentProperty(agent, propertyKey) === value) {
+        //     return true;
+        // }
+
+        // if (!this.hasOwnProperty(agent.id)) {
+        //     this[agent.id] = new AgentRecord();
+        // }
+
+        // const agentRecord = (<AgentRecord>this[agent.id]);
+
+        // const initValue = agentRecord.getMostRecentPropertyValue(propertyKey);
+        // if (initValue === value) {
+        //     return true;
+        // }
+
+        // if (initValue === undefined) {
+        //     agentRecord.add(0, "ADD", propertyKey.toString(), value);
+        // } else {
+        //     agentRecord.modify(0, "MODIFY", propertyKey.toString(), initValue, value);
+        // }
+
+        // return true;
+
+        const originalValue = agent.game.agents.getAgentProperty(agent, propertyKey);
 
         if (!this.hasOwnProperty(agent.id)) {
+            if (value === originalValue) {
+                return true;
+            }
+
             this[agent.id] = new AgentRecord();
+            
+            if (originalValue === undefined) {
+                agentRecord.add() // todo
+            } else {
+
+            }
         }
-
-        const agentRecord = (<AgentRecord>this[agent.id]);
-
-        const initValue = agentRecord.getMostRecentPropertyValue(propertyKey);
-        if (initValue === value) {
-            return true;
-        }
-
-        if (initValue === undefined) {
-            agentRecord.add(0, "ADD", propertyKey.toString(), value);
-        } else {
-            agentRecord.modify(0, "MODIFY", propertyKey.toString(), initValue, value);
-        }
-
-        return true;
     }
 
 }
 
 export enum PropertyOperation {
-    ADDED, MODIFIED, DELETED
+    ADDED = "ADDED",
+    MODIFIED = "MODIFIED",
+    DELETED = "DELETED"
 }
 
 export interface PropertyChange {
