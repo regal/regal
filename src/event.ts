@@ -7,10 +7,10 @@ export interface Event {
     name: string
 }
 
-export class InstanceEvents {
+const DEFAULT_EVENT_NAME: string = "DEFAULT";
+const DEFAULT_EVENT_ID: number = 0;
 
-    private defaultName: string = "DEFAULT";
-    private defaultId: number = 0;
+export class InstanceEvents {
 
     list: Event[] = [];
 
@@ -19,8 +19,8 @@ export class InstanceEvents {
 
         if (!event) {
             event = {
-                id: this.defaultId,
-                name: this.defaultName
+                id: DEFAULT_EVENT_ID,
+                name: DEFAULT_EVENT_NAME
             }
         }
 
@@ -28,7 +28,7 @@ export class InstanceEvents {
     }
 
     push(name: string): void {
-        const lastId = (this.list.length > 0) ? this.list[this.list.length - 1].id : this.defaultId;
+        const lastId = (this.list.length > 0) ? this.list[this.list.length - 1].id : DEFAULT_EVENT_ID;
         this.list.push({
             id: lastId + 1,
             name

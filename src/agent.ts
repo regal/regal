@@ -218,7 +218,6 @@ export class InstanceState extends Agent {
         super();
         return this.register(game, 0);
     }
-
 }
 
 // ** Test Code ** //
