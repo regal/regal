@@ -1,4 +1,4 @@
-import { EventFunction } from "./event";
+import { EventFunction, InstanceEvents } from "./event";
 import { InstanceAgents } from "./agent";
 
 export enum ErrorCode {
@@ -18,15 +18,17 @@ export class RegalError extends Error {
 }
 
 export class GameInstance {
-    events: string[] = [];
     output: string[] = [];
     queue: EventFunction[] = [];
 
+    events: InstanceEvents;
     agents: InstanceAgents;
 
     constructor() {
+        this.events = new InstanceEvents();
         this.agents = new InstanceAgents();
     }
+
 }
 
 export class Game {

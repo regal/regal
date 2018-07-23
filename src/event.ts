@@ -2,6 +2,38 @@ import { GameInstance } from './game';
 
 export type EventFunction = (x: GameInstance) => GameInstance;
 
+export interface Event {
+    id: number
+    name: string
+}
+
+export class InstanceEvents {
+
+    list: Event[] = [];
+
+    getCurrentEvent(): Event {
+        let event = this.list[this.list.length - 1];
+
+        if (!event) {
+            event = {
+                id: -1,
+                name: "DEFAULT"
+            }
+        }
+
+        return event;
+    }
+
+    push(name: string): void {
+        const lastId = (this.list.length > 0) ? this.list[this.list.length - 1].id : -1;
+        this.list.push({
+            id: lastId + 1,
+            name
+        });
+    }
+
+}
+
 export const on = (name: string, func: EventFunction): EventFunction => 
     (game: GameInstance) => {
         game.events.push(name);

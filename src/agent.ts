@@ -1,4 +1,5 @@
 import { GameInstance, RegalError } from "./game";
+import { Event } from "./event";
 import { inspect } from 'util';
 
 function isAgent(o: any): o is Agent {
@@ -10,7 +11,7 @@ const AgentProxyHandler = {
         let value = undefined;
 
         if (propertyKey in receiver) {
-            value = target.game.agents.getAgentProperty(target, propertyKey);
+            value = target.game.agents.getAgentProperty(target.id, propertyKey);
         }
 
         if (value === undefined) {
@@ -21,11 +22,12 @@ const AgentProxyHandler = {
     },
 
     set(target: Agent, propertyKey: PropertyKey, value: any, receiver: object) {
-        return target.game.agents.setAgentProperty(target, propertyKey, value);
+        const currentEvent = target.game.events.getCurrentEvent();
+        return target.game.agents.setAgentProperty(target.id, propertyKey, value, currentEvent);
     },
 
     has(target: Agent, propertyKey: PropertyKey) {
-        return target.game.agents.hasAgentProperty(target, propertyKey);
+        return target.game.agents.hasAgentProperty(target.id, propertyKey);
     }
 }
 
@@ -71,7 +73,8 @@ export class Agent {
             }
         }
 
-        game.agents.addAgent(this);
+        const currentEvent = game.events.getCurrentEvent();
+        game.agents.addAgent(this, currentEvent);
 
         return new Proxy(this, AgentProxyHandler) as this;
     }
@@ -82,50 +85,59 @@ export class Agent {
     }
 }
 
+function isAgentReference(o: any): o is AgentReference {
+    return (<AgentReference>o).refId !== undefined;
+}
+
+// TODO
+export interface AgentReference {
+    refId: number
+}
+
 export class InstanceAgents {
 
-    agentCount: number = 1;
+    agentCount: number = 0;
 
     getNextAgentId(): number {
         return this.agentCount + 1;
     }
 
-    addAgent(agent: Agent): void {
+    addAgent(agent: Agent, event: Event): void {
         if (this.hasOwnProperty(agent.id)) {
             throw new RegalError(`An agent with ID <${agent.id}> has already been registered with the instance.`);
         }
 
-        this[agent.id] = new AgentRecord(agent);
+        this[agent.id] = new AgentRecord(agent, event);
         this.agentCount++;
     }
 
-    getAgentProperty(agent: Agent, property: PropertyKey): any {
-        if (!this.hasOwnProperty(agent.id)) {
-            throw new RegalError(`No agent with ID <${agent.id}> exists in the instance.`);
+    getAgentProperty(agentId: number, property: PropertyKey): any {
+        if (!this.hasOwnProperty(agentId)) {
+            throw new RegalError(`No agent with ID <${agentId}> exists in the instance.`);
         }
 
-        const agentRecord: AgentRecord = this[agent.id];
+        const agentRecord: AgentRecord = this[agentId];
 
         return agentRecord.getProperty(property);
     }
 
-    setAgentProperty(agent: Agent, property: PropertyKey, value: any): boolean {
-        if (!this.hasOwnProperty(agent.id)) {
-            throw new RegalError(`No agent with ID <${agent.id}> exists in the instance.`);
+    setAgentProperty(agentId: number, property: PropertyKey, value: any, event: Event): boolean {
+        if (!this.hasOwnProperty(agentId)) {
+            throw new RegalError(`No agent with ID <${agentId}> exists in the instance.`);
         }
 
-        const agentRecord: AgentRecord = this[agent.id];
-        agentRecord.setProperty(0, "TODO EVENT", property, value);
+        const agentRecord: AgentRecord = this[agentId];
+        agentRecord.setProperty(event, property, value);
 
         return true;
     }
 
-    hasAgentProperty(agent: Agent, property: PropertyKey): boolean {
-        if (!this.hasOwnProperty(agent.id)) {
-            throw new RegalError(`No agent with ID <${agent.id}> exists in the instance.`);
+    hasAgentProperty(agentId: number, property: PropertyKey): boolean {
+        if (!this.hasOwnProperty(agentId)) {
+            throw new RegalError(`No agent with ID <${agentId}> exists in the instance.`);
         }
 
-        const agentRecord: AgentRecord = this[agent.id];
+        const agentRecord: AgentRecord = this[agentId];
         return agentRecord.hasOwnProperty(property);
     }
 }
@@ -148,13 +160,17 @@ export interface PropertyChange {
 
 export class AgentRecord {
 
-    constructor(agent: Agent) {
+    constructor(agent: Agent, event: Event) {
         for (let key in agent) {
             const arr = new Array<PropertyChange>();
+
             arr.push({
+                eventId: event.id,
+                eventName: event.name,
                 op: PropertyOperation.ADDED,
                 final: agent[key]
             });
+
             this[key] = arr;
         }
     }
@@ -169,27 +185,26 @@ export class AgentRecord {
         return undefined;
     }
 
-    setProperty<T>(eventId: number, eventName: string, property: PropertyKey, value: T): void {
+    setProperty<T>(event: Event, property: PropertyKey, value: T): void {
         if (!this.hasOwnProperty(property)) {
-            this._addRecord(eventId, eventName, property, PropertyOperation.ADDED, undefined, value);
+            this._addRecord(event, property, PropertyOperation.ADDED, undefined, value);
         } else {
             const initValue = this.getProperty(property);
-            this._addRecord(eventId, eventName, property, PropertyOperation.MODIFIED, initValue, value);
+            this._addRecord(event, property, PropertyOperation.MODIFIED, initValue, value);
         }
     }
 
-    private _addRecord<T>(eventId: number, eventName: string, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
+    private _addRecord<T>(event: Event, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
         if (!(property in this)) {
             this[property] = new Array<PropertyChange>();
         }
 
         const change: PropertyChange = {
-            eventId,
-            eventName,
+            eventId: event.id,
+            eventName: event.name,
             op,
             init,
-            final,
-            property: property.toString()
+            final
         };
 
         (<PropertyChange[]>this[property]).unshift(change);
@@ -225,6 +240,7 @@ const myGame = new GameInstance();
 const lars = new Dummy("Lars", 10).register(myGame);
 lars.health += 10;
 lars["self"] = lars;
+myGame.events.push("zop");
 lars["self"].name = "Hoo woopdee";
 
 console.log(inspect(myGame, {depth: Infinity}));
