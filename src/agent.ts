@@ -62,17 +62,6 @@ export class Agent {
         this.game = game;
         this._id = (newId !== undefined) ? newId : game.agents.getNextAgentId();
 
-        // TODO: Register every agent that is managed by the agent.
-        for (let property in this) {
-            if (this.hasOwnProperty(property)) {
-                const member = this[property];
-
-                if (isAgent(member) && !member.isRegistered) {
-                    member.register(game);
-                }
-            }
-        }
-
         const currentEvent = game.events.getCurrentEvent();
         game.agents.addAgent(this, currentEvent);
 
@@ -106,8 +95,12 @@ export class InstanceAgents {
             throw new RegalError(`An agent with ID <${agent.id}> has already been registered with the instance.`);
         }
 
-        this[agent.id] = new AgentRecord(agent, event);
+        this[agent.id] = new AgentRecord();
         this.agentCount++;
+
+        for (let key in agent) {
+            this.setAgentProperty(agent.id, key, agent[key], event);
+        }
     }
 
     getAgentProperty(agentId: number, property: PropertyKey): any {
@@ -138,7 +131,8 @@ export class InstanceAgents {
 
         if (isAgent(value)) {
             if (!value.isRegistered) {
-                console.log("WARNING: check this out");
+                const game: GameInstance = this.getAgentProperty(agentId, "game");
+                value = value.register(game);
             }
 
             value = new AgentReference(value.id);
@@ -176,21 +170,6 @@ export interface PropertyChange {
 }
 
 export class AgentRecord {
-
-    constructor(agent: Agent, event: Event) {
-        for (let key in agent) {
-            const arr = new Array<PropertyChange>();
-
-            arr.push({
-                eventId: event.id,
-                eventName: event.name,
-                op: PropertyOperation.ADDED,
-                final: agent[key]
-            });
-
-            this[key] = arr;
-        }
-    }
 
     getProperty(propertyKey: PropertyKey): any {
         const changes: PropertyChange[] = this[propertyKey];
@@ -246,6 +225,8 @@ export class InstanceState extends Agent {
 
 }
 
+// ** Test Code ** //
+
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
         super();
@@ -259,7 +240,7 @@ lars.health += 10;
 lars["self"] = lars;
 myGame.events.push("make friend");
 lars["self"].name = "Hoo woopdee";
-lars["friend"] = new Dummy("Jeff", 15).register(myGame);
+lars["friend"] = new Dummy("Jeff", 15);
 myGame.events.push("edit friend");
 lars["friend"].health = 99;
 
