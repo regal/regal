@@ -1,5 +1,5 @@
 import { EventFunction, InstanceEvents } from "./event";
-import { InstanceAgents, InstanceState } from "./agent";
+import { InstanceAgents, InstanceState, StaticAgentRegistry, Agent } from "./agent";
 
 export enum ErrorCode {
     OK,
