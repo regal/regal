@@ -9,6 +9,9 @@ export interface Event {
 
 export class InstanceEvents {
 
+    private defaultName: string = "DEFAULT";
+    private defaultId: number = 0;
+
     list: Event[] = [];
 
     getCurrentEvent(): Event {
@@ -16,8 +19,8 @@ export class InstanceEvents {
 
         if (!event) {
             event = {
-                id: -1,
-                name: "DEFAULT"
+                id: this.defaultId,
+                name: this.defaultName
             }
         }
 
@@ -25,7 +28,7 @@ export class InstanceEvents {
     }
 
     push(name: string): void {
-        const lastId = (this.list.length > 0) ? this.list[this.list.length - 1].id : -1;
+        const lastId = (this.list.length > 0) ? this.list[this.list.length - 1].id : this.defaultId;
         this.list.push({
             id: lastId + 1,
             name

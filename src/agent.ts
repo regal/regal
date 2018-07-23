@@ -89,9 +89,8 @@ function isAgentReference(o: any): o is AgentReference {
     return (<AgentReference>o).refId !== undefined;
 }
 
-// TODO
-export interface AgentReference {
-    refId: number
+export class AgentReference {
+    constructor(public refId: number) {}
 }
 
 export class InstanceAgents {
@@ -118,7 +117,16 @@ export class InstanceAgents {
 
         const agentRecord: AgentRecord = this[agentId];
 
-        return agentRecord.getProperty(property);
+        let value = agentRecord.getProperty(property);
+
+        if (isAgentReference(value)) {
+            const psuedoAgent = new Agent();
+            psuedoAgent.id = value.refId;
+            psuedoAgent.game = this.getAgentProperty(agentId, "game");
+            value = new Proxy(psuedoAgent, AgentProxyHandler);
+        }
+
+        return value;
     }
 
     setAgentProperty(agentId: number, property: PropertyKey, value: any, event: Event): boolean {
@@ -127,6 +135,15 @@ export class InstanceAgents {
         }
 
         const agentRecord: AgentRecord = this[agentId];
+
+        if (isAgent(value)) {
+            if (!value.isRegistered) {
+                console.log("WARNING: check this out");
+            }
+
+            value = new AgentReference(value.id);
+        }
+
         agentRecord.setProperty(event, property, value);
 
         return true;
@@ -240,8 +257,11 @@ const myGame = new GameInstance();
 const lars = new Dummy("Lars", 10).register(myGame);
 lars.health += 10;
 lars["self"] = lars;
-myGame.events.push("zop");
+myGame.events.push("make friend");
 lars["self"].name = "Hoo woopdee";
+lars["friend"] = new Dummy("Jeff", 15).register(myGame);
+myGame.events.push("edit friend");
+lars["friend"].health = 99;
 
 console.log(inspect(myGame, {depth: Infinity}));
 
