@@ -1,21 +1,16 @@
 import { GameInstance, RegalError } from "./game";
 import { inspect } from 'util';
 
+function isAgent(o: any): o is Agent {
+    return (<Agent>o).isRegistered !== undefined;
+}
+
 const AgentProxyHandler = {
-    get(target: Agent, propertyKey: string, receiver: object) {
+    get(target: Agent, propertyKey: PropertyKey, receiver: object) {
         let value = undefined;
 
-        if (propertyKey in target) {
-            if (target.hasOwnProperty(propertyKey)) {
-                console.log(propertyKey);
-
-                if (["game", "id", "_id", "isRegistered"].includes(propertyKey)) {
-                    value = Reflect.get(target, propertyKey, receiver);
-                }
-                else {
-                    value = target.game.agents.getAgentProperty(target, propertyKey);
-                }
-            }
+        if (propertyKey in receiver) {
+            value = target.game.agents.getAgentProperty(target, propertyKey);
         }
 
         if (value === undefined) {
@@ -25,13 +20,13 @@ const AgentProxyHandler = {
         return value;
     },
 
-    set(target: Agent, propertyKey: string, value: any, receiver: object) {
+    set(target: Agent, propertyKey: PropertyKey, value: any, receiver: object) {
         return target.game.agents.setAgentProperty(target, propertyKey, value);
-    }
-}
+    },
 
-function isAgent(o: any): o is Agent {
-    return (<Agent>o).isRegistered !== undefined;
+    has(target: Agent, propertyKey: PropertyKey) {
+        return target.game.agents.hasAgentProperty(target, propertyKey);
+    }
 }
 
 export class Agent {
@@ -78,9 +73,7 @@ export class Agent {
 
         game.agents.addAgent(this);
 
-        const agentProxy = new Proxy(this, AgentProxyHandler);
-
-        return agentProxy as this;
+        return new Proxy(this, AgentProxyHandler) as this;
     }
 
     static(): this {
@@ -89,33 +82,9 @@ export class Agent {
     }
 }
 
-// const InstanceAgentsProxyHandler = {
-//     set(target: InstanceAgents, propertyKey: string, value: any, receiver: object) {
-//         // TODO
-//         return AgentProxyHandler.set(target, propertyKey, value, receiver);
-//     }
-// };
-
-// export class InstanceAgents extends Agent {
 export class InstanceAgents {
 
     agentCount: number = 1;
-
-    // constructor(game: GameInstance) {
-    //     super();
-    //     this.game = game;
-    //     this.id = 1;
-    //     // return this.register(game, 1);
-    //     // this.id = 1;
-    // }
-
-    // register(game: GameInstance): undefined {
-    //     throw new RegalError("InstanceAgents is a reserved agent and cannot be registered.");
-    // }
-
-    // static(): undefined {
-    //     throw new RegalError("InstanceAgents is a reserved agent and cannot be made static.");
-    // }
 
     getNextAgentId(): number {
         return this.agentCount + 1;
@@ -149,75 +118,17 @@ export class InstanceAgents {
         agentRecord.setProperty(0, "TODO EVENT", property, value);
 
         return true;
-        // const prevValue = agentRecord.getMostRecentPropertyValue(property);
+    }
 
-        // if (prevValue === undefined) {
-        //     agentRecord.add(0, "TODO", property, value);
-        // } else {
-        //     agentRecord.modify(0, "TODO", property, value);
-        // }
+    hasAgentProperty(agent: Agent, property: PropertyKey): boolean {
+        if (!this.hasOwnProperty(agent.id)) {
+            throw new RegalError(`No agent with ID <${agent.id}> exists in the instance.`);
+        }
+
+        const agentRecord: AgentRecord = this[agent.id];
+        return agentRecord.hasOwnProperty(property);
     }
 }
-
-// export class InstanceDiff {
-
-//     getAgentProperty(agent: Agent, propertyKey: PropertyKey): any {
-//         let propertyValue = undefined;
-
-//         if (this.hasOwnProperty(agent.id)) {
-//             const agentRecord = (<AgentRecord>this[agent.id]);
-//             propertyValue = agentRecord.getMostRecentPropertyValue(propertyKey);
-//         }
-
-//         return propertyValue;
-//     }
-
-//     setAgentProperty(agent: Agent, propertyKey: PropertyKey, value: any): boolean {
-
-//         // ** This block works... just trying to refactor **
-
-//         // // If the value is being set to what it already is, do nothing.
-//         // if (agent.game.agents.getAgentProperty(agent, propertyKey) === value) {
-//         //     return true;
-//         // }
-
-//         // if (!this.hasOwnProperty(agent.id)) {
-//         //     this[agent.id] = new AgentRecord();
-//         // }
-
-//         // const agentRecord = (<AgentRecord>this[agent.id]);
-
-//         // const initValue = agentRecord.getMostRecentPropertyValue(propertyKey);
-//         // if (initValue === value) {
-//         //     return true;
-//         // }
-
-//         // if (initValue === undefined) {
-//         //     agentRecord.add(0, "ADD", propertyKey.toString(), value);
-//         // } else {
-//         //     agentRecord.modify(0, "MODIFY", propertyKey.toString(), initValue, value);
-//         // }
-
-//         // return true;
-
-//         const originalValue = agent.game.agents.getAgentProperty(agent, propertyKey);
-
-//         if (!this.hasOwnProperty(agent.id)) {
-//             if (value === originalValue) {
-//                 return true;
-//             }
-
-//             this[agent.id] = new AgentRecord();
-            
-//             if (originalValue === undefined) {
-//                 agentRecord.add() // todo
-//             } else {
-
-//             }
-//         }
-//     }
-
-// }
 
 export enum PropertyOperation {
     ADDED = "ADDED",
@@ -267,19 +178,6 @@ export class AgentRecord {
         }
     }
 
-    // modify<T>(eventId: number, eventName: string, property: PropertyKey, value: T): void {
-    //     const prevValue: T = this.getMostRecentPropertyValue(property);
-    //     return this._addRecord(eventId, eventName, property, PropertyOperation.MODIFIED, prevValue, value);
-    // }
-
-    // add<T>(eventId: number, eventName: string, property: PropertyKey, value: T): void {
-    //     return this._addRecord(eventId, eventName, property, PropertyOperation.ADDED, undefined, value);
-    // }
-
-    // delete<T>(eventId: number, eventName: string, property: PropertyKey, value: T): void {
-    //     return this._addRecord(eventId, eventName, property, PropertyOperation.DELETED, value);
-    // }
-
     private _addRecord<T>(eventId: number, eventName: string, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
         if (!(property in this)) {
             this[property] = new Array<PropertyChange>();
@@ -297,7 +195,6 @@ export class AgentRecord {
         (<PropertyChange[]>this[property]).unshift(change);
     }
 }
-
 
 // TODO
 export class InstanceState extends Agent {
@@ -317,16 +214,19 @@ export class InstanceState extends Agent {
 
 }
 
-class Foo extends Agent {
-    constructor(public str: string) {
+class Dummy extends Agent {
+    constructor(public name: string, public health: number) {
         super();
     }
 }
 
 const myGame = new GameInstance();
 
-const foo = new Foo("Foo 1").register(myGame);
-const foo2 = new Foo("Foo 2").register(myGame);
-foo.str = "Foo 1 Next";
+const lars = new Dummy("Lars", 10).register(myGame);
+lars.health += 10;
+lars["self"] = lars;
+lars["self"].name = "Hoo woopdee";
+
 console.log(inspect(myGame, {depth: Infinity}));
-console.log(foo.str);
+
+console.log(lars.name);
