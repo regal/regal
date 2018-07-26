@@ -1,6 +1,28 @@
 import { GameInstance, RegalError, Game } from "./game";
-import { Event } from "./event";
+import { Event, on } from "./event";
 import { inspect } from 'util';
+
+const log = (o: any, title?: string) => console.log(`${(title) ? `${title}: ` : ''}${inspect(o, {depth: Infinity})}`); // TODO: Remove
+
+const StaticAgentProxyHandler = {
+    get(target: Agent, propertyKey: PropertyKey, receiver: object) {
+        let value = Reflect.get(target, propertyKey);
+
+        if (value === undefined) {
+            value = StaticAgentRegistry.getAgentProperty(target.id, propertyKey);
+        }
+
+        return value;
+    },
+
+    set(target: Agent, propertyKey: PropertyKey, value: any, receiver: object) {
+        return Reflect.set(target, propertyKey, value, receiver);
+    },
+
+    has(target: Agent, propertyKey: PropertyKey) {
+        return StaticAgentRegistry.hasAgentProperty(target.id, propertyKey);
+    }
+}
 
 export const StaticAgentRegistry = {
 
@@ -10,15 +32,16 @@ export const StaticAgentRegistry = {
         if (agent.isRegistered) {
             throw new RegalError("Cannot create a static version of an agent that has already been registered.");
         }
-        if (agent.id !== undefined) {
+        if (agent.isStatic) {
             throw new RegalError("Cannot create more than one static version of an agent.");
         }
 
-        const id = this.agentCount++;
+        const id = ++this.agentCount;
         agent.id = id;
         this[id] = agent;
 
-        return new Agent(id) as T;
+        return new Proxy(new Agent(agent.id), StaticAgentProxyHandler) as T;
+        // return this;
     },
 
     getAgentProperty(agentId: number, propertyKey: PropertyKey): any {
@@ -31,6 +54,10 @@ export const StaticAgentRegistry = {
 
     hasAgent(agentId: number): boolean {
         return this.hasOwnProperty(agentId);
+    },
+
+    hasAgentProperty(agentId: number, propertyKey: PropertyKey): boolean {
+        return this.hasAgent(agentId) && this[agentId].hasOwnProperty(propertyKey);
     }
 }
 
@@ -64,7 +91,7 @@ const AgentProxyHandler = {
 }
 
 export class Agent {
-    
+
     constructor(private _id?: number, public game?: GameInstance) {}
 
     get isRegistered(): boolean {
@@ -95,10 +122,13 @@ export class Agent {
         }
 
         this.game = game;
-        if (this._id === undefined) {
-            this._id = (newId !== undefined) ? newId : game.agents.getNextAgentId();
-        }
 
+        if (newId !== undefined) {
+            this.id = newId;
+        } else if (!this.isStatic) {
+            this.id = game.agents.getNextAgentId();
+        }
+        
         const currentEvent = game.events.getCurrentEvent();
         game.agents.addAgent(this, currentEvent);
 
@@ -120,8 +150,10 @@ export class AgentReference {
 
 export class InstanceAgents {
 
+    constructor(public game: GameInstance) {}
+
     getNextAgentId(): number {
-        let i = StaticAgentRegistry.agentCount;
+        let i = StaticAgentRegistry.agentCount + 1;
         while (this.hasOwnProperty(i)) {
             i++;
         }
@@ -150,14 +182,20 @@ export class InstanceAgents {
             if (StaticAgentRegistry.hasAgent(agentId)) {
                 value = StaticAgentRegistry.getAgentProperty(agentId, property);
             } else {
-                throw new RegalError(`No agent with ID <${agentId}> exists in the instance.`);
+                throw new RegalError(`No agent with ID <${agentId}> exists in the instance or the static registry.`);
+            }
+        } else {
+            if (property in agentRecord) {
+                value = agentRecord.getProperty(property);
+            } else if (StaticAgentRegistry.hasAgentProperty(agentId, property)) {
+                value = StaticAgentRegistry.getAgentProperty(agentId, property);
+            } else {
+                value = undefined;
             }
         }
 
-        value = agentRecord.getProperty(property);
-
         if (isAgentReference(value)) {
-            const psuedoAgent = new Agent(value.refId, this.getAgentProperty(agentId, "game"));
+            const psuedoAgent = new Agent(value.refId, this.game);
             value = new Proxy(psuedoAgent, AgentProxyHandler);
         }
 
@@ -165,10 +203,13 @@ export class InstanceAgents {
     }
 
     // TODO: Register agents within arrays
-    // TODO: Handle statics
     setAgentProperty(agentId: number, property: PropertyKey, value: any, event: Event): boolean {
         if (!this.hasOwnProperty(agentId)) {
-            throw new RegalError(`No agent with ID <${agentId}> exists in the instance.`);
+            if (StaticAgentRegistry.hasAgent(agentId)) {
+                this[agentId] = new AgentRecord();
+            } else {
+                throw new RegalError(`No agent with ID <${agentId}> exists in the instance or the static registry.`);
+            }
         }
 
         const agentRecord: AgentRecord = this[agentId];
@@ -187,9 +228,11 @@ export class InstanceAgents {
         return true;
     }
 
-    // TODO: Handle statics
     hasAgentProperty(agentId: number, property: PropertyKey): boolean {
         if (!this.hasOwnProperty(agentId)) {
+            if (StaticAgentRegistry.hasAgent(agentId)) {
+                return StaticAgentRegistry.hasAgentProperty(agentId, property);
+            }
             throw new RegalError(`No agent with ID <${agentId}> exists in the instance.`);
         }
 
@@ -214,7 +257,6 @@ export interface PropertyChange {
     property?: string
 }
 
-// TODO: Handle statics
 export class AgentRecord {
 
     getProperty(propertyKey: PropertyKey): any {
@@ -269,19 +311,31 @@ class Dummy extends Agent {
     }
 }
 
-const myGame = new GameInstance();
+const staticDummy = new Dummy("Static Boi", 15).static();
+log(staticDummy, "Static Dummy");
+log(StaticAgentRegistry, "Static Agent Registry");
 
-const lars = new Dummy("Lars", 10).register(myGame);
-lars.health += 10;
-lars["self"] = lars;
-myGame.events.push("make friend");
-lars["self"].name = "Hoo woopdee";
-lars["friend"] = new Dummy("Jeff", 15);
-myGame.events.push("edit friend");
-lars["friend"].health = 99;
-myGame.state.myLars = lars;
-myGame.state.zoop = true;
+const add = (dummy: Dummy) => on("ADD", game => {
+    game.state.nonstatic = dummy;
+    game.output.push(game.state.nonstatic.name);
+    return game;
+});
 
-console.log(inspect(myGame, {depth: Infinity}));
+const init = on("INIT", game => {
+    game.state.static = staticDummy;
+    game.output.push(game.state.static.name);
 
-console.log(myGame.state.myLars.name);
+    const fluid = new Dummy("Fluid Man", 29).register(game);
+    add(fluid)(game);
+
+    fluid["staticy"] = staticDummy;
+    game.state.static.fluidy = fluid;
+
+    game.state.static.fluidy.name = "OH HECK THIS WORKS";
+
+    return game;
+});
+
+const myGame = init(new GameInstance());
+log(myGame);
+log(StaticAgentRegistry, "Static Agent Registry");
