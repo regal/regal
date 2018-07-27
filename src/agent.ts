@@ -59,6 +59,10 @@ export class StaticAgentRegistry {
 
 export let staticAgentRegistry = new StaticAgentRegistry();
 
+export const resetRegistry = () => {
+    staticAgentRegistry = new StaticAgentRegistry();
+};
+
 function isAgent(o: any): o is Agent {
     return (<Agent>o).isRegistered !== undefined;
 }
