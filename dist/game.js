@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const event_1 = require("./event");
+const agent_1 = require("./agent");
 var ErrorCode;
 (function (ErrorCode) {
     ErrorCode[ErrorCode["OK"] = 0] = "OK";
@@ -8,27 +10,19 @@ var ErrorCode;
     ErrorCode[ErrorCode["INVALID_STATE"] = 3] = "INVALID_STATE";
 })(ErrorCode = exports.ErrorCode || (exports.ErrorCode = {}));
 class RegalError extends Error {
-    constructor(code, message = "") {
-        super(`RegalError (${code}) ${message}`);
+    constructor(message = "") {
+        super(`RegalError: ${message}`);
         Object.setPrototypeOf(this, new.target.prototype);
-        this.code = code;
     }
 }
 exports.RegalError = RegalError;
 class GameInstance {
     constructor() {
-        this.events = [];
         this.output = [];
         this.queue = [];
-        this.agents = new Map();
-        this._maxInstanceId = 0;
-    }
-    get maxInstanceId() {
-        return this._maxInstanceId;
-    }
-    nextInstanceId() {
-        this._maxInstanceId += 1;
-        return this._maxInstanceId;
+        this.events = new event_1.InstanceEvents();
+        this.agents = new agent_1.InstanceAgents(this);
+        this.state = new agent_1.InstanceState(this);
     }
 }
 exports.GameInstance = GameInstance;
@@ -45,24 +39,12 @@ class Game {
     static set onUserInput(inputFunc) {
         this._onUserInput = inputFunc;
     }
-    static addPrefab(prefab) {
-        this._maxPrefabId++;
-        this._prefabMap.set(this._maxPrefabId, prefab);
-        return this._maxPrefabId;
-    }
-    static getPrefab(prefabId) {
-        if (this._prefabMap.has(prefabId)) {
-            return this._prefabMap.get(prefabId);
-        }
-        throw new RegalError(ErrorCode.INVALID_INPUT, `Prefab id ${prefabId} does not exist.`);
-    }
 }
 Game._onGameStart = () => {
-    throw new RegalError(ErrorCode.NOT_YET_IMPLEMENTED, "onGameStart has not been implemented by the game developer.");
+    throw new RegalError("onGameStart has not been implemented by the game developer.");
 };
 Game._onUserInput = (content, game) => {
-    throw new RegalError(ErrorCode.NOT_YET_IMPLEMENTED, "onUserInput has not been implemented by the game developer.");
+    throw new RegalError("onUserInput has not been implemented by the game developer.");
 };
-Game._maxPrefabId = 0;
-Game._prefabMap = new Map();
 exports.Game = Game;
+//# sourceMappingURL=game.js.map
