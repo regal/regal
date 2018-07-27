@@ -1,8 +1,5 @@
 import { GameInstance, RegalError, Game } from "./game";
 import { Event, on } from "./event";
-import { inspect } from 'util'; // TODO: Remove
-
-const log = (o: any, title?: string) => console.log(`${(title) ? `${title}: ` : ''}${inspect(o, {depth: Infinity})}`); // TODO: Remove
 
 const StaticAgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object) {
