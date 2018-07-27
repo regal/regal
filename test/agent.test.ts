@@ -14,6 +14,90 @@ class Dummy extends Agent {
 
 describe("Agent", function() {
 
+    describe("Agent Behavior", function() {
+
+        it("Registering an agent adds its properties to the instance", function() {
+            const myGame = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(myGame);
+
+            expect(myGame.agents.hasOwnProperty(1)).to.be.true;
+            expect(myGame.agents.hasAgentProperty(1, "name")).to.be.true;
+            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("D1");
+            expect(myGame.agents.hasAgentProperty(1, "health")).to.be.true;
+            expect(myGame.agents.getAgentProperty(1, "health")).to.equal(10);
+        });
+
+        it("It's possible to register an agent with a custom ID", function() {
+            const myGame = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(myGame, 15);
+
+            expect(dummy.id).to.equal(15);
+        });
+
+        it("If setting a custom ID, it must be positive", function() {
+            expect(() => 
+                new Dummy("D1", 10).register(new GameInstance(), -10)
+            ).to.throw(RegalError, "newId must be positive.");
+        });
+
+        it("If setting a custom ID, it cannot already be assigned to a registered agent", function() {
+            const myGame = new GameInstance();
+            const d1 = new Dummy("D1", 10).register(myGame);
+
+            expect(() =>
+                new Dummy("D2", 12).register(myGame, 1)
+            ).to.throw(RegalError, "An agent with ID <1> has already been registered with the instance.")
+        });
+
+        it("Registering an agent takes the next available agent ID", function() {
+            const myGame = new GameInstance();
+            const d1 = new Dummy("D1", 10).register(myGame);
+            const d2 = new Dummy("D2", 12).register(myGame);
+            const d3 = new Dummy("D3", 0).register(myGame);
+
+            expect(d1.id).to.equal(1);
+            expect(d2.id).to.equal(2);
+            expect(d3.id).to.equal(3);
+        });
+
+        it("Registering an agent takes the next available agent ID (custom IDs)", function() {
+            const myGame = new GameInstance();
+            const d1 = new Dummy("D1", 10).register(myGame, 2);
+            const d2 = new Dummy("D2", 12).register(myGame);
+            const d3 = new Dummy("D3", 0).register(myGame);
+
+            expect(d1.id).to.equal(2);
+            expect(d2.id).to.equal(1);
+            expect(d3.id).to.equal(3);
+        });
+
+        it("An unregistered agent's ID is undefined", function() {
+            expect(new Dummy("D1", 10).id).to.be.undefined;
+        });
+
+        it("An agent's ID can be set exactly once", function() {
+            const dummy = new Dummy("D1", 10);
+            dummy.id = 5;
+
+            expect(dummy.id).to.equal(5);
+            expect(() => dummy.id = 10).to.throw(RegalError, "Cannot change an agent's ID once it has been set.");
+        });
+
+        it("The GameInstance must be defined to register the agent.", function() {
+            expect(() =>
+                new Dummy("D1", 10).register(undefined)
+            ).to.throw(RegalError, "The GameInstance must be defined to register the agent.");
+        });
+
+        it("Cannot register an agent more than once.", function() {
+            const game = new GameInstance();
+
+            expect(() =>
+                new Dummy("D1", 10).register(game).register(game)
+            ).to.throw(RegalError, "Cannot register an agent more than once.");
+        });
+    });
+
     describe("Static Agents", function() {
 
         beforeEach(function() {
@@ -139,6 +223,27 @@ describe("Agent", function() {
             expect(staticAgentRegistry.getAgentProperty(1, "health")).to.equal(10);
             expect(staticAgentRegistry.getAgentProperty(1, "name")).to.equal("D1");
             expect(staticAgentRegistry.getAgentProperty(1, "newProp")).to.be.undefined;
+        });
+
+        it("After static agents are created, registering a nonstatic agent will get the next available ID", function() {
+            const staticDummy = new Dummy("D1", 10).static();
+            const game = new GameInstance();
+            const nonstaticDummy = new Dummy("D2", -21).register(game);
+
+            expect(nonstaticDummy.id).to.equal(2);
+        });
+
+        // TODO - Fix this bug
+        it("If setting a custom ID, it cannot already be assigned to a static agent", function() {
+            const myGame = new GameInstance();
+            const d1 = new Dummy("D1", 10).static();
+            new Dummy("D2", 12).register(myGame, 1);
+            d1.register(myGame);
+            log(myGame);
+
+            // expect(() =>
+            //     new Dummy("D2", 12).register(myGame, 1)
+            // ).to.throw(RegalError, "An agent with ID <1> has already been registered with the instance.")
         });
     });
 });

@@ -122,6 +122,9 @@ export class Agent {
         if (this.isRegistered) {
             throw new RegalError("Cannot register an agent more than once.");
         }
+        if (newId < 0) {
+            throw new RegalError("newId must be positive.");
+        }
 
         this.game = game;
 
