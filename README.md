@@ -1,13 +1,12 @@
-# Regal
-*The adaptable game framework for everyone.*
+# regal
+
+*v0.2.1*
 
 ## Introduction
 
-Regal is an upcoming project designed to make it easy for game developers to write stateless games that can easily be ported to various platforms.
+This repository contains the **Regal Game Library (RGL)**, which is a TypeScript package (titled `regal`) that is designed for games that are built on the [**Regal Framework**](https://github.com/regal/about), a project designed to help developers bring text-driven games and story experiences to players in revolutionary new ways.
 
-The term **Regal** can either refer to the TypeScript library included in this repository or the entire Regal Framework as a whole, which will include a set of additional projects.
-
-Regal is currently in version 0.2.1 and is not yet recommended for use.
+`regal` is currently in version 0.2.1 and is not yet recommended for use. If you would like to get involved, please see the project's [about](https://github.com/regal/about) page.
 
 ## Author
 
