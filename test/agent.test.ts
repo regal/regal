@@ -1,16 +1,16 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import { GameInstance } from '../src/game';
+import { GameInstance, RegalError } from '../src/game';
 import { Agent, resetRegistry, staticAgentRegistry } from '../src/agent';
 import { log } from '../src/utils';
+import { on } from '../src/event';
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
         super();
     }
 }
-
 
 describe("Agent", function() {
 
@@ -72,6 +72,73 @@ describe("Agent", function() {
             expect(staticAgentRegistry.hasAgent(2)).to.be.false;
             expect(staticAgentRegistry.hasAgentProperty(dummy.id, "non")).to.be.false;
             expect(staticAgentRegistry.hasAgentProperty(2, "name")).to.be.false;
+        });
+
+        it("Cannot declare an agent static multiple times", function() {
+            const dummy = new Dummy("D1", 10).static();
+
+            expect(() => dummy.static()).to.throw(RegalError, "Cannot create more than one static version of an agent.");
+        });
+
+        it("Cannot create a static version of a registered agent.", function() {
+            const dummy = new Dummy("D1", 10).register(new GameInstance());
+
+            expect(() => dummy.static()).to.throw(RegalError, "Cannot create a static version of a registered agent.");
+        });
+
+        it("Error check for StaticAgentRegistry#getAgentProperty", function() {
+            expect(() => 
+                staticAgentRegistry.getAgentProperty(100, "foo")
+            ).to.throw(RegalError, "No static agent with ID <100> exists in the registry.");
+        });
+
+        it("Registering a static agent does not modify the game instance", function() {
+            const dummy = new Dummy("D1", 10).static();
+            const game = new GameInstance();
+
+            dummy.register(game);
+            expect(game).to.deep.equal(new GameInstance());
+        });
+
+        it("A static agent's #has method includes user-defined agent properties", function() {
+            const dummy = new Dummy("D1", 10).static();
+            expect("name" in dummy).to.be.true;
+        })
+
+        it("Modifying a registered static agent adds the property to the instance state", function() {
+            const dummy = new Dummy("D1", 10).static();
+            const myGame = new GameInstance();
+
+            on("MODIFY", game => {
+                const myDummy = dummy.register(game);
+                myDummy.health += 15;
+                myDummy.name = "Jeff";
+                myDummy["newProp"] = "newValue";
+
+                return game;
+            })(myGame);
+
+            expect(myGame.agents.getAgentProperty(1, "health")).to.equal(25);
+            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Jeff");
+            expect(myGame.agents.getAgentProperty(1, "newProp")).to.equal("newValue");
+        });
+
+        it("Modifying a registered static agent does not modify the one in the registry", function() {
+            const dummy = new Dummy("D1", 10).static();
+            const myGame = new GameInstance();
+
+            on("MODIFY", game => {
+                const myDummy = dummy.register(game);
+                myDummy.health += 15;
+                myDummy.name = "Jeff";
+                myDummy["newProp"] = "newValue";
+
+                return game;
+            })(myGame);
+
+            expect(staticAgentRegistry.getAgentProperty(1, "health")).to.equal(10);
+            expect(staticAgentRegistry.getAgentProperty(1, "name")).to.equal("D1");
+            expect(staticAgentRegistry.getAgentProperty(1, "newProp")).to.be.undefined;
         });
     });
 });

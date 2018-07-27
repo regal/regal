@@ -27,7 +27,7 @@ export class StaticAgentRegistry {
 
     addAgent<T extends Agent>(agent: T): T {
         if (agent.isRegistered) {
-            throw new RegalError("Cannot create a static version of an agent that has already been registered.");
+            throw new RegalError("Cannot create a static version of a registered agent.");
         }
         if (agent.isStatic) {
             throw new RegalError("Cannot create more than one static version of an agent.");
