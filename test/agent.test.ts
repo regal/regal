@@ -14,6 +14,10 @@ class Dummy extends Agent {
 
 describe("Agent", function() {
 
+    beforeEach(function() {
+        resetRegistry();
+    });
+
     describe("Agent Behavior", function() {
 
         it("Registering an agent adds its properties to the instance", function() {
@@ -198,10 +202,6 @@ describe("Agent", function() {
 
     describe("Static Agents", function() {
 
-        beforeEach(function() {
-            resetRegistry();
-        });
-
         it("The static agent registry has no agents to begin with", function() {
             expect(staticAgentRegistry.agentCount).to.equal(0);
         });
@@ -341,9 +341,52 @@ describe("Agent", function() {
         });
     });
 
+    describe("Instance State", function() {
+
+        it("The instance state is automatically registered", function() {
+            expect(new GameInstance().state.isRegistered).to.be.true;
+        });
+
+        it("The instance state has a reserved ID of zero", function() {
+            expect(new GameInstance().state.id).to.equal(0);
+        });
+
+        it("Properties can be added and read from the instance state", function() {
+            const game = new GameInstance();
+            game.state.foo = "bar";
+
+            expect(game.state.foo).to.equal("bar");
+        });
+
+        it("Adding an agent to the state implicitly registers it", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10);
+
+            game.state.dum = dummy;
+
+            expect(game.state.dum.isRegistered).to.be.true;
+            expect(game.state.dum.id).to.equal(1);
+            expect(game.state.dum.name).to.equal("D1");
+            expect(game.state.dum.health).to.equal(10);
+        });
+
+        it("Adding a registered agent to the state uses its existing ID as a reference", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game, 100);
+
+            game.state.dum = dummy;
+
+            expect(game.state.dum.isRegistered).to.be.true;
+            expect(game.state.dum.id).to.equal(100);
+            expect(game.state.dum.name).to.equal("D1");
+            expect(game.state.dum.health).to.equal(10);
+        });
+
+    });
+
     describe("Agent Records", function() {
 
-        it("getProperty on a nonexistant property returns undefined", function() {
+        it("getProperty on a nonexistent property returns undefined", function() {
             expect(new AgentRecord().getProperty("foo")).to.be.undefined;
         });
 
