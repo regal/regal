@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 import { GameInstance, RegalError } from '../src/game';
-import { Agent, resetRegistry, staticAgentRegistry, AgentRecord, AgentReference } from '../src/agent';
+import { Agent, resetRegistry, staticAgentRegistry, AgentRecord, AgentReference, PropertyOperation } from '../src/agent';
 import { log } from '../src/utils';
 import { Event, on } from '../src/event';
 
@@ -390,6 +390,87 @@ describe("Agent", function() {
             expect(new AgentRecord().getProperty("foo")).to.be.undefined;
         });
 
+        it("Registering an agent adds all of its properties to a new record", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            expect(game.agents[1]).to.deep.equal({
+                _id: [{
+                    eventId: 0,
+                    eventName: "DEFAULT",
+                    op: PropertyOperation.ADDED,
+                    init: undefined,
+                    final: 1
+                }],
+
+                game: [{
+                    eventId: 0,
+                    eventName: "DEFAULT",
+                    op: PropertyOperation.ADDED,
+                    init: undefined,
+                    final: game
+                }],
+
+                name: [{
+                    eventId: 0,
+                    eventName: "DEFAULT",
+                    op: PropertyOperation.ADDED,
+                    init: undefined,
+                    final: "D1"
+                }],
+
+                health: [{
+                    eventId: 0,
+                    eventName: "DEFAULT",
+                    op: PropertyOperation.ADDED,
+                    init: undefined,
+                    final: 10
+                }]
+            });
+        });
+
+        it("Modifying a registered agent's property adds a record", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            dummy.name = "Jimmy";
+
+            expect(game.agents[1].name).to.deep.equal([
+                {
+                    eventId: 0,
+                    eventName: "DEFAULT",
+                    op: PropertyOperation.MODIFIED,
+                    init: "D1",
+                    final: "Jimmy"
+                },
+                {
+                    eventId: 0,
+                    eventName: "DEFAULT",
+                    op: PropertyOperation.ADDED,
+                    init: undefined,
+                    final: "D1"
+                }
+            ]);
+        });
+
+        it.skip("Modifying a static agent's property adds only that change to the record", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).static().register(game);
+
+            dummy.name = "Jimmy";
+
+            expect(game.agents[1]).to.deep.equal({
+                name: [
+                    {
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        op: PropertyOperation.MODIFIED,
+                        init: "D1",
+                        final: "Jimmy"
+                    }
+                ]
+            });
+        });
     });
 });
 
