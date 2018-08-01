@@ -273,12 +273,9 @@ export class AgentRecord {
     }
 
     setProperty<T>(event: Event, property: PropertyKey, value: T): void {
-        if (!this.hasOwnProperty(property)) {
-            this._addRecord(event, property, PropertyOperation.ADDED, undefined, value);
-        } else {
-            const initValue = this.getProperty(property);
-            this._addRecord(event, property, PropertyOperation.MODIFIED, initValue, value);
-        }
+        const initValue = this.getProperty(property);
+        const op = initValue === undefined ? PropertyOperation.ADDED : PropertyOperation.MODIFIED;
+        this._addRecord(event, property, op, initValue, value);
     }
 
     private _addRecord<T>(event: Event, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
@@ -305,40 +302,3 @@ export class InstanceState extends Agent {
         return this.register(game, 0);
     }
 }
-
-// ** Test Code ** //
-
-// class Dummy extends Agent {
-//     constructor(public name: string, public health: number) {
-//         super();
-//     }
-// }
-
-// const staticDummy = new Dummy("Static Boi", 15).static();
-// log(staticDummy, "Static Dummy");
-// log(staticAgentRegistry, "Static Agent Registry");
-
-// const add = (dummy: Dummy) => on("ADD", game => {
-//     game.state.nonstatic = dummy;
-//     game.output.push(game.state.nonstatic.name);
-//     return game;
-// });
-
-// const init = on("INIT", game => {
-//     game.state.static = staticDummy;
-//     game.output.push(game.state.static.name);
-
-//     const fluid = new Dummy("Fluid Man", 29).register(game);
-//     add(fluid)(game);
-
-//     fluid["staticy"] = staticDummy;
-//     game.state.static.fluidy = fluid;
-
-//     game.state.static.fluidy.name = "OH HECK THIS WORKS";
-
-//     return game;
-// });
-
-// const myGame = init(new GameInstance());
-// log(myGame);
-// log(staticAgentRegistry, "Static Agent Registry");
