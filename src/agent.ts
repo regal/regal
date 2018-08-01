@@ -122,17 +122,21 @@ export class Agent {
         if (this.isRegistered) {
             throw new RegalError("Cannot register an agent more than once.");
         }
-        if (newId < 0) {
-            throw new RegalError("newId must be positive.");
-        }
-
-        this.game = game;
 
         if (newId !== undefined) {
+            if (newId < 0) {
+                throw new RegalError("newId must be positive.");
+            }
+            if (staticAgentRegistry.hasAgent(newId)) {
+                throw new RegalError(`A static agent already has the ID <${newId}>.`);
+            }
+
             this.id = newId;
         } else if (!this.isStatic) {
             this.id = game.agents.getNextAgentId();
         }
+        
+        this.game = game;
         
         const currentEvent = game.events.getCurrentEvent();
         game.agents.addAgent(this, currentEvent);
@@ -169,6 +173,7 @@ export class InstanceAgents {
         if (this.hasOwnProperty(agent.id)) {
             throw new RegalError(`An agent with ID <${agent.id}> has already been registered with the instance.`);
         }
+        // TODO - Find some way to ensure that the ID is not being taken by a static agent
 
         if (!agent.isStatic) {
             this[agent.id] = new AgentRecord();

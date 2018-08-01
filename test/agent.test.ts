@@ -233,17 +233,13 @@ describe("Agent", function() {
             expect(nonstaticDummy.id).to.equal(2);
         });
 
-        // TODO - Fix this bug
         it("If setting a custom ID, it cannot already be assigned to a static agent", function() {
             const myGame = new GameInstance();
-            const d1 = new Dummy("D1", 10).static();
-            new Dummy("D2", 12).register(myGame, 1);
-            d1.register(myGame);
-            log(myGame);
+            const d1 = new Dummy("D1", 10).static().register(myGame);
 
-            // expect(() =>
-            //     new Dummy("D2", 12).register(myGame, 1)
-            // ).to.throw(RegalError, "An agent with ID <1> has already been registered with the instance.")
+            expect(() => 
+                new Dummy("D2", 12).register(myGame, 1)
+            ).to.throw(RegalError, "A static agent already has the ID <1>.")
         });
     });
 });
