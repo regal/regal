@@ -96,6 +96,39 @@ describe("Agent", function() {
                 new Dummy("D1", 10).register(game).register(game)
             ).to.throw(RegalError, "Cannot register an agent more than once.");
         });
+
+        it("Error check for InstanceAgents#getAgentProperty for an unused ID", function() {
+            expect(() =>
+                new GameInstance().agents.getAgentProperty(1, "foo")
+            ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
+        });
+
+        it("Registering an agent registers its property agents as well", function() {
+            const game = new GameInstance();
+            let dummy = new Dummy("D1", 10);
+            const childDummy = new Dummy("D2", 15);
+            dummy["child"] = childDummy;
+
+            dummy = dummy.register(game);
+
+            expect(dummy.isRegistered).to.be.true;
+            expect(childDummy.isRegistered).to.be.true;
+        });
+
+        it("Adding an agent as a property to a registered agent registers it", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            const childDummy = new Dummy("D2", 15);
+            
+            expect(dummy.isRegistered).to.be.true;
+            expect(childDummy.isRegistered).to.be.false;
+
+            dummy["child"] = childDummy;
+
+            expect(dummy.isRegistered).to.be.true;
+            expect(childDummy.isRegistered).to.be.true;
+        });
     });
 
     describe("Static Agents", function() {
