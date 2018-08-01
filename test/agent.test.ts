@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import 'mocha';
 
 import { GameInstance, RegalError } from '../src/game';
-import { Agent, resetRegistry, staticAgentRegistry } from '../src/agent';
+import { Agent, resetRegistry, staticAgentRegistry, AgentRecord, AgentReference } from '../src/agent';
 import { log } from '../src/utils';
-import { on } from '../src/event';
+import { Event, on } from '../src/event';
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -103,6 +103,18 @@ describe("Agent", function() {
             ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
         });
 
+        it("Error check for InstanceAgents#setAgentProperty for an unused ID", function() {
+            expect(() =>
+                new GameInstance().agents.setAgentProperty(1, "foo", "bar", { id: 0, name: "EVENT" })
+            ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
+        });
+
+        it("Error check for InstanceAgents#hasAgentProperty for an unused ID", function() {
+            expect(() =>
+                new GameInstance().agents.hasAgentProperty(1, "foo")
+            ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
+        });
+
         it("Registering an agent registers its property agents as well", function() {
             const game = new GameInstance();
             let dummy = new Dummy("D1", 10);
@@ -128,6 +140,59 @@ describe("Agent", function() {
 
             expect(dummy.isRegistered).to.be.true;
             expect(childDummy.isRegistered).to.be.true;
+        });
+
+        it("Agent properties are replaced by AgentReferences", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            const childDummy = new Dummy("D2", 15);
+            dummy["child"] = childDummy;
+
+            expect(game.agents[1].child[0].final).to.deep.equal(new AgentReference(2));
+        });
+
+        it("AgentReferences are invisible", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            const childDummy = new Dummy("D2", 15);
+            dummy["child"] = childDummy;
+
+            expect(dummy["child"].name).to.equal("D2");
+            expect(dummy["child"].health).to.equal(15);
+        });
+
+        it("Properties can be set across AgentReferences", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            const childDummy = new Dummy("D2", 15);
+            dummy["child"] = childDummy;
+
+            dummy["child"].name = "Paul Blart";
+
+            expect(dummy["child"].name).to.equal("Paul Blart");
+            expect(dummy["child"].health).to.equal(15);
+        });
+
+        it.skip("When a property is set across an AgentReference, the new property is accessible from the original agent definition", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            const childDummy = new Dummy("D2", 15);
+            dummy["child"] = childDummy;
+
+            dummy["child"].name = "Paul Blart";
+
+            expect(childDummy.name).to.equal("Paul Blart");
+        });
+
+        it("Trying to retrive an undefined property of a registered agent returns undefined", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            expect(dummy["foo"]).to.be.undefined;
         });
     });
 
@@ -274,6 +339,14 @@ describe("Agent", function() {
                 new Dummy("D2", 12).register(myGame, 1)
             ).to.throw(RegalError, "A static agent already has the ID <1>.")
         });
+    });
+
+    describe("Agent Records", function() {
+
+        it("getProperty on a nonexistant property returns undefined", function() {
+            expect(new AgentRecord().getProperty("foo")).to.be.undefined;
+        });
+
     });
 });
 

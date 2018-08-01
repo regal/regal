@@ -94,9 +94,7 @@ const AgentProxyHandler = {
 
 export class Agent {
 
-    constructor(private _id?: number, public game?: GameInstance) {
-        
-    }
+    constructor(private _id?: number, public game?: GameInstance) {}
 
     get isRegistered(): boolean {
         return this.game !== undefined;
@@ -197,13 +195,6 @@ export class InstanceAgents {
             }
         } else {
             value = agentRecord.getProperty(property);
-            // if (property in agentRecord) {
-            //     value = agentRecord.getProperty(property);
-            // } else if (staticAgentRegistry.hasAgentProperty(agentId, property)) {
-            //     value = staticAgentRegistry.getAgentProperty(agentId, property);
-            // } else {
-            //     value = undefined;
-            // }
         }
 
         if (isAgentReference(value)) {
@@ -245,7 +236,7 @@ export class InstanceAgents {
             if (staticAgentRegistry.hasAgent(agentId)) {
                 return staticAgentRegistry.hasAgentProperty(agentId, property);
             }
-            throw new RegalError(`No agent with ID <${agentId}> exists in the instance.`);
+            throw new RegalError(`No agent with ID <${agentId}> exists in the instance or the static registry.`);
         }
 
         const agentRecord: AgentRecord = this[agentId];
