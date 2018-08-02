@@ -1,14 +1,35 @@
 # Regal
-*The adaptable game framework for everyone.*
+
+*v0.2.1*
 
 ## Introduction
 
-Regal is an upcoming project designed to make it easy for game developers to write stateless games that can easily be ported to various platforms.
+The **Regal Game Library** is a TypeScript package designed for games that are built on the [**Regal Framework**](https://github.com/regal/about), a project designed to help developers bring text-driven games and story experiences to players in exciting new ways. 
 
-The term **Regal** can either refer to the TypeScript library included in this repository or the entire Regal Framework as a whole, which will include a set of additional projects.
+This library is a package on npm titled `regal`.
 
-Regal is currently in version 0.2.1 and is not yet recommended for use.
+## Status
 
-## Author
+This package is currently in version `0.2.1` and is not yet recommended for use. The next version will be `0.3.0`.
 
-Joe Cowman ([jcowman2](https://github.com/jcowman2))
+### `0.3.0` Details
+
+**Regal** `0.3.0` aims to be the first usable version of the library, and is currently under development.
+
+Component | Description | Designed | Implemented | Tested
+--- | --- | --- | --- | ---
+**API** | Public API for consumers of the library | 🔵 | 🔵 | ⚪
+**Agent** | Model for immutable game objects | ✔️ | 🔵 | 🔵
+**Event** | Model for game events | 🔵 | 🔵 | ⚪
+
+✔️ - Complete   
+🔵 - In-Progress    
+⚪- Planned
+
+## Contributors
+
+Created by Joe Cowman ([jcowman2](https://github.com/jcowman2)).
+
+If you would like to get involved, please see the project's [about](https://github.com/regal/about) page.
+
+*Copyright 2018, Joe Cowman*
