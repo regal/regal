@@ -180,7 +180,7 @@ describe("Agent", function() {
             expect(dummy["child"].health).to.equal(15);
         });
 
-        it.skip("When a property is set across an AgentReference, the new property is accessible from the original agent definition", function() {
+        it("When a property is set across an AgentReference, the new property is accessible from the original agent definition", function() {
             const game = new GameInstance();
             const dummy = new Dummy("D1", 10).register(game);
 

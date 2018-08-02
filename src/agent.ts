@@ -68,13 +68,12 @@ function isAgent(o: any): o is Agent {
 }
 
 const AgentProxyHandler = {
-    get(target: Agent, propertyKey: PropertyKey, receiver: object) {
-        let value = undefined;
+    get(target: Agent, propertyKey: PropertyKey, receiver: object): any {
+        let value: any = undefined;
 
-        if (propertyKey in receiver) {
+        if (target.isRegistered && propertyKey in receiver) {
             value = target.game.agents.getAgentProperty(target.id, propertyKey);
         }
-
         if (value === undefined) {
             value = Reflect.get(target, propertyKey, receiver);
         }
@@ -82,22 +81,34 @@ const AgentProxyHandler = {
         return value;
     },
 
-    set(target: Agent, propertyKey: PropertyKey, value: any, receiver: object) {
-        const currentEvent = target.game.events.getCurrentEvent();
-        return target.game.agents.setAgentProperty(target.id, propertyKey, value, currentEvent);
+    set(target: Agent, propertyKey: PropertyKey, value: any, receiver: object): boolean {
+        let result: boolean = undefined;
+
+        if (target.isRegistered) {
+            const currentEvent = target.game.events.getCurrentEvent();
+            result = target.game.agents.setAgentProperty(target.id, propertyKey, value, currentEvent);
+        } else {
+            result = Reflect.set(target, propertyKey, value, receiver);
+        }
+        
+        return result;
     },
 
-    has(target: Agent, propertyKey: PropertyKey) {
-        return target.game.agents.hasAgentProperty(target.id, propertyKey);
+    has(target: Agent, propertyKey: PropertyKey): boolean {
+        return target.isRegistered 
+            ? target.game.agents.hasAgentProperty(target.id, propertyKey) 
+            : Reflect.has(target, propertyKey);
     }
 }
 
 export class Agent {
 
-    constructor(private _id?: number, public game?: GameInstance) {}
+    constructor(private _id?: number, public game?: GameInstance) {
+        return new Proxy(this, AgentProxyHandler);
+    }
 
     get isRegistered(): boolean {
-        return this.game !== undefined;
+        return this.game !== undefined && this.game.agents.hasAgent(this.id);
     }
 
     get isStatic(): boolean {
@@ -141,7 +152,7 @@ export class Agent {
         const currentEvent = game.events.getCurrentEvent();
         game.agents.addAgent(this, currentEvent);
 
-        return new Proxy(this, AgentProxyHandler) as this;
+        return this;
     }
 
     static(): this {
@@ -181,6 +192,10 @@ export class InstanceAgents {
                 this.setAgentProperty(agent.id, key, agent[key], event);
             }
         }
+    }
+
+    hasAgent(agentId: number): boolean {
+        return this.hasOwnProperty(agentId) || staticAgentRegistry.hasAgent(agentId);
     }
 
     getAgentProperty(agentId: number, property: PropertyKey): any {
