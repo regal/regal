@@ -198,6 +198,13 @@ describe("Agent", function() {
 
             expect(dummy["foo"]).to.be.undefined;
         });
+
+        it("A non-registered agent's `has` method works properly", function() {
+            const dummy = new Dummy("D1", 10);
+
+            expect("name" in dummy).to.be.true;
+            expect("foo" in dummy).to.be.false;
+        });
     });
 
     describe("Static Agents", function() {
