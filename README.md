@@ -1,6 +1,7 @@
 # Regal
 
-*v0.2.1*
+[![npm version](https://badge.fury.io/js/regal.svg)](https://badge.fury.io/js/regal)
+[![CircleCI](https://circleci.com/gh/regal/regal.svg?style=svg)](https://circleci.com/gh/regal/regal)
 
 ## Introduction
 
