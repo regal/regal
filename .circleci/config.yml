@@ -25,3 +25,7 @@ jobs:
         
       # run tests!
       - run: npm test
+
+      - run:
+          name: Test Coverage
+          command: npm run coverage
