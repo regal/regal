@@ -26,7 +26,8 @@
   ],
   "scripts": {
     "test": "nyc mocha",
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "check-coverage": "nyc check-coverage --lines 100 --functions 75 --branches 75"
   },
   "nyc": {
     "include": [
