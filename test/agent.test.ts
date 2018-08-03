@@ -453,11 +453,12 @@ describe("Agent", function() {
             ]);
         });
 
-        it.skip("Modifying a static agent's property adds only that change to the record", function() {
+        it("Modifying a static agent's property adds only that change to the record", function() {
             const game = new GameInstance();
             const dummy = new Dummy("D1", 10).static().register(game);
 
             dummy.name = "Jimmy";
+            dummy["foo"] = "bar";
 
             expect(game.agents[1]).to.deep.equal({
                 name: [
@@ -467,6 +468,15 @@ describe("Agent", function() {
                         op: PropertyOperation.MODIFIED,
                         init: "D1",
                         final: "Jimmy"
+                    }
+                ],
+                foo: [
+                    {
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        op: PropertyOperation.ADDED,
+                        init: undefined,
+                        final: "bar"
                     }
                 ]
             });

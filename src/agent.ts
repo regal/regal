@@ -241,7 +241,7 @@ export class InstanceAgents {
             value = new AgentReference(value.id);
         }
 
-        agentRecord.setProperty(event, property, value);
+        agentRecord.setProperty(event, agentId, property, value);
 
         return true;
     }
@@ -279,16 +279,22 @@ export class AgentRecord {
 
     getProperty(propertyKey: PropertyKey): any {
         const changes: PropertyChange[] = this[propertyKey];
+        let property: any = undefined;
 
         if (changes !== undefined && changes.length > 0) {
-            return changes[0].final;
+            property = changes[0].final;
         }
 
-        return undefined;
+        return property;
     }
 
-    setProperty<T>(event: Event, property: PropertyKey, value: T): void {
-        const initValue = this.getProperty(property);
+    setProperty<T>(event: Event, agentId: number, property: PropertyKey, value: T): void {
+        let initValue = this.getProperty(property);
+
+        if (initValue === undefined && staticAgentRegistry.hasAgentProperty(agentId, property)) {
+            initValue = staticAgentRegistry.getAgentProperty(agentId, property);
+        }
+
         const op = initValue === undefined ? PropertyOperation.ADDED : PropertyOperation.MODIFIED;
         this._addRecord(event, property, op, initValue, value);
     }
