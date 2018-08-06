@@ -8,7 +8,7 @@ An *event* can be thought of as any change that occurs within your game. Any tim
 
 The *Event Function* is one of **Regal**'s central ideas.
 
-An `EventFunction` takes a `GameInstance` as an argument, modifies it, and returns any resulting `EventFunction`s.
+An `EventFunction` takes a `GameInstance` as an argument, modifies it, and returns the next `EventFunction` to be executed.
 
 An `EventFunction`'s contract looks like this:
 
@@ -16,7 +16,7 @@ An `EventFunction`'s contract looks like this:
 type EventFunction = (game: GameInstance) => EventFunction;
 ```
 
-Every *event* is actually an `EventFunction`.
+Every *event* in a Regal game is actually an `EventFunction`.
 
 ## Your First Event
 
@@ -40,7 +40,7 @@ greet(myGame); // Adds "Hello, world!" to myGame's output
 
 ## The `on` Function
 
-Although that's a perfectly valid use of an `EventFunction`, **Regal** offers a function called `on` that wraps your events with some useful metadata.
+Although that's a perfectly valid use of an `EventFunction`, **Regal** offers a function called `on` that wraps your events with some useful metadata and make executing multiple events easier.
 
 ```ts
 on(eventName: string, eventFunc: EventFunction): EventFunction;
@@ -62,7 +62,7 @@ const myGame = new GameInstance();
 greet(myGame); // Adds "Hello, world!" to myGame's output
 ```
 
-However, this stores some helpful metadata in `game.events.list`.
+Since we used `on`, some useful metadata was stored in `game.events.list`.
 
 ```ts
 myGame.events.list === [
@@ -76,7 +76,7 @@ myGame.events.list === [
 ];
 ```
 
-This is just a small sample of what is added when you track your events with `on`. It is highly recommended that you build your events this way.
+This is just a small sample of what is gained when you track your events with `on`. It is highly recommended that you build your events this way.
 
 ## Partially Applied Events
 
@@ -96,7 +96,7 @@ Now, `greet` can take any `name` and will generate an `EventFunction` using that
 
 ```ts
 const myGame = new GameInstance();
-greet("Regal")(myGame); // Create an EventFunction where name == "Regal"
+greet("Regal")(myGame); // Create an EventFunction where name == "Regal", then execute it
 
 myGame.events.list === [
     {
@@ -134,7 +134,7 @@ myGame.events.list === [
 
 ## Causing Additional Events
 
-As stated earlier, an `EventFunction` can return another `EventFunction`. This tells the event executor that another event should be executed on the game instance.
+As stated earlier, an `EventFunction` returns another `EventFunction`. This tells the event executor that another event should be executed on the game instance.
 
 Here is an example of an `EventFunction` causing another:
 
@@ -155,7 +155,7 @@ const motivate = (date: Date) =>
     });
 ```
 
-When the `motivate` event is executed, it checks the value of its `date` argument to determine which event should be caused next.
+When the `motivate` event is executed, it checks the value of its `date` argument to determine which event should be executed next.
 
 ```ts
 const myGame = new GameInstance();
@@ -185,9 +185,11 @@ myGame.events.list === [
 
 It's also possible to have one `EventFunction` cause multiple events.
 
+There are two ways this can be done: immediately with `EventFunction.then` and delayed with `enqueue`.
+
 ### Immediate Execution with `EventFunction.then`
 
-To have one event be executed immediately after another, use the `.then` method. This is useful in situations where multiple events should be executed in direct sequence.
+To have one event be executed immediately after another, use the `EventFunction.then` method. This is useful in situations where multiple events should be executed in direct sequence.
 
 To demonstrate, here's an example of a player crafting a sword. When the `makeSword` event is executed, the sword is immediately added to the player's inventory (`addItemToInventory`) and the player learns the blacksmithing skill (`learnSkill`).
 
@@ -290,7 +292,7 @@ Our top-level event function `drop` takes in a list of items that are being drop
         let queue = enqueue();
 ```
 
-The `enqueue` function takes zero or more `EventFunction`s as arguments, which it uses to build another `EventFunction` called the event queue. Creating an empty queue has no effect; it simply provides us a reference to add additional events shortly.
+The `enqueue` function takes zero or more `EventFunction`s as arguments, which it uses to build a special type of `EventFunction` called an `EventQueue`. Creating an empty queue has no effect; it simply provides us a reference to add additional events shortly.
 
 ```ts
         for (let item in items) {
@@ -298,7 +300,7 @@ The `enqueue` function takes zero or more `EventFunction`s as arguments, which i
         }
 ```
 
-In addition to being a standalone function, `enqueue` is also a method of `EventFunction`. Calling `EventFunction.enqueue` returns a new `EventFunction` which contains the event queue of all previously enqueued events and the new event(s).
+In addition to being a standalone function, `enqueue` is also a method of `EventQueue`. Calling `EventQueue.enqueue` returns a new `EventQueue` which contains the all previously enqueued events plus the new event(s).
 
 The previous two code blocks could be simplified using JavaScript's `map` function like so:
 
@@ -306,7 +308,7 @@ The previous two code blocks could be simplified using JavaScript's `map` functi
 const queue = enqueue(items.map(item => fall(item)));
 ```
 
-Finally, we return the event queue, which is itself an `EventFunction`.
+Finally, we return the event queue.
 
 ```ts
         return queue;
@@ -361,12 +363,21 @@ If you're still confused about the differene between `then` and `enqueue`, here 
 // Spoon hits the ground. Thud!
 ```
 
-Remember, `enqueue` is useful for situations where you have multiple series of events, like our [`fall` -> `hitGround`] series, and you want each series to execute their individual events in the same "round." We didn't want `hat` to `fall` and then `hitGround`, *then* `duck` to `fall` and then `hitGround`, etc. We wanted all of the items to fall together, and then all of them to hit the ground together.
+Remember, `enqueue` is useful for situations where you have multiple series of events, like our [`fall` -> `hitGround`] series, and you want each series to execute their alike events in the same "round." We didn't want `hat` to `fall` and then `hitGround`, *then* `duck` to `fall` and then `hitGround`, etc; we wanted *all of the items to fall together*, and then all of them to hit the ground together.
 
 If you wanted the opposite, (say you wanted `hat` to be done with hitting the ground before `duck` fell), then you would use `then`.
 
 `then` is for immediate execution; `enqueue` is for delayed exeuction.
 
-Final note: instead of writing `enqueue`, you can use the shorthand `nq`.
+Events are added to the end of the event queue as soon as the `EventQueue` function is executed.
+
+#### `enqueue` Shorthand
+
+If you'd like, you can use the shorthand `nq` instead of writing `enqueue`. We're all about efficiency. :+1:
+
+```ts
+const queue = nq([event1, event2]);
+queue.nq(event3);
+```
 
 ## Tracking Agent Changes by Event
