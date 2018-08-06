@@ -4,7 +4,7 @@ import 'mocha';
 import { GameInstance, RegalError } from '../src/game';
 import { Agent, resetRegistry, staticAgentRegistry, AgentRecord, AgentReference, PropertyOperation } from '../src/agent';
 import { log } from '../src/utils';
-import { Event, on } from '../src/event';
+import { on, noop } from '../src/event';
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -304,7 +304,7 @@ describe("Agent", function() {
                 myDummy.name = "Jeff";
                 myDummy["newProp"] = "newValue";
 
-                return game;
+                return noop;
             })(myGame);
 
             expect(myGame.agents.getAgentProperty(1, "health")).to.equal(25);
@@ -322,7 +322,7 @@ describe("Agent", function() {
                 myDummy.name = "Jeff";
                 myDummy["newProp"] = "newValue";
 
-                return game;
+                return noop;
             })(myGame);
 
             expect(staticAgentRegistry.getAgentProperty(1, "health")).to.equal(10);
