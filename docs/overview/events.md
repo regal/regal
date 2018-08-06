@@ -62,10 +62,10 @@ const myGame = new GameInstance();
 greet(myGame); // Adds "Hello, world!" to myGame's output
 ```
 
-Since we used `on`, some useful metadata was stored in `game.events.list`.
+Since we used `on`, some useful metadata was stored in `game.events.history`.
 
 ```ts
-myGame.events.list === [
+myGame.events.history === [
     {
         id: 1, // Auto-generated event ID
         name: "GREET",
@@ -98,7 +98,7 @@ Now, `greet` can take any `name` and will generate an `EventFunction` using that
 const myGame = new GameInstance();
 greet("Regal")(myGame); // Create an EventFunction where name == "Regal", then execute it
 
-myGame.events.list === [
+myGame.events.history === [
     {
         id: 1,
         name: "GREET",
@@ -121,7 +121,7 @@ const greet = (name: string) =>
 const myGame = new GameInstance();
 greet("Regal")(myGame);
 
-myGame.events.list === [
+myGame.events.history === [
     {
         id: 1,
         name: "GREET <Regal>", // Unique name!
@@ -162,7 +162,7 @@ const myGame = new GameInstance();
 const myDate = new Date("August 5, 2018 10:15:00");
 
 motivate(myDate)(myGame);
-myGame.events.list === [
+myGame.events.history === [
     {
         id: 2,
         causedBy: 1, // MOTIVATE (1) caused MORNING (2)
@@ -214,13 +214,13 @@ const makeSword = (name: string) =>
     });
 ```
 
-`GameInstance.events.list` contains the list of events that occurred, in reverse chronological order.
+`GameInstance.events.history` contains the list of events that occurred, in reverse chronological order.
 
 ```ts
 const myGame = new GameInstance();
 
 makeSword("King Arthur")(myGame);
-myGame.events.list === [
+myGame.events.history === [
     {
         id: 3,
         causedBy: 1,
@@ -381,3 +381,57 @@ queue.nq(event3);
 ```
 
 ## Tracking Agent Changes by Event
+
+In addition to what we've covered, `GameInstance.events.history` tracks all changes made to registered agents over the course of each event as well.
+
+Here's an example using a basic agent:
+
+```ts
+class Dummy extends Agent {
+    constructor(public name: string, public health: number) { 
+        super(); 
+    }
+}
+```
+
+And an event that modifies the agent:
+
+```ts
+const heal = (target: Dummy, amount: number) =>
+    on("HEAL", game => {
+        target.health += amount;
+
+        game.output.write(`Healed ${target.name} by ${amount}. Health is now ${target.health}.`);
+
+        return noop;
+    });
+```
+
+When `heal` is executed, we see a log of the changes reflected in `GameInstance.events.history`.
+
+```ts
+const myGame = new GameInstance();
+const dummy = new Dummy("Lars", 10);
+
+heal(dummy, 15)(game);
+
+game.events.history === [
+    {
+        id: 1,
+        name: "HEAL",
+        output: [
+            "Healed Lars by 15. Health is now 25."
+        ],
+        changes: [
+            {
+                agentId: 1,
+                op: "MODIFIED",
+                init: 10,
+                final: 25,
+                property: "health"
+            }
+        ]
+    },
+];
+```
+(For more information on agents, see the agent guide.)
