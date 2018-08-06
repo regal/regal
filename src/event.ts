@@ -1,73 +1,89 @@
-import { GameInstance } from './game';
+import { GameInstance, RegalError } from './game';
+import { PropertyChange } from './agent';
 
-export type EventFunction = (x: GameInstance) => GameInstance;
+export const DEFAULT_EVENT_NAME: string = "DEFAULT";
+export const DEFAULT_EVENT_ID: number = 0;
 
-export interface Event {
+export type EventFunction = (game: GameInstance) => EventFunction;
+
+export const noop: EventFunction = game => undefined;
+
+export interface EventRecord {
     id: number
     name: string
+    output?: string[]
+    causedBy?: number
+    caused?: number[],
+    changes?: PropertyChange[]
 }
-
-const DEFAULT_EVENT_NAME: string = "DEFAULT";
-const DEFAULT_EVENT_ID: number = 0;
 
 export class InstanceEvents {
 
-    list: Event[] = [];
+    history: EventRecord[] = [];
 
-    getCurrentEvent(): Event {
-        let event = this.list[this.list.length - 1];
-
-        if (!event) {
-            event = {
-                id: DEFAULT_EVENT_ID,
-                name: DEFAULT_EVENT_NAME
-            }
+    private _lastEventId = DEFAULT_EVENT_ID;
+    private _eventStack: EventRecord[] = [
+        {
+            id: DEFAULT_EVENT_ID,
+            name: DEFAULT_EVENT_NAME
         }
+    ];
 
-        return event;
-    }
+    startEvent(eventName: string): number {
+        const id = ++this._lastEventId;
 
-    push(name: string): void {
-        const lastId = (this.list.length > 0) ? this.list[this.list.length - 1].id : DEFAULT_EVENT_ID;
-        this.list.push({
-            id: lastId + 1,
-            name
+        this._eventStack.push({
+            id,
+            name: eventName
         });
+
+        return id;
     }
 
-}
-
-export const on = (name: string, func: EventFunction): EventFunction => 
-    (game: GameInstance) => {
-        game.events.push(name);
-        return func(game);
-};
-
-export const noop = () => (game: GameInstance) => game;
-
-export const pipe = (...funcs: EventFunction[]): EventFunction =>
-    (!funcs || funcs.length === 0) ? noop() : funcs.reduce((f, g) => (game: GameInstance) => g(f(game)));
-
-export const queue = (...funcs: EventFunction[]): EventFunction => {
-    if (!funcs || funcs.length === 0) {
-        return noop();
-    } else {
-        return (game: GameInstance) => {
-            game.queue.push(...funcs);
-            return game;
-        };
-    }
-};
-
-export const runQueue = (game: GameInstance): GameInstance => {
-    if (game) {
-        const queue = game.queue;
-        while (queue.length > 0) {
-            const event = queue.shift();
-            if (event) {
-                game = event(game);
-            }
+    stopEvent(): void {
+        if (this.currentEvent.id === DEFAULT_EVENT_ID) {
+            throw new RegalError("Cannot stop the default event.");
         }
+
+        this.history.unshift(this._eventStack.pop());
     }
-    return game;
+
+    get currentEvent(): EventRecord {
+        return this._eventStack[this._eventStack.length - 1];
+    }
 }
+
+export const on = (eventName: string, eventFunc: EventFunction): EventFunction =>
+    (game: GameInstance) => {
+        game.events.startEvent(eventName);
+        const result = eventFunc(game);
+        game.events.stopEvent();
+        return result;
+    };
+
+// export const pipe = (...funcs: EventFunction[]): EventFunction =>
+//     (!funcs || funcs.length === 0) ? noop() : funcs.reduce((f, g) => (game: GameInstance) => g(f(game)));
+
+// export const queue = (...funcs: EventFunction[]): EventFunction => {
+//     if (!funcs || funcs.length === 0) {
+//         return noop();
+//     } else {
+//         return (game: GameInstance) => {
+//             game.queue.push(...funcs);
+//             return game;
+//         };
+//     }
+// };
+
+// export const runQueue = (game: GameInstance): GameInstance => {
+//     if (game) {
+//         const queue = game.queue;
+//         while (queue.length > 0) {
+//             const event = queue.shift();
+//             if (event) {
+//                 game = event(game);
+//             }
+//         }
+//     }
+//     return game;
+// }
