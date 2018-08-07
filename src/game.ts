@@ -1,5 +1,6 @@
 import { EventFunction, InstanceEvents } from "./event";
 import { InstanceAgents, InstanceState, staticAgentRegistry, Agent } from "./agent";
+import { InstanceOutput } from "./output";
 
 export enum ErrorCode {
     OK,
@@ -18,16 +19,16 @@ export class RegalError extends Error {
 }
 
 export class GameInstance {
-    output: string[] = [];
-    queue: EventFunction[] = [];
 
-    events: InstanceEvents;
     agents: InstanceAgents;
+    events: InstanceEvents;
+    output: InstanceOutput;
     state: any;
 
     constructor() {
-        this.events = new InstanceEvents();
         this.agents = new InstanceAgents(this);
+        this.events = new InstanceEvents();
+        this.output = new InstanceOutput();
         this.state = new InstanceState(this);
     }
 

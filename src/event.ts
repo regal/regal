@@ -58,7 +58,10 @@ export const on = (eventName: string, eventFunc: EventFunction): EventFunction =
         game.events.startEvent(eventName);
         const result = eventFunc(game);
         game.events.stopEvent();
-        return result;
+
+        result(game);
+        
+        return noop;
     };
 
 // export const pipe = (...funcs: EventFunction[]): EventFunction =>
