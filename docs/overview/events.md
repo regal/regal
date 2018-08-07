@@ -139,12 +139,12 @@ As stated earlier, an `EventFunction` returns another `EventFunction`. This tell
 Here is an example of an `EventFunction` causing another:
 
 ```ts
-const morning = on("MORNING", event => {
+const morning = on("MORNING", game => {
     game.output.write("Have a great day!");
     return noop;
 });
 
-const afternoon = on("AFTERNOON", event => {
+const afternoon = on("AFTERNOON", game => {
     game.output.write("Keep it up!");
     return noop;
 });

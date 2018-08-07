@@ -50,4 +50,45 @@ describe("Event", function() {
         expect(myGame.output.lines).to.deep.equal(["Hello, Regal!"]);
     });
 
+    it.skip("Returning another EventFunction from inside another executes it", function() {
+        const morning = on("MORNING", game => {
+            game.output.write("Have a great day!");
+            return noop;
+        });
+
+        const afternoon = on("AFTERNOON", game => {
+            game.output.write("Keep it up!");
+            return noop;
+        });
+
+        const motivate = (date: Date) =>
+            on("MOTIVATE", game => {
+                return (date.getHours() < 12) ? morning : afternoon;
+            });
+
+        const myGame = new GameInstance();
+        const myDate = new Date("August 5, 2018 10:15:00");
+
+        motivate(myDate)(myGame);
+
+        expect(myGame.events.history).to.deep.equal([
+            {
+                id: 2,
+                causedBy: 1,
+                name: "MORNING",
+                output: [
+                    "Have a great day!"
+                ]
+            },
+            {
+                id: 1,
+                caused: [
+                    2
+                ],
+                name: "MOTIVATE"
+            }
+        ]);
+        log(myGame);
+    });
+
 });

@@ -24,6 +24,13 @@ export class EventRecord {
         }
         this.output.push(...lines);
     }
+
+    trackCausedEvent(...events: EventRecord[]): void {
+        if (this.caused === undefined) {
+            this.caused = [];
+        }
+        this.caused.push(...events.map(e => e.id));
+    }
 }
 
 export class InstanceEvents {
@@ -35,12 +42,13 @@ export class InstanceEvents {
         new EventRecord()
     ];
 
-    startEvent(eventName: string): number {
+    startEvent(eventName: string): EventRecord {
         const id = ++this._lastEventId;
+        const record = new EventRecord(id, eventName);
 
-        this._eventStack.push(new EventRecord(id, eventName));
+        this._eventStack.push(record);
 
-        return id;
+        return record;
     }
 
     stopEvent(): void {
@@ -58,11 +66,11 @@ export class InstanceEvents {
 
 export const on = (eventName: string, eventFunc: EventFunction): EventFunction =>
     (game: GameInstance) => {
-        game.events.startEvent(eventName);
+        const event = game.events.startEvent(eventName);
         const result = eventFunc(game);
-        game.events.stopEvent();
-
+        
         result(game);
+        game.events.stopEvent();
 
         return noop;
     };
