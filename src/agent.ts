@@ -85,7 +85,7 @@ const AgentProxyHandler = {
         let result: boolean = undefined;
 
         if (target.isRegistered) {
-            const currentEvent = target.game.events.currentEvent;
+            const currentEvent = target.game.events.current;
             result = target.game.agents.setAgentProperty(target.id, propertyKey, value, currentEvent);
         } else {
             result = Reflect.set(target, propertyKey, value, receiver);
@@ -149,7 +149,7 @@ export class Agent {
         
         this.game = game;
         
-        const currentEvent = game.events.currentEvent;
+        const currentEvent = game.events.current;
         game.agents.addAgent(this, currentEvent);
 
         return this;

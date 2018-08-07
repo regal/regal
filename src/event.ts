@@ -1,20 +1,29 @@
 import { GameInstance, RegalError } from './game';
 import { PropertyChange } from './agent';
 
-export const DEFAULT_EVENT_NAME: string = "DEFAULT";
 export const DEFAULT_EVENT_ID: number = 0;
+export const DEFAULT_EVENT_NAME: string = "DEFAULT";
 
 export type EventFunction = (game: GameInstance) => EventFunction;
 
 export const noop: EventFunction = game => undefined;
 
-export interface EventRecord {
-    id: number
-    name: string
+export class EventRecord {
+
     output?: string[]
     causedBy?: number
-    caused?: number[],
+    caused?: number[]
     changes?: PropertyChange[]
+
+    constructor(public id: number = DEFAULT_EVENT_ID, 
+        public name: string = DEFAULT_EVENT_NAME) {}
+
+    trackOutputWrite(...lines: string[]): void {
+        if (this.output === undefined) {
+            this.output = [];
+        }
+        this.output.push(...lines);
+    }
 }
 
 export class InstanceEvents {
@@ -23,32 +32,26 @@ export class InstanceEvents {
 
     private _lastEventId = DEFAULT_EVENT_ID;
     private _eventStack: EventRecord[] = [
-        {
-            id: DEFAULT_EVENT_ID,
-            name: DEFAULT_EVENT_NAME
-        }
+        new EventRecord()
     ];
 
     startEvent(eventName: string): number {
         const id = ++this._lastEventId;
 
-        this._eventStack.push({
-            id,
-            name: eventName
-        });
+        this._eventStack.push(new EventRecord(id, eventName));
 
         return id;
     }
 
     stopEvent(): void {
-        if (this.currentEvent.id === DEFAULT_EVENT_ID) {
+        if (this.current.id === DEFAULT_EVENT_ID) {
             throw new RegalError("Cannot stop the default event.");
         }
 
         this.history.unshift(this._eventStack.pop());
     }
 
-    get currentEvent(): EventRecord {
+    get current(): EventRecord {
         return this._eventStack[this._eventStack.length - 1];
     }
 }
@@ -60,7 +63,7 @@ export const on = (eventName: string, eventFunc: EventFunction): EventFunction =
         game.events.stopEvent();
 
         result(game);
-        
+
         return noop;
     };
 
