@@ -88,7 +88,61 @@ describe("Event", function() {
                 name: "MOTIVATE"
             }
         ]);
-        log(myGame);
+    });
+
+    it("Immediate execution with `then`", function() {
+        const learnSkill = (name: string, skill: string) =>
+            on(`LEARN SKILL <${skill}>`, game => {
+                game.output.write(`${name} learned ${skill}!`);
+                return noop;
+            });
+
+        const addItemToInventory = (name: string, item: string) =>
+            on(`ADD ITEM <${item}>`, game => {
+                game.output.write(`Added ${item} to ${name}'s inventory.`);
+                return noop;
+            });
+
+        const makeSword = (name: string) =>
+            on("MAKE SWORD", game => {
+                game.output.write(`${name} made a sword!`);
+                return learnSkill(name, "Blacksmithing")
+                    .then(addItemToInventory(name, "Sword"));
+            });
+
+        const myGame = new GameInstance();
+
+        makeSword("King Arthur")(myGame);
+
+        expect(myGame.events.history).to.deep.equal([
+            {
+                id: 3,
+                causedBy: 1,
+                name: "ADD ITEM <Sword>",
+                output: [
+                    "Added Sword to King Arthur's inventory."
+                ]
+            },
+            {
+                id: 2,
+                causedBy: 1,
+                name: "LEARN SKILL <Blacksmithing>",
+                output: [
+                    "King Arthur learned Blacksmithing!"
+                ]
+            },
+            {
+                id: 1,
+                name: "MAKE SWORD",
+                output: [
+                    "King Arthur made a sword!"
+                ],
+                caused: [
+                    2, 3
+                ]
+            }
+        ]);
+
     });
 
 });

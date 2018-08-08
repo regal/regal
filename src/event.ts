@@ -4,17 +4,32 @@ import { PropertyChange } from './agent';
 export const DEFAULT_EVENT_ID: number = 0;
 export const DEFAULT_EVENT_NAME: string = "DEFAULT";
 
-export type EventFunction = (game: GameInstance) => EventFunction;
+export interface EventFunction { 
+    (game: GameInstance): EventFunction;
+}
 
 export interface TrackedEvent extends EventFunction {
     (game: GameInstance): TrackedEvent | EventFunction;
     eventName: string;
-    target: EventFunction
+    target: EventFunction;
+    then(...events: TrackedEvent[]): EventQueue;
 }
 
-function isTrackedEvent(o: any): o is TrackedEvent {
-    return (<TrackedEvent>o).target !== undefined;
+export enum QueueInsertionType {
+    IMMEDIATE,
+    DELAYED
 }
+
+export interface EventQueue extends TrackedEvent {
+    qType: QueueInsertionType;
+    events: TrackedEvent[];
+}
+
+export const isTrackedEvent = (o: any): o is TrackedEvent => 
+    (<TrackedEvent>o).target !== undefined;
+
+export const isEventQueue = (o: any): o is EventQueue =>
+    (<EventQueue>o).qType !== undefined;
 
 export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;
@@ -77,43 +92,84 @@ export class InstanceEvents {
         return event;
     }
 
-    archiveCurrent(): void {
+    _archiveCurrent(): void {
         delete this.current.func;
         this.history.unshift(this._queue.shift());
     }
 
-    addEvent(event: TrackedEvent): EventRecord {
-        const id = ++this._lastEventId;
-        const record = new EventRecord(id, event.eventName, event);
+    _addEvents(events: TrackedEvent[], insertionType: QueueInsertionType, cause?: EventRecord): void {
+        const records = events.map(event =>
+            new EventRecord(++this._lastEventId, event.eventName, event)
+        );
 
-        this._queue.push(record);
+        if (cause) {
+            cause.trackCausedEvent(...records);
+        }
+        
+        switch (insertionType) {
+            case QueueInsertionType.IMMEDIATE:
+                this._queue = records.concat(this._queue);
+                break;
 
-        return record;
-    }
+            case QueueInsertionType.DELAYED:
+                this._queue = this._queue.concat(records);
+                break;
 
-    executeCurrent(): void {
-        const current = this.current;
-        const nextEvent = current.func.target(this.game);
-        this.archiveCurrent();
-
-        if (isTrackedEvent(nextEvent) && nextEvent !== noop) {
-            const nextEventRecord = this.addEvent(nextEvent);
-            current.trackCausedEvent(nextEventRecord);
-            this.executeCurrent();
+            default:
+                throw new RegalError("Invalid QueueInsertionType");
         }
     }
+
+    _executeCurrent(): void {
+        const current = this.current;
+        const nextEvent = current.func.target(this.game);
+        this._archiveCurrent();
+
+        if (isTrackedEvent(nextEvent) && nextEvent !== noop) {
+            if (isEventQueue(nextEvent))
+                this._addEvents(nextEvent.events, nextEvent.qType, current);
+            else
+                this._addEvents([nextEvent], QueueInsertionType.IMMEDIATE, current);
+        }
+
+        if (this._queue.length > 0) {
+            this._executeCurrent();
+        }
+    }
+
+    invoke(event: TrackedEvent): void {
+        this._addEvents([event], QueueInsertionType.IMMEDIATE);
+        this._executeCurrent();
+    }
+}
+
+const illegalEventQueueInvocation = (game: GameInstance): undefined => {
+    throw new RegalError("Cannot invoke an EventQueue.");
 }
 
 export const on = (eventName: string, eventFunc: EventFunction): TrackedEvent => {
     const event = <TrackedEvent>((game: GameInstance) => {
-        game.events.addEvent(event);
-        game.events.executeCurrent();
-
+        game.events.invoke(event);
         return noop;
     });
 
     event.eventName = eventName;
     event.target = eventFunc;
+
+    event.then = (...events: TrackedEvent[]): EventQueue => {
+        const eq = <EventQueue>(illegalEventQueueInvocation);
+
+        eq.target = illegalEventQueueInvocation;
+        eq.eventName = "Q IMMEDIATE";
+        eq.qType = QueueInsertionType.IMMEDIATE;
+
+        // If previous event is an event queue, include that queue.
+        eq.events = isEventQueue(event) 
+            ? event.events.concat(events) 
+            : Array.prototype.concat(event, events);
+        
+        return eq;
+    };
 
     return event;
 }
