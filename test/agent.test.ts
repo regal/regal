@@ -4,7 +4,7 @@ import 'mocha';
 import { GameInstance, RegalError } from '../src/game';
 import { Agent, resetRegistry, staticAgentRegistry, AgentRecord, AgentReference, PropertyOperation } from '../src/agent';
 import { log } from '../src/utils';
-import { on, noop } from '../src/event';
+import { on, noop, EventRecord } from '../src/event';
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -109,7 +109,7 @@ describe("Agent", function() {
 
         it("Error check for InstanceAgents#setAgentProperty for an unused ID", function() {
             expect(() =>
-                new GameInstance().agents.setAgentProperty(1, "foo", "bar", { id: 0, name: "EVENT" })
+                new GameInstance().agents.setAgentProperty(1, "foo", "bar", EventRecord.default)
             ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
         });
 

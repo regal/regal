@@ -22,7 +22,7 @@ describe("Event", function() {
                 name: "GREET",
                 output: [
                     "Hello, world!"
-                ]
+                ],
             }
         ]);
         expect(myGame.output.lines).to.deep.equal(["Hello, world!"]);
@@ -44,13 +44,13 @@ describe("Event", function() {
                 name: "GREET <Regal>",
                 output: [
                     "Hello, Regal!"
-                ]
+                ],
             }
         ]);
         expect(myGame.output.lines).to.deep.equal(["Hello, Regal!"]);
     });
 
-    it.skip("Returning another EventFunction from inside another executes it", function() {
+    it("Returning another EventFunction from inside another executes it", function() {
         const morning = on("MORNING", game => {
             game.output.write("Have a great day!");
             return noop;

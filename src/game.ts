@@ -27,7 +27,7 @@ export class GameInstance {
 
     constructor() {
         this.agents = new InstanceAgents(this);
-        this.events = new InstanceEvents();
+        this.events = new InstanceEvents(this);
         this.output = new InstanceOutput(this);
         this.state = new InstanceState(this);
     }
