@@ -23,6 +23,8 @@ export enum QueueInsertionType {
 export interface EventQueue extends TrackedEvent {
     qType: QueueInsertionType;
     events: TrackedEvent[];
+    enqueue(...events: TrackedEvent[]): EventQueue;
+    nq(...events: TrackedEvent[]): EventQueue;
 }
 
 export const isTrackedEvent = (o: any): o is TrackedEvent => 
@@ -177,7 +179,26 @@ export const on = (eventName: string, eventFunc: EventFunction): TrackedEvent =>
     event.then = buildThenMethod(event);
 
     return event;
-}
+};
+
+// * TODO: Allow combinations of immediate and delayed events
+// * {qType: QueueInsertionType; events: TrackedEvent[]}[]
+export const enqueue = (...events: TrackedEvent[]): EventQueue => {
+    const eq = <EventQueue>(illegalEventQueueInvocation);
+
+    eq.target = illegalEventQueueInvocation;
+    eq.eventName = "Q DELAYED";
+    eq.qType = QueueInsertionType.DELAYED;
+    eq.events = events;
+
+    eq.then = (o: any) => {
+        throw new RegalError("A delayed queue cannot have a `then`.");
+    }
+
+    return eq;
+};
+
+export const nq = enqueue;
 
 // export const queue = (...funcs: EventFunction[]): EventFunction => {
 //     if (!funcs || funcs.length === 0) {
