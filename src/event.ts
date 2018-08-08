@@ -147,6 +147,24 @@ const illegalEventQueueInvocation = (game: GameInstance): undefined => {
     throw new RegalError("Cannot invoke an EventQueue.");
 }
 
+// Builds the `then` method on a given TrackedEvent
+const buildThenMethod = (cause: TrackedEvent) => 
+    (...events: TrackedEvent[]): EventQueue => {
+        const eq = <EventQueue>(illegalEventQueueInvocation);
+
+        eq.target = illegalEventQueueInvocation;
+        eq.eventName = "Q IMMEDIATE";
+        eq.qType = QueueInsertionType.IMMEDIATE;
+        eq.then = buildThenMethod(eq);
+
+        // If previous event is an event queue, include that queue.
+        eq.events = isEventQueue(cause) 
+            ? cause.events.concat(events) 
+            : Array.prototype.concat(cause, events);
+        
+        return eq;
+    };
+
 export const on = (eventName: string, eventFunc: EventFunction): TrackedEvent => {
     const event = <TrackedEvent>((game: GameInstance) => {
         game.events.invoke(event);
@@ -156,28 +174,10 @@ export const on = (eventName: string, eventFunc: EventFunction): TrackedEvent =>
     event.eventName = eventName;
     event.target = eventFunc;
 
-    event.then = (...events: TrackedEvent[]): EventQueue => {
-        const eq = <EventQueue>(illegalEventQueueInvocation);
-
-        eq.target = illegalEventQueueInvocation;
-        eq.eventName = "Q IMMEDIATE";
-        eq.qType = QueueInsertionType.IMMEDIATE;
-
-        // If previous event is an event queue, include that queue.
-        eq.events = isEventQueue(event) 
-            ? event.events.concat(events) 
-            : Array.prototype.concat(event, events);
-        
-        return eq;
-    };
+    event.then = buildThenMethod(event);
 
     return event;
 }
-    
-
-
-// export const pipe = (...funcs: EventFunction[]): EventFunction =>
-//     (!funcs || funcs.length === 0) ? noop() : funcs.reduce((f, g) => (game: GameInstance) => g(f(game)));
 
 // export const queue = (...funcs: EventFunction[]): EventFunction => {
 //     if (!funcs || funcs.length === 0) {

@@ -90,7 +90,7 @@ describe("Event", function() {
         ]);
     });
 
-    it("Immediate execution with `then`", function() {
+    it("Executing a singleton EventQueue immediately with `then`", function() {
         const learnSkill = (name: string, skill: string) =>
             on(`LEARN SKILL <${skill}>`, game => {
                 game.output.write(`${name} learned ${skill}!`);
@@ -142,7 +142,50 @@ describe("Event", function() {
                 ]
             }
         ]);
+    });
 
+    it("Chaining n-ary immediate EventQueues with `then`", function() {
+        const foo = (name: string) => on(`FOO <${name}>`, game => {
+            return noop;
+        });
+        const complex = on("COMPLEX", game => {
+            return foo("ONE")
+                .then(foo("TWO"), foo("THREE"))
+                .then(foo("FOUR"));
+        });
+
+        const myGame = new GameInstance();
+        complex(myGame);
+
+        expect(myGame.events.history).to.deep.equal([
+            {
+                id: 5,
+                causedBy: 1,
+                name: "FOO <FOUR>",
+            },
+            {
+                id: 4,
+                causedBy: 1,
+                name: "FOO <THREE>",
+            },
+            {
+                id: 3,
+                causedBy: 1,
+                name: "FOO <TWO>",
+            },
+            {
+                id: 2,
+                causedBy: 1,
+                name: "FOO <ONE>",
+            },
+            {
+                id: 1,
+                name: "COMPLEX",
+                caused: [
+                    2, 3, 4, 5
+                ]
+            }
+        ]);
     });
 
 });
