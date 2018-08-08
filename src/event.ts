@@ -6,6 +6,16 @@ export const DEFAULT_EVENT_NAME: string = "DEFAULT";
 
 export type EventFunction = (game: GameInstance) => EventFunction;
 
+export interface TrackedEvent extends EventFunction {
+    (game: GameInstance): TrackedEvent | EventFunction;
+    eventName: string;
+    target: EventFunction
+}
+
+function isTrackedEvent(o: any): o is TrackedEvent {
+    return (<TrackedEvent>o).target !== undefined;
+}
+
 export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;
 
@@ -53,33 +63,10 @@ export class InstanceEvents {
     history: EventRecord[] = [];
 
     private _lastEventId = DEFAULT_EVENT_ID;
-    // private _eventStack: EventRecord[] = [
-    //     new EventRecord()
-    // ];
     private _queue: EventRecord[] = [];
 
     constructor(public game: GameInstance) {}
 
-    // startEvent(eventName: string): EventRecord {
-    //     const id = ++this._lastEventId;
-    //     const record = new EventRecord(id, eventName);
-
-    //     this._eventStack.push(record);
-
-    //     return record;
-    // }
-
-    // stopEvent(): void {
-    //     if (this.current.id === DEFAULT_EVENT_ID) {
-    //         throw new RegalError("Cannot stop the default event.");
-    //     }
-
-    //     this.history.unshift(this._eventStack.pop());
-    // }
-
-    // get current(): EventRecord {
-    //     return this._eventStack[this._eventStack.length - 1];
-    // }
     get current(): EventRecord {
         let event = this._queue[0];
 
@@ -115,55 +102,13 @@ export class InstanceEvents {
             this.executeCurrent();
         }
     }
-
-    // execute(event: TrackedEvent): void {
-    //     const eventRecord = this.addEvent(event);
-    //     const resultingEvent = event.target(this.game);
-
-    //     if (isTrackedEvent(resultingEvent)) {
-            
-    //         if (resultingEvent !== noop) {
-    //             const resultingEventRecord = this.addEvent(resultingEvent);
-    //             eventRecord.trackCausedEvent(resultingEventRecord);
-    //             resultingEvent(this.game); // TODO - pick things up here
-    //         }
-            
-    //     }
-
-    //     delete eventRecord.func; // Func doesn't need to be stored in eventRecord anymore
-    //     this.history.unshift(this._queue.shift());
-    // }
-}
-
-// export type TrackedEvent = EventFunction & { eventName: string };
-
-// export const on = (eventName: string, eventFunc: EventFunction): EventFunction =>
-//     (game: GameInstance) => {
-//         // const event = game.events.startEvent(eventName);
-//         // const result = eventFunc(game);
-        
-//         // result(game);
-//         // game.events.stopEvent();
-//         game.events.execute(eventName, eventFunc);
-
-//         return noop;
-//     };
-
-export interface TrackedEvent extends EventFunction {
-    (game: GameInstance): TrackedEvent | EventFunction;
-    eventName: string;
-    target: EventFunction
-}
-
-function isTrackedEvent(o: any): o is TrackedEvent {
-    return (<TrackedEvent>o).target !== undefined;
 }
 
 export const on = (eventName: string, eventFunc: EventFunction): TrackedEvent => {
     const event = <TrackedEvent>((game: GameInstance) => {
         game.events.addEvent(event);
         game.events.executeCurrent();
-        // game.events.execute(event);
+
         return noop;
     });
 
