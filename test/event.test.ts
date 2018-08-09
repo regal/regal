@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 import { GameInstance, RegalError } from '../src/game';
-import { on, noop, EventRecord, TrackedEvent } from '../src/event';
+import { on, noop, EventRecord, TrackedEvent, nq } from '../src/event';
 import { log } from '../src/utils';
 
 describe("Event", function() {
@@ -285,8 +285,28 @@ describe("Event", function() {
 
         // End utility functions
 
+        /* Queue Tests */
+        // 1-6
         QueueTest(() => f(1), ["f1"]);
+        QueueTest(() => f(1).then(f(2)), ["f1", "f2"]);
+        QueueTest(() => f(1).then(f(2), f(3), f(4)), ["f1", "f2", "f3", "f4"]);
+        QueueTest(() => f(1).then(f(2).then(f(3)), f(4)), ["f1", "f2", "f3", "f4"]);
+        QueueTest(() => f(1).then(f(2), f(3)).then(f(4)), ["f1", "f2", "f3", "f4"]);
+        QueueTest(() => f(1).then(f(2).then(f(3)), f(4).then(f(5), f(6)).then(f(7))).then(f(8), f(9)), ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"]);
 
+        // 7-10
+        QueueTest(() => nq(f(1)), ["f1"]);
+        QueueTest(() => nq(f(1), f(2), f(3)), ["f1", "f2", "f3"]);
+        QueueTest(() => nq(f(1).then(f(2)), f(3)), ["f1", "f2", "f3"]);
+        QueueTest(() => nq(f(1), f(2)).nq(f(3)), ["f1", "f2", "f3"]);
+
+        // 11-12
+        // 11. TODO
+        // 12. TODO
+
+        // 13-14
+        QueueTest(() => f(1).then(nq(f(2), f(3))), ["f1", "f2", "f3"]);
+        QueueTest(() => f(1).thenq(f(2), f(3)), ["f1", "f2", "f3"]);
     });
 
 });

@@ -13,6 +13,7 @@ export interface TrackedEvent extends EventFunction {
     eventName: string;
     target: EventFunction;
     then(...events: TrackedEvent[]): EventQueue;
+    thenq(...events: TrackedEvent[]): EventQueue;
 }
 
 export enum QueueInsertionType {
@@ -23,7 +24,6 @@ export enum QueueInsertionType {
 export interface EventQueue extends TrackedEvent {
     qType: QueueInsertionType;
     events: TrackedEvent[];
-    enqueue(...events: TrackedEvent[]): EventQueue;
     nq(...events: TrackedEvent[]): EventQueue;
 }
 
