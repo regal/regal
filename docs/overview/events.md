@@ -380,6 +380,41 @@ const queue = nq([event1, event2]);
 queue.nq(event3);
 ```
 
+### Definitions
+
+(TODO: Move this section)
+
+* An `EventFunction` is a function type that accepts a `GameInstance` and returns an `EventFunction`, called the *return function*.
+* The *return function* is caused by the *cause function*.
+
+* Wrapping an `EventFunction` with `on` creates a special type of `EventFunction` called a `TrackedEvent`.
+* A `TrackedEvent` is tracked by `GameInstance.events` and has methods `then` and `thenq`.
+
+* An `EventQueue` is a special type of `TrackedEvent` that contains multiple `EventFunction`s.
+* An `EventQueue` has method `enqueue` (and its alias `nq`).
+* An `EventQueue` contains two collections of `EventFunctions`: *immediate* events and *delayed* events.
+* When a return function is an `EventQueue`, the `EventQueue`'s *immediate* events are placed at the beginning of `GameInstance.events._queue` and *delayed* events are placed at the end.
+
+* A `TrackedEvent` that has not been modified can considered an `EventQueue` with one event in its immediate event collection. (Except it does not have the `enqueue` method.)
+
+* When `TrackedEvent.then(event: TrackedEvent)` is called, an `EventQueue` is created. The event(s) contained in the target `TrackedEvent`'s and the `event` argument's immediate event collections are combined to create the new `EventQueue`'s immediate event collection. 
+    * The events in the `event` argument's delayed event collection are carried over to create the new `EventQueue`'s delayed event collection.
+    * If `TrackedEvent.then` is called and the target's delayed event collection is not empty, an error will be thrown.
+
+* `TrackedEvent.then(eventA, eventB, eventC...: TrackedEvent[])` is equivalent to `TrackedEvent.then(eventA).then(eventB).then(eventC)`.
+
+* There exists a standalone function `enqueue` (and its alias `nq`) that accepts zero or more `TrackedEvent`s.
+* When `enqueue(...events: TrackedEvent[])` is called, an `EventQueue` is created. The event(s) contained in the `...events` argument are combined to create the new `EventQueue`'s delayed event collection.
+    * If the `...events` have events in both their immediate and delayed event collections, the immediate events will be concatenated, followed by the delayed events.
+
+* When `EventQueue.enqueue(...events: TrackedEvent[])` is called, an `EventQueue` is created. The event(s) contained in the target `EventQueue`'s delayed event collection and the event(s) contained in the `...events` argument are combined to create the new `EventQueue`'s delayed event collection.
+    * If the `...events` have events in both their immediate and delayed event collections, the immediate events will be concatenated, followed by the delayed events.
+    * If the target `EventQueue` has events in its immediate event collection, those events are carried over to the new `EventQueue`'s immediate event collection.
+
+* `enqueue(eventA, eventB, eventC...: TrackedEvent[])` is equivalent to `enqueue(eventA).nq(eventB).nq(eventC)`, which is equivalent to `enqueue(eventA).nq(eventB, eventC)`.
+
+* `TrackedEvent.thenq(...events: TrackedEvent[])` is a shorthand for `TrackedEvent.then(nq(...events: TrackedEvent[]))`.
+
 ## Tracking Agent Changes by Event
 
 In addition to what we've covered, `GameInstance.events.history` tracks all changes made to registered agents over the course of each event as well.
