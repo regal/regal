@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 import { GameInstance, RegalError } from '../src/game';
-import { on, noop } from '../src/event';
+import { on, noop, EventRecord, TrackedEvent } from '../src/event';
 import { log } from '../src/utils';
 
 describe("Event", function() {
@@ -196,7 +196,7 @@ describe("Event", function() {
                 }
             ]);
         });
-    
+
         it("Chaining n-ary immediate EventQueues with `then`", function() {
             const foo = (name: string) => on(`FOO <${name}>`, game => {
                 return noop;
@@ -240,6 +240,52 @@ describe("Event", function() {
                 }
             ]);
         });
+
+        // Start utility functions
+
+        const buildExpectedOutput = (cause: string, effects: string[]) => {
+            const causeRecord: Partial<EventRecord> = {
+                id: 1,
+                name: cause,
+                caused: []
+            };
+
+            let id = 1;
+
+            const effectRecords = effects.map(name => {
+                id++;
+                causeRecord.caused.push(id);
+                return {
+                    id,
+                    name,
+                    causedBy: 1
+                } as Partial<EventRecord>;
+            });
+
+            effectRecords.unshift(causeRecord);
+
+            return effectRecords.reverse();
+        }
+
+        const f = (n: number) => on(`f${n}`, game => noop);
+
+        const QueueTest = (q: () => TrackedEvent, expected: string[]) => 
+            it(`QTest: ${q.toString().split("=> ")[1]} -> ${expected.join(', ')}`, function() {
+                const init = on("INIT", game => {
+                    return q();
+                });
+    
+                const myGame = new GameInstance();
+                init(myGame);
+
+                expect(myGame.events.history).to.deep.equal(
+                    buildExpectedOutput("INIT", expected)
+                );
+            });
+
+        // End utility functions
+
+        QueueTest(() => f(1), ["f1"]);
 
     });
 
