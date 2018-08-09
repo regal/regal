@@ -90,58 +90,7 @@ describe("Event", function() {
         ]);
     });
 
-    /* Queueing Tests
-     * 1. return f1;
-     *      f1 | .
-     * 2. return f1.then(f2);
-     *      f1 f2 | .
-     * 3. return f1.then(f2, f3, f4);
-     *      f1 f2 f3 f4 | .
-     * 4. return f1.then(f2.then(f3), f4);
-     *      f1 f2 f3 f4 | .
-     * 5. return f1.then(f2, f3).then(f4);
-     *      f1 f2 f3 f4 | .
-     * 6. return f1.then(f2.then(f3), f4.then(f5, f6).then(f7)).then(f8, f9);
-     *      f1 f2 f3 f4 f5 f6 f7 f8 f9 | .
-     * 7. return nq(f1);
-     *      . | f1
-     * 8. return nq(f1, f2, f3);
-     *      . | f1 f2 f3
-     * 9. return nq(f1.then(f2), f3);
-     *      . | f1 f2 f3
-     * 10. return nq(f1, f2).nq(f3);
-     *      . | f1 f2 f3
-     * 11. return nq(f1, f2).then(f3);
-     *      RegalError: Any enqueue instruction must happen at the end of the return statement.
-     * 12. return f1.nq(f2, f3);
-     *      TypeError: `nq` does not exist on `f1`.
-     * 13. return f1.then(nq(f2, f3));
-     *      f1 | f2 f3
-     * 14. return f1.thenq(f2, f3);
-     *      f1 | f2 f3
-     * 15. return f1.then(nq(f2, f3)).then(f4);
-     *      RegalError: Any enqueue instruction must happen at the end of the return statement.
-     * 16. return f1.thenq(f2, f3).then(f4);
-     *      RegalError: Any enqueue instruction must happen at the end of the return statement.
-     * 17. return f1.thenq(f2.then(f3, f4), f5);
-     *      f1 | f2 f3 f4 f5
-     * 18. return f1.thenq(f2, f3).thenq(f4, f5);
-     *      f1 | f2 f3 f4 f5
-     * 19. return f1.thenq(nq(f2, f3));
-     *      f1 | f2 f3
-     * 20. return f1.thenq(f2.thenq(f3, f4));
-     *      f1 | f2 f3 f4
-     * 21. return f1.thenq(f2.then(f3, f4).then(nq(f5)), f6.thenq(f7, f8));
-     *      f1 | f2 f3 f4 f5 f6 f7 f8
-     * 22. return f1.then(f2, f3, nq(f4, f5));
-     *      f1 f2 f3 | f4 f5
-     * 23. return f1.then(f2, nq(f3, f4), f5);
-     *      RegalError: Any enqueue instruction must happen at the end of the return statement.
-     * 24. return f1.thenq(f2, nq(f3, f4), f5);
-     *      f1 | f2 f3 f4 f5
-    **/
-
-    describe("Queuing", function() {
+    describe("Queueing", function() {
 
         it("Executing a singleton EventQueue immediately with `then`", function() {
             const learnSkill = (name: string, skill: string) =>
@@ -285,28 +234,100 @@ describe("Event", function() {
 
         // End utility functions
 
-        /* Queue Tests */
-        // 1-6
+        /* * Queue Tests * */
+        
+        // * 1. return f1;
+        // *      f1 | .
         QueueTest(() => f(1), ["f1"]);
-        QueueTest(() => f(1).then(f(2)), ["f1", "f2"]);
-        QueueTest(() => f(1).then(f(2), f(3), f(4)), ["f1", "f2", "f3", "f4"]);
-        QueueTest(() => f(1).then(f(2).then(f(3)), f(4)), ["f1", "f2", "f3", "f4"]);
-        QueueTest(() => f(1).then(f(2), f(3)).then(f(4)), ["f1", "f2", "f3", "f4"]);
-        QueueTest(() => f(1).then(f(2).then(f(3)), f(4).then(f(5), f(6)).then(f(7))).then(f(8), f(9)), ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"]);
 
-        // 7-10
+        // * 2. return f1.then(f2);
+        // *      f1 f2 | .
+        QueueTest(() => f(1).then(f(2)), ["f1", "f2"]);
+
+        // * 3. return f1.then(f2, f3, f4);
+        // *      f1 f2 f3 f4 | .       
+        QueueTest(() => f(1).then(f(2), f(3), f(4)), ["f1", "f2", "f3", "f4"]);
+
+        // * 4. return f1.then(f2.then(f3), f4);
+        // *      f1 f2 f3 f4 | .
+        QueueTest(() => f(1).then(f(2).then(f(3)), f(4)), ["f1", "f2", "f3", "f4"]);
+        
+        // * 5. return f1.then(f2, f3).then(f4);
+        // *      f1 f2 f3 f4 | .
+        QueueTest(() => f(1).then(f(2), f(3)).then(f(4)), ["f1", "f2", "f3", "f4"]);
+        
+        // * 6. return f1.then(f2.then(f3), f4.then(f5, f6).then(f7)).then(f8, f9);
+        // *      f1 f2 f3 f4 f5 f6 f7 f8 f9 | .
+        QueueTest(() => f(1).then(f(2).then(f(3)), f(4).then(f(5), f(6)).then(f(7))).then(f(8), f(9)), 
+            ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"]);
+
+        // * 7. return nq(f1);
+        // *      . | f1
         QueueTest(() => nq(f(1)), ["f1"]);
+        
+        // * 8. return nq(f1, f2, f3);
+        // *      . | f1 f2 f3
         QueueTest(() => nq(f(1), f(2), f(3)), ["f1", "f2", "f3"]);
+        
+        // * 9. return nq(f1.then(f2), f3);
+        // *      . | f1 f2 f3
         QueueTest(() => nq(f(1).then(f(2)), f(3)), ["f1", "f2", "f3"]);
+        
+        // * 10. return nq(f1, f2).nq(f3);
+        // *      . | f1 f2 f3
         QueueTest(() => nq(f(1), f(2)).nq(f(3)), ["f1", "f2", "f3"]);
 
-        // 11-12
-        // 11. TODO
-        // 12. TODO
+        // * 11. return nq(f1, f2).then(f3);
+        // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
+   
+        // * 12. return f1.nq(f2, f3);
+        // *      TypeError: `nq` does not exist on `f1`.
 
-        // 13-14
+        // * 13. return f1.then(nq(f2, f3));
+        // *      f1 | f2 f3
         QueueTest(() => f(1).then(nq(f(2), f(3))), ["f1", "f2", "f3"]);
+
+        // * 14. return f1.thenq(f2, f3);
+        // *      f1 | f2 f3
         QueueTest(() => f(1).thenq(f(2), f(3)), ["f1", "f2", "f3"]);
+
+        // * 15. return f1.then(nq(f2, f3)).then(f4);
+        // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
+   
+        // * 16. return f1.thenq(f2, f3).then(f4);
+        // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
+
+        // * 17. return f1.thenq(f2, f3).thenq(f4, f5);
+        // *      RegalError: Any enqueue instruction must happen at the end of the return statement.   
+
+        // * 18. return f1.thenq(f2.then(f3, f4), f5);
+        // *      f1 | f2 f3 f4 f5   
+        QueueTest(() => f(1).thenq(f(2).then(f(3), f(4)), f(5)), ["f1", "f2", "f3", "f4", "f5"]);
+        
+        // * 19. return f1.thenq(nq(f2, f3));
+        // *      f1 | f2 f3   
+        QueueTest(() => f(1).thenq(nq(f(2), f(3))), ["f1", "f2", "f3"]);
+
+        // * 20. return f1.thenq(f2.thenq(f3, f4));
+        // *      f1 | f2 f3 f4   
+        QueueTest(() => f(1).thenq(f(2).thenq(f(3), f(4))), ["f1", "f2", "f3", "f4"]);
+
+        // * 21. return f1.thenq(f2.then(f3, f4).then(nq(f5)), f6.thenq(f7, f8));
+        // *      f1 | f2 f3 f4 f5 f6 f7 f8   
+        QueueTest(() => f(1).thenq(f(2).then(f(3), f(4)).then(nq(f(5))), f(6).thenq(f(7), f(8))),
+            ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"]);
+
+        // * 22. return f1.then(f2, f3, nq(f4, f5));
+        // *      f1 f2 f3 | f4 f5       
+        QueueTest(() => f(1).then(f(2), f(3), nq(f(4), f(5))), ["f1", "f2", "f3", "f4", "f5"]);
+        
+        // * 23. return f1.thenq(f2, nq(f3, f4), f5);
+        // *      f1 | f2 f3 f4 f5   
+        QueueTest(() => f(1).thenq(f(2), nq(f(3), f(4)), f(5)), ["f1", "f2", "f3", "f4", "f5"]);
+
+        // * 24. return f1.then(f2, nq(f3, f4), f5);
+        // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
+   
     });
 
 });
