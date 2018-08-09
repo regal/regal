@@ -147,7 +147,7 @@ export class InstanceEvents {
 
 const illegalEventQueueInvocation = (game: GameInstance): undefined => {
     throw new RegalError("Cannot invoke an EventQueue.");
-}
+};
 
 // Builds the `then` method on a given TrackedEvent
 const buildThenMethod = (cause: TrackedEvent) => 
