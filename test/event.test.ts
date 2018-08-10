@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 import { GameInstance, RegalError } from '../src/game';
-import { on, noop, EventRecord, TrackedEvent, nq, isEventQueue } from '../src/event';
+import { on, noop, EventRecord, TrackedEvent, nq, isEventQueue, enqueue } from '../src/event';
 import { log } from '../src/utils';
 
 describe("Event", function() {
@@ -188,6 +188,101 @@ describe("Event", function() {
                     ]
                 }
             ]);
+        });
+
+        it("Delayed execution with enqueue", function() {
+            const hitGround = (item: string) =>
+                on(`HIT GROUND <${item}>`, game => {
+                    game.output.write(`${item} hits the ground. Thud!`);
+                    return noop;
+                });
+
+            const fall = (item: string) =>
+                on(`FALL <${item}>`, game => {
+                    game.output.write(`${item} falls.`);
+                    return enqueue(hitGround(item));
+                });
+
+            const drop = (items: string[]) =>
+                on("DROP ITEMS", game => {
+                    let queue = enqueue();
+                    items.forEach(item => {
+                        queue = queue.nq(fall(item));
+                    });
+                    return queue;
+                });
+
+            const myGame = new GameInstance();
+            const items = ["Hat", "Duck", "Spoon"];
+
+            drop(items)(myGame);
+
+            expect(myGame.events.history).to.deep.equal([
+                {
+                    id: 7,
+                    causedBy: 4,
+                    name: "HIT GROUND <Spoon>",
+                    output: [
+                        "Spoon hits the ground. Thud!"
+                    ]
+                },
+                {
+                    id: 6,
+                    causedBy: 3,
+                    name: "HIT GROUND <Duck>",
+                    output: [
+                        "Duck hits the ground. Thud!"
+                    ]
+                },
+                {
+                    id: 5,
+                    causedBy: 2,
+                    name: "HIT GROUND <Hat>",
+                    output: [
+                        "Hat hits the ground. Thud!"
+                    ]
+                },
+                {
+                    id: 4,
+                    causedBy: 1,
+                    name: "FALL <Spoon>",
+                    output: [
+                        "Spoon falls."
+                    ],
+                    caused: [
+                        7
+                    ]
+                },
+                {
+                    id: 3,
+                    causedBy: 1,
+                    name: "FALL <Duck>",
+                    output: [
+                        "Duck falls."
+                    ],
+                    caused: [
+                        6
+                    ]
+                },
+                {
+                    id: 2,
+                    causedBy: 1,
+                    name: "FALL <Hat>",
+                    output: [
+                        "Hat falls."
+                    ],
+                    caused: [
+                        5
+                    ]
+                },
+                {
+                    id: 1,
+                    name: "DROP ITEMS",
+                    caused: [
+                        2, 3, 4
+                    ]
+                }
+            ])
         });
 
         describe("QTests", function() {
