@@ -1,4 +1,5 @@
 import { RegalError, ErrorCode, Game, GameInstance } from "./game";
+import { InstanceOutput } from "./output";
 
 export enum RequestType {
     USER_INPUT = "User Input",
@@ -13,7 +14,7 @@ export interface Request {
 }
 
 export interface Response {
-    output?: string[];
+    output?: InstanceOutput;
     game: GameInstance;
 }
 
@@ -29,7 +30,7 @@ export const play = (request: Request): Response => {
                 throw new RegalError("A game instance must be supplied with a user input request.");
             }
 
-            request.game.output = [];
+            request.game.output = new InstanceOutput(request.game);
             
             game = Game.onUserInput(request.content, request.game);
             break;

@@ -1,42 +1,88 @@
 import { GameInstance, RegalError } from './game';
 import { PropertyChange } from './agent';
 
+/** Event ID for untracked EventFunctions. */
 export const DEFAULT_EVENT_ID: number = 0;
+/** Name of untracked EventFunctions.*/
 export const DEFAULT_EVENT_NAME: string = "DEFAULT";
 
+/**
+ * A function that modifies the game instance.
+ * @param game The game instance to be modified.
+ * @returns The next EventFunction to be executed.
+ */
 export interface EventFunction { 
     (game: GameInstance): EventFunction;
 }
 
+/**
+ * An EventFunction that is tracked by the game instance and can 
+ * be extended into an EventQueue.
+ * @param game The game instance to be modified.
+ * @returns The next EventFunction to be executed.
+ */
 export interface TrackedEvent extends EventFunction {
+
     (game: GameInstance): TrackedEvent | EventFunction;
+
+    /** The name of the event. */
     eventName: string;
+
+    /** The EventFunction that is wrapped by the TrackedEvent. */
     target: EventFunction;
+
+    /**
+     * Adds events to the front of the event queue.
+     * @param events The events to be added.
+     * @returns An EventQueue with the new events.
+     */
     then(...events: TrackedEvent[]): EventQueue;
+
+    /**
+     * Adds events to the end of the event queue. 
+     * 
+     * Equivalent to calling <TrackedEvent>.then(nq(...events))
+     * @param events The events to be added.
+     * @returns An EventQueue with the new events.
+     */
     thenq(...events: TrackedEvent[]): EventQueue;
 }
 
-// export enum QueueInsertionType {
-//     IMMEDIATE,
-//     DELAYED
-// }
-
+/**
+ * Contains a queue of TrackedEvents to be added to the game instance.
+ */
 export interface EventQueue extends TrackedEvent {
-    // qType: QueueInsertionType;
-    // events: TrackedEvent[];
+
+    /** The events to be added to the beginning of the game's event queue. */
     immediateEvents: TrackedEvent[];
+
+    /** The events to be added to the end of the game's event queue. */
     delayedEvents: TrackedEvent[];
+
+    /**
+     * Adds events to the end of the event queue.
+     * @param events The events to be added.
+     * @returns An EventQueue with the new events.
+     */
     enqueue(...events: TrackedEvent[]): EventQueue;
+
+    /**
+     * Adds events to the end of the event queue. (Alias of EventQueue.enqueue)
+     * @param events The events to be added.
+     * @returns An EventQueue with the new events.
+     */
     nq(...events: TrackedEvent[]): EventQueue;
 }
 
-export const isTrackedEvent = (o: any): o is TrackedEvent => 
+/** Ensures the object is a TrackedEvent. */
+const isTrackedEvent = (o: any): o is TrackedEvent => 
     (<TrackedEvent>o).target !== undefined;
 
-export const isEventQueue = (o: any): o is EventQueue =>
+/** Ensures the object is an EventQueue. */
+const isEventQueue = (o: any): o is EventQueue =>
     (<EventQueue>o).nq !== undefined;
-    // (<EventQueue>o).qType !== undefined;
 
+/** "No operation" - reserved TrackedEvent that signals no more events. */
 export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;
 
@@ -48,21 +94,39 @@ export const noop: TrackedEvent = (() => {
     return event;
 })();
 
+/**
+ * Record of a TrackedEvent's effects in a game cycle.
+ */
 export class EventRecord {
 
+    /** The output emitted by the event. */
     output?: string[];
+    /** The ID of the event that caused this event. */
     causedBy?: number;
+    /** The IDs of the events that were caused by this event. */
     caused?: number[];
+    /** The records of all changes to registered agents that were caused by this event. */
     changes?: PropertyChange[];
 
+    /** Default EventRecord for untracked EventFunctions. */
     static default = new EventRecord();
 
+    /**
+     * Constructs a new EventRecord.
+     * @param id The event's unique numeric ID.
+     * @param name The event's name.
+     * @param func The event's TrackedEvent.
+     */
     constructor(
         public id: number = DEFAULT_EVENT_ID, 
         public name: string = DEFAULT_EVENT_NAME, 
         public func: TrackedEvent = noop
     ) {}
 
+    /**
+     * Appends lines of output to the EventRecord's output log.
+     * @param lines The lines of output emitted by the event.
+     */
     trackOutputWrite(...lines: string[]): void {
         if (this.output === undefined) {
             this.output = [];
@@ -70,6 +134,12 @@ export class EventRecord {
         this.output.push(...lines);
     }
 
+    /**
+     * Creates an association between this EventRecord and the caused events,
+     * setting the caused events' causedBy properties to this EventRecord's ID, and
+     * appending the events' IDs to this EventRecord's caused property.
+     * @param events The events that were caused by this event.
+     */
     trackCausedEvent(...events: EventRecord[]): void {
         if (this.caused === undefined) {
             this.caused = [];
@@ -79,15 +149,26 @@ export class EventRecord {
     }
 }
 
+/**
+ * Manager for all events in a GameInstance.
+ */
 export class InstanceEvents {
 
+    /** Contains records of the past events executed during the game cycle. */
     history: EventRecord[] = [];
 
+    /** ID of the most recently generated EventRecord. */
     private _lastEventId = DEFAULT_EVENT_ID;
+    /** Internal queue of events that have yet to be executed. */
     private _queue: EventRecord[] = [];
 
+    /**
+     * Constructs an InstanceEvents.
+     * @param game The game instance that owns this InstanceEvents.
+     */
     constructor(public game: GameInstance) {}
 
+    /** The current EventRecord. */
     get current(): EventRecord {
         let event = this._queue[0];
 
@@ -98,34 +179,22 @@ export class InstanceEvents {
         return event;
     }
 
-    _archiveCurrent(): void {
-        delete this.current.func;
-        this.history.unshift(this._queue.shift());
+    /**
+     * Executes the given event and all events caused by it.
+     * @param event The TrackedEvent to be invoked.
+     */
+    invoke(event: TrackedEvent): void {
+        this._addEvent(event);
+        this._executeCurrent();
     }
 
-    // _addEvents(events: TrackedEvent[], insertionType: QueueInsertionType, cause?: EventRecord): void {
-    //     const records = events.map(event =>
-    //         new EventRecord(++this._lastEventId, event.eventName, event)
-    //     );
-
-    //     if (cause) {
-    //         cause.trackCausedEvent(...records);
-    //     }
-        
-    //     switch (insertionType) {
-    //         case QueueInsertionType.IMMEDIATE:
-    //             this._queue = records.concat(this._queue);
-    //             break;
-
-    //         case QueueInsertionType.DELAYED:
-    //             this._queue = this._queue.concat(records);
-    //             break;
-
-    //         default:
-    //             throw new RegalError("Invalid QueueInsertionType");
-    //     }
-    // }
-
+    /**
+     * Adds the event to the internal queue. If the event is an EventQueue,
+     * the event's immediateEvents are added to the front of the queue
+     * and the delayedEvents are added to the back of the queue.
+     * @param event The TrackedEvent to be added to the queue.
+     * @param cause The EventRecord to be recorded as the event's cause (optional).
+     */
     _addEvent(event: TrackedEvent, cause?: EventRecord): void {
         let immediateEvents: TrackedEvent[];
         let delayedEvents: TrackedEvent[];
@@ -153,70 +222,47 @@ export class InstanceEvents {
         this._queue = this._queue.concat(delayedEventRecords);
     }
 
-    // _executeCurrent(): void {
-    //     const current = this.current;
-    //     const nextEvent = current.func.target(this.game);
-    //     this._archiveCurrent();
-
-    //     if (isTrackedEvent(nextEvent) && nextEvent !== noop) {
-    //         if (isEventQueue(nextEvent))
-    //             this._addEvents(nextEvent.events, nextEvent.qType, current);
-    //         else
-    //             this._addEvents([nextEvent], QueueInsertionType.IMMEDIATE, current);
-    //     }
-
-    //     if (this._queue.length > 0) {
-    //         this._executeCurrent();
-    //     }
-    // }
-
+    /**
+     * Executes the current EventRecord and recursively exeuctes
+     * all remaining EventRecords in the queue.
+     */
     _executeCurrent(): void {
         const current = this.current;
         const nextEvent = current.func.target(this.game);
         this._archiveCurrent();
 
+        // Add the nextEvent to the internal queue, if necessary.
         if (isTrackedEvent(nextEvent) && nextEvent !== noop) {
             this._addEvent(nextEvent, current);
         }
 
+        // While the queue is not empty, keep executing.
         if (this._queue.length > 0) {
             this._executeCurrent();
         }
     }
 
-    // invoke(event: TrackedEvent): void {
-    //     this._addEvents([event], QueueInsertionType.IMMEDIATE);
-    //     this._executeCurrent();
-    // }
-
-    invoke(event: TrackedEvent): void {
-        this._addEvent(event);
-        this._executeCurrent();
+    /**
+     * Deletes unnecessary data from the current EventRecord
+     * and moves it to the history array.
+     */
+    _archiveCurrent(): void {
+        delete this.current.func;
+        this.history.unshift(this._queue.shift());
     }
 }
 
+/** Creates a function that returns an error upon invocation. */
 const illegalEventQueueInvocation = () => (game: GameInstance): undefined => {
     throw new RegalError("Cannot invoke an EventQueue.");
 };
 
-// // Builds the `then` method on a given TrackedEvent
-// const buildThenMethod = (cause: TrackedEvent) => 
-//     (...events: TrackedEvent[]): EventQueue => {
-//         const eq = <EventQueue>(illegalEventQueueInvocation);
-
-//         eq.target = illegalEventQueueInvocation;
-//         eq.eventName = "Q IMMEDIATE";
-//         eq.qType = QueueInsertionType.IMMEDIATE;
-//         eq.then = buildThenMethod(eq);
-
-//         // If previous event is an event queue, include that queue.
-//         eq.events = isEventQueue(cause) 
-//             ? cause.events.concat(events) 
-//             : Array.prototype.concat(cause, events);
-        
-//         return eq;
-//     };
-
+/**
+ * Builds an EventQueue from the given collections of events.
+ * @param immediateEvents The collection of events to be executed immediately.
+ * @param delayedEvents The collection of events to be executed at the end of the queue.
+ * @returns The EventQueue.
+ */
 const buildEventQueue = (immediateEvents: TrackedEvent[], delayedEvents: TrackedEvent[]): EventQueue => {
     const eq = <EventQueue>(illegalEventQueueInvocation());
     eq.target = illegalEventQueueInvocation();
@@ -235,30 +281,19 @@ const buildEventQueue = (immediateEvents: TrackedEvent[], delayedEvents: Tracked
     return eq;
 };
 
-export const enqueue = (...events: TrackedEvent[]): EventQueue => {
-    const argImmediateEvents: TrackedEvent[] = [];
-    const argDelayedEvents: TrackedEvent[] = [];
-
-    events.forEach(event => {
-        if (isEventQueue(event)) {
-            argImmediateEvents.push(...event.immediateEvents);
-            argDelayedEvents.push(...event.delayedEvents);
-        } else {
-            argImmediateEvents.push(event);
-        }
-    });
-
-    return buildEventQueue([], argImmediateEvents.concat(argDelayedEvents));
-};
-
-export const nq = enqueue;
-
+/**
+ * Creates the `then` method for a TrackedEvent.
+ * @param rootTarget The TrackedEvent.
+ * @returns The `then` method.
+ */
 const thenConstructor = (rootTarget: TrackedEvent) =>
     (...events: TrackedEvent[]): EventQueue => {
+        // Build a helper function to call `then` for a single TrackedEvent.
         const singleThen = (target: TrackedEvent, arg: TrackedEvent): EventQueue => {
             let targetImmediateEvents: TrackedEvent[];
 
             if (isEventQueue(target)) {
+                // An EventQueue with at least one event in its delayedEvents collection cannot have its `then` method called.
                 if (target.delayedEvents.length > 0) {
                     throw new RegalError("Any enqueue instruction must happen at the end of the return statement.");
                 }
@@ -281,10 +316,56 @@ const thenConstructor = (rootTarget: TrackedEvent) =>
             return buildEventQueue(targetImmediateEvents.concat(argImmediateEvents), argDelayedEvents);
         }
 
+        // Call the helper `then` on every event, starting with the rootTarget.
         return <EventQueue>events.reduce(singleThen, rootTarget);
     };
 
+/**
+ * Executes the events at the end of the game's event queue.
+ * 
+ * If the events are EventQueues, any events in the queues' 
+ * immediateEvents collections will be concatenated, followed 
+ * by any events in the queues' delayedEvents collections.
+ * 
+ * @param events The events to be executed.
+ * @returns The EventQueue with all events in the queue's delayedEvent collection.
+ */
+export const enqueue = (...events: TrackedEvent[]): EventQueue => {
+    const argImmediateEvents: TrackedEvent[] = [];
+    const argDelayedEvents: TrackedEvent[] = [];
+
+    events.forEach(event => {
+        if (isEventQueue(event)) {
+            argImmediateEvents.push(...event.immediateEvents);
+            argDelayedEvents.push(...event.delayedEvents);
+        } else {
+            argImmediateEvents.push(event);
+        }
+    });
+
+    return buildEventQueue([], argImmediateEvents.concat(argDelayedEvents));
+};
+
+/**
+ * Executes the events at the end of the game's event queue.
+ * 
+ * If the events are EventQueues, any events in the queues' 
+ * immediateEvents collections will be concatenated, followed 
+ * by any events in the queues' delayedEvents collections.
+ * 
+ * @param events The events to be executed.
+ * @returns The EventQueue with all events in the queue's delayedEvent collection.
+ */
+export const nq = enqueue;
+
+/**
+ * Creates a TrackedEvent around an EventFunction.
+ * @param eventName The name of the TrackedEvent.
+ * @param eventFunc The EventFunction to be tracked.
+ * @returns The TrackedEvent.
+ */
 export const on = (eventName: string, eventFunc: EventFunction): TrackedEvent => {
+    // Make the TrackedEvent callable like a function.
     const event = <TrackedEvent>((game: GameInstance) => {
         game.events.invoke(event);
         return noop;
@@ -293,52 +374,8 @@ export const on = (eventName: string, eventFunc: EventFunction): TrackedEvent =>
     event.eventName = eventName;
     event.target = eventFunc;
 
-    // event.then = buildThenMethod(event);
     event.then = thenConstructor(event);
     event.thenq = (...events: TrackedEvent[]) => event.then(enqueue(...events));
 
     return event;
 };
-
-// * TODO: Allow combinations of immediate and delayed events
-// * {qType: QueueInsertionType; events: TrackedEvent[]}[]
-// export const enqueue = (...events: TrackedEvent[]): EventQueue => {
-//     const eq = <EventQueue>(illegalEventQueueInvocation);
-
-//     eq.target = illegalEventQueueInvocation;
-//     eq.eventName = "Q DELAYED";
-//     eq.qType = QueueInsertionType.DELAYED;
-//     eq.events = events;
-
-//     eq.then = (o: any) => {
-//         throw new RegalError("A delayed queue cannot have a `then`.");
-//     }
-
-//     return eq;
-// };
-
-// export const nq = enqueue;
-
-// export const queue = (...funcs: EventFunction[]): EventFunction => {
-//     if (!funcs || funcs.length === 0) {
-//         return noop();
-//     } else {
-//         return (game: GameInstance) => {
-//             game.queue.push(...funcs);
-//             return game;
-//         };
-//     }
-// };
-
-// export const runQueue = (game: GameInstance): GameInstance => {
-//     if (game) {
-//         const queue = game.queue;
-//         while (queue.length > 0) {
-//             const event = queue.shift();
-//             if (event) {
-//                 game = event(game);
-//             }
-//         }
-//     }
-//     return game;
-// }
