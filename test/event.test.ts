@@ -192,44 +192,84 @@ describe("Event", function() {
 
         // Start utility functions
 
-        const buildExpectedOutput = (cause: string, effects: string[]) => {
-            const causeRecord: Partial<EventRecord> = {
-                id: 1,
-                name: cause,
-                caused: []
-            };
+        const buildExpectedOutput = (events: string[], causes: string[]) => {
+            if (events.length != causes.length) {
+                throw new Error("Args must be the same length.");
+            }
 
-            let id = 1;
+            let id = 0;
 
-            const effectRecords = effects.map(name => {
-                id++;
-                causeRecord.caused.push(id);
+            const eventRecords = events.map(name => {
                 return {
-                    id,
-                    name,
-                    causedBy: 1
+                    id: ++id,
+                    name
                 } as Partial<EventRecord>;
             });
 
-            effectRecords.unshift(causeRecord);
+            causes.forEach((causeName, idx) => {
+                if (causeName === undefined) {
+                    return;
+                }
 
-            return effectRecords.reverse();
+                const causeIdx = eventRecords.findIndex(event => event.name === causeName);
+
+                if (causeIdx < 0) {
+                    throw new Error("Cause not found.");
+                }
+
+                const causeRecord = eventRecords[causeIdx];
+                const effectRecord = eventRecords[idx];
+
+                effectRecord.causedBy = causeRecord.id;
+
+                if (causeRecord.caused === undefined) {
+                    causeRecord.caused = [];
+                }
+
+                causeRecord.caused.push(effectRecord.id);
+            });
+
+            return eventRecords.reverse();
         }
 
         const f = (n: number) => on(`f${n}`, game => noop);
 
-        const QueueTest = (q: () => TrackedEvent, expected: string[]) => 
-            it(`QTest: ${q.toString().split("=> ")[1]} -> ${expected.join(', ')}`, function() {
-                const init = on("INIT", game => {
-                    return q();
-                });
+        const QueueTest = (q: () => TrackedEvent, immediate: string[], deferred: string[]) => 
+            it(`QTest: ${
+                q.toString().split("=> ")[1]
+            } -> ${
+                immediate.join(', ')
+            } | ${
+                deferred.join(', ')
+            }`, 
+            function() {
+                // Test basic queue execution
+                const init = on("INIT", game => q());
     
-                const myGame = new GameInstance();
+                let myGame = new GameInstance();
                 init(myGame);
 
-                expect(myGame.events.history).to.deep.equal(
-                    buildExpectedOutput("INIT", expected)
-                );
+                let expectedEventNames = ["INIT"].concat(immediate,  deferred);
+                let expectedEventCauses = [undefined].concat(Array(expectedEventNames.length - 1).fill("INIT"));
+                let expectedOutput = buildExpectedOutput(expectedEventNames, expectedEventCauses);
+
+                expect(myGame.events.history).deep.equal(expectedOutput);
+
+                // Test queue with an additional event in between the immediate and deferred collections
+                const dummy = on("DUMMY", game => noop);
+                const makeQueue = on("MAKE QUEUE", game => q().then(dummy));
+
+                myGame = new GameInstance();
+                makeQueue(myGame);
+
+                // log(myGame.events.history, "Actual");
+                // log(expectedOutput, "Expected");
+
+                expectedEventNames = ["MAKE QUEUE"].concat(immediate, ["DUMMY"], deferred);
+                expectedEventCauses = [undefined].concat(Array(expectedEventNames.length - 1).fill("MAKE QUEUE"));
+                expectedOutput = buildExpectedOutput(expectedEventNames, expectedEventCauses);
+
+                expect(myGame.events.history).deep.equal(expectedOutput);
             });
 
         // End utility functions
@@ -238,44 +278,44 @@ describe("Event", function() {
         
         // * 1. return f1;
         // *      f1 | .
-        QueueTest(() => f(1), ["f1"]);
+        QueueTest(() => f(1), ["f1"], []);
 
         // * 2. return f1.then(f2);
         // *      f1 f2 | .
-        QueueTest(() => f(1).then(f(2)), ["f1", "f2"]);
+        QueueTest(() => f(1).then(f(2)), ["f1", "f2"], []);
 
         // * 3. return f1.then(f2, f3, f4);
         // *      f1 f2 f3 f4 | .       
-        QueueTest(() => f(1).then(f(2), f(3), f(4)), ["f1", "f2", "f3", "f4"]);
+        QueueTest(() => f(1).then(f(2), f(3), f(4)), ["f1", "f2", "f3", "f4"], []);
 
         // * 4. return f1.then(f2.then(f3), f4);
         // *      f1 f2 f3 f4 | .
-        QueueTest(() => f(1).then(f(2).then(f(3)), f(4)), ["f1", "f2", "f3", "f4"]);
+        QueueTest(() => f(1).then(f(2).then(f(3)), f(4)), ["f1", "f2", "f3", "f4"], []);
         
         // * 5. return f1.then(f2, f3).then(f4);
         // *      f1 f2 f3 f4 | .
-        QueueTest(() => f(1).then(f(2), f(3)).then(f(4)), ["f1", "f2", "f3", "f4"]);
+        QueueTest(() => f(1).then(f(2), f(3)).then(f(4)), ["f1", "f2", "f3", "f4"], []);
         
         // * 6. return f1.then(f2.then(f3), f4.then(f5, f6).then(f7)).then(f8, f9);
         // *      f1 f2 f3 f4 f5 f6 f7 f8 f9 | .
         QueueTest(() => f(1).then(f(2).then(f(3)), f(4).then(f(5), f(6)).then(f(7))).then(f(8), f(9)), 
-            ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"]);
+            ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"], []);
 
         // * 7. return nq(f1);
         // *      . | f1
-        QueueTest(() => nq(f(1)), ["f1"]);
+        QueueTest(() => nq(f(1)), [], ["f1"]);
         
         // * 8. return nq(f1, f2, f3);
         // *      . | f1 f2 f3
-        QueueTest(() => nq(f(1), f(2), f(3)), ["f1", "f2", "f3"]);
+        QueueTest(() => nq(f(1), f(2), f(3)), [], ["f1", "f2", "f3"]);
         
         // * 9. return nq(f1.then(f2), f3);
         // *      . | f1 f2 f3
-        QueueTest(() => nq(f(1).then(f(2)), f(3)), ["f1", "f2", "f3"]);
+        QueueTest(() => nq(f(1).then(f(2)), f(3)), [], ["f1", "f2", "f3"]);
         
         // * 10. return nq(f1, f2).nq(f3);
         // *      . | f1 f2 f3
-        QueueTest(() => nq(f(1), f(2)).nq(f(3)), ["f1", "f2", "f3"]);
+        QueueTest(() => nq(f(1), f(2)).nq(f(3)), [], ["f1", "f2", "f3"]);
 
         // * 11. return nq(f1, f2).then(f3);
         // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
@@ -285,11 +325,11 @@ describe("Event", function() {
 
         // * 13. return f1.then(nq(f2, f3));
         // *      f1 | f2 f3
-        QueueTest(() => f(1).then(nq(f(2), f(3))), ["f1", "f2", "f3"]);
+        QueueTest(() => f(1).then(nq(f(2), f(3))), ["f1"], ["f2", "f3"]);
 
         // * 14. return f1.thenq(f2, f3);
         // *      f1 | f2 f3
-        QueueTest(() => f(1).thenq(f(2), f(3)), ["f1", "f2", "f3"]);
+        QueueTest(() => f(1).thenq(f(2), f(3)), ["f1"], ["f2", "f3"]);
 
         // * 15. return f1.then(nq(f2, f3)).then(f4);
         // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
@@ -302,28 +342,28 @@ describe("Event", function() {
 
         // * 18. return f1.thenq(f2.then(f3, f4), f5);
         // *      f1 | f2 f3 f4 f5   
-        QueueTest(() => f(1).thenq(f(2).then(f(3), f(4)), f(5)), ["f1", "f2", "f3", "f4", "f5"]);
+        QueueTest(() => f(1).thenq(f(2).then(f(3), f(4)), f(5)), ["f1"], ["f2", "f3", "f4", "f5"]);
         
         // * 19. return f1.thenq(nq(f2, f3));
         // *      f1 | f2 f3   
-        QueueTest(() => f(1).thenq(nq(f(2), f(3))), ["f1", "f2", "f3"]);
+        QueueTest(() => f(1).thenq(nq(f(2), f(3))), ["f1"], ["f2", "f3"]);
 
         // * 20. return f1.thenq(f2.thenq(f3, f4));
         // *      f1 | f2 f3 f4   
-        QueueTest(() => f(1).thenq(f(2).thenq(f(3), f(4))), ["f1", "f2", "f3", "f4"]);
+        QueueTest(() => f(1).thenq(f(2).thenq(f(3), f(4))), ["f1"], ["f2", "f3", "f4"]);
 
         // * 21. return f1.thenq(f2.then(f3, f4).then(nq(f5)), f6.thenq(f7, f8));
         // *      f1 | f2 f3 f4 f5 f6 f7 f8   
         QueueTest(() => f(1).thenq(f(2).then(f(3), f(4)).then(nq(f(5))), f(6).thenq(f(7), f(8))),
-            ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"]);
+            ["f1"], ["f2", "f3", "f4", "f5", "f6", "f7", "f8"]);
 
         // * 22. return f1.then(f2, f3, nq(f4, f5));
         // *      f1 f2 f3 | f4 f5       
-        QueueTest(() => f(1).then(f(2), f(3), nq(f(4), f(5))), ["f1", "f2", "f3", "f4", "f5"]);
+        QueueTest(() => f(1).then(f(2), f(3), nq(f(4), f(5))), ["f1", "f2", "f3"], ["f4", "f5"]);
         
         // * 23. return f1.thenq(f2, nq(f3, f4), f5);
         // *      f1 | f2 f3 f4 f5   
-        QueueTest(() => f(1).thenq(f(2), nq(f(3), f(4)), f(5)), ["f1", "f2", "f3", "f4", "f5"]);
+        QueueTest(() => f(1).thenq(f(2), nq(f(3), f(4)), f(5)), ["f1"], ["f2", "f3", "f4", "f5"]);
 
         // * 24. return f1.then(f2, nq(f3, f4), f5);
         // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
