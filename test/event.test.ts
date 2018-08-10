@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 import { GameInstance, RegalError } from '../src/game';
-import { on, noop, EventRecord, TrackedEvent, nq } from '../src/event';
+import { on, noop, EventRecord, TrackedEvent, nq, isEventQueue } from '../src/event';
 import { log } from '../src/utils';
 
 describe("Event", function() {
@@ -236,13 +236,13 @@ describe("Event", function() {
 
             const f = (n: number) => on(`f${n}`, game => noop);
 
-            const QueueTest = (q: () => TrackedEvent, immediate: string[], deferred: string[]) => 
+            const QueueTest = (q: () => TrackedEvent, immediate: string[], delayed: string[]) => 
                 it(`QTest: ${
                     q.toString().split("=> ")[1]
                 } -> ${
                     immediate.join(', ')
                 } | ${
-                    deferred.join(', ')
+                    delayed.join(', ')
                 }`, 
                 function() {
                     // Test basic queue execution
@@ -251,25 +251,23 @@ describe("Event", function() {
                     let myGame = new GameInstance();
                     init(myGame);
 
-                    let expectedEventNames = ["INIT"].concat(immediate, deferred);
+                    let expectedEventNames = ["INIT"].concat(immediate, delayed);
                     let expectedEventCauses = [undefined].concat(Array(expectedEventNames.length - 1).fill("INIT"));
                     let expectedOutput = buildExpectedOutput(expectedEventNames, expectedEventCauses);
 
                     expect(myGame.events.history).deep.equal(expectedOutput);
 
-                    // TODO: Test queue with an additional event in between the immediate and deferred collections
-                    // const dummy = on("DUMMY", game => noop);
-                    // // const makeQueue = on("MAKE QUEUE", game => q().then(dummy));
+                    // Assert that the generated queue has the correct events in the immediate and deferred event collections.
+                    const toEventNames = (event: TrackedEvent) => event.eventName;
+                    const queue = q();
 
-                    // myGame = new GameInstance();
-                    // myGame.events._addEvent(dummy);
-                    // init(myGame);
-
-                    // expectedEventNames = ["INIT"].concat(immediate, ["DUMMY"], deferred);
-                    // expectedEventCauses = [undefined].concat(Array(expectedEventNames.length - 1).fill("INIT"));
-                    // expectedOutput = buildExpectedOutput(expectedEventNames, expectedEventCauses);
-
-                    // expect(myGame.events.history).deep.equal(expectedOutput);
+                    if (isEventQueue(queue)) {
+                        expect(queue.immediateEvents.map(toEventNames)).to.deep.equal(immediate);
+                        expect(queue.delayedEvents.map(toEventNames)).to.deep.equal(delayed);
+                    } else {
+                        expect(immediate.length).to.equal(1);
+                        expect(delayed.length).to.equal(0);
+                    }
                 });
 
             // End utility functions

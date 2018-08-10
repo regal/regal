@@ -75,11 +75,11 @@ export interface EventQueue extends TrackedEvent {
 }
 
 /** Ensures the object is a TrackedEvent. */
-const isTrackedEvent = (o: any): o is TrackedEvent => 
+export const isTrackedEvent = (o: any): o is TrackedEvent => 
     (<TrackedEvent>o).target !== undefined;
 
 /** Ensures the object is an EventQueue. */
-const isEventQueue = (o: any): o is EventQueue =>
+export const isEventQueue = (o: any): o is EventQueue =>
     (<EventQueue>o).nq !== undefined;
 
 /** "No operation" - reserved TrackedEvent that signals no more events. */
