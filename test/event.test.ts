@@ -190,7 +190,7 @@ describe("Event", function() {
             ]);
         });
 
-        describe.only("QTests", function() {
+        describe("QTests", function() {
 
             // Start utility functions
 
@@ -264,9 +264,6 @@ describe("Event", function() {
                     myGame = new GameInstance();
                     makeQueue(myGame);
 
-                    // log(myGame.events.history, "Actual");
-                    // log(expectedOutput, "Expected");
-
                     expectedEventNames = ["MAKE QUEUE"].concat(immediate, ["DUMMY"], deferred);
                     expectedEventCauses = [undefined].concat(Array(expectedEventNames.length - 1).fill("MAKE QUEUE"));
                     expectedOutput = buildExpectedOutput(expectedEventNames, expectedEventCauses);
@@ -280,41 +277,27 @@ describe("Event", function() {
             
             // * 1. return f1;
             // *      f1 | .
-            // QueueTest(() => f(1), ["f1"], []);
+            QueueTest(() => f(1), ["f1"], []);
 
             // * 2. return f1.then(f2);
             // *      f1 f2 | .
-            // QueueTest(() => f(1).then(f(2)), ["f1", "f2"], []);
+            QueueTest(() => f(1).then(f(2)), ["f1", "f2"], []);
 
             // * 3. return f1.then(f2, f3, f4);
             // *      f1 f2 f3 f4 | .       
-            // QueueTest(() => f(1).then(f(2), f(3), f(4)), ["f1", "f2", "f3", "f4"], []);
+            QueueTest(() => f(1).then(f(2), f(3), f(4)), ["f1", "f2", "f3", "f4"], []);
 
             // * 4. return f1.then(f2.then(f3), f4);
             // *      f1 f2 f3 f4 | .
-            // QueueTest(() => f(1).then(f(2).then(f(3)), f(4)), ["f1", "f2", "f3", "f4"], []);
+            QueueTest(() => f(1).then(f(2).then(f(3)), f(4)), ["f1", "f2", "f3", "f4"], []);
             
             // * 5. return f1.then(f2, f3).then(f4);
             // *      f1 f2 f3 f4 | .
-            // QueueTest(() => f(1).then(f(2), f(3)).then(f(4)), ["f1", "f2", "f3", "f4"], []);
-
-            const get6 = () => {
-                const f2f3 = f(2).then(f(3));
-
-                const f4f5f6 = f(4).then(f(5), f(6));
-                const f456then7 = f4f5f6.then(f(7));
-
-                const f1then1 = f(1).then(f2f3, f456then7);
-                const final = f1then1.then(f(8), f(9));
-
-                return final;
-            }
+            QueueTest(() => f(1).then(f(2), f(3)).then(f(4)), ["f1", "f2", "f3", "f4"], []);
             
             // * 6. return f1.then(f2.then(f3), f4.then(f5, f6).then(f7)).then(f8, f9);
             // *      f1 f2 f3 f4 f5 f6 f7 f8 f9 | .
-            // QueueTest(() => f(1).then(f(2).then(f(3)), f(4).then(f(5), f(6)).then(f(7))).then(f(8), f(9)), 
-            //     ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"], []);
-            QueueTest(get6, 
+            QueueTest(() => f(1).then(f(2).then(f(3)), f(4).then(f(5), f(6)).then(f(7))).then(f(8), f(9)), 
                 ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"], []);
 
             // * 7. return nq(f1);

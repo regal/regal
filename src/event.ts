@@ -195,7 +195,7 @@ export class InstanceEvents {
     }
 }
 
-const illegalEventQueueInvocation = (game: GameInstance): undefined => {
+const illegalEventQueueInvocation = () => (game: GameInstance): undefined => {
     throw new RegalError("Cannot invoke an EventQueue.");
 };
 
@@ -218,8 +218,8 @@ const illegalEventQueueInvocation = (game: GameInstance): undefined => {
 //     };
 
 const buildEventQueue = (immediateEvents: TrackedEvent[], delayedEvents: TrackedEvent[]): EventQueue => {
-    const eq = <EventQueue>(illegalEventQueueInvocation);
-    eq.target = illegalEventQueueInvocation;
+    const eq = <EventQueue>(illegalEventQueueInvocation());
+    eq.target = illegalEventQueueInvocation();
     eq.then = thenConstructor(eq);
     eq.thenq = (...events: TrackedEvent[]) => eq.then(enqueue(...events));
 
