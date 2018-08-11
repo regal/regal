@@ -18,7 +18,7 @@ This package is currently in version `0.2.1` and is not yet recommended for use.
 
 Component | Description | Designed | Implemented | Tested
 --- | --- | --- | --- | ---
-**API** | Public API for consumers of the library | 🔵 | 🔵 | ⚪
+**API** | Public API for consumers of the library | ✔️ | 🔵 | 🔵
 **Agent** | Model for immutable game objects | ✔️ | 🔵 | 🔵
 **Event** | Model for game events | 🔵 | 🔵 | ⚪
 
