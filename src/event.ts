@@ -321,13 +321,13 @@ const thenConstructor = (rootTarget: TrackedEvent) =>
     };
 
 /**
- * Executes the events at the end of the game's event queue.
+ * Adds the events to the end of the game's event queue.
  * 
  * If the events are EventQueues, any events in the queues' 
  * immediateEvents collections will be concatenated, followed 
  * by any events in the queues' delayedEvents collections.
  * 
- * @param events The events to be executed.
+ * @param events The events to be added.
  * @returns The EventQueue with all events in the queue's delayedEvent collection.
  */
 export const enqueue = (...events: TrackedEvent[]): EventQueue => {
@@ -347,13 +347,13 @@ export const enqueue = (...events: TrackedEvent[]): EventQueue => {
 };
 
 /**
- * Executes the events at the end of the game's event queue.
+ * Adds the events to the end of the game's event queue.
  * 
  * If the events are EventQueues, any events in the queues' 
  * immediateEvents collections will be concatenated, followed 
  * by any events in the queues' delayedEvents collections.
  * 
- * @param events The events to be executed.
+ * @param events The events to be added.
  * @returns The EventQueue with all events in the queue's delayedEvent collection.
  */
 export const nq = enqueue;
