@@ -1,5 +1,5 @@
 import { GameInstance, RegalError, Game } from "./game";
-import { Event, on } from "./event";
+import { EventRecord, on } from "./event";
 
 const StaticAgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object) {
@@ -85,7 +85,7 @@ const AgentProxyHandler = {
         let result: boolean = undefined;
 
         if (target.isRegistered) {
-            const currentEvent = target.game.events.getCurrentEvent();
+            const currentEvent = target.game.events.current;
             result = target.game.agents.setAgentProperty(target.id, propertyKey, value, currentEvent);
         } else {
             result = Reflect.set(target, propertyKey, value, receiver);
@@ -149,7 +149,7 @@ export class Agent {
         
         this.game = game;
         
-        const currentEvent = game.events.getCurrentEvent();
+        const currentEvent = game.events.current;
         game.agents.addAgent(this, currentEvent);
 
         return this;
@@ -180,7 +180,7 @@ export class InstanceAgents {
         return i;
     }
 
-    addAgent(agent: Agent, event: Event): void {
+    addAgent(agent: Agent, event: EventRecord): void {
         if (this.hasOwnProperty(agent.id)) {
             throw new RegalError(`An agent with ID <${agent.id}> has already been registered with the instance.`);
         }
@@ -221,7 +221,7 @@ export class InstanceAgents {
     }
 
     // TODO: Register agents within arrays
-    setAgentProperty(agentId: number, property: PropertyKey, value: any, event: Event): boolean {
+    setAgentProperty(agentId: number, property: PropertyKey, value: any, event: EventRecord): boolean {
         if (!this.hasOwnProperty(agentId)) {
             if (staticAgentRegistry.hasAgent(agentId)) {
                 this[agentId] = new AgentRecord();
@@ -288,7 +288,7 @@ export class AgentRecord {
         return property;
     }
 
-    setProperty<T>(event: Event, agentId: number, property: PropertyKey, value: T): void {
+    setProperty<T>(event: EventRecord, agentId: number, property: PropertyKey, value: T): void {
         let initValue = this.getProperty(property);
 
         if (initValue === undefined && staticAgentRegistry.hasAgentProperty(agentId, property)) {
@@ -297,9 +297,11 @@ export class AgentRecord {
 
         const op = initValue === undefined ? PropertyOperation.ADDED : PropertyOperation.MODIFIED;
         this._addRecord(event, property, op, initValue, value);
+        
+        event.trackChange(agentId, property, op, initValue, value);
     }
 
-    private _addRecord<T>(event: Event, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
+    private _addRecord<T>(event: EventRecord, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
         if (!(property in this)) {
             this[property] = new Array<PropertyChange>();
         }
