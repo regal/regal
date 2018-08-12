@@ -91,200 +91,8 @@ describe("Event", function() {
         ]);
     });
 
-    it("Agent changes are tracked in GameInstance.events.history", function() {
-        resetRegistry();
-        
-        const heal = (target: Dummy, amount: number) =>
-            on("HEAL", game => {
-                target.health += amount;
-                game.output.write(`Healed ${target.name} by ${amount}. Health is now ${target.health}.`);
-                return noop;
-            });
-        
-        const myGame = new GameInstance();
-        const dummy = new Dummy("Lars", 10).register(myGame);
-
-        heal(dummy, 15)(myGame);
-
-        expect(myGame.events.history).to.deep.equal([
-            {
-                id: 1,
-                name: "HEAL",
-                output: [
-                    "Healed Lars by 15. Health is now 25."
-                ],
-                changes: [
-                    {
-                        agentId: 1,
-                        op: PropertyOperation.MODIFIED,
-                        init: 10,
-                        final: 25,
-                        property: "health"
-                    }
-                ]
-            }
-        ])
-    });
-
-    it("Complicated agent changes are tracked in GameInstance.events.history", function() {
-        const changeFriendsHealth = (target: Dummy, amount: number) =>
-            on(`CHANGE <${target["friend"].name}> HEALTH`, game => {
-                target["friend"].health += amount;
-                return noop;
-            });
-
-        const readStatus = on("READ STATUS", game => {
-            let agent: Dummy = game.state.mainAgent;
-            do {
-                game.output.write(`${agent.name}'s health is ${agent.health}.`);
-                agent = agent["friend"];
-            } while (agent);
-
-            return noop;
-        });
-
-        const addFriend = (target: Dummy, friend: Dummy) =>
-            on("ADD FRIEND", game => {
-                target["friend"] = friend;
-
-                game.output.write(`${target.name} has a new friend! (${friend.name})`);
-                return changeFriendsHealth(target, 11);
-            });
-
-        const start = on("START", game => {
-            const lars = new Dummy("Lars", 10);
-            const bill = new Dummy("Bill", 25);
-            
-            game.state.mainAgent = lars;
-
-            return addFriend(lars, bill).thenq(readStatus);
-        });
-
-        const myGame = new GameInstance();
-        start(myGame);
-
-        expect(myGame.events.history).to.deep.equal([
-            {
-                id: 3,
-                name: "READ STATUS",
-                causedBy: 1,
-                output: [
-                    "Lars's health is 10.",
-                    "Bill's health is 36."
-                ]
-            },
-            {
-                id: 4,
-                name: "CHANGE <Bill> HEALTH",
-                causedBy: 2,
-                changes: [
-                    {
-                        agentId: 2,
-                        op: PropertyOperation.MODIFIED,
-                        property: "health",
-                        init: 25,
-                        final: 36
-                    }
-                ]
-                
-            },
-            {
-                id: 2,
-                name: "ADD FRIEND",
-                output: [
-                    "Lars has a new friend! (Bill)"
-                ],
-                causedBy: 1,
-                caused: [
-                    4
-                ],
-                changes: [
-                    {
-                        agentId: 2,
-                        op: PropertyOperation.ADDED,
-                        property: "_id",
-                        init: undefined,
-                        final: 2
-                    },
-                    {
-                        agentId: 2,
-                        op: PropertyOperation.ADDED,
-                        property: "game",
-                        init: undefined,
-                        final: myGame
-                    },
-                    {
-                        agentId: 2,
-                        op: PropertyOperation.ADDED,
-                        property: "name",
-                        init: undefined,
-                        final: "Bill"
-                    },
-                    {
-                        agentId: 2,
-                        op: PropertyOperation.ADDED,
-                        property: "health",
-                        init: undefined,
-                        final: 25
-                    },
-                    {
-                        agentId: 1,
-                        op: PropertyOperation.ADDED,
-                        property: "friend",
-                        init: undefined,
-                        final: {
-                            refId: 2
-                        }
-                    }
-                ]
-            },
-            {
-                id: 1,
-                name: "START",
-                caused: [
-                    2, 3
-                ],
-                changes: [
-                    {
-                        agentId: 1,
-                        op: PropertyOperation.ADDED,
-                        property: "_id",
-                        init: undefined,
-                        final: 1
-                    },
-                    {
-                        agentId: 1,
-                        op: PropertyOperation.ADDED,
-                        property: "game",
-                        init: undefined,
-                        final: myGame
-                    },
-                    {
-                        agentId: 1,
-                        op: PropertyOperation.ADDED,
-                        property: "name",
-                        init: undefined,
-                        final: "Lars"
-                    },
-                    {
-                        agentId: 1,
-                        op: PropertyOperation.ADDED,
-                        property: "health",
-                        init: undefined,
-                        final: 10
-                    },
-                    {
-                        agentId: 0,
-                        op: PropertyOperation.ADDED,
-                        property: "mainAgent",
-                        init: undefined,
-                        final: {
-                            refId: 1
-                        }
-                    }
-                ]
-            }
-        ])
+    it("noop returns undefined", function() {
+        expect(noop(new GameInstance())).to.be.undefined;
     });
 
     describe("Queueing", function() {
@@ -482,6 +290,12 @@ describe("Event", function() {
             ])
         });
 
+        it("Attempting to invoke an EventQueue throws an error", function() {
+            const nonevent = on("FOO", game => noop);
+            const queue = nq(nonevent, nonevent);
+            expect(() => queue(new GameInstance())).to.throw(RegalError, "Cannot invoke an EventQueue.");
+        });
+
         describe("QTests", function() {
 
             // Start utility functions
@@ -562,6 +376,11 @@ describe("Event", function() {
                     }
                 });
 
+            const QueueTestError = (q: () => TrackedEvent, error: Function | Error, message: string) =>
+                it(`QTest: ${q.toString().split("=> ")[1]} -> ${error.name}: ${message}`, function() {
+                    expect(q).to.throw(RegalError, message);
+                });
+
             // End utility functions
 
             /* * Queue Tests * */
@@ -609,9 +428,11 @@ describe("Event", function() {
 
             // * 11. return nq(f1, f2).then(f3);
             // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
+            QueueTestError(() => nq(f(1), f(2)).then(f(3)), RegalError, "Any enqueue instruction must happen at the end of the return statement.");
     
-            // * 12. return f1.nq(f2, f3);
-            // *      TypeError: `nq` does not exist on `f1`.
+            // * 12. return f1.then(f2, f3).thenq(f4, f5)
+            // *      f1 f2 f3 | f4 f5
+            QueueTest(() => f(1).then(f(2), f(3)).thenq(f(4), f(5)), ["f1", "f2", "f3"], ["f4", "f5"]);
 
             // * 13. return f1.then(nq(f2, f3));
             // *      f1 | f2 f3
@@ -623,12 +444,15 @@ describe("Event", function() {
 
             // * 15. return f1.then(nq(f2, f3)).then(f4);
             // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
+            QueueTestError(() => f(1).then(nq(f(2), f(3))).then(f(4)), RegalError, "Any enqueue instruction must happen at the end of the return statement.");
     
             // * 16. return f1.thenq(f2, f3).then(f4);
             // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
+            QueueTestError(() => f(1).thenq(f(2), f(3)).then(f(4)), RegalError, "Any enqueue instruction must happen at the end of the return statement.");
 
             // * 17. return f1.thenq(f2, f3).thenq(f4, f5);
-            // *      RegalError: Any enqueue instruction must happen at the end of the return statement.   
+            // *      RegalError: Any enqueue instruction must happen at the end of the return statement.  
+            QueueTestError(() => f(1).thenq(f(2), f(3)).then(f(4), f(5)), RegalError, "Any enqueue instruction must happen at the end of the return statement."); 
 
             // * 18. return f1.thenq(f2.then(f3, f4), f5);
             // *      f1 | f2 f3 f4 f5   
@@ -657,8 +481,207 @@ describe("Event", function() {
 
             // * 24. return f1.then(f2, nq(f3, f4), f5);
             // *      RegalError: Any enqueue instruction must happen at the end of the return statement.
+            QueueTestError(() => f(1).then(f(2), nq(f(3), f(4)), f(5)), RegalError, "Any enqueue instruction must happen at the end of the return statement.");
         });
    
+    });
+
+    describe("Agent Change Tracking", function() {
+        it("Agent changes are tracked in GameInstance.events.history", function() {
+            resetRegistry();
+            
+            const heal = (target: Dummy, amount: number) =>
+                on("HEAL", game => {
+                    target.health += amount;
+                    game.output.write(`Healed ${target.name} by ${amount}. Health is now ${target.health}.`);
+                    return noop;
+                });
+            
+            const myGame = new GameInstance();
+            const dummy = new Dummy("Lars", 10).register(myGame);
+    
+            heal(dummy, 15)(myGame);
+    
+            expect(myGame.events.history).to.deep.equal([
+                {
+                    id: 1,
+                    name: "HEAL",
+                    output: [
+                        "Healed Lars by 15. Health is now 25."
+                    ],
+                    changes: [
+                        {
+                            agentId: 1,
+                            op: PropertyOperation.MODIFIED,
+                            init: 10,
+                            final: 25,
+                            property: "health"
+                        }
+                    ]
+                }
+            ])
+        });
+    
+        it("Complicated agent changes are tracked in GameInstance.events.history", function() {
+            const changeFriendsHealth = (target: Dummy, amount: number) =>
+                on(`CHANGE <${target["friend"].name}> HEALTH`, game => {
+                    target["friend"].health += amount;
+                    return noop;
+                });
+    
+            const readStatus = on("READ STATUS", game => {
+                let agent: Dummy = game.state.mainAgent;
+                do {
+                    game.output.write(`${agent.name}'s health is ${agent.health}.`);
+                    agent = agent["friend"];
+                } while (agent);
+    
+                return noop;
+            });
+    
+            const addFriend = (target: Dummy, friend: Dummy) =>
+                on("ADD FRIEND", game => {
+                    target["friend"] = friend;
+    
+                    game.output.write(`${target.name} has a new friend! (${friend.name})`);
+                    return changeFriendsHealth(target, 11);
+                });
+    
+            const start = on("START", game => {
+                const lars = new Dummy("Lars", 10);
+                const bill = new Dummy("Bill", 25);
+                
+                game.state.mainAgent = lars;
+    
+                return addFriend(lars, bill).thenq(readStatus);
+            });
+    
+            const myGame = new GameInstance();
+            start(myGame);
+    
+            expect(myGame.events.history).to.deep.equal([
+                {
+                    id: 3,
+                    name: "READ STATUS",
+                    causedBy: 1,
+                    output: [
+                        "Lars's health is 10.",
+                        "Bill's health is 36."
+                    ]
+                },
+                {
+                    id: 4,
+                    name: "CHANGE <Bill> HEALTH",
+                    causedBy: 2,
+                    changes: [
+                        {
+                            agentId: 2,
+                            op: PropertyOperation.MODIFIED,
+                            property: "health",
+                            init: 25,
+                            final: 36
+                        }
+                    ]
+                    
+                },
+                {
+                    id: 2,
+                    name: "ADD FRIEND",
+                    output: [
+                        "Lars has a new friend! (Bill)"
+                    ],
+                    causedBy: 1,
+                    caused: [
+                        4
+                    ],
+                    changes: [
+                        {
+                            agentId: 2,
+                            op: PropertyOperation.ADDED,
+                            property: "_id",
+                            init: undefined,
+                            final: 2
+                        },
+                        {
+                            agentId: 2,
+                            op: PropertyOperation.ADDED,
+                            property: "game",
+                            init: undefined,
+                            final: myGame
+                        },
+                        {
+                            agentId: 2,
+                            op: PropertyOperation.ADDED,
+                            property: "name",
+                            init: undefined,
+                            final: "Bill"
+                        },
+                        {
+                            agentId: 2,
+                            op: PropertyOperation.ADDED,
+                            property: "health",
+                            init: undefined,
+                            final: 25
+                        },
+                        {
+                            agentId: 1,
+                            op: PropertyOperation.ADDED,
+                            property: "friend",
+                            init: undefined,
+                            final: {
+                                refId: 2
+                            }
+                        }
+                    ]
+                },
+                {
+                    id: 1,
+                    name: "START",
+                    caused: [
+                        2, 3
+                    ],
+                    changes: [
+                        {
+                            agentId: 1,
+                            op: PropertyOperation.ADDED,
+                            property: "_id",
+                            init: undefined,
+                            final: 1
+                        },
+                        {
+                            agentId: 1,
+                            op: PropertyOperation.ADDED,
+                            property: "game",
+                            init: undefined,
+                            final: myGame
+                        },
+                        {
+                            agentId: 1,
+                            op: PropertyOperation.ADDED,
+                            property: "name",
+                            init: undefined,
+                            final: "Lars"
+                        },
+                        {
+                            agentId: 1,
+                            op: PropertyOperation.ADDED,
+                            property: "health",
+                            init: undefined,
+                            final: 10
+                        },
+                        {
+                            agentId: 0,
+                            op: PropertyOperation.ADDED,
+                            property: "mainAgent",
+                            init: undefined,
+                            final: {
+                                refId: 1
+                            }
+                        }
+                    ]
+                }
+            ]);
+        });
     });
 
 });
