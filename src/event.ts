@@ -1,3 +1,10 @@
+/**
+ * Model for game events in the Regal Game Library.
+ * @since 0.3.0
+ * @author Joe Cowman
+ * @license MIT (see https://github.com/regal/regal)
+ */
+
 import { GameInstance, RegalError } from './game';
 import { PropertyChange, PropertyOperation } from './agent';
 
