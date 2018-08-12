@@ -4,6 +4,7 @@ import 'mocha';
 import { GameInstance, RegalError } from '../src/game';
 import { on, noop, EventRecord, TrackedEvent, nq, isEventQueue, enqueue } from '../src/event';
 import { log } from '../src/utils';
+import { Agent, PropertyOperation, resetRegistry } from '../src/agent';
 
 describe("Event", function() {
 
@@ -88,6 +89,202 @@ describe("Event", function() {
                 name: "MOTIVATE"
             }
         ]);
+    });
+
+    it("Agent changes are tracked in GameInstance.events.history", function() {
+        resetRegistry();
+        
+        const heal = (target: Dummy, amount: number) =>
+            on("HEAL", game => {
+                target.health += amount;
+                game.output.write(`Healed ${target.name} by ${amount}. Health is now ${target.health}.`);
+                return noop;
+            });
+        
+        const myGame = new GameInstance();
+        const dummy = new Dummy("Lars", 10).register(myGame);
+
+        heal(dummy, 15)(myGame);
+
+        expect(myGame.events.history).to.deep.equal([
+            {
+                id: 1,
+                name: "HEAL",
+                output: [
+                    "Healed Lars by 15. Health is now 25."
+                ],
+                changes: [
+                    {
+                        agentId: 1,
+                        op: PropertyOperation.MODIFIED,
+                        init: 10,
+                        final: 25,
+                        property: "health"
+                    }
+                ]
+            }
+        ])
+    });
+
+    it("Complicated agent changes are tracked in GameInstance.events.history", function() {
+        const changeFriendsHealth = (target: Dummy, amount: number) =>
+            on(`CHANGE <${target["friend"].name}> HEALTH`, game => {
+                target["friend"].health += amount;
+                return noop;
+            });
+
+        const readStatus = on("READ STATUS", game => {
+            let agent: Dummy = game.state.mainAgent;
+            do {
+                game.output.write(`${agent.name}'s health is ${agent.health}.`);
+                agent = agent["friend"];
+            } while (agent);
+
+            return noop;
+        });
+
+        const addFriend = (target: Dummy, friend: Dummy) =>
+            on("ADD FRIEND", game => {
+                target["friend"] = friend;
+
+                game.output.write(`${target.name} has a new friend! (${friend.name})`);
+                return changeFriendsHealth(target, 11);
+            });
+
+        const start = on("START", game => {
+            const lars = new Dummy("Lars", 10);
+            const bill = new Dummy("Bill", 25);
+            
+            game.state.mainAgent = lars;
+
+            return addFriend(lars, bill).thenq(readStatus);
+        });
+
+        const myGame = new GameInstance();
+        start(myGame);
+
+        expect(myGame.events.history).to.deep.equal([
+            {
+                id: 3,
+                name: "READ STATUS",
+                causedBy: 1,
+                output: [
+                    "Lars's health is 10.",
+                    "Bill's health is 36."
+                ]
+            },
+            {
+                id: 4,
+                name: "CHANGE <Bill> HEALTH",
+                causedBy: 2,
+                changes: [
+                    {
+                        agentId: 2,
+                        op: PropertyOperation.MODIFIED,
+                        property: "health",
+                        init: 25,
+                        final: 36
+                    }
+                ]
+                
+            },
+            {
+                id: 2,
+                name: "ADD FRIEND",
+                output: [
+                    "Lars has a new friend! (Bill)"
+                ],
+                causedBy: 1,
+                caused: [
+                    4
+                ],
+                changes: [
+                    {
+                        agentId: 2,
+                        op: PropertyOperation.ADDED,
+                        property: "_id",
+                        init: undefined,
+                        final: 2
+                    },
+                    {
+                        agentId: 2,
+                        op: PropertyOperation.ADDED,
+                        property: "game",
+                        init: undefined,
+                        final: myGame
+                    },
+                    {
+                        agentId: 2,
+                        op: PropertyOperation.ADDED,
+                        property: "name",
+                        init: undefined,
+                        final: "Bill"
+                    },
+                    {
+                        agentId: 2,
+                        op: PropertyOperation.ADDED,
+                        property: "health",
+                        init: undefined,
+                        final: 25
+                    },
+                    {
+                        agentId: 1,
+                        op: PropertyOperation.ADDED,
+                        property: "friend",
+                        init: undefined,
+                        final: {
+                            refId: 2
+                        }
+                    }
+                ]
+            },
+            {
+                id: 1,
+                name: "START",
+                caused: [
+                    2, 3
+                ],
+                changes: [
+                    {
+                        agentId: 1,
+                        op: PropertyOperation.ADDED,
+                        property: "_id",
+                        init: undefined,
+                        final: 1
+                    },
+                    {
+                        agentId: 1,
+                        op: PropertyOperation.ADDED,
+                        property: "game",
+                        init: undefined,
+                        final: myGame
+                    },
+                    {
+                        agentId: 1,
+                        op: PropertyOperation.ADDED,
+                        property: "name",
+                        init: undefined,
+                        final: "Lars"
+                    },
+                    {
+                        agentId: 1,
+                        op: PropertyOperation.ADDED,
+                        property: "health",
+                        init: undefined,
+                        final: 10
+                    },
+                    {
+                        agentId: 0,
+                        op: PropertyOperation.ADDED,
+                        property: "mainAgent",
+                        init: undefined,
+                        final: {
+                            refId: 1
+                        }
+                    }
+                ]
+            }
+        ])
     });
 
     describe("Queueing", function() {
@@ -465,3 +662,9 @@ describe("Event", function() {
     });
 
 });
+
+class Dummy extends Agent {
+    constructor(public name: string, public health: number) {
+        super();
+    }
+}

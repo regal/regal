@@ -446,7 +446,7 @@ When `heal` is executed, we see a log of the changes reflected in `GameInstance.
 
 ```ts
 const myGame = new GameInstance();
-const dummy = new Dummy("Lars", 10);
+const dummy = new Dummy("Lars", 10).register(myGame);
 
 heal(dummy, 15)(game);
 
