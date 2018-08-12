@@ -297,6 +297,8 @@ export class AgentRecord {
 
         const op = initValue === undefined ? PropertyOperation.ADDED : PropertyOperation.MODIFIED;
         this._addRecord(event, property, op, initValue, value);
+        
+        event.trackChange(agentId, property, op, initValue, value);
     }
 
     private _addRecord<T>(event: EventRecord, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {

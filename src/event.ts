@@ -1,5 +1,5 @@
 import { GameInstance, RegalError } from './game';
-import { PropertyChange } from './agent';
+import { PropertyChange, PropertyOperation } from './agent';
 
 /** Event ID for untracked EventFunctions. */
 export const DEFAULT_EVENT_ID: number = 0;
@@ -146,6 +146,28 @@ export class EventRecord {
         }
         this.caused.push(...events.map(e => e.id));
         events.forEach(e => e.causedBy = this.id);
+    }
+
+    /**
+     * Adds a record of a single change to a registered agent's property to the
+     * EventRecord's changes property.
+     * @param agentId The registered agent's ID.
+     * @param property The property being modified.
+     * @param op The type of modification.
+     * @param init The initial value of the property.
+     * @param final The final value of the property.
+     */
+    trackChange<T>(agentId: number, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
+        if (this.changes === undefined) {
+            this.changes = [];
+        }
+        this.changes.push({
+            agentId,
+            op,
+            property: property.toString(),
+            init,
+            final
+        });
     }
 }
 
