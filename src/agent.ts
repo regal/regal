@@ -1,5 +1,5 @@
-import { GameInstance, RegalError, Game } from "./game";
-import { EventRecord, on } from "./event";
+import { GameInstance, RegalError } from "./game";
+import { EventRecord } from "./event";
 
 const StaticAgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object) {
@@ -13,7 +13,7 @@ const StaticAgentProxyHandler = {
     },
 
     set(target: Agent, propertyKey: PropertyKey, value: any, receiver: object) {
-        return Reflect.set(target, propertyKey, value, receiver);
+        return Reflect.set(target, propertyKey, value, receiver); // TODO - this isn't doing anything?
     },
 
     has(target: Agent, propertyKey: PropertyKey) {
@@ -98,6 +98,19 @@ const AgentProxyHandler = {
         return target.isRegistered 
             ? target.game.agents.hasAgentProperty(target.id, propertyKey) 
             : Reflect.has(target, propertyKey);
+    },
+
+    deleteProperty(target: Agent, propertyKey: PropertyKey): boolean {
+        let result: boolean = undefined;
+
+        if (target.isRegistered && propertyKey in target) {
+            const currentEvent = target.game.events.current;
+            result = target.game.agents.deleteAgentProperty(target.id, propertyKey, currentEvent);
+        } else {
+            result = Reflect.deleteProperty(target, propertyKey);
+        }
+
+        return result;
     }
 }
 
@@ -316,13 +329,26 @@ export class AgentRecord {
         }
 
         const op = initValue === undefined ? PropertyOperation.ADDED : PropertyOperation.MODIFIED;
+
         this._addRecord(event, property, op, initValue, value);
-        
         event.trackChange(agentId, property, op, initValue, value);
     }
 
     deleteProperty(event: EventRecord, agentId: number, property: PropertyKey): boolean {
-        throw new Error("Method not implemented.");
+        let initValue = this.getProperty(property);
+
+        if (!this.hasOwnProperty(property)) {
+            if (staticAgentRegistry.hasAgentProperty(agentId, property)) {
+                initValue = staticAgentRegistry.getAgentProperty(agentId, property);
+            } else {
+                return false;
+            }
+        }
+
+        this._addRecord(event, property, PropertyOperation.DELETED, initValue);
+        event.trackChange(agentId, property, PropertyOperation.DELETED, initValue);
+
+        return true;
     }
 
     private _addRecord<T>(event: EventRecord, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
