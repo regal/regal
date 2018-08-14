@@ -205,6 +205,19 @@ describe("Agent", function() {
             expect("name" in dummy).to.be.true;
             expect("foo" in dummy).to.be.false;
         });
+
+        it("Registered agents' properties may be deleted", function() {
+            const myGame = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(myGame);
+
+            expect(dummy.name).to.equal("D1");
+            expect("name" in dummy).to.be.true;
+
+            delete dummy.name;
+
+            expect(dummy.name).to.be.undefined;
+            expect("name" in dummy).to.be.false;
+        });
     });
 
     describe("Static Agents", function() {

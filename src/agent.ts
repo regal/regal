@@ -64,17 +64,19 @@ export const resetRegistry = () => {
 };
 
 function isAgent(o: any): o is Agent {
-    return (<Agent>o).isRegistered !== undefined;
+    return o && (<Agent>o).isRegistered !== undefined;
 }
 
 const AgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object): any {
         let value: any = undefined;
 
-        if (target.isRegistered && propertyKey in receiver) {
+        // If the property exists in the instance state, return it.
+        if (target.isRegistered && target.game.agents.hasAgentProperty(target.id, propertyKey)) {
             value = target.game.agents.getAgentProperty(target.id, propertyKey);
-        }
-        if (value === undefined) {
+        } 
+        // If the property never existed in the instance state (i.e. wasn't deleted), return the Reflect.get.
+        else if (target.game === undefined || !target.game.agents.agentPropertyWasDeleted(target.id, propertyKey)) {
             value = Reflect.get(target, propertyKey, receiver);
         }
 
@@ -103,7 +105,7 @@ const AgentProxyHandler = {
     deleteProperty(target: Agent, propertyKey: PropertyKey): boolean {
         let result: boolean = undefined;
 
-        if (target.isRegistered && propertyKey in target) {
+        if (target.isRegistered && target.game.agents.hasAgentProperty(target.id, propertyKey)) {
             const currentEvent = target.game.events.current;
             result = target.game.agents.deleteAgentProperty(target.id, propertyKey, currentEvent);
         } else {
@@ -174,7 +176,7 @@ export class Agent {
 }
 
 function isAgentReference(o: any): o is AgentReference {
-    return (<AgentReference>o).refId !== undefined;
+    return o && (<AgentReference>o).refId !== undefined;
 }
 
 export class AgentReference {
@@ -268,7 +270,7 @@ export class InstanceAgents {
         }
 
         const agentRecord: AgentRecord = this[agentId];
-        return agentRecord.hasOwnProperty(property);
+        return agentRecord.hasOwnProperty(property) && !agentRecord.propertyWasDeleted(property);
     }
 
     deleteAgentProperty(agentId: number, property: PropertyKey, event: EventRecord): boolean {
@@ -290,12 +292,16 @@ export class InstanceAgents {
 
         return agentRecord.deleteProperty(event, agentId, property);
     }
+
+    agentPropertyWasDeleted(agentId: number, property: PropertyKey): boolean {
+        return this.hasOwnProperty(agentId) && (<AgentRecord>this[agentId]).propertyWasDeleted(property);
+    }
 }
 
 export enum PropertyOperation {
     ADDED = "ADDED",
     MODIFIED = "MODIFIED",
-    DELETED = "DELETED" // TODO: support
+    DELETED = "DELETED"
 }
 
 export interface PropertyChange {
@@ -349,6 +355,18 @@ export class AgentRecord {
         event.trackChange(agentId, property, PropertyOperation.DELETED, initValue);
 
         return true;
+    }
+
+    propertyWasDeleted(propertyKey: PropertyKey): boolean {
+        if (this.hasOwnProperty(propertyKey)) {
+            const lastChange: PropertyChange = this[propertyKey][0];
+
+            if (lastChange.op === PropertyOperation.DELETED) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private _addRecord<T>(event: EventRecord, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
