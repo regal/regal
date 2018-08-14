@@ -15,17 +15,13 @@ const StaticAgentProxyHandler = {
         return value;
     },
 
-    set(target: Agent, propertyKey: PropertyKey, value: any, receiver: object) {
-        return Reflect.set(target, propertyKey, value, receiver); // TODO - this isn't doing anything?
-    },
-
     has(target: Agent, propertyKey: PropertyKey) {
         if (target.game !== undefined && target.game.agents.agentPropertyWasDeleted(target.id, propertyKey)) {
             return false;
         }
         return staticAgentRegistry.hasAgentProperty(target.id, propertyKey);
     }
-}
+};
 
 export class StaticAgentRegistry {
 
@@ -69,9 +65,8 @@ export const resetRegistry = () => {
     staticAgentRegistry = new StaticAgentRegistry();
 };
 
-function isAgent(o: any): o is Agent {
-    return o && (<Agent>o).isRegistered !== undefined;
-}
+export const isAgent = (o: any): o is Agent =>
+    o && (<Agent>o).isRegistered !== undefined;
 
 const AgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object): any {
@@ -120,7 +115,7 @@ const AgentProxyHandler = {
 
         return result;
     }
-}
+};
 
 export class Agent {
 
@@ -181,9 +176,8 @@ export class Agent {
     }
 }
 
-function isAgentReference(o: any): o is AgentReference {
-    return o && (<AgentReference>o).refId !== undefined;
-}
+const isAgentReference = (o: any): o is AgentReference =>
+    o && (<AgentReference>o).refId !== undefined;
 
 export class AgentReference {
     constructor(public refId: number) {}

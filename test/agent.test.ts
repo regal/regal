@@ -119,6 +119,12 @@ describe("Agent", function() {
             ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
         });
 
+        it("Error check for InstanceAgents#deleteAgentProperty for an unused ID", function() {
+            expect(() =>
+                new GameInstance().agents.deleteAgentProperty(1, "foo", EventRecord.default)
+            ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
+        });
+
         it("Registering an agent registers its property agents as well", function() {
             const game = new GameInstance();
             let dummy = new Dummy("D1", 10);
@@ -209,6 +215,18 @@ describe("Agent", function() {
         it("Registered agents' properties may be deleted", function() {
             const myGame = new GameInstance();
             const dummy = new Dummy("D1", 10).register(myGame);
+
+            expect(dummy.name).to.equal("D1");
+            expect("name" in dummy).to.be.true;
+
+            delete dummy.name;
+
+            expect(dummy.name).to.be.undefined;
+            expect("name" in dummy).to.be.false;
+        });
+
+        it("Unregistered agents' properties may be deleted", function() {
+            const dummy = new Dummy("D1", 10);
 
             expect(dummy.name).to.equal("D1");
             expect("name" in dummy).to.be.true;
@@ -372,6 +390,13 @@ describe("Agent", function() {
             expect(dummy.name).to.be.undefined;
             expect("name" in dummy).to.be.false;
         });
+
+        it("InstanceAgents#deleteAgentProperty will return false if one tries to delete a static agent property that doesn't exist", function() {
+            const myGame = new GameInstance();
+            const dummy = new Dummy("D1", 10).static().register(myGame);
+
+            expect(myGame.agents.deleteAgentProperty(1, "foo", EventRecord.default)).to.be.false;
+        });
     });
 
     describe("Instance State", function() {
@@ -513,6 +538,74 @@ describe("Agent", function() {
                     }
                 ]
             });
+        });
+
+        it("Deleting a registered agent's property adds a record", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            delete dummy.name;
+
+            expect(game.agents[1].name).to.deep.equal([
+                {
+                    eventId: 0,
+                    eventName: "DEFAULT",
+                    op: PropertyOperation.DELETED,
+                    init: "D1",
+                    final: undefined
+                },
+                {
+                    eventId: 0,
+                    eventName: "DEFAULT",
+                    op: PropertyOperation.ADDED,
+                    init: undefined,
+                    final: "D1"
+                }
+            ]);
+        });
+
+        it("Deleting a static agent's property adds only that change to the record", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).static().register(game);
+
+            delete dummy.name;
+
+            expect(game.agents[1]).to.deep.equal({
+                name: [
+                    {
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        op: PropertyOperation.DELETED,
+                        init: "D1",
+                        final: undefined
+                    }
+                ]
+            });
+        });
+
+        it("If you try and delete a nonexistent property of a registered agent, nothing will happen", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(game);
+
+            delete dummy["foo"];
+
+            expect(game.agents[1].foo).to.be.undefined;
+        });
+
+        it("If you try and delete a nonexistent property of a registered static agent, nothing will happen", function() {
+            const game = new GameInstance();
+            const dummy = new Dummy("D1", 10).static().register(game);
+
+            delete dummy["foo"];
+
+            expect(game.agents[1]).to.be.undefined;
+        });
+
+        it("AgentRecord#deleteProperty will return false if one tries to delete a agent property that doesn't exist", function() {
+            const myGame = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(myGame);
+
+            expect(myGame.agents[1].deleteProperty(EventRecord.default, 1, "foo")).to.be.false;
         });
     });
 });
