@@ -257,6 +257,26 @@ export class InstanceAgents {
         const agentRecord: AgentRecord = this[agentId];
         return agentRecord.hasOwnProperty(property);
     }
+
+    deleteAgentProperty(agentId: number, property: PropertyKey, event: EventRecord): boolean {
+        if (!this.hasOwnProperty(agentId)) {
+            if (staticAgentRegistry.hasAgent(agentId)) {
+                if (staticAgentRegistry.hasAgentProperty(agentId, property)) {
+                    this[agentId] = new AgentRecord();
+                } else {
+                    // If the static agent doesn't exist in the instance state, but that agent doesn't
+                    // have the property that someone is attempting to delete, we don't do anything.
+                    return false; 
+                }
+            } else {
+                throw new RegalError(`No agent with ID <${agentId}> exists in the instance or the static registry.`);
+            }
+        }
+
+        const agentRecord: AgentRecord = this[agentId];
+
+        return agentRecord.deleteProperty(event, agentId, property);
+    }
 }
 
 export enum PropertyOperation {
@@ -276,7 +296,7 @@ export interface PropertyChange {
 }
 
 export class AgentRecord {
-
+    
     getProperty(propertyKey: PropertyKey): any {
         const changes: PropertyChange[] = this[propertyKey];
         let property: any = undefined;
@@ -299,6 +319,10 @@ export class AgentRecord {
         this._addRecord(event, property, op, initValue, value);
         
         event.trackChange(agentId, property, op, initValue, value);
+    }
+
+    deleteProperty(event: EventRecord, agentId: number, property: PropertyKey): boolean {
+        throw new Error("Method not implemented.");
     }
 
     private _addRecord<T>(event: EventRecord, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
