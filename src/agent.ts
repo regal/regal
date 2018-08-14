@@ -5,7 +5,10 @@ const StaticAgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object) {
         let value = Reflect.get(target, propertyKey);
 
-        if (value === undefined) {
+        if (
+            value === undefined 
+            && (target.game === undefined || !target.game.agents.agentPropertyWasDeleted(target.id, propertyKey))
+        ) {
             value = staticAgentRegistry.getAgentProperty(target.id, propertyKey);
         }
 
@@ -17,6 +20,9 @@ const StaticAgentProxyHandler = {
     },
 
     has(target: Agent, propertyKey: PropertyKey) {
+        if (target.game !== undefined && target.game.agents.agentPropertyWasDeleted(target.id, propertyKey)) {
+            return false;
+        }
         return staticAgentRegistry.hasAgentProperty(target.id, propertyKey);
     }
 }

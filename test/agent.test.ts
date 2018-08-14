@@ -359,6 +359,19 @@ describe("Agent", function() {
                 new Dummy("D2", 12).register(myGame, 1)
             ).to.throw(RegalError, "A static agent already has the ID <1>.")
         });
+
+        it("A static agent's properties can be deleted", function() {
+            const myGame = new GameInstance();
+            const dummy = new Dummy("D1", 10).static().register(myGame);
+
+            expect(dummy.name).to.equal("D1");
+            expect("name" in dummy).to.be.true;
+
+            delete dummy.name;
+
+            expect(dummy.name).to.be.undefined;
+            expect("name" in dummy).to.be.false;
+        });
     });
 
     describe("Instance State", function() {
