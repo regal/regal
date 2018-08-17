@@ -1,4 +1,5 @@
 import { RegalError, ErrorCode, Game, GameInstance } from "./game";
+import { InstanceOutput } from "./output";
 
 export enum RequestType {
     USER_INPUT = "User Input",
@@ -13,7 +14,7 @@ export interface Request {
 }
 
 export interface Response {
-    output?: string[];
+    output?: InstanceOutput;
     game: GameInstance;
 }
 
@@ -23,26 +24,26 @@ export const play = (request: Request): Response => {
     switch (request.type) {
         case RequestType.USER_INPUT:
             if (!request.content) {
-                throw new RegalError(ErrorCode.INVALID_INPUT, "Request content must be supplied with a user input request.");
+                throw new RegalError("Request content must be supplied with a user input request.");
             }
             if (!request.game) {
-                throw new RegalError(ErrorCode.INVALID_INPUT, "A game instance must be supplied with a user input request.");
+                throw new RegalError("A game instance must be supplied with a user input request.");
             }
 
-            request.game.output = [];
+            request.game.output = new InstanceOutput(request.game);
             
             game = Game.onUserInput(request.content, request.game);
             break;
         
         case RequestType.ALARM:
-            throw new RegalError(ErrorCode.NOT_YET_IMPLEMENTED, "Alarms not yet supported.");
+            throw new RegalError("Alarms not yet supported.");
 
         case RequestType.START:
              game = Game.onGameStart();
              break;
 
         default:
-            throw new RegalError(ErrorCode.INVALID_INPUT, "Invalid request type.");
+            throw new RegalError("Invalid request type.");
     }
 
     return { game, output: game.output };

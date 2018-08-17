@@ -1,5 +1,6 @@
 import { EventFunction, on, queue, runQueue } from '../../src/event';
 import { Game, GameInstance, RegalError, ErrorCode } from '../../src/game';
+import { Agent } from '../../src/agent';
 
 // AGENTS //
 
@@ -69,10 +70,11 @@ interface IPhysical extends INamed {
     weight: number;
 }
 
-class GameObject implements INamed {
+class GameObject extends Agent implements INamed {
     name: string;
 
     constructor(name: string) {
+        super();
         this.name = name;
     }
 }
@@ -215,6 +217,7 @@ const death = (subject: ICanDie) =>
 
 const drop = (subject: ICanHold, target: IHoldable) =>
     on("DROP", game => {
+        subject.items = subject.items.filter(item => item.name !== target.name); // TODO: fix list mutability issues
         game.output.push(`${subject.name} drops their ${target.name}.`);
         return isPhysical(target) ? queue(fall(target)) (game) : game;
 });
@@ -237,24 +240,28 @@ const checkState = (state: any): state is FightState => {
     return (<FightState>state).knight !== undefined;
 }
 
+const knightArmor = new Armor("Shining armor").prefab();
+const broadsword = new MeleeWeapon("Broadsword", 15).prefab();
+let knight = Creature.Human("Knight", [knightArmor, broadsword])
+knight.equip(broadsword);
+knight = knight.prefab();
+
+const orcArmor = new Armor("Rusted armor").prefab();
+const club = new MeleeWeapon("Club", 5).prefab();
+let orc = Creature.Orc("Orc", [orcArmor, club]);
+orc.equip(club);
+orc = orc.prefab();
+
 export const init = () => {
 
     Game.onGameStart = () => {
         const game = new GameInstance();
+        game.state = { 
+            knight: knight.register(game), 
+            orc: orc.register(game)
+        } as FightState;
 
-        const knightArmor = new Armor("Shining armor");
-        const sword = new MeleeWeapon("Broadsword", 15);
-        const knight = Creature.Human("Knight", [knightArmor, sword]);
-        knight.equip(sword);
-
-        const orcArmor = new Armor("Rusted armor");
-        const club = new MeleeWeapon("Club", 5);
-        const orc = Creature.Orc("Orc", [orcArmor, club]);
-        orc.equip(club);
-
-        game.state = {knight, orc} as FightState;
-        game.output.push("The knight and orc are in a standoff, sizing each other up.")
-
+        game.output.push("The knight and orc are in a standoff, sizing each other up.");
         return game;
     }
 
@@ -271,6 +278,11 @@ export const init = () => {
                     event = attack(game.state.orc, game.state.knight, game.state.orc.equippedWeapon);
                     break;
 
+                case "log":
+                    console.log(`GAME: ${JSON.stringify(game, null, 2)}`);
+                    console.log(`AGENTS: ${JSON.stringify([...game.agents], null, 2)}`);
+                    return game;
+
                 default:
                     game.output.push("Sorry, that input doesn't make sense.");
                     return game;
@@ -282,6 +294,4 @@ export const init = () => {
             throw new RegalError(ErrorCode.INVALID_STATE, "Input state is not of the correct form.")
         }
     };
-
-    console.log("Fight initialized.");
 }

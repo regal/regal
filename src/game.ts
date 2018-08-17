@@ -1,4 +1,6 @@
-import { EventFunction } from "./event";
+import { EventFunction, InstanceEvents } from "./event";
+import { InstanceAgents, InstanceState, staticAgentRegistry, Agent } from "./agent";
+import { InstanceOutput } from "./output";
 
 export enum ErrorCode {
     OK,
@@ -10,30 +12,32 @@ export enum ErrorCode {
 export class RegalError extends Error {
     code: ErrorCode;
 
-    constructor(code: ErrorCode, message: string = "") {
-        super(`Code: ${code}, Message: ${message}`);
+    constructor(message: string = "") {
+        super(`RegalError: ${message}`);
         Object.setPrototypeOf(this, new.target.prototype);
-        this.code = code;
     }
 }
 
 export class GameInstance {
-    events: string[];
-    output: string[];
-    queue: EventFunction[];
+
+    agents: InstanceAgents;
+    events: InstanceEvents;
+    output: InstanceOutput;
     state: any;
 
     constructor() {
-        this.events = [];
-        this.output = [];
-        this.queue = [];
+        this.agents = new InstanceAgents(this);
+        this.events = new InstanceEvents(this);
+        this.output = new InstanceOutput(this);
+        this.state = new InstanceState(this);
     }
+
 }
 
 export class Game {
 
     private static _onGameStart = (): GameInstance => {
-        throw new RegalError(ErrorCode.NOT_YET_IMPLEMENTED, "onGameStart has not been implemented by the game developer.")
+        throw new RegalError("onGameStart has not been implemented by the game developer.")
     }
     static get onGameStart() {
         return this._onGameStart;
@@ -43,7 +47,7 @@ export class Game {
     }
 
     private static _onUserInput = (content: string, game: GameInstance): GameInstance => {
-        throw new RegalError(ErrorCode.NOT_YET_IMPLEMENTED, "onUserInput has not been implemented by the game developer.")
+        throw new RegalError("onUserInput has not been implemented by the game developer.")
     }
     static get onUserInput() {
         return this._onUserInput;
@@ -51,5 +55,4 @@ export class Game {
     static set onUserInput(inputFunc: (content: string, game: GameInstance) => GameInstance) {
         this._onUserInput = inputFunc;
     }
-
 }
