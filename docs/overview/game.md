@@ -12,3 +12,31 @@ Regal was structured like this so that a client's only responsibilties are:
 * Calling the Regal API
 
 The idea is that a Regal game is deterministic; i.e. it will always return the same output when given the same input. This makes debugging easier and means that no user-specific game data ever needs to be stored on the game servers -- in fact, a Regal game can be serverless! All one needs is a client that can store data and call the Regal API. Multiple clients playing multiple games can call the same API, and they won't interfere with each other.
+
+## Data Transfer Model
+
+Interaction with a Regal game is done through the `Game` API. The API expects a `GameRequest` and returns a `GameResponse`.
+
+### `GameRequest`
+
+A `GameRequest` contains the player's command and the instance state of the game at that moment. A `GameRequest` is sent to the `Game` API whenever a command (such as "open door") is created.
+
+The `GameRequest` schema is as follows:
+
+```ts
+interface GameRequest {
+    command: GameCommand;
+    instance: GameInstance;
+}
+```
+
+`GameCommand` is an interface that represents a command. Its schema is as follows:
+
+```ts
+interface GameCommand {
+    type: GameCommandType;
+    data: any;
+}
+```
+
+The type of `GameCommand.data` is determined by the value of `GameCommand.type`. Different classes of `GameCommand` exist for different types of commands.
