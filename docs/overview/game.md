@@ -48,23 +48,22 @@ MINOR | Non-important line; emphasized less than `NORMAL` lines, and won't alway
 DEBUG | Meant for debugging purposes; only visible when the `DEBUG` option is enabled. | Debugging
 SECTION_TITLE | Signifies the start of a new section or scene in the game. | In games that have scenes, rooms, or other disconnected sections. (i.e. "**West of House**")
 
-
 ## Calling the `Game` API
 
 `Game` is a global object that contains the public API for interacting with a Regal game. 
 
-It has six methods:
+It has six methods for commanding the game:
 
-* `GetOptionCommand`
-* `GetMetadataCommand`
-* `PostPlayerCommand`
-* `PostStartCommand`
-* `PostUndoCommand`
-* `PostOptionCommand`
+* `getOptionCommand`
+* `getMetadataCommand`
+* `postPlayerCommand`
+* `postStartCommand`
+* `postUndoCommand`
+* `postOptionCommand`
 
 Each of these methods returns a `GameResponse` object.
 
-### `Game.GetOptionCommand(instance: GameInstance, options: string[])`
+### `Game.getOptionCommand(instance: GameInstance, options: string[])`
 
 Outputs the values of the named game options.
 
@@ -82,7 +81,7 @@ response.output === {
 };
 ```
 
-### `Game.GetMetadataCommand()`
+### `Game.getMetadataCommand()`
 
 Gets the game's metadata. Note that this is not specific to any game instance.
 
@@ -101,7 +100,7 @@ response.output === {
 }
 ```
 
-### `Game.PostPlayerCommand(instance: GameInstance, command: string)`
+### `Game.postPlayerCommand(instance: GameInstance, command: string)`
 
 Posts a command that was spoken or typed by a player. Usually used to do something in the game.
 
@@ -123,7 +122,7 @@ response.output === {
 };
 ```
 
-### `Game.PostStartCommand(options: GameOption)`
+### `Game.postStartCommand(options: GameOption)`
 
 Starts a new game with the option to override one or more `GameOption`s.
 
@@ -157,7 +156,7 @@ response2.output === {
 };
 ```
 
-### `Game.PostUndoCommand(instance: GameInstance)`
+### `Game.postUndoCommand(instance: GameInstance)`
 
 Undoes the effects of the previous command.
 
@@ -182,7 +181,7 @@ response2.output === {
 };
 ```
 
-### `Game.PostOptionCommand(instance: GameInstance, options: GameOption)`
+### `Game.postOptionCommand(instance: GameInstance, options: GameOption)`
 
 Updates the values of the named game options.
 
@@ -195,3 +194,25 @@ response.output === {
 
 Game.GetOptionCommand(response.instance, [ "debug" ]).output.options.debug === false;
 ```
+
+## Hooking into the Game API
+
+So far, everything explained by this guide is on the "client-end" of a Regal game. It is unlikely that a game developer will call any of the `Game` static methods, as they are meant to be called by a client playing the game. However, it's important to know what they are so that their behavior can be controlled.
+
+On the "game-end," which refers to the source of a Regal game, there are several of *hooks* that a game developer should call to set up their game.
+
+A *hook* is a method that is called internally by the Game API and can be implemented by the game developer. This allows the developer to specify functions that should be executed at certain times.
+
+There are three hooks for the Game Command API:
+
+* `onPlayerCommand`
+* `onStartCommand`
+* `onBeforeUndoCommand`
+
+Each of these methods return `void`, and will error if called more than once.
+
+### `onPlayerCommand((command: string) => TrackedEvent)`
+
+### `onStartCommand((options: GameOption) => TrackedEvent)`
+
+### `onBeforeUndoCommand((game: GameInstance) => boolean)`
