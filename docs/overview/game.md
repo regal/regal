@@ -211,8 +211,22 @@ There are three hooks for the Game Command API:
 
 Each of these methods return `void`, and will error if called more than once.
 
-### `onPlayerCommand((command: string) => TrackedEvent)`
+### `onPlayerCommand(handler: (command: string) => TrackedEvent)`
 
-### `onStartCommand((options: GameOption) => TrackedEvent)`
+Executes whenever `postPlayerCommand` is called. The `handler` function in this case should use the player's `command`, which is a string, to generate a `TrackedEvent`.
 
-### `onBeforeUndoCommand((game: GameInstance) => boolean)`
+#### Example
+
+```ts
+const handleInput = (command: string) =>
+    on("INPUT", game => {
+        game.output.write(`You entered ${command}!`);
+        return noop;
+    });
+
+onPlayerCommand(handleInput);
+```
+
+### `onStartCommand(handler: TrackedEvent)`
+
+### `onBeforeUndoCommand(handler: (game: GameInstance) => boolean)`
