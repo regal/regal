@@ -2,7 +2,7 @@
 
 The Regal `Game` object is the API through which games are played. 
 
-In a sense, any operation on a Regal game can be thought of as a pure function. A request (consisting of the player's command and the game state) is sent to the Game API, and a response (consisting of the game's output and the updated game state) is returned. The game's source and the original game state are never modified.
+In a sense, any operation on a Regal game can be thought of as a pure function. A request (usually containing the game's current state) is sent to the Game API, and a response (consisting of the game's output and the updated game state) is returned. The game's source and the original game state are never modified.
 
 Regal was structured like this so that a client's only responsibilties are:
 
@@ -21,7 +21,7 @@ The `GameResponse` schema is as follows:
 
 ```ts
 interface GameResponse {
-    instance: GameInstance;
+    instance?: GameInstance;
     output: GameOutput;
 }
 ```
@@ -34,7 +34,9 @@ Property | Type | Required | Description
 --- | --- | --- | ---
 wasSuccessful | boolean | Yes | Will be false if an error occurred during the game's execution of the request.
 error | RegalError | No | If `wasSuccessful` is false, this will contain the error that was thrown.
-log | OutputLine[] | Yes | Contains any lines of text emitted by the game.
+log | OutputLine[] | No | Contains any lines of text emitted by the game.
+options | GameOptions | No | Contains any game options requested by `getOptionCommand` or updated by `postOptionCommand`.
+metadata | GameMetadata | No | Contains the game's metadata if `getMetadataCommand` was called.
 
 An `OutputLine` usually contains a line of text meant to notify the player of something that happened in the game. It has a `data` property of type `string`, and a `type` property that is of type `OutputLineType`.
 
@@ -70,7 +72,7 @@ Outputs the values of the named game options.
 #### Example
 
 ```ts
-const response = Game.GetOptionCommand(myGame, [ "debug", "showMinor" ]);
+const response = Game.getOptionCommand(myGame, [ "debug", "showMinor" ]);
 
 response.output === {
     wasSuccessful: true,
@@ -86,7 +88,7 @@ response.output === {
 Gets the game's metadata. Note that this is not specific to any game instance.
 
 ```ts
-const response = Game.GetMetadataCommand();
+const response = Game.getMetadataCommand();
 
 response.output === {
     wasSuccessful: true,
@@ -105,7 +107,7 @@ response.output === {
 Posts a command that was spoken or typed by a player. Usually used to do something in the game.
 
 ```ts
-const response = Game.PostPlayerCommand(myGame, "enter door");
+const response = Game.postPlayerCommand(myGame, "enter door");
 
 response.output === {
     wasSuccessful: true,
@@ -127,7 +129,7 @@ response.output === {
 Starts a new game with the option to override one or more `GameOption`s.
 
 ```ts
-const response1 = Game.PostStartCommand();
+const response1 = Game.postStartCommand();
 
 reponse1.output === {
     wasSuccessful: true,
@@ -139,7 +141,7 @@ reponse1.output === {
     ]
 };
 
-const response2 = Game.PostStartCommand({ debug: true });
+const response2 = Game.postStartCommand({ debug: true });
 
 response2.output === {
     wasSuccessful: true,
@@ -155,6 +157,8 @@ response2.output === {
     ]
 };
 ```
+
+If options are omitted, their default values will be used.
 
 ### `Game.postUndoCommand(instance: GameInstance)`
 
@@ -211,15 +215,17 @@ There are three hooks for the Game Command API:
 
 Each of these methods return `void`, and will error if called more than once.
 
-### `onPlayerCommand(handler: (command: string) => TrackedEvent)`
+### `onPlayerCommand(handler: (command: string) => EventFunction)`
 
-Executes whenever `postPlayerCommand` is called. The `handler` function in this case should use the player's `command`, which is a string, to generate a `TrackedEvent`.
+Executes whenever `postPlayerCommand` is called. The `handler` function in this case should use the player's `command`, which is a string, to generate a `EventFunction`.
+
+Note that if `handler` is not a `TrackedEvent`, it will be wrapped in a new `TrackedEvent` called `INPUT`.
 
 #### Example
 
 ```ts
 const handleInput = (command: string) =>
-    on("INPUT", game => {
+    (game: GameInstance) => {
         game.output.write(`You entered ${command}!`);
         return noop;
     });
@@ -227,6 +233,105 @@ const handleInput = (command: string) =>
 onPlayerCommand(handleInput);
 ```
 
-### `onStartCommand(handler: TrackedEvent)`
+### `onStartCommand(handler: EventFunction)`
+
+Executes whenever `postStartCommand` is called.
+
+Note that if `handler` is not a `TrackedEvent`, it will be wrapped in a new `TrackedEvent` called `START`.
+
+#### Example
+
+```ts
+onStartCommand(game => {
+    game.output.write("Welcome to my awesome game!");
+    return noop;
+});
+```
 
 ### `onBeforeUndoCommand(handler: (game: GameInstance) => boolean)`
+
+Executes whenever `postUndoCommand` is called. The `handler` function, which takes place before the game's undo operation command happens, should return a boolean specifying whether or not the undo is allowed to take place.
+
+If `handler` returns true, the previous command will be undone. If it returns false, a `RegalError` will be thrown.
+
+Note that `onBeforeUndoCommand` will only be triggered if the previous command was a `PlayerCommand`.
+
+#### Example
+
+```ts
+// Initialize game.foo = 0
+onStartCommand(game => {
+    game.foo = 0;
+    return noop;
+});
+
+// Set game.foo to the given number
+onPlayerCommand(command => game => {
+    game.foo = command;
+});
+
+// Only allow undo if game.foo > 1
+onBeforeUndoCommand(game => {
+    return game.foo > 1;
+});
+
+let myGame = Game.postStartCommand();
+myGame = Game.postPlayerCommand(myGame, -1); // Set myGame.foo = -1
+
+myGame = Game.postUndoCommand(myGame); // throws RegalError "You can't undo that operation."
+
+myGame = Game.postPlayerCommand(myGame, 10); // Set myGame.foo = 10;
+
+myGame = Game.postUndoCommand(myGmae); // Successful! Sets myGame.foo back to 0.
+```
+
+## Game Configuration
+
+Configuration for a Regal game is kept in the project's root directory, in a file called `regal.json`. This file contains metadata about the game (such as its title and author), as well as default values for its game options.
+
+A game's `regal.json` file might look something like this:
+
+```
+{
+    name: "My Awesome Game",
+    author: "Joe Cowman",
+    version: "1.0.0",
+    headline: "This is the best game ever.",
+    description: "Let me tell you why this is the best game ever...",
+    options: {
+        debug: false,
+        showMinor: true
+    }
+}
+```
+
+The complete schema of `regal.json` is as follows:
+
+**Property** | Type | Description
+--- | --- | ---
+**name** | string | The game's title.
+**author** | string | The game's author.
+**headline** | string | A brief description of the game to be displayed with links to the game.
+**description** | string | The full description of the game.
+**homepage** | string | The URL of the project's homepage.
+**repository** | string | The URL of the project's repository.
+**options** | object | Default values for the game's options. (See below.)
+
+None of the above properties are required, nor is a `regal.json` file even required. For every property except `headline`, if that property is omitted, its value will be retrieved from `package.json`. If a property exists in both `regal.json` and `package.json`, the value from `regal.json` will be used.
+
+#### `GameMetadata` Interface
+
+The `GameMetadata` interface exists to contain metadata from `regal.json` in the game's source. It is the same structure as the json file.
+
+### Game Options
+
+The `options` object contains default values for the game's options. It's not required to provide defaults for all options, or even an `options` object at all. The options and their defaults are as follows:
+
+**Property** | Type | Default Value | Description
+**debug** | boolean | `false` | Whether debug output should be returned to the client.
+**showMinor** | boolean | `true` | Whether minor output should be returned to the client.
+
+#### `GameOption` Interface
+
+The `GameOption` interface exists to contain metadata from `regal.json`'s `options` object in the game's source. It is the same structure as the `options` value in the `regal.json` file.
+
