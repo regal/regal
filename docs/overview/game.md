@@ -328,6 +328,7 @@ The `GameMetadata` interface exists to contain metadata from `regal.json` in the
 The `options` object contains default values for the game's options. It's not required to provide defaults for all options, or even an `options` object at all. The options and their defaults are as follows:
 
 **Property** | Type | Default Value | Description
+--- | --- | --- | ---
 **debug** | boolean | `false` | Whether debug output should be returned to the client.
 **showMinor** | boolean | `true` | Whether minor output should be returned to the client.
 
