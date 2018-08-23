@@ -28,7 +28,8 @@
     "test": "nyc mocha",
     "publish-coverage": "nyc report --reporter=text-lcov | coveralls",
     "check-coverage": "nyc check-coverage --lines 75 --functions 75 --branches 75",
-    "commit": "git-cz"
+    "commit": "git-cz",
+    "test-release": "npx semantic-release --branch 0.x --dry-run true"
   },
   "nyc": {
     "include": [
