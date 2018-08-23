@@ -22,7 +22,7 @@ Component | Description | Designed | Implemented | Tested
 --- | --- | --- | --- | ---
 **API** | Public API for consumers of the library | 🔵 | 🔵 | ⚪
 **Agent** | Model for immutable game objects | ✔️ | 🔵 | 🔵
-**Event** | Model for game events | 🔵 | 🔵 | ⚪
+**Event** | Model for game events | ✔️ | ✔️ | ✔️
 
 ✔️ - Complete   
 🔵 - In-Progress    
