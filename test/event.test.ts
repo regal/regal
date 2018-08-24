@@ -5,6 +5,7 @@ import { GameInstance, RegalError } from '../src/game';
 import { on, noop, EventRecord, TrackedEvent, nq, isEventQueue, enqueue } from '../src/event';
 import { log } from '../src/utils';
 import { Agent, PropertyOperation, resetRegistry } from '../src/agent';
+import { OutputLineType } from '../src/output';
 
 describe("Event", function() {
 
@@ -22,11 +23,15 @@ describe("Event", function() {
                 id: 1,
                 name: "GREET",
                 output: [
-                    "Hello, world!"
+                    1
                 ],
             }
         ]);
-        expect(myGame.output.lines).to.deep.equal(["Hello, world!"]);
+        expect(myGame.output.lines).to.deep.equal([{
+            id: 1,
+            type: OutputLineType.NORMAL,
+            data: "Hello, world!"
+        }]);
     });
 
     it("Partial application and name templating with `on`", function() {
@@ -44,11 +49,15 @@ describe("Event", function() {
                 id: 1,
                 name: "GREET <Regal>",
                 output: [
-                    "Hello, Regal!"
+                    1
                 ],
             }
         ]);
-        expect(myGame.output.lines).to.deep.equal(["Hello, Regal!"]);
+        expect(myGame.output.lines).to.deep.equal([{
+            id: 1,
+            type: OutputLineType.NORMAL,
+            data: "Hello, Regal!"
+        }]);
     });
 
     it("Returning another EventFunction from inside another executes it", function() {
@@ -78,7 +87,7 @@ describe("Event", function() {
                 causedBy: 1,
                 name: "MORNING",
                 output: [
-                    "Have a great day!"
+                    1
                 ]
             },
             {
@@ -89,6 +98,11 @@ describe("Event", function() {
                 name: "MOTIVATE"
             }
         ]);
+        expect(myGame.output.lines).to.deep.equal([{
+            id: 1,
+            type: OutputLineType.NORMAL,
+            data: "Have a great day!"
+        }]);
     });
 
     it("noop returns undefined", function() {
@@ -127,7 +141,7 @@ describe("Event", function() {
                     causedBy: 1,
                     name: "ADD ITEM <Sword>",
                     output: [
-                        "Added Sword to King Arthur's inventory."
+                        3
                     ]
                 },
                 {
@@ -135,18 +149,35 @@ describe("Event", function() {
                     causedBy: 1,
                     name: "LEARN SKILL <Blacksmithing>",
                     output: [
-                        "King Arthur learned Blacksmithing!"
+                        2
                     ]
                 },
                 {
                     id: 1,
                     name: "MAKE SWORD",
                     output: [
-                        "King Arthur made a sword!"
+                        1
                     ],
                     caused: [
                         2, 3
                     ]
+                }
+            ]);
+            expect(myGame.output.lines).to.deep.equal([
+                {
+                    id: 1,
+                    type: OutputLineType.NORMAL,
+                    data: "King Arthur made a sword!"
+                },
+                {
+                    id: 2,
+                    type: OutputLineType.NORMAL,
+                    data: "King Arthur learned Blacksmithing!"
+                },
+                {
+                    id: 3,
+                    type: OutputLineType.NORMAL,
+                    data: "Added Sword to King Arthur's inventory."
                 }
             ]);
         });
@@ -228,7 +259,7 @@ describe("Event", function() {
                     causedBy: 4,
                     name: "HIT GROUND <Spoon>",
                     output: [
-                        "Spoon hits the ground. Thud!"
+                        6
                     ]
                 },
                 {
@@ -236,7 +267,7 @@ describe("Event", function() {
                     causedBy: 3,
                     name: "HIT GROUND <Duck>",
                     output: [
-                        "Duck hits the ground. Thud!"
+                        5
                     ]
                 },
                 {
@@ -244,7 +275,7 @@ describe("Event", function() {
                     causedBy: 2,
                     name: "HIT GROUND <Hat>",
                     output: [
-                        "Hat hits the ground. Thud!"
+                        4
                     ]
                 },
                 {
@@ -252,7 +283,7 @@ describe("Event", function() {
                     causedBy: 1,
                     name: "FALL <Spoon>",
                     output: [
-                        "Spoon falls."
+                        3
                     ],
                     caused: [
                         7
@@ -263,7 +294,7 @@ describe("Event", function() {
                     causedBy: 1,
                     name: "FALL <Duck>",
                     output: [
-                        "Duck falls."
+                        2
                     ],
                     caused: [
                         6
@@ -274,7 +305,7 @@ describe("Event", function() {
                     causedBy: 1,
                     name: "FALL <Hat>",
                     output: [
-                        "Hat falls."
+                        1
                     ],
                     caused: [
                         5
@@ -287,7 +318,39 @@ describe("Event", function() {
                         2, 3, 4
                     ]
                 }
-            ])
+            ]);
+            expect(myGame.output.lines).to.deep.equal([
+                {
+                    id: 1,
+                    type: OutputLineType.NORMAL,
+                    data: "Hat falls."
+                },
+                {
+                    id: 2,
+                    type: OutputLineType.NORMAL,
+                    data: "Duck falls."
+                },
+                {
+                    id: 3,
+                    type: OutputLineType.NORMAL,
+                    data: "Spoon falls."
+                },
+                {
+                    id: 4,
+                    type: OutputLineType.NORMAL,
+                    data: "Hat hits the ground. Thud!"
+                },
+                {
+                    id: 5,
+                    type: OutputLineType.NORMAL,
+                    data: "Duck hits the ground. Thud!"
+                },
+                {
+                    id: 6,
+                    type: OutputLineType.NORMAL,
+                    data: "Spoon hits the ground. Thud!"
+                }
+            ]);
         });
 
         it("Attempting to invoke an EventQueue throws an error", function() {
@@ -507,7 +570,7 @@ describe("Event", function() {
                     id: 1,
                     name: "HEAL",
                     output: [
-                        "Healed Lars by 15. Health is now 25."
+                        1
                     ],
                     changes: [
                         {
@@ -519,7 +582,12 @@ describe("Event", function() {
                         }
                     ]
                 }
-            ])
+            ]);
+            expect(myGame.output.lines).to.deep.equal([{
+                id: 1,
+                type: OutputLineType.NORMAL,
+                data: "Healed Lars by 15. Health is now 25."
+            }]);
         });
     
         it("Complicated agent changes are tracked in GameInstance.events.history", function() {
@@ -565,8 +633,8 @@ describe("Event", function() {
                     name: "READ STATUS",
                     causedBy: 1,
                     output: [
-                        "Lars's health is 10.",
-                        "Bill's health is 36."
+                        2,
+                        3
                     ]
                 },
                 {
@@ -582,13 +650,12 @@ describe("Event", function() {
                             final: 36
                         }
                     ]
-                    
                 },
                 {
                     id: 2,
                     name: "ADD FRIEND",
                     output: [
-                        "Lars has a new friend! (Bill)"
+                        1
                     ],
                     causedBy: 1,
                     caused: [
@@ -679,6 +746,23 @@ describe("Event", function() {
                             }
                         }
                     ]
+                }
+            ]);
+            expect(myGame.output.lines).to.deep.equal([
+                {
+                    id: 1,
+                    type: OutputLineType.NORMAL,
+                    data: "Lars has a new friend! (Bill)"
+                },
+                {
+                    id: 2,
+                    type: OutputLineType.NORMAL,
+                    data: "Lars's health is 10."
+                },
+                {
+                    id: 3,
+                    type: OutputLineType.NORMAL,
+                    data: "Bill's health is 36."
                 }
             ]);
         });
