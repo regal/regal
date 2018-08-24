@@ -1,4 +1,4 @@
-import { GameInstance } from "./game";
+import { GameInstance, RegalError } from "./game";
 
 export enum OutputLineType {
     NORMAL = "NORMAL",
@@ -56,4 +56,27 @@ export class InstanceOutput {
     writeTitle(line: string) {
         this.writeLine(line, OutputLineType.SECTION_TITLE);
     }
+}
+
+export interface GameOutput {
+    wasSuccessful: boolean;
+    error?: RegalError;
+    log?: OutputLine[];
+    options?: GameOptions;
+    metadata?: GameMetadata;
+}
+
+export interface GameOptions {
+    debug?: boolean;
+    showMinor?: boolean;
+}
+
+export interface GameMetadata {
+    name: string;
+    author: string;
+    headline: string;
+    description: string;
+    homepage: string;
+    repository: string;
+    options: GameOptions;
 }
