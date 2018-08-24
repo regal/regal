@@ -7,6 +7,7 @@
 
 import { GameInstance, RegalError } from './game';
 import { PropertyChange, PropertyOperation } from './agent';
+import { OutputLine } from './output';
 
 /** Event ID for untracked EventFunctions. */
 export const DEFAULT_EVENT_ID: number = 0;
@@ -106,8 +107,8 @@ export const noop: TrackedEvent = (() => {
  */
 export class EventRecord {
 
-    /** The output emitted by the event. */
-    output?: string[];
+    /** The IDs of the OutputLines emitted by the event. */
+    output?: number[];
     /** The ID of the event that caused this event. */
     causedBy?: number;
     /** The IDs of the events that were caused by this event. */
@@ -131,14 +132,14 @@ export class EventRecord {
     ) {}
 
     /**
-     * Appends lines of output to the EventRecord's output log.
-     * @param lines The lines of output emitted by the event.
+     * Appends a reference to an OutputLine to the EventRecord's output log.
+     * @param line The line of output emitted by the event.
      */
-    trackOutputWrite(...lines: string[]): void {
+    trackOutputWrite(line: OutputLine): void {
         if (this.output === undefined) {
             this.output = [];
         }
-        this.output.push(...lines);
+        this.output.push(line.id);
     }
 
     /**
