@@ -5,9 +5,10 @@
  * @license MIT (see https://github.com/regal/regal)
  */
 
-import { GameInstance, RegalError } from './game';
+import GameInstance from './gameInstance';
 import { PropertyChange, PropertyOperation } from './agent';
 import { OutputLine } from './output';
+import { RegalError } from './error';
 
 /** Event ID for untracked EventFunctions. */
 export const DEFAULT_EVENT_ID: number = 0;

@@ -5,7 +5,8 @@
  * @license MIT (see https://github.com/regal/regal)
  */
 
-import { GameInstance, RegalError } from "./game";
+import GameInstance from "./gameInstance";
+import { RegalError } from "./error";
 
 /**
  * Conveys semantic meaning of an OutputLine to the client.

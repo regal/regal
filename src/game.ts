@@ -1,38 +1,5 @@
-import { EventFunction, InstanceEvents } from "./event";
-import { InstanceAgents, InstanceState, staticAgentRegistry, Agent } from "./agent";
-import { InstanceOutput } from "./output";
-
-export enum ErrorCode {
-    OK,
-    NOT_YET_IMPLEMENTED,
-    INVALID_INPUT,
-    INVALID_STATE
-}
-
-export class RegalError extends Error {
-    code: ErrorCode;
-
-    constructor(message: string = "") {
-        super(`RegalError: ${message}`);
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
-}
-
-export class GameInstance {
-
-    agents: InstanceAgents;
-    events: InstanceEvents;
-    output: InstanceOutput;
-    state: any;
-
-    constructor() {
-        this.agents = new InstanceAgents(this);
-        this.events = new InstanceEvents(this);
-        this.output = new InstanceOutput(this);
-        this.state = new InstanceState(this);
-    }
-
-}
+import GameInstance from "./gameInstance";
+import { RegalError } from "./error";
 
 export class Game {
 
