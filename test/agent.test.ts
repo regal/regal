@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import GameInstance from '../src/gameInstance';
+import GameInstance from '../src/game-instance';
 import { RegalError } from '../src/error';
 import { Agent, resetRegistry, staticAgentRegistry, AgentRecord, AgentReference, PropertyOperation } from '../src/agent';
 import { log } from '../src/utils';

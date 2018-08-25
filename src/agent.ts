@@ -1,6 +1,6 @@
 import { EventRecord } from "./event";
 import { RegalError } from "./error";
-import GameInstance from "./gameInstance";
+import GameInstance from "./game-instance";
 
 const StaticAgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object) {

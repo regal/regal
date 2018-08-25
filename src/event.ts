@@ -5,7 +5,7 @@
  * @license MIT (see https://github.com/regal/regal)
  */
 
-import GameInstance from './gameInstance';
+import GameInstance from './game-instance';
 import { PropertyChange, PropertyOperation } from './agent';
 import { OutputLine } from './output';
 import { RegalError } from './error';
