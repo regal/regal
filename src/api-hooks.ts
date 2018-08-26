@@ -1,4 +1,4 @@
-import { EventFunction, TrackedEvent, on } from "./event";
+import { EventFunction, TrackedEvent, on, isTrackedEvent } from "./event";
 import GameInstance from "./game-instance";
 import { RegalError } from "./error";
 
@@ -25,7 +25,16 @@ export const onPlayerCommand = (handler: (command: string) => EventFunction): vo
         throw new RegalError("Handler must be defined.");
     }
 
-    const trackedEvent = (cmd: string) => on("INPUT", handler(cmd));
+    const trackedEvent = (cmd: string) => on("INPUT", game => { 
+        const activatedHandler = handler(cmd);
+
+        // Allow the handler to be an EventFunction, a TrackedEvent, or an EventQueue
+        if (isTrackedEvent(activatedHandler)) {
+            return activatedHandler;
+        } else {
+            return activatedHandler(game);
+        }
+    });
 
     HookManager.playerCommandHook = trackedEvent;
 };
