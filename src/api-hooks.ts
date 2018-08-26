@@ -5,10 +5,16 @@ import { RegalError } from "./error";
 const returnTrue = (game: GameInstance) => true;
 
 export class HookManager {
-    
+
     static playerCommandHook: (command: string) => TrackedEvent;
     static startCommandHook: TrackedEvent;
     static beforeUndoCommandHook: (game: GameInstance) => boolean = returnTrue;
+
+    static resetHooks() {
+        this.playerCommandHook = undefined;
+        this.startCommandHook = undefined;
+        this.beforeUndoCommandHook = returnTrue;
+    }
 }
 
 export const onPlayerCommand = (handler: (command: string) => EventFunction): void => {
