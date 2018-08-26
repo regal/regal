@@ -47,7 +47,14 @@ export const onStartCommand = (handler: EventFunction): void => {
         throw new RegalError("Handler must be defined.");
     }
 
-    const trackedEvent = on("START", handler);
+    const trackedEvent = on("START", game => {
+        // Allow the handler to be an EventFunction, a TrackedEvent, or an EventQueue
+        if (isTrackedEvent(handler)) {
+            return handler;
+        } else {
+            return handler(game);
+        }
+    });
 
     HookManager.startCommandHook = trackedEvent;
 };
