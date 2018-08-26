@@ -381,4 +381,35 @@ describe("API Hooks", function() {
             expect(() => onStartCommand(undefined)).to.throw(RegalError, "Handler must be defined.");
         });
     });
+
+    describe("onBeforeUndoCommand", function() {
+
+        it("onBeforeUndoCommand allows the developer to set if undo is allowed for a given GameInstance", function() {
+            onBeforeUndoCommand(game => game.state.foo !== undefined && game.state.foo > 10);
+    
+            const setFoo = (val: number) => on("SET FOO", game => {
+                game.state.foo = val;
+                return noop;
+            });
+    
+            const myGame = new GameInstance();
+    
+            expect(HookManager.beforeUndoCommandHook(myGame)).to.be.false;
+    
+            setFoo(15)(myGame);
+            expect(HookManager.beforeUndoCommandHook(myGame)).to.be.true;
+    
+            setFoo(-3)(myGame);
+            expect(HookManager.beforeUndoCommandHook(myGame)).to.be.false;
+        });
+
+        it("onBeforeUndoCommand cannot be called more than once", function() {
+            onBeforeUndoCommand(game => game.state.foo);
+            expect(() => onBeforeUndoCommand(game => game.state.bar)).to.throw(RegalError, "Cannot call onBeforeUndoCommand more than once.");
+        });
+
+        it("onBeforeUndoCommand's handler must be defined", function() {
+            expect(() => onBeforeUndoCommand(undefined)).to.throw(RegalError, "Handler must be defined.");
+        });
+    });
 });
