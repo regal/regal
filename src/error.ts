@@ -6,7 +6,6 @@ export enum ErrorCode {
 }
 
 export class RegalError extends Error {
-    code: ErrorCode;
 
     constructor(message: string = "") {
         super(`RegalError: ${message}`);
