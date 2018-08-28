@@ -835,12 +835,130 @@ describe("Agent", function() {
             });
         });
 
-        it.skip("InstanceAgents.cycle does not copy the properties of non-static agents that were most recently deleted", function() {
-            // TODO
+        it("InstanceAgents.cycle does not copy the properties of non-static agents that were most recently deleted", function() {
+            const myGame = new GameInstance();
+
+            on("INIT", game => {
+                game.state.dummy = new Dummy("D1", 10);
+
+                return on("MOD", game => {
+                    delete game.state.dummy.name;
+                    delete game.state.foo;
+                    return noop;
+                });
+            }) (myGame);
+
+            const game2 = new GameInstance();
+            game2.agents = myGame.agents.cycle(game2);
+
+            expect(game2.agents).to.deep.equal({
+                game: game2,
+                0: {
+                    _id: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: 0,
+                        op: PropertyOperation.ADDED
+                    }],
+                    game: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: game2,
+                        op: PropertyOperation.ADDED
+                    }],
+                    dummy: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: {
+                            refId: 1
+                        },
+                        op: PropertyOperation.ADDED
+                    }]
+                },
+                1: {
+                    _id: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: 1,
+                        op: PropertyOperation.ADDED
+                    }],
+                    game: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: game2,
+                        op: PropertyOperation.ADDED
+                    }],
+                    health: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: 10,
+                        op: PropertyOperation.ADDED
+                    }]
+                }
+            });
+
+
         });
 
-        it.skip("InstanceAgents.cycle DOES copy the properties of STATIC agents that were most recently deleted", function() {
-            // TODO
+        it("InstanceAgents.cycle DOES copy the properties of STATIC agents that were most recently deleted", function() {
+            const myGame = new GameInstance();
+            const staticDummy = new Dummy("D1", 10).static();
+
+            on("INIT", game => {
+                game.state.dummy = staticDummy;
+
+                return on("MOD", game => {
+                    delete game.state.dummy.name;
+                    return noop;
+                });
+            }) (myGame);
+
+            const game2 = new GameInstance();
+            game2.agents = myGame.agents.cycle(game2);
+
+            expect(game2.agents).to.deep.equal({
+                game: game2,
+                0: {
+                    _id: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: 0,
+                        op: PropertyOperation.ADDED
+                    }],
+                    game: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: game2,
+                        op: PropertyOperation.ADDED
+                    }],
+                    dummy: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: undefined,
+                        final: {
+                            refId: 1
+                        },
+                        op: PropertyOperation.ADDED
+                    }]
+                },
+                1: {
+                    name: [{
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        init: "D1",
+                        final: undefined,
+                        op: PropertyOperation.DELETED
+                    }]
+                }
+            });
         });
     });
 });

@@ -319,20 +319,30 @@ export class InstanceAgents {
             const keysToAdd = Object.keys(formerAgent)
                 .filter(key => key !== "game" && key !== "_id")
 
-            // Create new Agent with the old agent's id and the new GameInstance
+            // Create new Agent with the old agent's id and the new GameInstance.
             const id = Number.parseInt(agentKeys[i]);
             const newAgent = new Agent(id, current);
             newAgents.addAgent(newAgent, EventRecord.default); // Note: If the agent is static, this won't do anything.
 
-            // For each updated property on the old agent, add its last value to the new agent
+            // For each updated property on the old agent, add its last value to the new agent.
             keysToAdd.forEach(key => {
-                let formerProperty = formerAgent.getProperty(key);
 
-                if (isAgentReference(formerProperty)) {
-                    formerProperty = new AgentReference(formerProperty.refId);
+                if (formerAgent.propertyWasDeleted(key)) {
+
+                    if (staticAgentRegistry.hasAgentProperty(id, key)) {
+                        newAgents.deleteAgentProperty(id, key, EventRecord.default); // Record deletions to static agents.
+                    }
+
+                    return; // If the property was deleted, don't add it to the new record.
                 }
 
-                newAgents.setAgentProperty(newAgent.id, key, formerProperty, EventRecord.default);
+                let formerPropertyValue = formerAgent.getProperty(key);
+
+                if (isAgentReference(formerPropertyValue)) {
+                    formerPropertyValue = new AgentReference(formerPropertyValue.refId);
+                }
+
+                newAgents.setAgentProperty(newAgent.id, key, formerPropertyValue, EventRecord.default);
             });
         }
 
