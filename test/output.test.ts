@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 import GameInstance from '../src/game-instance';
-import { OutputLineType } from '../src/output';
+import { OutputLineType, InstanceOutput } from '../src/output';
 
 describe("Output", function() {
 
@@ -174,6 +174,47 @@ describe("Output", function() {
                     data: "There are things here."
                 }
             ]);
+        });
+
+        it("The lineCount getter works properly when startingLineCount = 0", function() {
+            const myGame = new GameInstance();
+
+            expect(myGame.output.lineCount).to.equal(0);
+
+            myGame.output.write("Foo");
+
+            expect(myGame.output.lineCount).to.equal(1);
+        });
+
+        it("The lineCount getter works properly when startingLineCount is not 0", function() {
+            const myGame = new GameInstance();
+            myGame.output = new InstanceOutput(myGame, 10);
+
+            expect(myGame.output.lineCount).to.equal(10);
+
+            myGame.output.write("Foo");
+
+            expect(myGame.output.lineCount).to.equal(11);
+        });
+
+        it("InstanceOutput.cycle creates a new InstanceOutput with the previous instance's lineCount", function() {
+            const game1 = new GameInstance();
+            
+            const game2 = new GameInstance();
+            const output2 = game1.output.cycle(game2);
+
+            expect(output2.lineCount).to.equal(0);
+            expect(output2.game).to.equal(game2);
+            expect(output2.lines).to.be.empty;
+
+            output2.write("Foo", "Bar", "Baz");
+
+            const game3 = new GameInstance();
+            const output3 = output2.cycle(game3);
+
+            expect(output3.lineCount).to.equal(3);
+            expect(output3.game).to.equal(game3);
+            expect(output3.lines).to.be.empty;
         });
 
     });

@@ -184,6 +184,11 @@ export class AgentReference {
     constructor(public refId: number) {}
 }
 
+const propertyIsAgentId = (property: string) => {
+    const tryNum = Math.floor(Number(property));
+    return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
+}
+
 export class InstanceAgents {
 
     constructor(public game: GameInstance) {}
@@ -296,6 +301,41 @@ export class InstanceAgents {
 
     agentPropertyWasDeleted(agentId: number, property: PropertyKey): boolean {
         return this.hasOwnProperty(agentId) && (<AgentRecord>this[agentId]).propertyWasDeleted(property);
+    }
+
+    /**
+     * Creates a new `InstanceAgents` for the new game cycle.
+     * **Don't call this unless you know what you're doing.**
+     * @param current The `GameInstance` for the new game cycle.
+     */
+    cycle(current: GameInstance): InstanceAgents {
+        const newAgents = new InstanceAgents(current);
+
+        const agentKeys = Object.keys(this).filter(propertyIsAgentId);
+        const agentRecords = agentKeys.map(key => <AgentRecord>this[key]);
+
+        for (let i = 0; i < agentRecords.length; i++) {
+            const formerAgent = agentRecords[i];
+            const keysToAdd = Object.keys(formerAgent)
+                .filter(key => key !== "game" && key !== "_id")
+
+            // Create new Agent with the old agent's id and the new GameInstance
+            const newAgent = new Agent(formerAgent.getProperty("_id"), current);
+            newAgents.addAgent(newAgent, EventRecord.default);
+
+            // For each updated property on the old agent, add its last value to the new agent
+            keysToAdd.forEach(key => {
+                let formerProperty = formerAgent.getProperty(key);
+
+                if (isAgentReference(formerProperty)) {
+                    formerProperty = new AgentReference(formerProperty.refId);
+                }
+
+                newAgents.setAgentProperty(newAgent.id, key, formerProperty, EventRecord.default);
+            });
+        }
+
+        return newAgents;
     }
 }
 

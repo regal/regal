@@ -34,10 +34,12 @@ const wrapApiErrorAsRegalError = (err: any): RegalError => {
     return newErr;
 }
 
-const cloneGame = (instance: GameInstance): GameInstance => {
-    // TODO
-    return instance;
-};
+// const cycleInstance = (former: GameInstance): GameInstance => {
+//     const current = new GameInstance();
+//     current.output.lineCount = former.output.lineCount;
+
+//     return former;
+// };
 
 export class Game {
 
@@ -61,7 +63,7 @@ export class Game {
             throw new RegalError("onPlayerCommand has not been implemented by the game developer.");
         }
 
-        let newInstance = cloneGame(instance);
+        let newInstance = instance.cycle();
         let err: RegalError;
 
         try {
