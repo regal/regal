@@ -320,8 +320,9 @@ export class InstanceAgents {
                 .filter(key => key !== "game" && key !== "_id")
 
             // Create new Agent with the old agent's id and the new GameInstance
-            const newAgent = new Agent(formerAgent.getProperty("_id"), current);
-            newAgents.addAgent(newAgent, EventRecord.default);
+            const id = Number.parseInt(agentKeys[i]);
+            const newAgent = new Agent(id, current);
+            newAgents.addAgent(newAgent, EventRecord.default); // Note: If the agent is static, this won't do anything.
 
             // For each updated property on the old agent, add its last value to the new agent
             keysToAdd.forEach(key => {

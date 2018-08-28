@@ -772,9 +772,7 @@ describe("Agent", function() {
             });
         });
 
-        it.skip("InstanceAgents.cycle copies only the properties of static agents that are different than their initial values", function() {
-            // TODO
-
+        it("InstanceAgents.cycle copies only the properties of static agents that are different than their initial values", function() {
             const myGame = new GameInstance();
             const staticDummy = new Dummy("D1", 10).static();
 
@@ -826,20 +824,6 @@ describe("Agent", function() {
                     }]
                 },
                 1: {
-                    _id: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 1,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: game2,
-                        op: PropertyOperation.ADDED
-                    }],
                     name: [{
                         eventId: 0,
                         eventName: "DEFAULT",
