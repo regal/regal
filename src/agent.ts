@@ -1,5 +1,6 @@
-import { GameInstance, RegalError } from "./game";
 import { EventRecord } from "./event";
+import { RegalError } from "./error";
+import GameInstance from "./game-instance";
 
 const StaticAgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object) {
@@ -183,6 +184,11 @@ export class AgentReference {
     constructor(public refId: number) {}
 }
 
+const propertyIsAgentId = (property: string) => {
+    const tryNum = Math.floor(Number(property));
+    return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
+}
+
 export class InstanceAgents {
 
     constructor(public game: GameInstance) {}
@@ -295,6 +301,52 @@ export class InstanceAgents {
 
     agentPropertyWasDeleted(agentId: number, property: PropertyKey): boolean {
         return this.hasOwnProperty(agentId) && (<AgentRecord>this[agentId]).propertyWasDeleted(property);
+    }
+
+    /**
+     * Creates a new `InstanceAgents` for the new game cycle.
+     * **Don't call this unless you know what you're doing.**
+     * @param current The `GameInstance` for the new game cycle.
+     */
+    cycle(current: GameInstance): InstanceAgents {
+        const newAgents = new InstanceAgents(current);
+
+        const agentKeys = Object.keys(this).filter(propertyIsAgentId);
+        const agentRecords = agentKeys.map(key => <AgentRecord>this[key]);
+
+        for (let i = 0; i < agentRecords.length; i++) {
+            const formerAgent = agentRecords[i];
+            const keysToAdd = Object.keys(formerAgent)
+                .filter(key => key !== "game" && key !== "_id")
+
+            // Create new Agent with the old agent's id and the new GameInstance.
+            const id = Number.parseInt(agentKeys[i]);
+            const newAgent = new Agent(id, current);
+            newAgents.addAgent(newAgent, EventRecord.default); // Note: If the agent is static, this won't do anything.
+
+            // For each updated property on the old agent, add its last value to the new agent.
+            keysToAdd.forEach(key => {
+
+                if (formerAgent.propertyWasDeleted(key)) {
+
+                    if (staticAgentRegistry.hasAgentProperty(id, key)) {
+                        newAgents.deleteAgentProperty(id, key, EventRecord.default); // Record deletions to static agents.
+                    }
+
+                    return; // If the property was deleted, don't add it to the new record.
+                }
+
+                let formerPropertyValue = formerAgent.getProperty(key);
+
+                if (isAgentReference(formerPropertyValue)) {
+                    formerPropertyValue = new AgentReference(formerPropertyValue.refId);
+                }
+
+                newAgents.setAgentProperty(newAgent.id, key, formerPropertyValue, EventRecord.default);
+            });
+        }
+
+        return newAgents;
     }
 }
 

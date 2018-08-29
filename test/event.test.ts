@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import { GameInstance, RegalError } from '../src/game';
-import { on, noop, EventRecord, TrackedEvent, nq, isEventQueue, enqueue } from '../src/event';
+import GameInstance from '../src/game-instance';
+import { RegalError } from '../src/error';
+import { on, noop, EventRecord, TrackedEvent, nq, isEventQueue, enqueue, InstanceEvents } from '../src/event';
 import { log } from '../src/utils';
 import { Agent, PropertyOperation, resetRegistry } from '../src/agent';
 import { OutputLineType } from '../src/output';
@@ -765,6 +766,66 @@ describe("Event", function() {
                     data: "Bill's health is 36."
                 }
             ]);
+        });
+    });
+
+    describe("Other InstanceEvents Behavior", function() {
+
+        it("InstanceEvents.lastEventId property getter works properly when startingEventId is not set", function() {
+            const spam = on("SPAM", game => {
+                game.output.write("Get spammed.");
+                return noop;
+            });
+
+            const myGame = new GameInstance();
+
+            expect(myGame.events.lastEventId).to.equal(0);
+
+            myGame.events.invoke(spam.then(spam));
+
+            expect(myGame.events.lastEventId).to.equal(2);
+        });
+
+
+        it("InstanceEvents.lastEventId property getter works properly when startingEventId is a custom value", function() {
+            const spam = on("SPAM", game => {
+                game.output.write("Get spammed.");
+                return noop;
+            });
+
+            const myGame = new GameInstance();
+            myGame.events = new InstanceEvents(myGame, 10);
+
+            expect(myGame.events.lastEventId).to.equal(10);
+
+            myGame.events.invoke(spam.then(spam, spam));
+
+            expect(myGame.events.lastEventId).to.equal(13);
+        });
+
+        it("InstanceEvents.cycle creates a new InstanceEvents with the previous instance's lastEventId", function() {
+            const spam = on("SPAM", game => {
+                game.output.write("Get spammed.");
+                return noop;
+            });
+
+            const game1 = new GameInstance();
+
+            const game2 = new GameInstance();
+            const events2 = game1.events.cycle(game2);
+
+            expect(events2.lastEventId).to.equal(0);
+            expect(events2.game).to.equal(game2);
+            expect(events2.history).to.be.empty;
+
+            events2.invoke(spam.then(spam).thenq(spam));
+
+            const game3 = new GameInstance();
+            const events3 = events2.cycle(game3);
+
+            expect(events3.lastEventId).to.equal(3);
+            expect(events3.game).to.equal(game3);
+            expect(events3.history).to.be.empty;
         });
     });
 

@@ -5,9 +5,10 @@
  * @license MIT (see https://github.com/regal/regal)
  */
 
-import { GameInstance, RegalError } from './game';
+import GameInstance from './game-instance';
 import { PropertyChange, PropertyOperation } from './agent';
 import { OutputLine } from './output';
+import { RegalError } from './error';
 
 /** Event ID for untracked EventFunctions. */
 export const DEFAULT_EVENT_ID: number = 0;
@@ -187,16 +188,19 @@ export class InstanceEvents {
     /** Contains records of the past events executed during the game cycle. */
     history: EventRecord[] = [];
 
-    /** ID of the most recently generated EventRecord. */
-    private _lastEventId = DEFAULT_EVENT_ID;
+    /** Internal member for the ID of the most recently generated EventRecord. */
+    private _lastEventId;
     /** Internal queue of events that have yet to be executed. */
     private _queue: EventRecord[] = [];
 
     /**
      * Constructs an InstanceEvents.
      * @param game The game instance that owns this InstanceEvents.
+     * @param startingEventId Optional starting ID for new `EventRecord`s.
      */
-    constructor(public game: GameInstance) {}
+    constructor(public game: GameInstance, startingEventId = DEFAULT_EVENT_ID) {
+        this._lastEventId = startingEventId;
+    }
 
     /** The current EventRecord. */
     get current(): EventRecord {
@@ -207,6 +211,11 @@ export class InstanceEvents {
         }
 
         return event;
+    }
+
+    /** The ID of the most recently generated `EventRecord`. */
+    get lastEventId() {
+        return this._lastEventId;
     }
 
     /**
@@ -279,6 +288,15 @@ export class InstanceEvents {
     _archiveCurrent(): void {
         delete this.current.func;
         this.history.unshift(this._queue.shift());
+    }
+
+    /**
+     * Creates a new `InstanceEvents` for the new game cycle.
+     * **Don't call this unless you know what you're doing.**
+     * @param current The `GameInstance` for the new game cycle.
+     */
+    cycle(current: GameInstance): InstanceEvents {
+        return new InstanceEvents(current, this.lastEventId);
     }
 }
 
