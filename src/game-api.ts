@@ -3,6 +3,7 @@ import { GameOptions } from "./game-config";
 import { GameOutput } from "./output";
 import { HookManager } from "./api-hooks";
 import { RegalError } from "./error";
+import { resetRegistry } from "./agent";
 
 const validateGameInstance = (instance: GameInstance): void => {
     if (
@@ -17,8 +18,8 @@ const validateGameInstance = (instance: GameInstance): void => {
 };
 
 const wrapApiErrorAsRegalError = (err: any): RegalError => {
-    if (!err || !err.stack || !err.message) {
-        throw new RegalError("Not a valid error object.");
+    if (!err || !err.name || !err.stack || !err.message) {
+        return new RegalError("Invalid error object.");
     }
     
     // If err is already a RegalError, return it
@@ -27,19 +28,12 @@ const wrapApiErrorAsRegalError = (err: any): RegalError => {
     }
 
     // Else, create a RegalError
-    const msg = `An error occurred while executing the request. Details: ${err.message}`;
+    const msg = `An error occurred while executing the request. Details: <${err.name}: ${err.message}>`;
     const newErr = new RegalError(msg);
     newErr.stack = err.stack;
 
     return newErr;
 }
-
-// const cycleInstance = (former: GameInstance): GameInstance => {
-//     const current = new GameInstance();
-//     current.output.lineCount = former.output.lineCount;
-
-//     return former;
-// };
 
 export class Game {
 
@@ -54,19 +48,21 @@ export class Game {
     }
 
     static postPlayerCommand(instance: GameInstance, command: string): GameResponse {
-        validateGameInstance(instance);
-
-        if (command === undefined) {
-            throw new RegalError("Command must be defined.");
-        }
-        if (HookManager.playerCommandHook === undefined) {
-            throw new RegalError("onPlayerCommand has not been implemented by the game developer.");
-        }
-
-        let newInstance = instance.cycle();
+        let newInstance: GameInstance;
         let err: RegalError;
 
         try {
+            validateGameInstance(instance);
+
+            if (command === undefined) {
+                throw new RegalError("Command must be defined.");
+            }
+            if (HookManager.playerCommandHook === undefined) {
+                throw new RegalError("onPlayerCommand has not been implemented by the game developer.");
+            }
+
+            newInstance = instance.cycle();
+
             const activatedEvent = HookManager.playerCommandHook(command);
             newInstance.events.invoke(activatedEvent);
         } catch (error) {
@@ -113,9 +109,14 @@ export class Game {
         // TODO
         throw new Error("Method not implemented");
     }
-};
+}
 
 export interface GameResponse {
     instance?: GameInstance;
     output: GameOutput;
 }
+
+export const resetGame = () => {
+    HookManager.resetHooks();
+    resetRegistry();
+};

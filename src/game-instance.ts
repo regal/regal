@@ -18,8 +18,8 @@ export default class GameInstance {
 
     cycle(): GameInstance {
         const newGame = new GameInstance();
-        newGame.agents = this.agents.cycle(newGame);
         newGame.events = this.events.cycle(newGame);
+        newGame.agents = this.agents.cycle(newGame);
         newGame.output = this.output.cycle(newGame);
 
         return newGame;
