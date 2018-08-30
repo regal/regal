@@ -3,5 +3,8 @@
     "extends": ["tslint:recommended", "tslint-config-prettier"],
     "linterOptions": {
         "exclude": "test/**/*.ts"
+    },
+    "rules": {
+        "interface-name": false
     }
 }
