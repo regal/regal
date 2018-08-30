@@ -1,13 +1,11 @@
-import { expect } from 'chai';
-import 'mocha';
+import { expect } from "chai";
+import "mocha";
 
-import GameInstance from '../src/game-instance';
-import { OutputLineType, InstanceOutput } from '../src/output';
+import GameInstance from "../src/game-instance";
+import { OutputLineType, InstanceOutput } from "../src/output";
 
 describe("Output", function() {
-
     describe("Instance Output", function() {
-
         it("InstanceOutput.writeLine writes a normal line by default", function() {
             const myGame = new GameInstance();
 
@@ -150,7 +148,10 @@ describe("Output", function() {
 
             myGame.output.writeDebug("Room loaded.");
             myGame.output.writeTitle("West of House");
-            myGame.output.write("You are west of a house.", "There are things here.");
+            myGame.output.write(
+                "You are west of a house.",
+                "There are things here."
+            );
 
             expect(myGame.output.lines).to.deep.equal([
                 {
@@ -199,7 +200,7 @@ describe("Output", function() {
 
         it("InstanceOutput.cycle creates a new InstanceOutput with the previous instance's lineCount", function() {
             const game1 = new GameInstance();
-            
+
             const game2 = new GameInstance();
             const output2 = game1.output.cycle(game2);
 
@@ -216,6 +217,5 @@ describe("Output", function() {
             expect(output3.game).to.equal(game3);
             expect(output3.lines).to.be.empty;
         });
-
     });
 });

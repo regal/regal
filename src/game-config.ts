@@ -2,7 +2,6 @@
  * Represents game options that are configurable by a Regal client.
  */
 export interface GameOptions {
-
     /** Whether output of type `DEBUG` should be returned to the client. Defaults to false. */
     debug?: boolean;
 
@@ -17,7 +16,6 @@ export interface GameOptions {
  * Metadata about the game, such as its title and author.
  */
 export interface GameMetadata {
-
     /** The game's title. */
     name: string;
 

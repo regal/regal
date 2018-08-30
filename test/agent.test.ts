@@ -1,11 +1,18 @@
-import { expect } from 'chai';
-import 'mocha';
+import { expect } from "chai";
+import "mocha";
 
-import GameInstance from '../src/game-instance';
-import { RegalError } from '../src/error';
-import { Agent, resetRegistry, staticAgentRegistry, AgentRecord, AgentReference, PropertyOperation } from '../src/agent';
-import { log } from '../src/utils';
-import { on, noop, EventRecord } from '../src/event';
+import GameInstance from "../src/game-instance";
+import { RegalError } from "../src/error";
+import {
+    Agent,
+    resetRegistry,
+    staticAgentRegistry,
+    AgentRecord,
+    AgentReference,
+    PropertyOperation
+} from "../src/agent";
+import { log } from "../src/utils";
+import { on, noop, EventRecord } from "../src/event";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -14,13 +21,11 @@ class Dummy extends Agent {
 }
 
 describe("Agent", function() {
-
     beforeEach(function() {
         resetRegistry();
     });
 
     describe("Agent Behavior", function() {
-
         it("Registering an agent adds its properties to the instance", function() {
             const myGame = new GameInstance();
             const dummy = new Dummy("D1", 10).register(myGame);
@@ -40,7 +45,7 @@ describe("Agent", function() {
         });
 
         it("If setting a custom ID, it must be positive", function() {
-            expect(() => 
+            expect(() =>
                 new Dummy("D1", 10).register(new GameInstance(), -10)
             ).to.throw(RegalError, "newId must be positive.");
         });
@@ -49,9 +54,10 @@ describe("Agent", function() {
             const myGame = new GameInstance();
             const d1 = new Dummy("D1", 10).register(myGame);
 
-            expect(() =>
-                new Dummy("D2", 12).register(myGame, 1)
-            ).to.throw(RegalError, "An agent with ID <1> has already been registered with the instance.")
+            expect(() => new Dummy("D2", 12).register(myGame, 1)).to.throw(
+                RegalError,
+                "An agent with ID <1> has already been registered with the instance."
+            );
         });
 
         it("Registering an agent takes the next available agent ID", function() {
@@ -85,13 +91,17 @@ describe("Agent", function() {
             dummy.id = 5;
 
             expect(dummy.id).to.equal(5);
-            expect(() => dummy.id = 10).to.throw(RegalError, "Cannot change an agent's ID once it has been set.");
+            expect(() => (dummy.id = 10)).to.throw(
+                RegalError,
+                "Cannot change an agent's ID once it has been set."
+            );
         });
 
         it("The GameInstance must be defined to register the agent.", function() {
-            expect(() =>
-                new Dummy("D1", 10).register(undefined)
-            ).to.throw(RegalError, "The GameInstance must be defined to register the agent.");
+            expect(() => new Dummy("D1", 10).register(undefined)).to.throw(
+                RegalError,
+                "The GameInstance must be defined to register the agent."
+            );
         });
 
         it("Cannot register an agent more than once.", function() {
@@ -105,25 +115,46 @@ describe("Agent", function() {
         it("Error check for InstanceAgents#getAgentProperty for an unused ID", function() {
             expect(() =>
                 new GameInstance().agents.getAgentProperty(1, "foo")
-            ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
+            ).to.throw(
+                RegalError,
+                "No agent with ID <1> exists in the instance or the static registry."
+            );
         });
 
         it("Error check for InstanceAgents#setAgentProperty for an unused ID", function() {
             expect(() =>
-                new GameInstance().agents.setAgentProperty(1, "foo", "bar", EventRecord.default)
-            ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
+                new GameInstance().agents.setAgentProperty(
+                    1,
+                    "foo",
+                    "bar",
+                    EventRecord.default
+                )
+            ).to.throw(
+                RegalError,
+                "No agent with ID <1> exists in the instance or the static registry."
+            );
         });
 
         it("Error check for InstanceAgents#hasAgentProperty for an unused ID", function() {
             expect(() =>
                 new GameInstance().agents.hasAgentProperty(1, "foo")
-            ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
+            ).to.throw(
+                RegalError,
+                "No agent with ID <1> exists in the instance or the static registry."
+            );
         });
 
         it("Error check for InstanceAgents#deleteAgentProperty for an unused ID", function() {
             expect(() =>
-                new GameInstance().agents.deleteAgentProperty(1, "foo", EventRecord.default)
-            ).to.throw(RegalError, "No agent with ID <1> exists in the instance or the static registry.")
+                new GameInstance().agents.deleteAgentProperty(
+                    1,
+                    "foo",
+                    EventRecord.default
+                )
+            ).to.throw(
+                RegalError,
+                "No agent with ID <1> exists in the instance or the static registry."
+            );
         });
 
         it("Registering an agent registers its property agents as well", function() {
@@ -143,7 +174,7 @@ describe("Agent", function() {
             const dummy = new Dummy("D1", 10).register(game);
 
             const childDummy = new Dummy("D2", 15);
-            
+
             expect(dummy.isRegistered).to.be.true;
             expect(childDummy.isRegistered).to.be.false;
 
@@ -160,7 +191,9 @@ describe("Agent", function() {
             const childDummy = new Dummy("D2", 15);
             dummy["child"] = childDummy;
 
-            expect(game.agents[1].child[0].final).to.deep.equal(new AgentReference(2));
+            expect(game.agents[1].child[0].final).to.deep.equal(
+                new AgentReference(2)
+            );
         });
 
         it("AgentReferences are invisible", function() {
@@ -240,77 +273,92 @@ describe("Agent", function() {
     });
 
     describe("Static Agents", function() {
-
         it("The static agent registry has no agents to begin with", function() {
             expect(staticAgentRegistry.agentCount).to.equal(0);
         });
-    
+
         it("Defining a static agent lets it retain its original properties", function() {
             const dummy = new Dummy("D1", 10).static();
-    
+
             expect(dummy.name).to.equal("D1");
             expect(dummy.health).to.equal(10);
         });
-    
+
         it("Defining a static agent assigns it an ID in the order it was made static", function() {
             const dummy1 = new Dummy("D1", 10).static();
             let dummy3 = new Dummy("D3", 109);
             const dummy2 = new Dummy("D2", -2).static();
             dummy3 = dummy3.static();
-    
+
             expect(dummy1.id).to.equal(1);
             expect(dummy2.id).to.equal(2);
             expect(dummy3.id).to.equal(3);
         });
-    
+
         it("The isStatic property of static agents is appropriately assigned", function() {
             const dummy = new Dummy("D1", 10);
-    
+
             expect(dummy.isStatic).to.be.false;
-    
+
             dummy.static();
-    
+
             expect(dummy.isStatic).to.be.true;
         });
-    
+
         it("Declaring an agent static adds it to the registry", function() {
             const dummy = new Dummy("D1", 10).static();
-    
+
             expect(staticAgentRegistry.agentCount).to.equal(1);
-    
+
             expect(staticAgentRegistry.hasAgent(dummy.id)).to.be.true;
-            expect(staticAgentRegistry.hasAgentProperty(dummy.id, "name")).to.be.true;
-            expect(staticAgentRegistry.hasAgentProperty(1, "health")).to.be.true;
-    
-            expect(staticAgentRegistry.getAgentProperty(1, "name")).to.equal("D1");
-            expect(staticAgentRegistry.getAgentProperty(dummy.id, "health")).to.equal(10);
+            expect(staticAgentRegistry.hasAgentProperty(dummy.id, "name")).to.be
+                .true;
+            expect(staticAgentRegistry.hasAgentProperty(1, "health")).to.be
+                .true;
+
+            expect(staticAgentRegistry.getAgentProperty(1, "name")).to.equal(
+                "D1"
+            );
+            expect(
+                staticAgentRegistry.getAgentProperty(dummy.id, "health")
+            ).to.equal(10);
         });
-    
+
         it("The static agent registry doesn't have any false positives", function() {
             const dummy = new Dummy("D1", 10).static();
-    
+
             expect(staticAgentRegistry.hasAgent(0)).to.be.false;
             expect(staticAgentRegistry.hasAgent(2)).to.be.false;
-            expect(staticAgentRegistry.hasAgentProperty(dummy.id, "non")).to.be.false;
+            expect(staticAgentRegistry.hasAgentProperty(dummy.id, "non")).to.be
+                .false;
             expect(staticAgentRegistry.hasAgentProperty(2, "name")).to.be.false;
         });
 
         it("Cannot declare an agent static multiple times", function() {
             const dummy = new Dummy("D1", 10).static();
 
-            expect(() => dummy.static()).to.throw(RegalError, "Cannot create more than one static version of an agent.");
+            expect(() => dummy.static()).to.throw(
+                RegalError,
+                "Cannot create more than one static version of an agent."
+            );
         });
 
         it("Cannot create a static version of a registered agent.", function() {
             const dummy = new Dummy("D1", 10).register(new GameInstance());
 
-            expect(() => dummy.static()).to.throw(RegalError, "Cannot create a static version of a registered agent.");
+            expect(() => dummy.static()).to.throw(
+                RegalError,
+                "Cannot create a static version of a registered agent."
+            );
         });
 
         it("Error check for StaticAgentRegistry#getAgentProperty", function() {
-            expect(() => 
+            expect(() =>
                 staticAgentRegistry.getAgentProperty(100, "foo")
-            ).to.throw(RegalError, "No static agent with ID <100> exists in the registry.");
+            ).to.throw(
+                RegalError,
+                "No static agent with ID <100> exists in the registry."
+            );
         });
 
         it("Registering a static agent does not modify the game instance", function() {
@@ -324,7 +372,7 @@ describe("Agent", function() {
         it("A static agent's #has method includes user-defined agent properties", function() {
             const dummy = new Dummy("D1", 10).static();
             expect("name" in dummy).to.be.true;
-        })
+        });
 
         it("Modifying a registered static agent adds the property to the instance state", function() {
             const dummy = new Dummy("D1", 10).static();
@@ -341,7 +389,9 @@ describe("Agent", function() {
 
             expect(myGame.agents.getAgentProperty(1, "health")).to.equal(25);
             expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Jeff");
-            expect(myGame.agents.getAgentProperty(1, "newProp")).to.equal("newValue");
+            expect(myGame.agents.getAgentProperty(1, "newProp")).to.equal(
+                "newValue"
+            );
         });
 
         it("Modifying a registered static agent does not modify the one in the registry", function() {
@@ -357,9 +407,14 @@ describe("Agent", function() {
                 return noop;
             })(myGame);
 
-            expect(staticAgentRegistry.getAgentProperty(1, "health")).to.equal(10);
-            expect(staticAgentRegistry.getAgentProperty(1, "name")).to.equal("D1");
-            expect(staticAgentRegistry.getAgentProperty(1, "newProp")).to.be.undefined;
+            expect(staticAgentRegistry.getAgentProperty(1, "health")).to.equal(
+                10
+            );
+            expect(staticAgentRegistry.getAgentProperty(1, "name")).to.equal(
+                "D1"
+            );
+            expect(staticAgentRegistry.getAgentProperty(1, "newProp")).to.be
+                .undefined;
         });
 
         it("After static agents are created, registering a nonstatic agent will get the next available ID", function() {
@@ -374,9 +429,10 @@ describe("Agent", function() {
             const myGame = new GameInstance();
             const d1 = new Dummy("D1", 10).static().register(myGame);
 
-            expect(() => 
-                new Dummy("D2", 12).register(myGame, 1)
-            ).to.throw(RegalError, "A static agent already has the ID <1>.")
+            expect(() => new Dummy("D2", 12).register(myGame, 1)).to.throw(
+                RegalError,
+                "A static agent already has the ID <1>."
+            );
         });
 
         it("A static agent's properties can be deleted", function() {
@@ -396,12 +452,13 @@ describe("Agent", function() {
             const myGame = new GameInstance();
             const dummy = new Dummy("D1", 10).static().register(myGame);
 
-            expect(myGame.agents.deleteAgentProperty(1, "foo", EventRecord.default)).to.be.false;
+            expect(
+                myGame.agents.deleteAgentProperty(1, "foo", EventRecord.default)
+            ).to.be.false;
         });
     });
 
     describe("Instance State", function() {
-
         it("The instance state is automatically registered", function() {
             expect(new GameInstance().state.isRegistered).to.be.true;
         });
@@ -440,11 +497,9 @@ describe("Agent", function() {
             expect(game.state.dum.name).to.equal("D1");
             expect(game.state.dum.health).to.equal(10);
         });
-
     });
 
     describe("Agent Records", function() {
-
         it("getProperty on a nonexistent property returns undefined", function() {
             expect(new AgentRecord().getProperty("foo")).to.be.undefined;
         });
@@ -454,37 +509,45 @@ describe("Agent", function() {
             const dummy = new Dummy("D1", 10).register(game);
 
             expect(game.agents[1]).to.deep.equal({
-                _id: [{
-                    eventId: 0,
-                    eventName: "DEFAULT",
-                    op: PropertyOperation.ADDED,
-                    init: undefined,
-                    final: 1
-                }],
+                _id: [
+                    {
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        op: PropertyOperation.ADDED,
+                        init: undefined,
+                        final: 1
+                    }
+                ],
 
-                game: [{
-                    eventId: 0,
-                    eventName: "DEFAULT",
-                    op: PropertyOperation.ADDED,
-                    init: undefined,
-                    final: game
-                }],
+                game: [
+                    {
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        op: PropertyOperation.ADDED,
+                        init: undefined,
+                        final: game
+                    }
+                ],
 
-                name: [{
-                    eventId: 0,
-                    eventName: "DEFAULT",
-                    op: PropertyOperation.ADDED,
-                    init: undefined,
-                    final: "D1"
-                }],
+                name: [
+                    {
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        op: PropertyOperation.ADDED,
+                        init: undefined,
+                        final: "D1"
+                    }
+                ],
 
-                health: [{
-                    eventId: 0,
-                    eventName: "DEFAULT",
-                    op: PropertyOperation.ADDED,
-                    init: undefined,
-                    final: 10
-                }]
+                health: [
+                    {
+                        eventId: 0,
+                        eventName: "DEFAULT",
+                        op: PropertyOperation.ADDED,
+                        init: undefined,
+                        final: 10
+                    }
+                ]
             });
         });
 
@@ -606,12 +669,13 @@ describe("Agent", function() {
             const myGame = new GameInstance();
             const dummy = new Dummy("D1", 10).register(myGame);
 
-            expect(myGame.agents[1].deleteProperty(EventRecord.default, 1, "foo")).to.be.false;
+            expect(
+                myGame.agents[1].deleteProperty(EventRecord.default, 1, "foo")
+            ).to.be.false;
         });
     });
 
     describe("Cycling InstanceAgents", function() {
-
         it("InstanceAgents.cycle creates all new Agents that have only the last values of each of the original agents' properties", function() {
             const myGame = new GameInstance();
 
@@ -623,58 +687,70 @@ describe("Agent", function() {
                     game.state.foo = true;
                     return noop;
                 });
-            }) (myGame);
+            })(myGame);
 
             // Verify initial condition
             expect(myGame.agents).to.deep.equal({
                 game: myGame,
                 0: {
-                    _id: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 0,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: myGame,
-                        op: PropertyOperation.ADDED
-                    }],
-                    dummy: [{
-                        eventId: 1,
-                        eventName: "INIT",
-                        init: undefined,
-                        final: {
-                            refId: 1
-                        },
-                        op: PropertyOperation.ADDED
-                    }],
-                    foo: [{
-                        eventId: 2,
-                        eventName: "MOD",
-                        init: undefined,
-                        final: true,
-                        op: PropertyOperation.ADDED
-                    }]
+                    _id: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 0,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    game: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: myGame,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    dummy: [
+                        {
+                            eventId: 1,
+                            eventName: "INIT",
+                            init: undefined,
+                            final: {
+                                refId: 1
+                            },
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    foo: [
+                        {
+                            eventId: 2,
+                            eventName: "MOD",
+                            init: undefined,
+                            final: true,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
                 },
                 1: {
-                    _id: [{
-                        eventId: 1,
-                        eventName: "INIT",
-                        init: undefined,
-                        final: 1,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 1,
-                        eventName: "INIT",
-                        init: undefined,
-                        final: myGame,
-                        op: PropertyOperation.ADDED
-                    }],
+                    _id: [
+                        {
+                            eventId: 1,
+                            eventName: "INIT",
+                            init: undefined,
+                            final: 1,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    game: [
+                        {
+                            eventId: 1,
+                            eventName: "INIT",
+                            init: undefined,
+                            final: myGame,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
                     name: [
                         {
                             eventId: 2,
@@ -691,13 +767,15 @@ describe("Agent", function() {
                             op: PropertyOperation.ADDED
                         }
                     ],
-                    health: [{
-                        eventId: 1,
-                        eventName: "INIT",
-                        init: undefined,
-                        final: 10,
-                        op: PropertyOperation.ADDED
-                    }]
+                    health: [
+                        {
+                            eventId: 1,
+                            eventName: "INIT",
+                            init: undefined,
+                            final: 10,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
                 }
             });
 
@@ -708,66 +786,82 @@ describe("Agent", function() {
             expect(game2.agents).to.deep.equal({
                 game: game2,
                 0: {
-                    _id: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 0,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: game2,
-                        op: PropertyOperation.ADDED
-                    }],
-                    dummy: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: {
-                            refId: 1
-                        },
-                        op: PropertyOperation.ADDED
-                    }],
-                    foo: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: true,
-                        op: PropertyOperation.ADDED
-                    }]
+                    _id: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 0,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    game: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: game2,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    dummy: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: {
+                                refId: 1
+                            },
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    foo: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: true,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
                 },
                 1: {
-                    _id: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 1,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: game2,
-                        op: PropertyOperation.ADDED
-                    }],
-                    name: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: "Jimmy",
-                        op: PropertyOperation.ADDED
-                    }],
-                    health: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 10,
-                        op: PropertyOperation.ADDED
-                    }]
+                    _id: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 1,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    game: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: game2,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    name: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: "Jimmy",
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    health: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 10,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
                 }
             });
         });
@@ -784,7 +878,7 @@ describe("Agent", function() {
                     game.state.foo = true;
                     return noop;
                 });
-            }) (myGame);
+            })(myGame);
 
             const game2 = new GameInstance();
             game2.agents = myGame.agents.cycle(game2);
@@ -792,45 +886,55 @@ describe("Agent", function() {
             expect(game2.agents).to.deep.equal({
                 game: game2,
                 0: {
-                    _id: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 0,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: game2,
-                        op: PropertyOperation.ADDED
-                    }],
-                    dummy: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: {
-                            refId: 1
-                        },
-                        op: PropertyOperation.ADDED
-                    }],
-                    foo: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: true,
-                        op: PropertyOperation.ADDED
-                    }]
+                    _id: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 0,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    game: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: game2,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    dummy: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: {
+                                refId: 1
+                            },
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    foo: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: true,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
                 },
                 1: {
-                    name: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: "D1",
-                        final: "Jimmy",
-                        op: PropertyOperation.MODIFIED
-                    }]
+                    name: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: "D1",
+                            final: "Jimmy",
+                            op: PropertyOperation.MODIFIED
+                        }
+                    ]
                 }
             });
         });
@@ -846,7 +950,7 @@ describe("Agent", function() {
                     delete game.state.foo;
                     return noop;
                 });
-            }) (myGame);
+            })(myGame);
 
             const game2 = new GameInstance();
             game2.agents = myGame.agents.cycle(game2);
@@ -854,56 +958,66 @@ describe("Agent", function() {
             expect(game2.agents).to.deep.equal({
                 game: game2,
                 0: {
-                    _id: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 0,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: game2,
-                        op: PropertyOperation.ADDED
-                    }],
-                    dummy: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: {
-                            refId: 1
-                        },
-                        op: PropertyOperation.ADDED
-                    }]
+                    _id: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 0,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    game: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: game2,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    dummy: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: {
+                                refId: 1
+                            },
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
                 },
                 1: {
-                    _id: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 1,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: game2,
-                        op: PropertyOperation.ADDED
-                    }],
-                    health: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 10,
-                        op: PropertyOperation.ADDED
-                    }]
+                    _id: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 1,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    game: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: game2,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    health: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 10,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
                 }
             });
-
-
         });
 
         it("InstanceAgents.cycle DOES copy the properties of STATIC agents that were most recently deleted", function() {
@@ -917,7 +1031,7 @@ describe("Agent", function() {
                     delete game.state.dummy.name;
                     return noop;
                 });
-            }) (myGame);
+            })(myGame);
 
             const game2 = new GameInstance();
             game2.agents = myGame.agents.cycle(game2);
@@ -925,38 +1039,46 @@ describe("Agent", function() {
             expect(game2.agents).to.deep.equal({
                 game: game2,
                 0: {
-                    _id: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: 0,
-                        op: PropertyOperation.ADDED
-                    }],
-                    game: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: game2,
-                        op: PropertyOperation.ADDED
-                    }],
-                    dummy: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: undefined,
-                        final: {
-                            refId: 1
-                        },
-                        op: PropertyOperation.ADDED
-                    }]
+                    _id: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 0,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    game: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: game2,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    dummy: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: {
+                                refId: 1
+                            },
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
                 },
                 1: {
-                    name: [{
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        init: "D1",
-                        final: undefined,
-                        op: PropertyOperation.DELETED
-                    }]
+                    name: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: "D1",
+                            final: undefined,
+                            op: PropertyOperation.DELETED
+                        }
+                    ]
                 }
             });
         });

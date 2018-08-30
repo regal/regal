@@ -1,9 +1,9 @@
-import GameInstance from "./game-instance";
-import { GameOptions } from "./game-config";
-import { GameOutput } from "./output";
+import { resetRegistry } from "./agent";
 import { HookManager } from "./api-hooks";
 import { RegalError } from "./error";
-import { resetRegistry } from "./agent";
+import { GameOptions } from "./game-config";
+import GameInstance from "./game-instance";
+import { GameOutput } from "./output";
 
 const validateGameInstance = (instance: GameInstance): void => {
     if (
@@ -21,33 +21,40 @@ const wrapApiErrorAsRegalError = (err: any): RegalError => {
     if (!err || !err.name || !err.stack || !err.message) {
         return new RegalError("Invalid error object.");
     }
-    
+
     // If err is already a RegalError, return it
     if (err.message.indexOf("RegalError:") !== -1) {
         return err;
     }
 
     // Else, create a RegalError
-    const msg = `An error occurred while executing the request. Details: <${err.name}: ${err.message}>`;
+    const msg = `An error occurred while executing the request. Details: <${
+        err.name
+    }: ${err.message}>`;
     const newErr = new RegalError(msg);
     newErr.stack = err.stack;
 
     return newErr;
-}
+};
 
 export class Game {
-
-    static getOptionCommand(instance: GameInstance, options: string[]): GameResponse {
+    public static getOptionCommand(
+        instance: GameInstance,
+        options: string[]
+    ): GameResponse {
         // TODO
         throw new Error("Method not implemented.");
     }
 
-    static getMetadataCommand(): GameResponse {
+    public static getMetadataCommand(): GameResponse {
         // TODO
         throw new Error("Method not implemented.");
     }
 
-    static postPlayerCommand(instance: GameInstance, command: string): GameResponse {
+    public static postPlayerCommand(
+        instance: GameInstance,
+        command: string
+    ): GameResponse {
         let newInstance: GameInstance;
         let err: RegalError;
 
@@ -58,7 +65,9 @@ export class Game {
                 throw new RegalError("Command must be defined.");
             }
             if (HookManager.playerCommandHook === undefined) {
-                throw new RegalError("onPlayerCommand has not been implemented by the game developer.");
+                throw new RegalError(
+                    "onPlayerCommand has not been implemented by the game developer."
+                );
             }
 
             newInstance = instance.cycle();
@@ -70,7 +79,7 @@ export class Game {
         }
 
         let response: GameResponse;
-        
+
         if (err !== undefined) {
             const output: GameOutput = {
                 wasSuccessful: false,
@@ -89,23 +98,26 @@ export class Game {
             response = {
                 instance: newInstance,
                 output
-            }
+            };
         }
 
         return response;
     }
 
-    static postStartCommand(options: GameOptions): GameResponse {
+    public static postStartCommand(options: GameOptions): GameResponse {
         // TODO
         throw new Error("Method not implemented.");
     }
 
-    static postUndoCommand(instance: GameInstance): GameResponse {
+    public static postUndoCommand(instance: GameInstance): GameResponse {
         // TODO
         throw new Error("Method not implemented.");
     }
 
-    static postOptionCommand(instance: GameInstance, options: GameOptions): GameResponse {
+    public static postOptionCommand(
+        instance: GameInstance,
+        options: GameOptions
+    ): GameResponse {
         // TODO
         throw new Error("Method not implemented");
     }
