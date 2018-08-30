@@ -49,6 +49,9 @@
     "sourceMap": true,
     "instrument": true
   },
+  "prettier": {
+    "tabWidth": 4
+  },
   "dependencies": {
     "util": "^0.11.0"
   },
