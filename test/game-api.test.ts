@@ -1,29 +1,30 @@
-import { expect } from 'chai';
-import 'mocha';
+import { expect } from "chai";
+import "mocha";
 
-import { Game, GameResponse, resetGame } from '../src/game-api';
-import { onPlayerCommand, onStartCommand } from '../src/api-hooks';
-import { noop } from '../src/event';
-import GameInstance from '../src/game-instance';
-import { OutputLineType } from '../src/output';
-import { log } from '../src/utils';
-import { Agent } from '../src/agent';
+import { Game, GameResponse, resetGame } from "../src/game-api";
+import { onPlayerCommand, onStartCommand } from "../src/api-hooks";
+import { noop } from "../src/events";
+import GameInstance from "../src/game-instance";
+import { OutputLineType } from "../src/output";
+import { log } from "./utils";
+import { Agent } from "../src/agents";
 
 describe("Game API", function() {
-
     beforeEach(function() {
         resetGame();
     });
 
     describe("Game.postPlayerCommand", function() {
-
         it("Sending a good request sends the correct output", function() {
             onPlayerCommand(command => game => {
                 game.output.write(`You typed "${command}".`);
                 return noop;
             });
 
-            const response = Game.postPlayerCommand(new GameInstance(), "Hello, World!");
+            const response = Game.postPlayerCommand(
+                new GameInstance(),
+                "Hello, World!"
+            );
 
             expect(response.instance).to.not.be.undefined;
             expect(response.output).to.deep.equal({
@@ -31,7 +32,7 @@ describe("Game API", function() {
                 log: [
                     {
                         id: 1,
-                        data: "You typed \"Hello, World!\".",
+                        data: 'You typed "Hello, World!".',
                         type: OutputLineType.NORMAL
                     }
                 ]
@@ -43,7 +44,9 @@ describe("Game API", function() {
                 if (!game.state.comms) {
                     game.state.comms = [command];
                 } else {
-                    game.state.comms = (<string[]>game.state.comms).concat(command);
+                    game.state.comms = (<string[]>game.state.comms).concat(
+                        command
+                    );
                 }
                 return noop;
             });
@@ -54,7 +57,11 @@ describe("Game API", function() {
 
             expect(r1.instance.state.comms).to.deep.equal(["One"]);
             expect(r2.instance.state.comms).to.deep.equal(["One", "Two"]);
-            expect(r3.instance.state.comms).to.deep.equal(["One", "Two", "Three"]);
+            expect(r3.instance.state.comms).to.deep.equal([
+                "One",
+                "Two",
+                "Three"
+            ]);
         });
 
         it("Running the same request multiple times does not have any side effects", function() {
@@ -95,20 +102,30 @@ describe("Game API", function() {
         it("Invalid GameInstance isn't allowed", function() {
             onPlayerCommand(() => noop);
 
-            const response = Game.postPlayerCommand(<GameInstance><any>"bork", "bork");
+            const response = Game.postPlayerCommand(
+                <GameInstance>(<any>"bork"),
+                "bork"
+            );
 
             expect(response.output.wasSuccessful).to.be.false;
-            expect(response.output.error.message).to.equal("RegalError: Invalid GameInstance.");
+            expect(response.output.error.message).to.equal(
+                "RegalError: Invalid GameInstance."
+            );
             expect(response.instance).to.be.undefined;
         });
 
         it("Undefined command isn't allowed", function() {
             onPlayerCommand(() => noop);
 
-            const response = Game.postPlayerCommand(new GameInstance(), undefined);
+            const response = Game.postPlayerCommand(
+                new GameInstance(),
+                undefined
+            );
 
             expect(response.output.wasSuccessful).to.be.false;
-            expect(response.output.error.message).to.equal("RegalError: Command must be defined.");
+            expect(response.output.error.message).to.equal(
+                "RegalError: Command must be defined."
+            );
             expect(response.instance).to.be.undefined;
         });
 
@@ -116,7 +133,9 @@ describe("Game API", function() {
             const response = Game.postPlayerCommand(new GameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
-            expect(response.output.error.message).to.equal("RegalError: onPlayerCommand has not been implemented by the game developer.");
+            expect(response.output.error.message).to.equal(
+                "RegalError: onPlayerCommand has not been implemented by the game developer."
+            );
             expect(response.instance).to.be.undefined;
         });
 
@@ -128,22 +147,25 @@ describe("Game API", function() {
             const response = Game.postPlayerCommand(new GameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
-            expect(response.output.error.message).to.equal("RegalError: Invalid error object.");
+            expect(response.output.error.message).to.equal(
+                "RegalError: Invalid error object."
+            );
             expect(response.instance).to.be.undefined;
         });
 
         it("A new RegalError is made if an error occurred during the game's runtime", function() {
             onPlayerCommand(() => () => {
-                (<string[]><any>5).push("blarp"); // yum
+                (<string[]>(<any>5)).push("blarp"); // yum
                 return noop;
             });
 
             const response = Game.postPlayerCommand(new GameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
-            expect(response.output.error.message).to.equal("RegalError: An error occurred while executing the request. Details: <TypeError: 5.push is not a function>");
+            expect(response.output.error.message).to.equal(
+                "RegalError: An error occurred while executing the request. Details: <TypeError: 5.push is not a function>"
+            );
             expect(response.instance).to.be.undefined;
         });
-
     });
 });

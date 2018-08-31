@@ -1,35 +1,39 @@
 version: 2
 jobs:
-  build:
-    docker:
-      - image: circleci/node:10
-      
-    working_directory: ~/regal
+    build:
+        docker:
+            - image: circleci/node:10
 
-    steps:
-      - checkout
+        working_directory: ~/regal
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+        steps:
+            - checkout
 
-      - run: npm install
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "package.json" }}
+                      # fallback to using the latest cache if no exact match is found
+                      - v1-dependencies-
 
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
-        
-      # run tests!
-      - run: npm test
+            - run: npm install
 
-      - run:
-          name: Publish Test Coverage
-          command: npm run publish-coverage
+            - save_cache:
+                  paths:
+                      - node_modules
+                  key: v1-dependencies-{{ checksum "package.json" }}
 
-      - run:
-          name: Check Test Coverage
-          command: npm run check-coverage
+            - run:
+                name: Lint Check
+                command: npm run lint
+
+            # run tests!
+            - run: npm test
+
+            - run:
+                  name: Publish Test Coverage
+                  command: npm run publish-coverage
+
+            - run:
+                  name: Check Test Coverage
+                  command: npm run check-coverage
