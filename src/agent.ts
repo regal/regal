@@ -1,5 +1,5 @@
-import { EventRecord } from "./event";
 import { RegalError } from "./error";
+import { EventRecord } from "./events";
 import GameInstance from "./game-instance";
 
 const StaticAgentProxyHandler = {
@@ -35,9 +35,9 @@ const StaticAgentProxyHandler = {
 };
 
 export class StaticAgentRegistry {
-    agentCount = 0;
+    public agentCount = 0;
 
-    addAgent<T extends Agent>(agent: T): T {
+    public addAgent<T extends Agent>(agent: T): T {
         if (agent.isRegistered) {
             throw new RegalError(
                 "Cannot create a static version of a registered agent."
@@ -56,7 +56,7 @@ export class StaticAgentRegistry {
         return new Proxy(new Agent(agent.id), StaticAgentProxyHandler) as T;
     }
 
-    getAgentProperty(agentId: number, propertyKey: PropertyKey): any {
+    public getAgentProperty(agentId: number, propertyKey: PropertyKey): any {
         if (!this.hasOwnProperty(agentId)) {
             throw new RegalError(
                 `No static agent with ID <${agentId}> exists in the registry.`
@@ -66,11 +66,14 @@ export class StaticAgentRegistry {
         return this[agentId][propertyKey];
     }
 
-    hasAgent(agentId: number): boolean {
+    public hasAgent(agentId: number): boolean {
         return this.hasOwnProperty(agentId);
     }
 
-    hasAgentProperty(agentId: number, propertyKey: PropertyKey): boolean {
+    public hasAgentProperty(
+        agentId: number,
+        propertyKey: PropertyKey
+    ): boolean {
         return (
             this.hasAgent(agentId) && this[agentId].hasOwnProperty(propertyKey)
         );
@@ -84,11 +87,11 @@ export const resetRegistry = () => {
 };
 
 export const isAgent = (o: any): o is Agent =>
-    o && (<Agent>o).isRegistered !== undefined;
+    o && (o as Agent).isRegistered !== undefined;
 
 const AgentProxyHandler = {
     get(target: Agent, propertyKey: PropertyKey, receiver: object): any {
-        let value: any = undefined;
+        let value: any;
 
         // If the property exists in the instance state, return it.
         if (
@@ -114,7 +117,7 @@ const AgentProxyHandler = {
         value: any,
         receiver: object
     ): boolean {
-        let result: boolean = undefined;
+        let result: boolean;
 
         if (target.isRegistered) {
             const currentEvent = target.game.events.current;
@@ -138,7 +141,7 @@ const AgentProxyHandler = {
     },
 
     deleteProperty(target: Agent, propertyKey: PropertyKey): boolean {
-        let result: boolean = undefined;
+        let result: boolean;
 
         if (
             target.isRegistered &&
@@ -184,7 +187,7 @@ export class Agent {
         this._id = value;
     }
 
-    register(game: GameInstance, newId?: number): this {
+    public register(game: GameInstance, newId?: number): this {
         if (!game) {
             throw new RegalError(
                 "The GameInstance must be defined to register the agent."
@@ -217,13 +220,13 @@ export class Agent {
         return this;
     }
 
-    static(): this {
+    public static(): this {
         return staticAgentRegistry.addAgent(this);
     }
 }
 
 const isAgentReference = (o: any): o is AgentReference =>
-    o && (<AgentReference>o).refId !== undefined;
+    o && (o as AgentReference).refId !== undefined;
 
 export class AgentReference {
     constructor(public refId: number) {}
@@ -237,7 +240,7 @@ const propertyIsAgentId = (property: string) => {
 export class InstanceAgents {
     constructor(public game: GameInstance) {}
 
-    getNextAgentId(): number {
+    public getNextAgentId(): number {
         let i = staticAgentRegistry.agentCount + 1;
         while (this.hasOwnProperty(i)) {
             i++;
@@ -245,7 +248,7 @@ export class InstanceAgents {
         return i;
     }
 
-    addAgent(agent: Agent, event: EventRecord): void {
+    public addAgent(agent: Agent, event: EventRecord): void {
         if (this.hasOwnProperty(agent.id)) {
             throw new RegalError(
                 `An agent with ID <${
@@ -257,20 +260,20 @@ export class InstanceAgents {
         if (!agent.isStatic) {
             this[agent.id] = new AgentRecord();
 
-            for (let key in agent) {
+            for (const key in agent) {
                 this.setAgentProperty(agent.id, key, agent[key], event);
             }
         }
     }
 
-    hasAgent(agentId: number): boolean {
+    public hasAgent(agentId: number): boolean {
         return (
             this.hasOwnProperty(agentId) ||
             staticAgentRegistry.hasAgent(agentId)
         );
     }
 
-    getAgentProperty(agentId: number, property: PropertyKey): any {
+    public getAgentProperty(agentId: number, property: PropertyKey): any {
         const agentRecord: AgentRecord = this[agentId];
         let value;
 
@@ -295,7 +298,7 @@ export class InstanceAgents {
     }
 
     // TODO: Register agents within arrays
-    setAgentProperty(
+    public setAgentProperty(
         agentId: number,
         property: PropertyKey,
         value: any,
@@ -373,7 +376,10 @@ export class InstanceAgents {
         return agentRecord.deleteProperty(event, agentId, property);
     }
 
-    public agentPropertyWasDeleted(agentId: number, property: PropertyKey): boolean {
+    public agentPropertyWasDeleted(
+        agentId: number,
+        property: PropertyKey
+    ): boolean {
         return (
             this.hasOwnProperty(agentId) &&
             (this[agentId] as AgentRecord).propertyWasDeleted(property)

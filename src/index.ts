@@ -15,7 +15,7 @@ export {
     enqueue,
     nq,
     on
-} from "./event";
+} from "./events";
 export { Game, GameResponse } from "./game-api";
 export { GameOptions, GameMetadata } from "./game-config";
 export * from "./game-instance";

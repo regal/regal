@@ -12,12 +12,12 @@ import {
     isEventQueue,
     enqueue,
     InstanceEvents
-} from "../src/event";
+} from "../src/events";
 import { log } from "./utils";
 import { Agent, PropertyOperation, resetRegistry } from "../src/agent";
 import { OutputLineType } from "../src/output";
 
-describe("Event", function() {
+describe("Events", function() {
     it("The `on` function does not alter the inner event function", function() {
         const greet = on("GREET", game => {
             game.output.write("Hello, world!");

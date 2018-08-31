@@ -12,7 +12,7 @@ import {
     PropertyOperation
 } from "../src/agent";
 import { log } from "./utils";
-import { on, noop, EventRecord } from "../src/event";
+import { on, noop, EventRecord } from "../src/events";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {

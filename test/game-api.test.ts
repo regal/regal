@@ -3,7 +3,7 @@ import "mocha";
 
 import { Game, GameResponse, resetGame } from "../src/game-api";
 import { onPlayerCommand, onStartCommand } from "../src/api-hooks";
-import { noop } from "../src/event";
+import { noop } from "../src/events";
 import GameInstance from "../src/game-instance";
 import { OutputLineType } from "../src/output";
 import { log } from "./utils";

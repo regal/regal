@@ -1,5 +1,5 @@
 import { InstanceAgents, InstanceState } from "./agent";
-import { InstanceEvents } from "./event";
+import { InstanceEvents } from "./events";
 import { InstanceOutput } from "./output";
 
 export default class GameInstance {

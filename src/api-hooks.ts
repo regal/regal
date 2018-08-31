@@ -11,7 +11,7 @@
  */
 
 import { RegalError } from "./error";
-import { EventFunction, isTrackedEvent, on, TrackedEvent } from "./event";
+import { EventFunction, isTrackedEvent, on, TrackedEvent } from "./events";
 import GameInstance from "./game-instance";
 
 /** Default implementation of `beforeUndoCommandHook`; always returns true. */
