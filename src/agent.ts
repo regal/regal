@@ -7,17 +7,27 @@ const StaticAgentProxyHandler = {
         let value = Reflect.get(target, propertyKey);
 
         if (
-            value === undefined 
-            && (target.game === undefined || !target.game.agents.agentPropertyWasDeleted(target.id, propertyKey))
+            value === undefined &&
+            (target.game === undefined ||
+                !target.game.agents.agentPropertyWasDeleted(
+                    target.id,
+                    propertyKey
+                ))
         ) {
-            value = staticAgentRegistry.getAgentProperty(target.id, propertyKey);
+            value = staticAgentRegistry.getAgentProperty(
+                target.id,
+                propertyKey
+            );
         }
 
         return value;
     },
 
     has(target: Agent, propertyKey: PropertyKey) {
-        if (target.game !== undefined && target.game.agents.agentPropertyWasDeleted(target.id, propertyKey)) {
+        if (
+            target.game !== undefined &&
+            target.game.agents.agentPropertyWasDeleted(target.id, propertyKey)
+        ) {
             return false;
         }
         return staticAgentRegistry.hasAgentProperty(target.id, propertyKey);
@@ -25,15 +35,18 @@ const StaticAgentProxyHandler = {
 };
 
 export class StaticAgentRegistry {
-
-    agentCount = 0
+    agentCount = 0;
 
     addAgent<T extends Agent>(agent: T): T {
         if (agent.isRegistered) {
-            throw new RegalError("Cannot create a static version of a registered agent.");
+            throw new RegalError(
+                "Cannot create a static version of a registered agent."
+            );
         }
         if (agent.isStatic) {
-            throw new RegalError("Cannot create more than one static version of an agent.");
+            throw new RegalError(
+                "Cannot create more than one static version of an agent."
+            );
         }
 
         const id = ++this.agentCount;
@@ -45,7 +58,9 @@ export class StaticAgentRegistry {
 
     getAgentProperty(agentId: number, propertyKey: PropertyKey): any {
         if (!this.hasOwnProperty(agentId)) {
-            throw new RegalError(`No static agent with ID <${agentId}> exists in the registry.`)
+            throw new RegalError(
+                `No static agent with ID <${agentId}> exists in the registry.`
+            );
         }
 
         return this[agentId][propertyKey];
@@ -56,7 +71,9 @@ export class StaticAgentRegistry {
     }
 
     hasAgentProperty(agentId: number, propertyKey: PropertyKey): boolean {
-        return this.hasAgent(agentId) && this[agentId].hasOwnProperty(propertyKey);
+        return (
+            this.hasAgent(agentId) && this[agentId].hasOwnProperty(propertyKey)
+        );
     }
 }
 
@@ -74,42 +91,65 @@ const AgentProxyHandler = {
         let value: any = undefined;
 
         // If the property exists in the instance state, return it.
-        if (target.isRegistered && target.game.agents.hasAgentProperty(target.id, propertyKey)) {
+        if (
+            target.isRegistered &&
+            target.game.agents.hasAgentProperty(target.id, propertyKey)
+        ) {
             value = target.game.agents.getAgentProperty(target.id, propertyKey);
-        } 
+        }
         // If the property never existed in the instance state (i.e. wasn't deleted), return the Reflect.get.
-        else if (target.game === undefined || !target.game.agents.agentPropertyWasDeleted(target.id, propertyKey)) {
+        else if (
+            target.game === undefined ||
+            !target.game.agents.agentPropertyWasDeleted(target.id, propertyKey)
+        ) {
             value = Reflect.get(target, propertyKey, receiver);
         }
 
         return value;
     },
 
-    set(target: Agent, propertyKey: PropertyKey, value: any, receiver: object): boolean {
+    set(
+        target: Agent,
+        propertyKey: PropertyKey,
+        value: any,
+        receiver: object
+    ): boolean {
         let result: boolean = undefined;
 
         if (target.isRegistered) {
             const currentEvent = target.game.events.current;
-            result = target.game.agents.setAgentProperty(target.id, propertyKey, value, currentEvent);
+            result = target.game.agents.setAgentProperty(
+                target.id,
+                propertyKey,
+                value,
+                currentEvent
+            );
         } else {
             result = Reflect.set(target, propertyKey, value, receiver);
         }
-        
+
         return result;
     },
 
     has(target: Agent, propertyKey: PropertyKey): boolean {
-        return target.isRegistered 
-            ? target.game.agents.hasAgentProperty(target.id, propertyKey) 
+        return target.isRegistered
+            ? target.game.agents.hasAgentProperty(target.id, propertyKey)
             : Reflect.has(target, propertyKey);
     },
 
     deleteProperty(target: Agent, propertyKey: PropertyKey): boolean {
         let result: boolean = undefined;
 
-        if (target.isRegistered && target.game.agents.hasAgentProperty(target.id, propertyKey)) {
+        if (
+            target.isRegistered &&
+            target.game.agents.hasAgentProperty(target.id, propertyKey)
+        ) {
             const currentEvent = target.game.events.current;
-            result = target.game.agents.deleteAgentProperty(target.id, propertyKey, currentEvent);
+            result = target.game.agents.deleteAgentProperty(
+                target.id,
+                propertyKey,
+                currentEvent
+            );
         } else {
             result = Reflect.deleteProperty(target, propertyKey);
         }
@@ -119,7 +159,6 @@ const AgentProxyHandler = {
 };
 
 export class Agent {
-
     constructor(private _id?: number, public game?: GameInstance) {
         return new Proxy(this, AgentProxyHandler);
     }
@@ -138,14 +177,18 @@ export class Agent {
 
     set id(value: number) {
         if (this._id !== undefined) {
-            throw new RegalError("Cannot change an agent's ID once it has been set.");
+            throw new RegalError(
+                "Cannot change an agent's ID once it has been set."
+            );
         }
         this._id = value;
     }
 
     register(game: GameInstance, newId?: number): this {
         if (!game) {
-            throw new RegalError("The GameInstance must be defined to register the agent.");
+            throw new RegalError(
+                "The GameInstance must be defined to register the agent."
+            );
         }
         if (this.isRegistered) {
             throw new RegalError("Cannot register an agent more than once.");
@@ -156,16 +199,18 @@ export class Agent {
                 throw new RegalError("newId must be positive.");
             }
             if (staticAgentRegistry.hasAgent(newId)) {
-                throw new RegalError(`A static agent already has the ID <${newId}>.`);
+                throw new RegalError(
+                    `A static agent already has the ID <${newId}>.`
+                );
             }
 
             this.id = newId;
         } else if (!this.isStatic) {
             this.id = game.agents.getNextAgentId();
         }
-        
+
         this.game = game;
-        
+
         const currentEvent = game.events.current;
         game.agents.addAgent(this, currentEvent);
 
@@ -187,10 +232,9 @@ export class AgentReference {
 const propertyIsAgentId = (property: string) => {
     const tryNum = Math.floor(Number(property));
     return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
-}
+};
 
 export class InstanceAgents {
-
     constructor(public game: GameInstance) {}
 
     getNextAgentId(): number {
@@ -203,7 +247,11 @@ export class InstanceAgents {
 
     addAgent(agent: Agent, event: EventRecord): void {
         if (this.hasOwnProperty(agent.id)) {
-            throw new RegalError(`An agent with ID <${agent.id}> has already been registered with the instance.`);
+            throw new RegalError(
+                `An agent with ID <${
+                    agent.id
+                }> has already been registered with the instance.`
+            );
         }
 
         if (!agent.isStatic) {
@@ -216,7 +264,10 @@ export class InstanceAgents {
     }
 
     hasAgent(agentId: number): boolean {
-        return this.hasOwnProperty(agentId) || staticAgentRegistry.hasAgent(agentId);
+        return (
+            this.hasOwnProperty(agentId) ||
+            staticAgentRegistry.hasAgent(agentId)
+        );
     }
 
     getAgentProperty(agentId: number, property: PropertyKey): any {
@@ -227,7 +278,9 @@ export class InstanceAgents {
             if (staticAgentRegistry.hasAgent(agentId)) {
                 value = staticAgentRegistry.getAgentProperty(agentId, property);
             } else {
-                throw new RegalError(`No agent with ID <${agentId}> exists in the instance or the static registry.`);
+                throw new RegalError(
+                    `No agent with ID <${agentId}> exists in the instance or the static registry.`
+                );
             }
         } else {
             value = agentRecord.getProperty(property);
@@ -242,12 +295,19 @@ export class InstanceAgents {
     }
 
     // TODO: Register agents within arrays
-    setAgentProperty(agentId: number, property: PropertyKey, value: any, event: EventRecord): boolean {
+    setAgentProperty(
+        agentId: number,
+        property: PropertyKey,
+        value: any,
+        event: EventRecord
+    ): boolean {
         if (!this.hasOwnProperty(agentId)) {
             if (staticAgentRegistry.hasAgent(agentId)) {
                 this[agentId] = new AgentRecord();
             } else {
-                throw new RegalError(`No agent with ID <${agentId}> exists in the instance or the static registry.`);
+                throw new RegalError(
+                    `No agent with ID <${agentId}> exists in the instance or the static registry.`
+                );
             }
         }
 
@@ -255,7 +315,10 @@ export class InstanceAgents {
 
         if (isAgent(value)) {
             if (!value.isRegistered) {
-                const game: GameInstance = this.getAgentProperty(agentId, "game");
+                const game: GameInstance = this.getAgentProperty(
+                    agentId,
+                    "game"
+                );
                 value = value.register(game);
             }
 
@@ -267,19 +330,28 @@ export class InstanceAgents {
         return true;
     }
 
-    hasAgentProperty(agentId: number, property: PropertyKey): boolean {
+    public hasAgentProperty(agentId: number, property: PropertyKey): boolean {
         if (!this.hasOwnProperty(agentId)) {
             if (staticAgentRegistry.hasAgent(agentId)) {
                 return staticAgentRegistry.hasAgentProperty(agentId, property);
             }
-            throw new RegalError(`No agent with ID <${agentId}> exists in the instance or the static registry.`);
+            throw new RegalError(
+                `No agent with ID <${agentId}> exists in the instance or the static registry.`
+            );
         }
 
         const agentRecord: AgentRecord = this[agentId];
-        return agentRecord.hasOwnProperty(property) && !agentRecord.propertyWasDeleted(property);
+        return (
+            agentRecord.hasOwnProperty(property) &&
+            !agentRecord.propertyWasDeleted(property)
+        );
     }
 
-    deleteAgentProperty(agentId: number, property: PropertyKey, event: EventRecord): boolean {
+    public deleteAgentProperty(
+        agentId: number,
+        property: PropertyKey,
+        event: EventRecord
+    ): boolean {
         if (!this.hasOwnProperty(agentId)) {
             if (staticAgentRegistry.hasAgent(agentId)) {
                 if (staticAgentRegistry.hasAgentProperty(agentId, property)) {
@@ -287,10 +359,12 @@ export class InstanceAgents {
                 } else {
                     // If the static agent doesn't exist in the instance state, but that agent doesn't
                     // have the property that someone is attempting to delete, we don't do anything.
-                    return false; 
+                    return false;
                 }
             } else {
-                throw new RegalError(`No agent with ID <${agentId}> exists in the instance or the static registry.`);
+                throw new RegalError(
+                    `No agent with ID <${agentId}> exists in the instance or the static registry.`
+                );
             }
         }
 
@@ -299,8 +373,11 @@ export class InstanceAgents {
         return agentRecord.deleteProperty(event, agentId, property);
     }
 
-    agentPropertyWasDeleted(agentId: number, property: PropertyKey): boolean {
-        return this.hasOwnProperty(agentId) && (<AgentRecord>this[agentId]).propertyWasDeleted(property);
+    public agentPropertyWasDeleted(agentId: number, property: PropertyKey): boolean {
+        return (
+            this.hasOwnProperty(agentId) &&
+            (this[agentId] as AgentRecord).propertyWasDeleted(property)
+        );
     }
 
     /**
@@ -308,16 +385,17 @@ export class InstanceAgents {
      * **Don't call this unless you know what you're doing.**
      * @param current The `GameInstance` for the new game cycle.
      */
-    cycle(current: GameInstance): InstanceAgents {
+    public cycle(current: GameInstance): InstanceAgents {
         const newAgents = new InstanceAgents(current);
 
         const agentKeys = Object.keys(this).filter(propertyIsAgentId);
-        const agentRecords = agentKeys.map(key => <AgentRecord>this[key]);
+        const agentRecords = agentKeys.map(key => this[key] as AgentRecord);
 
         for (let i = 0; i < agentRecords.length; i++) {
             const formerAgent = agentRecords[i];
-            const keysToAdd = Object.keys(formerAgent)
-                .filter(key => key !== "game" && key !== "_id")
+            const keysToAdd = Object.keys(formerAgent).filter(
+                key => key !== "game" && key !== "_id"
+            );
 
             // Create new Agent with the old agent's id and the new GameInstance.
             const id = Number.parseInt(agentKeys[i]);
@@ -326,11 +404,13 @@ export class InstanceAgents {
 
             // For each updated property on the old agent, add its last value to the new agent.
             keysToAdd.forEach(key => {
-
                 if (formerAgent.propertyWasDeleted(key)) {
-
                     if (staticAgentRegistry.hasAgentProperty(id, key)) {
-                        newAgents.deleteAgentProperty(id, key, EventRecord.default); // Record deletions to static agents.
+                        newAgents.deleteAgentProperty(
+                            id,
+                            key,
+                            EventRecord.default
+                        ); // Record deletions to static agents.
                     }
 
                     return; // If the property was deleted, don't add it to the new record.
@@ -339,10 +419,17 @@ export class InstanceAgents {
                 let formerPropertyValue = formerAgent.getProperty(key);
 
                 if (isAgentReference(formerPropertyValue)) {
-                    formerPropertyValue = new AgentReference(formerPropertyValue.refId);
+                    formerPropertyValue = new AgentReference(
+                        formerPropertyValue.refId
+                    );
                 }
 
-                newAgents.setAgentProperty(newAgent.id, key, formerPropertyValue, EventRecord.default);
+                newAgents.setAgentProperty(
+                    newAgent.id,
+                    key,
+                    formerPropertyValue,
+                    EventRecord.default
+                );
             });
         }
 
@@ -357,20 +444,19 @@ export enum PropertyOperation {
 }
 
 export interface PropertyChange {
-    eventId?: number,
-    eventName?: string,
-    agentId?: number,
-    op: PropertyOperation,
-    init?: any,
-    final?: any,
-    property?: string
+    eventId?: number;
+    eventName?: string;
+    agentId?: number;
+    op: PropertyOperation;
+    init?: any;
+    final?: any;
+    property?: string;
 }
 
 export class AgentRecord {
-    
-    getProperty(propertyKey: PropertyKey): any {
+    public getProperty(propertyKey: PropertyKey): any {
         const changes: PropertyChange[] = this[propertyKey];
-        let property: any = undefined;
+        let property: any;
 
         if (changes !== undefined && changes.length > 0) {
             property = changes[0].final;
@@ -379,37 +465,60 @@ export class AgentRecord {
         return property;
     }
 
-    setProperty<T>(event: EventRecord, agentId: number, property: PropertyKey, value: T): void {
+    public setProperty<T>(
+        event: EventRecord,
+        agentId: number,
+        property: PropertyKey,
+        value: T
+    ): void {
         let initValue = this.getProperty(property);
 
-        if (initValue === undefined && staticAgentRegistry.hasAgentProperty(agentId, property)) {
+        if (
+            initValue === undefined &&
+            staticAgentRegistry.hasAgentProperty(agentId, property)
+        ) {
             initValue = staticAgentRegistry.getAgentProperty(agentId, property);
         }
 
-        const op = initValue === undefined ? PropertyOperation.ADDED : PropertyOperation.MODIFIED;
+        const op =
+            initValue === undefined
+                ? PropertyOperation.ADDED
+                : PropertyOperation.MODIFIED;
 
         this._addRecord(event, property, op, initValue, value);
         event.trackChange(agentId, property, op, initValue, value);
     }
 
-    deleteProperty(event: EventRecord, agentId: number, property: PropertyKey): boolean {
+    public deleteProperty(
+        event: EventRecord,
+        agentId: number,
+        property: PropertyKey
+    ): boolean {
         let initValue = this.getProperty(property);
 
         if (!this.hasOwnProperty(property)) {
             if (staticAgentRegistry.hasAgentProperty(agentId, property)) {
-                initValue = staticAgentRegistry.getAgentProperty(agentId, property);
+                initValue = staticAgentRegistry.getAgentProperty(
+                    agentId,
+                    property
+                );
             } else {
                 return false;
             }
         }
 
         this._addRecord(event, property, PropertyOperation.DELETED, initValue);
-        event.trackChange(agentId, property, PropertyOperation.DELETED, initValue);
+        event.trackChange(
+            agentId,
+            property,
+            PropertyOperation.DELETED,
+            initValue
+        );
 
         return true;
     }
 
-    propertyWasDeleted(propertyKey: PropertyKey): boolean {
+    public propertyWasDeleted(propertyKey: PropertyKey): boolean {
         if (this.hasOwnProperty(propertyKey)) {
             const lastChange: PropertyChange = this[propertyKey][0];
 
@@ -421,7 +530,13 @@ export class AgentRecord {
         return false;
     }
 
-    private _addRecord<T>(event: EventRecord, property: PropertyKey, op: PropertyOperation, init?: T, final?: T): void {
+    private _addRecord<T>(
+        event: EventRecord,
+        property: PropertyKey,
+        op: PropertyOperation,
+        init?: T,
+        final?: T
+    ): void {
         if (!(property in this)) {
             this[property] = new Array<PropertyChange>();
         }
@@ -434,12 +549,11 @@ export class AgentRecord {
             final
         };
 
-        (<PropertyChange[]>this[property]).unshift(change);
+        (this[property] as PropertyChange[]).unshift(change);
     }
 }
 
 export class InstanceState extends Agent {
-
     constructor(game: GameInstance) {
         super();
         return this.register(game, 0);

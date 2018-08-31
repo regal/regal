@@ -32,7 +32,9 @@ export class HookManager {
      * Defaults to always return true.
      * @returns Whether the undo operation is allowed.
      */
-    public static beforeUndoCommandHook: (game: GameInstance) => boolean = returnTrue;
+    public static beforeUndoCommandHook: (
+        game: GameInstance
+    ) => boolean = returnTrue;
 
     /**
      * Resets the API hooks to their default values.

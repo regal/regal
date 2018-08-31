@@ -82,8 +82,8 @@ export class Game {
 
         if (err !== undefined) {
             const output: GameOutput = {
-                wasSuccessful: false,
-                error: err
+                error: err,
+                wasSuccessful: false
             };
 
             response = {
@@ -91,8 +91,8 @@ export class Game {
             };
         } else {
             const output: GameOutput = {
-                wasSuccessful: true,
-                log: newInstance.output.lines
+                log: newInstance.output.lines,
+                wasSuccessful: true
             };
 
             response = {
