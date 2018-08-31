@@ -13,7 +13,7 @@ import {
     enqueue,
     InstanceEvents
 } from "../src/event";
-import { log } from "../src/utils";
+import { log } from "./utils";
 import { Agent, PropertyOperation, resetRegistry } from "../src/agent";
 import { OutputLineType } from "../src/output";
 

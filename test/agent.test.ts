@@ -11,7 +11,7 @@ import {
     AgentReference,
     PropertyOperation
 } from "../src/agent";
-import { log } from "../src/utils";
+import { log } from "./utils";
 import { on, noop, EventRecord } from "../src/event";
 
 class Dummy extends Agent {

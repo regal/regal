@@ -6,7 +6,7 @@ import { onPlayerCommand, onStartCommand } from "../src/api-hooks";
 import { noop } from "../src/event";
 import GameInstance from "../src/game-instance";
 import { OutputLineType } from "../src/output";
-import { log } from "../src/utils";
+import { log } from "./utils";
 import { Agent } from "../src/agent";
 
 describe("Game API", function() {

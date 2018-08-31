@@ -9,7 +9,7 @@ import {
 } from "../src/api-hooks";
 import GameInstance from "../src/game-instance";
 import { noop, on } from "../src/event";
-import { log } from "../src/utils";
+import { log } from "./utils";
 import { PropertyOperation } from "../src/agent";
 import { RegalError } from "../src/error";
 
