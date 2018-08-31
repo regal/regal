@@ -1,4 +1,4 @@
-import { InstanceAgents, InstanceState } from "./agent";
+import { InstanceAgents, InstanceState } from "./agents";
 import { InstanceEvents } from "./events";
 import { InstanceOutput } from "./output";
 

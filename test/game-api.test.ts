@@ -7,7 +7,7 @@ import { noop } from "../src/events";
 import GameInstance from "../src/game-instance";
 import { OutputLineType } from "../src/output";
 import { log } from "./utils";
-import { Agent } from "../src/agent";
+import { Agent } from "../src/agents";
 
 describe("Game API", function() {
     beforeEach(function() {

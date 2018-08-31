@@ -10,7 +10,7 @@ import {
 import GameInstance from "../src/game-instance";
 import { noop, on } from "../src/events";
 import { log } from "./utils";
-import { PropertyOperation } from "../src/agent";
+import { PropertyOperation } from "../src/agents";
 import { RegalError } from "../src/error";
 
 describe("API Hooks", function() {

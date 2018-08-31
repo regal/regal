@@ -6,7 +6,7 @@
  * @license MIT (see https://github.com/regal/regal)
  */
 
-import { PropertyChange, PropertyOperation } from "../agent";
+import { PropertyChange, PropertyOperation } from "../agents";
 import { OutputLine } from "../output";
 import { noop, TrackedEvent } from "./event-model";
 

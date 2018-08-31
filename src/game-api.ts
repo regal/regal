@@ -1,4 +1,4 @@
-import { resetRegistry } from "./agent";
+import { StaticAgentRegistry } from "./agents";
 import { HookManager } from "./api-hooks";
 import { RegalError } from "./error";
 import { GameOptions } from "./game-config";
@@ -130,5 +130,5 @@ export interface GameResponse {
 
 export const resetGame = () => {
     HookManager.resetHooks();
-    resetRegistry();
+    StaticAgentRegistry.resetRegistry();
 };

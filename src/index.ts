@@ -1,4 +1,4 @@
-export * from "./agent"; // TODO - Decide what to export from agent.ts
+export * from "./agents"; // TODO - Decide what to export from agent.ts
 export {
     onPlayerCommand,
     onStartCommand,

@@ -5,12 +5,11 @@ import GameInstance from "../src/game-instance";
 import { RegalError } from "../src/error";
 import {
     Agent,
-    resetRegistry,
-    staticAgentRegistry,
+    StaticAgentRegistry,
     AgentRecord,
     AgentReference,
     PropertyOperation
-} from "../src/agent";
+} from "../src/agents";
 import { log } from "./utils";
 import { on, noop, EventRecord } from "../src/events";
 
@@ -20,9 +19,9 @@ class Dummy extends Agent {
     }
 }
 
-describe("Agent", function() {
+describe("Agents", function() {
     beforeEach(function() {
-        resetRegistry();
+        StaticAgentRegistry.resetRegistry();
     });
 
     describe("Agent Behavior", function() {
@@ -274,7 +273,7 @@ describe("Agent", function() {
 
     describe("Static Agents", function() {
         it("The static agent registry has no agents to begin with", function() {
-            expect(staticAgentRegistry.agentCount).to.equal(0);
+            expect(StaticAgentRegistry.agentCount).to.equal(0);
         });
 
         it("Defining a static agent lets it retain its original properties", function() {
@@ -308,30 +307,30 @@ describe("Agent", function() {
         it("Declaring an agent static adds it to the registry", function() {
             const dummy = new Dummy("D1", 10).static();
 
-            expect(staticAgentRegistry.agentCount).to.equal(1);
+            expect(StaticAgentRegistry.agentCount).to.equal(1);
 
-            expect(staticAgentRegistry.hasAgent(dummy.id)).to.be.true;
-            expect(staticAgentRegistry.hasAgentProperty(dummy.id, "name")).to.be
+            expect(StaticAgentRegistry.hasAgent(dummy.id)).to.be.true;
+            expect(StaticAgentRegistry.hasAgentProperty(dummy.id, "name")).to.be
                 .true;
-            expect(staticAgentRegistry.hasAgentProperty(1, "health")).to.be
+            expect(StaticAgentRegistry.hasAgentProperty(1, "health")).to.be
                 .true;
 
-            expect(staticAgentRegistry.getAgentProperty(1, "name")).to.equal(
+            expect(StaticAgentRegistry.getAgentProperty(1, "name")).to.equal(
                 "D1"
             );
             expect(
-                staticAgentRegistry.getAgentProperty(dummy.id, "health")
+                StaticAgentRegistry.getAgentProperty(dummy.id, "health")
             ).to.equal(10);
         });
 
         it("The static agent registry doesn't have any false positives", function() {
             const dummy = new Dummy("D1", 10).static();
 
-            expect(staticAgentRegistry.hasAgent(0)).to.be.false;
-            expect(staticAgentRegistry.hasAgent(2)).to.be.false;
-            expect(staticAgentRegistry.hasAgentProperty(dummy.id, "non")).to.be
+            expect(StaticAgentRegistry.hasAgent(0)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(2)).to.be.false;
+            expect(StaticAgentRegistry.hasAgentProperty(dummy.id, "non")).to.be
                 .false;
-            expect(staticAgentRegistry.hasAgentProperty(2, "name")).to.be.false;
+            expect(StaticAgentRegistry.hasAgentProperty(2, "name")).to.be.false;
         });
 
         it("Cannot declare an agent static multiple times", function() {
@@ -354,7 +353,7 @@ describe("Agent", function() {
 
         it("Error check for StaticAgentRegistry#getAgentProperty", function() {
             expect(() =>
-                staticAgentRegistry.getAgentProperty(100, "foo")
+                StaticAgentRegistry.getAgentProperty(100, "foo")
             ).to.throw(
                 RegalError,
                 "No static agent with ID <100> exists in the registry."
@@ -407,13 +406,13 @@ describe("Agent", function() {
                 return noop;
             })(myGame);
 
-            expect(staticAgentRegistry.getAgentProperty(1, "health")).to.equal(
+            expect(StaticAgentRegistry.getAgentProperty(1, "health")).to.equal(
                 10
             );
-            expect(staticAgentRegistry.getAgentProperty(1, "name")).to.equal(
+            expect(StaticAgentRegistry.getAgentProperty(1, "name")).to.equal(
                 "D1"
             );
-            expect(staticAgentRegistry.getAgentProperty(1, "newProp")).to.be
+            expect(StaticAgentRegistry.getAgentProperty(1, "newProp")).to.be
                 .undefined;
         });
 

@@ -14,7 +14,7 @@ import {
     InstanceEvents
 } from "../src/events";
 import { log } from "./utils";
-import { Agent, PropertyOperation, resetRegistry } from "../src/agent";
+import { Agent, PropertyOperation, StaticAgentRegistry } from "../src/agents";
 import { OutputLineType } from "../src/output";
 
 describe("Events", function() {
@@ -640,7 +640,7 @@ describe("Events", function() {
 
     describe("Agent Change Tracking", function() {
         it("Agent changes are tracked in GameInstance.events.history", function() {
-            resetRegistry();
+            StaticAgentRegistry.resetRegistry();
 
             const heal = (target: Dummy, amount: number) =>
                 on("HEAL", game => {
