@@ -37,6 +37,31 @@ const wrapApiErrorAsRegalError = (err: any): RegalError => {
     return newErr;
 };
 
+const buildGameResponse = (err: RegalError, newInstance: GameInstance) => {
+    let response: GameResponse;
+
+    if (err !== undefined) {
+        const output: GameOutput = {
+            error: err,
+            wasSuccessful: false
+        };
+        response = {
+            output
+        };
+    } else {
+        const output: GameOutput = {
+            log: newInstance.output.lines,
+            wasSuccessful: true
+        };
+        response = {
+            instance: newInstance,
+            output
+        };
+    }
+
+    return response;
+};
+
 export class Game {
     public static getOptionCommand(
         instance: GameInstance,
@@ -78,35 +103,27 @@ export class Game {
             err = wrapApiErrorAsRegalError(error);
         }
 
-        let response: GameResponse;
-
-        if (err !== undefined) {
-            const output: GameOutput = {
-                error: err,
-                wasSuccessful: false
-            };
-
-            response = {
-                output
-            };
-        } else {
-            const output: GameOutput = {
-                log: newInstance.output.lines,
-                wasSuccessful: true
-            };
-
-            response = {
-                instance: newInstance,
-                output
-            };
-        }
-
-        return response;
+        return buildGameResponse(err, newInstance);
     }
 
     public static postStartCommand(options: GameOptions): GameResponse {
-        // TODO
-        throw new Error("Method not implemented.");
+        let newInstance: GameInstance;
+        let err: RegalError;
+
+        try {
+            if (HookManager.startCommandHook === undefined) {
+                throw new RegalError(
+                    "onStartCommand has not been implemented by the game developer."
+                );
+            }
+
+            newInstance = new GameInstance(options);
+            newInstance.events.invoke(HookManager.startCommandHook);
+        } catch (error) {
+            err = wrapApiErrorAsRegalError(error);
+        }
+
+        return buildGameResponse(err, newInstance);
     }
 
     public static postUndoCommand(instance: GameInstance): GameResponse {
@@ -119,7 +136,7 @@ export class Game {
         options: GameOptions
     ): GameResponse {
         // TODO
-        throw new Error("Method not implemented");
+        throw new Error("Method not implemented.");
     }
 }
 
