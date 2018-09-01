@@ -19,7 +19,7 @@ export default class GameInstance {
     }
 
     public cycle(): GameInstance {
-        const newGame = new GameInstance(this.options.optionOverrides);
+        const newGame = new GameInstance(this.options.overrides);
         newGame.events = this.events.cycle(newGame);
         newGame.agents = this.agents.cycle(newGame);
         newGame.output = this.output.cycle(newGame);
