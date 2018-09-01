@@ -30,6 +30,19 @@ export const DEFAULT_GAME_OPTIONS: GameOptions = {
 
 const OPTION_KEYS = Object.keys(DEFAULT_GAME_OPTIONS);
 
+const OPTION_OVERRIDES_PROXY_HANDLER = {
+    set(
+        target: Partial<GameOptions>,
+        propertKey: PropertyKey,
+        value: any,
+        receiver: object
+    ) {
+        throw new RegalError(
+            "Cannot modify the properties of the instance overrides."
+        );
+    }
+};
+
 const INSTANCE_OPTIONS_PROXY_HANDLER = {
     get(target: InstanceOptions, propertyKey: PropertyKey, receiver: object) {
         return target[propertyKey] === undefined
@@ -54,10 +67,11 @@ export class InstanceOptions implements GameOptions {
     public forbidChanges: string[] | boolean;
     public showMinor: boolean;
 
-    constructor(
-        public game: GameInstance,
-        public overrides: Readonly<Partial<GameOptions>>
-    ) {
+    public overrides: Readonly<Partial<GameOptions>>;
+
+    constructor(public game: GameInstance, overrides: Partial<GameOptions>) {
+        this.overrides = new Proxy(overrides, OPTION_OVERRIDES_PROXY_HANDLER);
+
         const overrideKeys = Object.keys(overrides);
 
         overrideKeys.forEach(key => {
