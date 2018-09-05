@@ -24,3 +24,5 @@ export const DEFAULT_GAME_OPTIONS: GameOptions = {
     forbidChanges: false,
     showMinor: true
 };
+
+export const OPTION_KEYS = Object.keys(DEFAULT_GAME_OPTIONS);

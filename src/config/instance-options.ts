@@ -1,8 +1,6 @@
 import { RegalError } from "../error";
 import GameInstance from "../game-instance";
-import { DEFAULT_GAME_OPTIONS, GameOptions } from "./game-options";
-
-const OPTION_KEYS = Object.keys(DEFAULT_GAME_OPTIONS);
+import { DEFAULT_GAME_OPTIONS, GameOptions, OPTION_KEYS } from "./game-options";
 
 const OPTION_OVERRIDES_PROXY_HANDLER = {
     set(
@@ -55,13 +53,16 @@ export class InstanceOptions implements GameOptions {
             }
 
             // Ensure that each overriden option has the correct type.
+            // TODO - this doesn't work well for nonprimitive options. Perhaps each one should be validated seperately.
             if (typeof overrides[key] !== typeof DEFAULT_GAME_OPTIONS[key]) {
                 throw new RegalError(
-                    `The option <${key}> is of type ${typeof overrides[
+                    `The option <${key}> is of type <${typeof overrides[
                         key
-                    ]}, must be of type ${typeof DEFAULT_GAME_OPTIONS[key]}`
+                    ]}>, must be of type <${typeof DEFAULT_GAME_OPTIONS[key]}>.`
                 );
             }
+
+            this[key] = overrides[key];
         });
 
         return new Proxy(this, INSTANCE_OPTIONS_PROXY_HANDLER);

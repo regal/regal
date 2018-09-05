@@ -107,7 +107,7 @@ export class Game {
     }
 
     public static postStartCommand(
-        options: Partial<GameOptions>
+        options: Partial<GameOptions> = {}
     ): GameResponse {
         let newInstance: GameInstance;
         let err: RegalError;
