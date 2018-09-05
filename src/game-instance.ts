@@ -1,6 +1,6 @@
 import { InstanceAgents, InstanceState } from "./agents";
+import { GameOptions, InstanceOptions } from "./config";
 import { InstanceEvents } from "./events";
-import { GameOptions, InstanceOptions } from "./game-config";
 import { InstanceOutput } from "./output";
 
 export default class GameInstance {

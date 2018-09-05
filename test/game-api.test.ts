@@ -168,4 +168,27 @@ describe("Game API", function() {
             expect(response.instance).to.be.undefined;
         });
     });
+
+    describe("Game.postStartCommand", function() {
+        it("Sending a good request sends the correct output", function() {
+            onStartCommand(game => {
+                game.output.write("Hello, world!");
+                return noop;
+            });
+
+            const response = Game.postStartCommand({});
+
+            expect(response.instance).to.not.be.undefined;
+            expect(response.output).to.deep.equal({
+                wasSuccessful: true,
+                log: [
+                    {
+                        id: 1,
+                        data: "Hello, world!",
+                        type: OutputLineType.NORMAL
+                    }
+                ]
+            });
+        });
+    });
 });

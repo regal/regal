@@ -17,7 +17,7 @@ export {
     on
 } from "./events";
 export { Game, GameResponse } from "./game-api";
-export { GameOptions, GameMetadata } from "./game-config";
+export { GameOptions, GameMetadata } from "./config";
 export * from "./game-instance";
 export {
     OutputLineType,

@@ -1,7 +1,7 @@
 import { StaticAgentRegistry } from "./agents";
 import { HookManager } from "./api-hooks";
+import { GameOptions } from "./config";
 import { RegalError } from "./error";
-import { GameOptions } from "./game-config";
 import GameInstance from "./game-instance";
 import { GameOutput } from "./output";
 
@@ -106,7 +106,9 @@ export class Game {
         return buildGameResponse(err, newInstance);
     }
 
-    public static postStartCommand(options: GameOptions): GameResponse {
+    public static postStartCommand(
+        options: Partial<GameOptions>
+    ): GameResponse {
         let newInstance: GameInstance;
         let err: RegalError;
 
