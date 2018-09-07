@@ -1,6 +1,6 @@
 import { StaticAgentRegistry } from "./agents";
 import { HookManager } from "./api-hooks";
-import { GameOptions } from "./config";
+import { GameOptions, OPTION_KEYS } from "./config";
 import { RegalError } from "./error";
 import GameInstance from "./game-instance";
 import { GameOutput } from "./output";
@@ -37,7 +37,7 @@ const wrapApiErrorAsRegalError = (err: any): RegalError => {
     return newErr;
 };
 
-const buildGameResponse = (err: RegalError, newInstance: GameInstance) => {
+const buildLogResponse = (err: RegalError, newInstance: GameInstance) => {
     let response: GameResponse;
 
     if (err !== undefined) {
@@ -63,14 +63,6 @@ const buildGameResponse = (err: RegalError, newInstance: GameInstance) => {
 };
 
 export class Game {
-    public static getOptionCommand(
-        instance: GameInstance,
-        options: string[]
-    ): GameResponse {
-        // TODO
-        throw new Error("Method not implemented.");
-    }
-
     public static getMetadataCommand(): GameResponse {
         // TODO
         throw new Error("Method not implemented.");
@@ -103,7 +95,7 @@ export class Game {
             err = wrapApiErrorAsRegalError(error);
         }
 
-        return buildGameResponse(err, newInstance);
+        return buildLogResponse(err, newInstance);
     }
 
     public static postStartCommand(
@@ -125,7 +117,7 @@ export class Game {
             err = wrapApiErrorAsRegalError(error);
         }
 
-        return buildGameResponse(err, newInstance);
+        return buildLogResponse(err, newInstance);
     }
 
     public static postUndoCommand(instance: GameInstance): GameResponse {

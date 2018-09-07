@@ -193,9 +193,6 @@ export interface GameOutput {
     /** Contains any lines of output emitted because of the request. */
     log?: OutputLine[];
 
-    /** Contains any game options requested by `Game.getOptionCommand` or updated by `Game.postOptionCommand`. */
-    options?: GameOptions;
-
     /** Contains the game's metadata if `Game.getMetdataCommand` was called. */
     metadata?: GameMetadata;
 }
