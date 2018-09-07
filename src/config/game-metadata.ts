@@ -1,16 +1,4 @@
-/**
- * Represents game options that are configurable by a Regal client.
- */
-export interface GameOptions {
-    /** Whether output of type `DEBUG` should be returned to the client. Defaults to false. */
-    debug?: boolean;
-
-    /** Whether output of type `MINOR` should be returned to the client. Defaults to true. */
-    showMinor?: boolean;
-
-    /** Game options that cannot be changed by a Regal client. Defaults to none. */
-    forbidChanges?: string[];
-}
+import { GameOptions } from "./game-options";
 
 /**
  * Metadata about the game, such as its title and author.

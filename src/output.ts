@@ -5,8 +5,8 @@
  * @license MIT (see https://github.com/regal/regal)
  */
 
+import { GameMetadata, GameOptions } from "./config";
 import { RegalError } from "./error";
-import { GameMetadata, GameOptions } from "./game-config";
 import GameInstance from "./game-instance";
 
 /**
