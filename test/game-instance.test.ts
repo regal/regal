@@ -24,4 +24,15 @@ describe("GameInstance", function() {
 
         expect(former).to.not.equal(current);
     });
+
+    it("Cycling a game instance copies its options", function() {
+        const former = new GameInstance({
+            debug: true,
+            forbidChanges: ["debug"]
+        });
+        const current = former.cycle();
+
+        expect(former.options).to.not.equal(current.options);
+        expect(current.options).to.deep.equal(former.options);
+    });
 });

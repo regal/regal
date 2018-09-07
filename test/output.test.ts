@@ -21,7 +21,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.writeLine accepts an optional OutputLineType", function() {
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ debug: true });
 
             myGame.output.writeLine("Hello, world!", OutputLineType.DEBUG);
 
@@ -111,7 +111,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.writeDebug writes DEBUG lines", function() {
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ debug: true });
 
             myGame.output.writeDebug("Line 1", "Line 2");
 
@@ -144,7 +144,7 @@ describe("Output", function() {
         });
 
         it("Multiple line types with InstanceOutput", function() {
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ debug: true });
 
             myGame.output.writeDebug("Room loaded.");
             myGame.output.writeTitle("West of House");

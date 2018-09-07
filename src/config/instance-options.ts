@@ -14,7 +14,7 @@ const OPTION_OVERRIDES_PROXY_HANDLER = {
         receiver: object
     ) {
         throw new RegalError(
-            "Cannot modify the properties of the instance overrides."
+            "Cannot modify the properties of the InstanceOption option overrides."
         );
     }
 };
