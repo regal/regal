@@ -99,6 +99,19 @@ export class InstanceOutput {
         line: string,
         lineType: OutputLineType = OutputLineType.NORMAL
     ) {
+        switch (lineType) {
+            case OutputLineType.DEBUG:
+                if (!this.game.options.debug) {
+                    return;
+                }
+                break;
+            case OutputLineType.MINOR:
+                if (!this.game.options.showMinor) {
+                    return;
+                }
+                break;
+        }
+
         const outputLine = {
             data: line,
             id: ++this._lineCount,
