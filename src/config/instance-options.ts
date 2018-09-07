@@ -38,6 +38,35 @@ const INSTANCE_OPTIONS_PROXY_HANDLER = {
     }
 };
 
+const ensureOverridesAllowed = (
+    overrides: Partial<GameOptions>,
+    allowOverrides: string[] | boolean
+): void => {
+    if (overrides.allowOverrides !== undefined) {
+        throw new RegalError(
+            "The allowOverrides option can never be overridden."
+        );
+    }
+
+    if (Array.isArray(allowOverrides)) {
+        const overrideKeys = Object.keys(overrides);
+        const forbiddenKeys = overrideKeys.filter(
+            key => !allowOverrides.includes(key)
+        );
+
+        if (forbiddenKeys.length > 0) {
+            throw new RegalError(
+                `The following option overrides are forbidden: <${forbiddenKeys}>.`
+            );
+        }
+    } else {
+        // Option is a boolean
+        if (!allowOverrides && Object.keys(overrides).length > 0) {
+            throw new RegalError("No option overrides are allowed.");
+        }
+    }
+};
+
 export class InstanceOptions implements GameOptions {
     public allowOverrides: string[] | boolean;
     public debug: boolean;
@@ -53,5 +82,25 @@ export class InstanceOptions implements GameOptions {
         Object.keys(overrides).forEach(key => (this[key] = overrides[key]));
 
         return new Proxy(this, INSTANCE_OPTIONS_PROXY_HANDLER);
+    }
+
+    public setOptions(newOpts: Partial<GameOptions>): void {
+        validateOptions(newOpts);
+        ensureOverridesAllowed(newOpts, this.allowOverrides);
+
+        const currentOverrideKeys = Object.keys(this.overrides);
+        const newOverrideKeys = Object.keys(newOpts);
+        const newOverrides: Partial<GameOptions> = {};
+
+        currentOverrideKeys
+            .filter(key => !newOverrideKeys.includes(key)) // Don't handle options that are going to get overridden.
+            .forEach(key => (newOverrides[key] = this.overrides[key]));
+
+        newOverrideKeys.forEach(key => {
+            newOverrides[key] = newOpts[key];
+            this[key] = newOpts[key];
+        });
+
+        this.overrides = newOverrides;
     }
 }

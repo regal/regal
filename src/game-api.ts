@@ -129,8 +129,31 @@ export class Game {
         instance: GameInstance,
         options: GameOptions
     ): GameResponse {
-        // TODO
-        throw new Error("Method not implemented.");
+        let newInstance: GameInstance;
+        let err: RegalError;
+
+        try {
+            validateGameInstance(instance);
+
+            newInstance = instance.cycle();
+            newInstance.options.setOptions(options);
+        } catch (error) {
+            err = wrapApiErrorAsRegalError(error);
+        }
+
+        return err !== undefined
+            ? {
+                  output: {
+                      error: err,
+                      wasSuccessful: false
+                  }
+              }
+            : {
+                  instance: newInstance,
+                  output: {
+                      wasSuccessful: true
+                  }
+              };
     }
 }
 
