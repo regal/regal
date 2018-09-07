@@ -273,7 +273,7 @@ describe("Game API", function() {
             expect(options.showMinor).to.equal(DEFAULT_GAME_OPTIONS.showMinor);
         });
 
-        it("Sending a start request with invalid options throws an error", function() {
+        it("Sending a start request with invalid options throws an error (option does not exist)", function() {
             onStartCommand(game => noop);
 
             const response = Game.postStartCommand(<any>{ foo: 3 });
@@ -285,7 +285,7 @@ describe("Game API", function() {
             expect(response.instance).to.be.undefined;
         });
 
-        it("Sending a start requests with mistyped options throws an error (1)", function() {
+        it("Sending a start request with invalid options throws an error (option has the wrong type)", function() {
             onStartCommand(game => noop);
 
             const response = Game.postStartCommand(<any>{ debug: 3 });
@@ -297,7 +297,7 @@ describe("Game API", function() {
             expect(response.instance).to.be.undefined;
         });
 
-        it("Sending a start requests with mistyped options throws an error (2)", function() {
+        it("Sending a start request with invalid options throws an error (option has the wrong type)", function() {
             onStartCommand(game => noop);
 
             const response = Game.postStartCommand(<any>{ debug: [] });
@@ -307,6 +307,99 @@ describe("Game API", function() {
                 "RegalError: The option <debug> is of type <object>, must be of type <boolean>."
             );
             expect(response.instance).to.be.undefined;
+        });
+
+        describe("Option validation checks", function() {
+            it("GameOptions.debug VALID", function() {
+                onStartCommand(game => noop);
+
+                const response = Game.postStartCommand({
+                    debug: true
+                });
+                const options = response.instance.options;
+
+                expect(response.output.wasSuccessful).to.be.true;
+                expect(options.overrides).to.deep.equal({
+                    debug: true
+                });
+                expect(options.debug).to.be.true;
+            });
+
+            it("GameOptions.debug INVALID", function() {
+                onStartCommand(game => noop);
+
+                const response = Game.postStartCommand(<any>{ foo: 3 });
+
+                expect(response.output.wasSuccessful).to.be.false;
+                expect(response.output.error.message).to.equal(
+                    "RegalError: Invalid option name <foo>."
+                );
+                expect(response.instance).to.be.undefined;
+            });
+
+            it("GameOptions.forbidChanges VALID", function() {
+                onStartCommand(game => noop);
+
+                const response1 = Game.postStartCommand({
+                    forbidChanges: true
+                });
+                const options1 = response1.instance.options;
+
+                expect(response1.output.wasSuccessful).to.be.true;
+                expect(options1.overrides).to.deep.equal({
+                    forbidChanges: true
+                });
+                expect(options1.forbidChanges).to.be.true;
+
+                const response2 = Game.postStartCommand({
+                    forbidChanges: []
+                });
+                const options2 = response2.instance.options;
+
+                expect(response2.output.wasSuccessful).to.be.true;
+                expect(options2.overrides).to.deep.equal({
+                    forbidChanges: []
+                });
+                expect(options2.forbidChanges).to.deep.equal([]);
+
+                const response3 = Game.postStartCommand({
+                    forbidChanges: ["debug", "forbidChanges"]
+                });
+                const options3 = response3.instance.options;
+
+                expect(response3.output.wasSuccessful).to.be.true;
+                expect(options3.overrides).to.deep.equal({
+                    forbidChanges: ["debug", "forbidChanges"]
+                });
+                expect(options3.forbidChanges).to.deep.equal([
+                    "debug",
+                    "forbidChanges"
+                ]);
+            });
+
+            it("GameOptions.forbidChanges INVALID", function() {
+                onStartCommand(game => noop);
+
+                const response1 = Game.postStartCommand(<any>{
+                    forbidChanges: 5
+                });
+
+                expect(response1.output.wasSuccessful).to.be.false;
+                expect(response1.output.error.message).to.equal(
+                    "RegalError: The option <forbidChanges> is of type <number>, must be of type <boolean> or <string[]>."
+                );
+                expect(response1.instance).to.be.undefined;
+
+                const response2 = Game.postStartCommand({
+                    forbidChanges: ["blark"]
+                });
+
+                expect(response2.output.wasSuccessful).to.be.false;
+                expect(response2.output.error.message).to.equal(
+                    "RegalError: The option <blark> does not exist."
+                );
+                expect(response2.instance).to.be.undefined;
+            });
         });
     });
 });
