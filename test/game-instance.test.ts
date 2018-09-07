@@ -28,7 +28,7 @@ describe("GameInstance", function() {
     it("Cycling a game instance copies its options", function() {
         const former = new GameInstance({
             debug: true,
-            forbidChanges: ["debug"]
+            allowOverrides: ["debug"]
         });
         const current = former.cycle();
 

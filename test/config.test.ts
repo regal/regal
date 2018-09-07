@@ -33,51 +33,61 @@ describe("Config", function() {
                 );
             });
 
-            it("GameOptions.forbidChanges VALID: boolean", function() {
-                const myGame = new GameInstance({ forbidChanges: true });
+            it("GameOptions.allowOverrides VALID: boolean", function() {
+                const myGame = new GameInstance({ allowOverrides: true });
                 expect(myGame.options.overrides).to.deep.equal({
-                    forbidChanges: true
+                    allowOverrides: true
                 });
-                expect(myGame.options.forbidChanges).to.be.true;
+                expect(myGame.options.allowOverrides).to.be.true;
             });
 
-            it("GameOptions.forbidChanges VALID: empty array", function() {
-                const myGame = new GameInstance({ forbidChanges: [] });
+            it("GameOptions.allowOverrides VALID: empty array", function() {
+                const myGame = new GameInstance({ allowOverrides: [] });
                 expect(myGame.options.overrides).to.deep.equal({
-                    forbidChanges: []
+                    allowOverrides: []
                 });
-                expect(myGame.options.forbidChanges).to.deep.equal([]);
+                expect(myGame.options.allowOverrides).to.deep.equal([]);
             });
 
-            it("GameOptions.forbidChanges VALID: valid array", function() {
+            it("GameOptions.allowOverrides VALID: valid array", function() {
                 const myGame = new GameInstance({
-                    forbidChanges: ["debug", "forbidChanges"]
+                    allowOverrides: ["debug", "showMinor"]
                 });
                 expect(myGame.options.overrides).to.deep.equal({
-                    forbidChanges: ["debug", "forbidChanges"]
+                    allowOverrides: ["debug", "showMinor"]
                 });
-                expect(myGame.options.forbidChanges).to.deep.equal([
+                expect(myGame.options.allowOverrides).to.deep.equal([
                     "debug",
-                    "forbidChanges"
+                    "showMinor"
                 ]);
             });
 
-            it("GameOptions.forbidChanges INVALID: mistype", function() {
+            it("GameOptions.allowOverrides INVALID: mistype", function() {
                 expect(
-                    () => new GameInstance(<any>{ forbidChanges: 3 })
+                    () => new GameInstance(<any>{ allowOverrides: 3 })
                 ).to.throw(
                     RegalError,
-                    "RegalError: The option <forbidChanges> is of type <number>, must be of type <boolean> or <string[]>."
+                    "RegalError: The option <allowOverrides> is of type <number>, must be of type <boolean> or <string[]>."
                 );
             });
 
-            it("GameOptions.forbidChanges INVALID: illegal array", function() {
+            it("GameOptions.allowOverrides INVALID: illegal array", function() {
                 expect(
                     () =>
-                        new GameInstance({ forbidChanges: ["debug", "blark"] })
+                        new GameInstance({ allowOverrides: ["debug", "blark"] })
                 ).to.throw(
                     RegalError,
                     "RegalError: The option <blark> does not exist."
+                );
+            });
+
+            it("GameOptions.allowOverrides INVALID: allowing allowOverrides", function() {
+                expect(
+                    () =>
+                        new GameInstance({ allowOverrides: ["allowOverrides"] })
+                ).to.throw(
+                    RegalError,
+                    "RegalError: The option <allowOverrides> is not allowed to be overridden."
                 );
             });
 

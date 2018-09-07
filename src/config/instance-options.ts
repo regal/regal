@@ -39,8 +39,8 @@ const INSTANCE_OPTIONS_PROXY_HANDLER = {
 };
 
 export class InstanceOptions implements GameOptions {
+    public allowOverrides: string[] | boolean;
     public debug: boolean;
-    public forbidChanges: string[] | boolean;
     public showMinor: boolean;
 
     public overrides: Readonly<Partial<GameOptions>>;
