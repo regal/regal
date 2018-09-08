@@ -7,7 +7,7 @@ import { noop } from "../src/events";
 import GameInstance from "../src/game-instance";
 import { OutputLineType } from "../src/output";
 import { log, getDemoMetadata, metadataWithOptions } from "./test-utils";
-import { Agent } from "../src/agents";
+import { Agent, buildRevertFunction } from "../src/agents";
 import {
     DEFAULT_GAME_OPTIONS,
     OPTION_KEYS,
@@ -15,6 +15,12 @@ import {
     MetadataManager,
     GameMetadata
 } from "../src/config";
+
+class Dummy extends Agent {
+    constructor(public name: string, public health: number) {
+        super();
+    }
+}
 
 describe("Game API", function() {
     before(function() {
@@ -372,6 +378,36 @@ describe("Game API", function() {
             expect(response.output.error.message).to.equal(
                 "RegalError: No option overrides are allowed."
             );
+        });
+    });
+
+    describe("Game.postUndoCommand", function() {
+        it("Undo a simple operation", function() {
+            onStartCommand(game => {
+                game.state.foo = true;
+                game.state.dummy = new Dummy("Lars", 10);
+                return noop;
+            });
+
+            onPlayerCommand(command => game => {
+                game.state.foo = false;
+                game.state.dummy.name = command;
+                return noop;
+            });
+
+            const initResponse = Game.postPlayerCommand(
+                Game.postStartCommand().instance,
+                "Jimbo"
+            );
+
+            expect(initResponse.instance.state.foo).to.be.false;
+            expect(initResponse.instance.state.dummy.name).to.equal("Jimbo");
+
+            const undoResponse = Game.postUndoCommand(initResponse.instance);
+
+            expect(undoResponse.output.wasSuccessful).to.be.true;
+            expect(undoResponse.instance.state.foo).to.be.true;
+            expect(undoResponse.instance.state.dummy.name).to.equal("Lars");
         });
     });
 });
