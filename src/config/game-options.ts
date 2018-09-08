@@ -4,26 +4,29 @@ import { RegalError } from "../error";
  * Represents game options that are configurable by a Regal client.
  */
 export interface GameOptions {
+    /**
+     * Game options that can be overridden by a Regal client.
+     * Can be an array of strings or a boolean. Defaults to true.
+     *
+     * If an array of strings, these options will be configurable by a Regal client.
+     * Note that `allowOptions` is never configurable, and including it will throw an error.
+     *
+     * If `true`, all options except `allowOverrides` will be configurable.
+     *
+     * If `false`, no options will be configurable.
+     */
+    allowOverrides: string[] | boolean;
+
     /** Whether output of type `DEBUG` should be returned to the client. Defaults to false. */
     debug: boolean;
-
-    /**
-     * Game options that cannot be changed by a Regal client.
-     * Can be an array of strings or a boolean.
-     *
-     * If an array of strings, these options will not be configurable by a Regal client.
-     * If `true`, no options will be configurable.
-     * If `false`, all options will be configurable.
-     */
-    forbidChanges: string[] | boolean;
 
     /** Whether output of type `MINOR` should be returned to the client. Defaults to true. */
     showMinor: boolean;
 }
 
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
+    allowOverrides: true,
     debug: false,
-    forbidChanges: false,
     showMinor: true
 };
 
@@ -55,18 +58,24 @@ export const validateOptions = (options: Partial<GameOptions>): void => {
 
     checkTypeIfDefined("debug", "boolean");
 
-    if (options.forbidChanges !== undefined) {
-        if (Array.isArray(options.forbidChanges)) {
-            options.forbidChanges.forEach(optionName => {
+    if (options.allowOverrides !== undefined) {
+        if (Array.isArray(options.allowOverrides)) {
+            options.allowOverrides.forEach(optionName => {
                 if (!OPTION_KEYS.includes(optionName)) {
                     throw new RegalError(
                         `The option <${optionName}> does not exist.`
                     );
                 }
             });
-        } else if (typeof options.forbidChanges !== "boolean") {
+
+            if (options.allowOverrides.includes("allowOverrides")) {
+                throw new RegalError(
+                    "The option <allowOverrides> is not allowed to be overridden."
+                );
+            }
+        } else if (typeof options.allowOverrides !== "boolean") {
             throw new RegalError(
-                `The option <forbidChanges> is of type <${typeof options.forbidChanges}>, must be of type <boolean> or <string[]>.`
+                `The option <allowOverrides> is of type <${typeof options.allowOverrides}>, must be of type <boolean> or <string[]>.`
             );
         }
     }

@@ -13,11 +13,20 @@ import {
     enqueue,
     InstanceEvents
 } from "../src/events";
-import { log } from "./utils";
+import { log, getDemoMetadata } from "./test-utils";
 import { Agent, PropertyOperation, StaticAgentRegistry } from "../src/agents";
 import { OutputLineType } from "../src/output";
+import { MetadataManager } from "../src/config";
 
 describe("Events", function() {
+    before(function() {
+        MetadataManager.forceConfig(getDemoMetadata());
+    });
+
+    after(function() {
+        MetadataManager.reset();
+    });
+
     it("The `on` function does not alter the inner event function", function() {
         const greet = on("GREET", game => {
             game.output.write("Hello, world!");

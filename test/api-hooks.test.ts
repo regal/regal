@@ -9,11 +9,20 @@ import {
 } from "../src/api-hooks";
 import GameInstance from "../src/game-instance";
 import { noop, on } from "../src/events";
-import { log } from "./utils";
+import { log, getDemoMetadata } from "./test-utils";
 import { PropertyOperation } from "../src/agents";
 import { RegalError } from "../src/error";
+import { MetadataManager } from "../src/config";
 
 describe("API Hooks", function() {
+    before(function() {
+        MetadataManager.forceConfig(getDemoMetadata());
+    });
+
+    after(function() {
+        MetadataManager.reset();
+    });
+
     beforeEach(function() {
         HookManager.resetHooks();
     });
