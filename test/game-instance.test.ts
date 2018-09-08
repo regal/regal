@@ -2,8 +2,18 @@ import { expect } from "chai";
 import "mocha";
 
 import GameInstance from "../src/game-instance";
+import { MetadataManager } from "../src/config";
+import { getDemoMetadata } from "./test-utils";
 
 describe("GameInstance", function() {
+    before(function() {
+        MetadataManager.forceConfig(getDemoMetadata());
+    });
+
+    after(function() {
+        MetadataManager.reset();
+    });
+
     it("Sanity check", function() {
         const myGame = new GameInstance();
         let game2 = myGame;
@@ -27,8 +37,7 @@ describe("GameInstance", function() {
 
     it("Cycling a game instance copies its options", function() {
         const former = new GameInstance({
-            debug: true,
-            allowOverrides: ["debug"]
+            debug: true
         });
         const current = former.cycle();
 

@@ -6,11 +6,25 @@ import { onPlayerCommand, onStartCommand } from "../src/api-hooks";
 import { noop } from "../src/events";
 import GameInstance from "../src/game-instance";
 import { OutputLineType } from "../src/output";
-import { log } from "./utils";
+import { log, getDemoMetadata, metadataWithOptions } from "./test-utils";
 import { Agent } from "../src/agents";
-import { DEFAULT_GAME_OPTIONS, OPTION_KEYS, GameOptions } from "../src/config";
+import {
+    DEFAULT_GAME_OPTIONS,
+    OPTION_KEYS,
+    GameOptions,
+    MetadataManager,
+    GameMetadata
+} from "../src/config";
 
 describe("Game API", function() {
+    before(function() {
+        MetadataManager.forceConfig(getDemoMetadata());
+    });
+
+    after(function() {
+        MetadataManager.reset();
+    });
+
     beforeEach(function() {
         resetGame();
     });
@@ -267,8 +281,8 @@ describe("Game API", function() {
                 debug: true
             });
             expect(options.debug).to.be.true;
-            expect(options.forbidChanges).to.equal(
-                DEFAULT_GAME_OPTIONS.forbidChanges
+            expect(options.allowOverrides).to.equal(
+                DEFAULT_GAME_OPTIONS.allowOverrides
             );
             expect(options.showMinor).to.equal(DEFAULT_GAME_OPTIONS.showMinor);
         });
@@ -307,6 +321,57 @@ describe("Game API", function() {
                 "RegalError: The option <debug> is of type <object>, must be of type <boolean>."
             );
             expect(response.instance).to.be.undefined;
+        });
+    });
+
+    describe("Game.postOptionCommand", function() {
+        it("Overriding an allowed option when nothing has yet been overridden", function() {
+            const myGame = new GameInstance();
+
+            expect(myGame.options.debug).to.be.false;
+
+            const response = Game.postOptionCommand(myGame, { debug: true });
+
+            expect(response.output.wasSuccessful).to.be.true;
+            expect(response.instance.options.debug).to.be.true;
+            expect(response.instance.options.overrides).to.deep.equal({
+                debug: true
+            });
+        });
+
+        it("Overriding options multiple times", function() {
+            let response = Game.postOptionCommand(new GameInstance(), {
+                debug: true,
+                showMinor: false
+            });
+
+            response = Game.postOptionCommand(response.instance, {
+                debug: false
+            });
+
+            expect(response.output.wasSuccessful).to.be.true;
+            expect(response.instance.options.debug).to.be.false;
+            expect(response.instance.options.showMinor).to.be.false;
+            expect(response.instance.options.overrides).to.deep.equal({
+                debug: false,
+                showMinor: false
+            });
+        });
+
+        it("Trying to override a forbidden option", function() {
+            MetadataManager.forceConfig(
+                metadataWithOptions({ allowOverrides: false })
+            );
+
+            const response = Game.postOptionCommand(new GameInstance(), {
+                debug: true
+            });
+
+            expect(response.instance).to.be.undefined;
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(
+                "RegalError: No option overrides are allowed."
+            );
         });
     });
 });

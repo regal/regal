@@ -5,14 +5,10 @@ import {
     GameOptions,
     validateOptions
 } from "./game-options";
+import { MetadataManager } from "./metadata";
 
 const OPTION_OVERRIDES_PROXY_HANDLER = {
-    set(
-        target: Partial<GameOptions>,
-        propertKey: PropertyKey,
-        value: any,
-        receiver: object
-    ) {
+    set() {
         throw new RegalError(
             "Cannot modify the properties of the InstanceOption option overrides."
         );
@@ -26,19 +22,14 @@ const INSTANCE_OPTIONS_PROXY_HANDLER = {
             : Reflect.get(target, propertyKey, receiver);
     },
 
-    set(
-        target: InstanceOptions,
-        propertKey: PropertyKey,
-        value: any,
-        receiver: object
-    ) {
+    set() {
         throw new RegalError(
             "Cannot modify the properties of InstanceOptions."
         );
     }
 };
 
-const ensureOverridesAllowed = (
+export const ensureOverridesAllowed = (
     overrides: Partial<GameOptions>,
     allowOverrides: string[] | boolean
 ): void => {
@@ -75,32 +66,28 @@ export class InstanceOptions implements GameOptions {
     public overrides: Readonly<Partial<GameOptions>>;
 
     constructor(public game: GameInstance, overrides: Partial<GameOptions>) {
-        this.overrides = new Proxy(overrides, OPTION_OVERRIDES_PROXY_HANDLER);
-
         validateOptions(overrides);
 
-        Object.keys(overrides).forEach(key => (this[key] = overrides[key]));
+        const configOpts = MetadataManager.getMetadata().options;
+        validateOptions(configOpts);
 
+        const allowOverrides =
+            configOpts.allowOverrides !== undefined
+                ? configOpts.allowOverrides
+                : DEFAULT_GAME_OPTIONS.allowOverrides;
+
+        ensureOverridesAllowed(overrides, allowOverrides);
+
+        const overrideKeys = Object.keys(overrides);
+        const configKeys = Object.keys(configOpts);
+
+        configKeys
+            .filter(key => !overrideKeys.includes(key))
+            .forEach(key => (this[key] = configOpts[key]));
+
+        overrideKeys.forEach(key => (this[key] = overrides[key]));
+
+        this.overrides = new Proxy(overrides, OPTION_OVERRIDES_PROXY_HANDLER);
         return new Proxy(this, INSTANCE_OPTIONS_PROXY_HANDLER);
-    }
-
-    public setOptions(newOpts: Partial<GameOptions>): void {
-        validateOptions(newOpts);
-        ensureOverridesAllowed(newOpts, this.allowOverrides);
-
-        const currentOverrideKeys = Object.keys(this.overrides);
-        const newOverrideKeys = Object.keys(newOpts);
-        const newOverrides: Partial<GameOptions> = {};
-
-        currentOverrideKeys
-            .filter(key => !newOverrideKeys.includes(key)) // Don't handle options that are going to get overridden.
-            .forEach(key => (newOverrides[key] = this.overrides[key]));
-
-        newOverrideKeys.forEach(key => {
-            newOverrides[key] = newOpts[key];
-            this[key] = newOpts[key];
-        });
-
-        this.overrides = newOverrides;
     }
 }

@@ -3,8 +3,18 @@ import "mocha";
 
 import GameInstance from "../src/game-instance";
 import { OutputLineType, InstanceOutput } from "../src/output";
+import { MetadataManager } from "../src/config";
+import { getDemoMetadata } from "./test-utils";
 
 describe("Output", function() {
+    before(function() {
+        MetadataManager.forceConfig(getDemoMetadata());
+    });
+
+    after(function() {
+        MetadataManager.reset();
+    });
+
     describe("Instance Output", function() {
         it("InstanceOutput.writeLine writes a normal line by default", function() {
             const myGame = new GameInstance();

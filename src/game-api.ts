@@ -127,7 +127,7 @@ export class Game {
 
     public static postOptionCommand(
         instance: GameInstance,
-        options: GameOptions
+        options: Partial<GameOptions>
     ): GameResponse {
         let newInstance: GameInstance;
         let err: RegalError;
@@ -135,8 +135,17 @@ export class Game {
         try {
             validateGameInstance(instance);
 
-            newInstance = instance.cycle();
-            newInstance.options.setOptions(options);
+            const oldOverrideKeys = Object.keys(instance.options.overrides);
+            const newOptionKeys = Object.keys(options);
+
+            const newOptions: Partial<GameOptions> = {};
+
+            oldOverrideKeys
+                .filter(key => !newOptionKeys.includes(key))
+                .forEach(key => (newOptions[key] = instance.options[key]));
+            newOptionKeys.forEach(key => (newOptions[key] = options[key]));
+
+            newInstance = instance.cycle(newOptions);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }

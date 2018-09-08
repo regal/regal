@@ -10,8 +10,9 @@ import {
     AgentReference,
     PropertyOperation
 } from "../src/agents";
-import { log } from "./utils";
+import { log, getDemoMetadata } from "./test-utils";
 import { on, noop, EventRecord } from "../src/events";
+import { MetadataManager } from "../src/config";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -20,6 +21,14 @@ class Dummy extends Agent {
 }
 
 describe("Agents", function() {
+    before(function() {
+        MetadataManager.forceConfig(getDemoMetadata());
+    });
+
+    after(function() {
+        MetadataManager.reset();
+    });
+
     beforeEach(function() {
         StaticAgentRegistry.resetRegistry();
     });

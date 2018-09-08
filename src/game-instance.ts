@@ -18,8 +18,11 @@ export default class GameInstance {
         this.state = new InstanceState(this);
     }
 
-    public cycle(): GameInstance {
-        const newGame = new GameInstance(this.options.overrides);
+    public cycle(newOptions?: Partial<GameOptions>): GameInstance {
+        const opts =
+            newOptions === undefined ? this.options.overrides : newOptions;
+
+        const newGame = new GameInstance(opts);
         newGame.events = this.events.cycle(newGame);
         newGame.agents = this.agents.cycle(newGame);
         newGame.output = this.output.cycle(newGame);

@@ -6,7 +6,7 @@ import { RegalError } from "../error";
 export interface GameOptions {
     /**
      * Game options that can be overridden by a Regal client.
-     * Can be an array of strings or a boolean.
+     * Can be an array of strings or a boolean. Defaults to true.
      *
      * If an array of strings, these options will be configurable by a Regal client.
      * Note that `allowOptions` is never configurable, and including it will throw an error.
@@ -25,7 +25,7 @@ export interface GameOptions {
 }
 
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
-    allowOverrides: false,
+    allowOverrides: true,
     debug: false,
     showMinor: true
 };
