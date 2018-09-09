@@ -2,7 +2,11 @@ import { expect } from "chai";
 import "mocha";
 
 import { Game, GameResponse, resetGame } from "../src/game-api";
-import { onPlayerCommand, onStartCommand } from "../src/api-hooks";
+import {
+    onPlayerCommand,
+    onStartCommand,
+    onBeforeUndoCommand
+} from "../src/api-hooks";
 import { noop } from "../src/events";
 import GameInstance from "../src/game-instance";
 import { OutputLineType } from "../src/output";
@@ -23,16 +27,13 @@ class Dummy extends Agent {
 }
 
 describe("Game API", function() {
-    before(function() {
+    beforeEach(function() {
+        resetGame();
         MetadataManager.forceConfig(getDemoMetadata());
     });
 
-    after(function() {
+    afterEach(function() {
         MetadataManager.reset();
-    });
-
-    beforeEach(function() {
-        resetGame();
     });
 
     describe("Game.postPlayerCommand", function() {
@@ -408,6 +409,24 @@ describe("Game API", function() {
             expect(undoResponse.output.wasSuccessful).to.be.true;
             expect(undoResponse.instance.state.foo).to.be.true;
             expect(undoResponse.instance.state.dummy.name).to.equal("Lars");
+        });
+
+        it("When the player uses onBeforeUndoCommand to block the undo, an error is thrown", function() {
+            onStartCommand(game => {
+                game.state.foo = false;
+                return noop;
+            });
+            onBeforeUndoCommand(game => game.state.foo);
+
+            const undoResponse = Game.postUndoCommand(
+                Game.postStartCommand().instance
+            );
+
+            expect(undoResponse.output.wasSuccessful).to.be.false;
+            expect(undoResponse.output.error.message).to.equal(
+                "RegalError: Undo is not allowed here."
+            );
+            expect(undoResponse.instance).to.be.undefined;
         });
     });
 });

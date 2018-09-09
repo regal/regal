@@ -8,7 +8,8 @@ import {
     StaticAgentRegistry,
     AgentRecord,
     AgentReference,
-    PropertyOperation
+    PropertyOperation,
+    buildRevertFunction
 } from "../src/agents";
 import { log, getDemoMetadata } from "./test-utils";
 import { on, noop, EventRecord } from "../src/events";
@@ -21,16 +22,13 @@ class Dummy extends Agent {
 }
 
 describe("Agents", function() {
-    before(function() {
+    beforeEach(function() {
+        StaticAgentRegistry.resetRegistry();
         MetadataManager.forceConfig(getDemoMetadata());
     });
 
-    after(function() {
+    afterEach(function() {
         MetadataManager.reset();
-    });
-
-    beforeEach(function() {
-        StaticAgentRegistry.resetRegistry();
     });
 
     describe("Agent Behavior", function() {
@@ -1089,6 +1087,39 @@ describe("Agents", function() {
                     ]
                 }
             });
+        });
+    });
+
+    describe("Reverting", function() {
+        it("Reverting a simple operation", function() {
+            const start = on("START", game => {
+                game.state.foo = true;
+                game.state.dummy = new Dummy("Lars", 10);
+                return noop;
+            });
+
+            const mod = (name: string) =>
+                on("MOD", game => {
+                    game.state.foo = false;
+                    game.state.dummy.name = name;
+                    return noop;
+                });
+
+            const myGame = new GameInstance();
+            start(myGame);
+            mod("Jimbo")(myGame);
+
+            expect(myGame.state.foo).to.be.false;
+            expect(myGame.state.dummy.name).to.equal("Jimbo");
+            expect(myGame.state.dummy.health).to.equal(10);
+
+            const revert = buildRevertFunction(myGame.agents);
+            revert(myGame);
+            log(myGame);
+
+            expect(myGame.state.foo).to.be.true;
+            expect(myGame.state.dummy.name).to.equal("Lars");
+            expect(myGame.state.dummy.health).to.equal(10);
         });
     });
 });

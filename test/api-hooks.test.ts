@@ -15,16 +15,13 @@ import { RegalError } from "../src/error";
 import { MetadataManager } from "../src/config";
 
 describe("API Hooks", function() {
-    before(function() {
+    beforeEach(function() {
+        HookManager.resetHooks();
         MetadataManager.forceConfig(getDemoMetadata());
     });
 
-    after(function() {
+    afterEach(function() {
         MetadataManager.reset();
-    });
-
-    beforeEach(function() {
-        HookManager.resetHooks();
     });
 
     it("playerCommandHook starts out undefined", function() {

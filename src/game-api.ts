@@ -127,7 +127,9 @@ export class Game {
         try {
             validateGameInstance(instance);
 
-            // TODO - include onBeforeUndoCommand hook
+            if (!HookManager.beforeUndoCommandHook(instance)) {
+                throw new RegalError("Undo is not allowed here.");
+            }
 
             newInstance = instance.cycle();
             buildRevertFunction(instance.agents)(newInstance);
