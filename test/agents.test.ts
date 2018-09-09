@@ -1113,9 +1113,8 @@ describe("Agents", function() {
             expect(myGame.state.dummy.name).to.equal("Jimbo");
             expect(myGame.state.dummy.health).to.equal(10);
 
-            const revert = buildRevertFunction(myGame.agents);
+            const revert = buildRevertFunction(myGame.agents, 1);
             revert(myGame);
-            log(myGame);
 
             expect(myGame.state.foo).to.be.true;
             expect(myGame.state.dummy.name).to.equal("Lars");
