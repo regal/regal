@@ -19,11 +19,11 @@ import { OutputLineType } from "../src/output";
 import { MetadataManager } from "../src/config";
 
 describe("Events", function() {
-    before(function() {
+    beforeEach(function() {
         MetadataManager.forceConfig(getDemoMetadata());
     });
 
-    after(function() {
+    afterEach(function() {
         MetadataManager.reset();
     });
 

@@ -2,12 +2,16 @@ import { expect } from "chai";
 import "mocha";
 
 import { Game, GameResponse, resetGame } from "../src/game-api";
-import { onPlayerCommand, onStartCommand } from "../src/api-hooks";
+import {
+    onPlayerCommand,
+    onStartCommand,
+    onBeforeUndoCommand
+} from "../src/api-hooks";
 import { noop } from "../src/events";
 import GameInstance from "../src/game-instance";
 import { OutputLineType } from "../src/output";
 import { log, getDemoMetadata, metadataWithOptions } from "./test-utils";
-import { Agent } from "../src/agents";
+import { Agent, buildRevertFunction } from "../src/agents";
 import {
     DEFAULT_GAME_OPTIONS,
     OPTION_KEYS,
@@ -16,17 +20,20 @@ import {
     GameMetadata
 } from "../src/config";
 
+class Dummy extends Agent {
+    constructor(public name: string, public health: number) {
+        super();
+    }
+}
+
 describe("Game API", function() {
-    before(function() {
+    beforeEach(function() {
+        resetGame();
         MetadataManager.forceConfig(getDemoMetadata());
     });
 
-    after(function() {
+    afterEach(function() {
         MetadataManager.reset();
-    });
-
-    beforeEach(function() {
-        resetGame();
     });
 
     describe("Game.postPlayerCommand", function() {
@@ -372,6 +379,54 @@ describe("Game API", function() {
             expect(response.output.error.message).to.equal(
                 "RegalError: No option overrides are allowed."
             );
+        });
+    });
+
+    describe("Game.postUndoCommand", function() {
+        it("Undo a simple operation", function() {
+            onStartCommand(game => {
+                game.state.foo = true;
+                game.state.dummy = new Dummy("Lars", 10);
+                return noop;
+            });
+
+            onPlayerCommand(command => game => {
+                game.state.foo = false;
+                game.state.dummy.name = command;
+                return noop;
+            });
+
+            const initResponse = Game.postPlayerCommand(
+                Game.postStartCommand().instance,
+                "Jimbo"
+            );
+
+            expect(initResponse.instance.state.foo).to.be.false;
+            expect(initResponse.instance.state.dummy.name).to.equal("Jimbo");
+
+            const undoResponse = Game.postUndoCommand(initResponse.instance);
+
+            expect(undoResponse.output.wasSuccessful).to.be.true;
+            expect(undoResponse.instance.state.foo).to.be.true;
+            expect(undoResponse.instance.state.dummy.name).to.equal("Lars");
+        });
+
+        it("When the player uses onBeforeUndoCommand to block the undo, an error is thrown", function() {
+            onStartCommand(game => {
+                game.state.foo = false;
+                return noop;
+            });
+            onBeforeUndoCommand(game => game.state.foo);
+
+            const undoResponse = Game.postUndoCommand(
+                Game.postStartCommand().instance
+            );
+
+            expect(undoResponse.output.wasSuccessful).to.be.false;
+            expect(undoResponse.output.error.message).to.equal(
+                "RegalError: Undo is not allowed here."
+            );
+            expect(undoResponse.instance).to.be.undefined;
         });
     });
 });

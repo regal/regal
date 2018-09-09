@@ -1,6 +1,6 @@
-import { StaticAgentRegistry } from "./agents";
+import { buildRevertFunction, StaticAgentRegistry } from "./agents";
 import { HookManager } from "./api-hooks";
-import { GameOptions, OPTION_KEYS } from "./config";
+import { GameOptions, MetadataManager, OPTION_KEYS } from "./config";
 import { RegalError } from "./error";
 import GameInstance from "./game-instance";
 import { GameOutput } from "./output";
@@ -121,8 +121,35 @@ export class Game {
     }
 
     public static postUndoCommand(instance: GameInstance): GameResponse {
-        // TODO
-        throw new Error("Method not implemented.");
+        let newInstance: GameInstance;
+        let err: RegalError;
+
+        try {
+            validateGameInstance(instance);
+
+            if (!HookManager.beforeUndoCommandHook(instance)) {
+                throw new RegalError("Undo is not allowed here.");
+            }
+
+            newInstance = instance.cycle();
+            buildRevertFunction(instance.agents)(newInstance);
+        } catch (error) {
+            err = wrapApiErrorAsRegalError(error);
+        }
+
+        return err !== undefined
+            ? {
+                  output: {
+                      error: err,
+                      wasSuccessful: false
+                  }
+              }
+            : {
+                  instance: newInstance,
+                  output: {
+                      wasSuccessful: true
+                  }
+              };
     }
 
     public static postOptionCommand(

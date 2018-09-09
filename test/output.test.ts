@@ -7,11 +7,11 @@ import { MetadataManager } from "../src/config";
 import { getDemoMetadata } from "./test-utils";
 
 describe("Output", function() {
-    before(function() {
+    beforeEach(function() {
         MetadataManager.forceConfig(getDemoMetadata());
     });
 
-    after(function() {
+    afterEach(function() {
         MetadataManager.reset();
     });
 
