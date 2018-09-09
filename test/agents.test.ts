@@ -387,14 +387,13 @@ describe("Agents", function() {
             on("MODIFY", game => {
                 const myDummy = dummy.register(game);
                 myDummy.health += 15;
-                myDummy.name = "Jeff";
                 myDummy["newProp"] = "newValue";
 
                 return noop;
             })(myGame);
 
             expect(myGame.agents.getAgentProperty(1, "health")).to.equal(25);
-            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Jeff");
+            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("D1");
             expect(myGame.agents.getAgentProperty(1, "newProp")).to.equal(
                 "newValue"
             );
@@ -1091,7 +1090,7 @@ describe("Agents", function() {
     });
 
     describe("Reverting", function() {
-        it("Reverting a simple operation", function() {
+        it("Reverting the effects of one event to the one before", function() {
             const start = on("START", game => {
                 game.state.foo = true;
                 game.state.dummy = new Dummy("Lars", 10);
@@ -1119,6 +1118,140 @@ describe("Agents", function() {
             expect(myGame.state.foo).to.be.true;
             expect(myGame.state.dummy.name).to.equal("Lars");
             expect(myGame.state.dummy.health).to.equal(10);
+        });
+
+        it("Reverting the effects of many events back to the first one", function() {
+            const init = on("INIT", game => {
+                game.state.foo = "Hello, world!";
+                return noop;
+            });
+
+            const mod = (num: number) =>
+                on(`MOD ${num}`, game => {
+                    game.state.foo += `-${num}`;
+                    game.state[num] = `Yo ${num}`;
+                    return noop;
+                });
+
+            const myGame = new GameInstance();
+            init(myGame);
+
+            for (let x = 0; x < 10; x++) {
+                mod(x)(myGame);
+            }
+
+            expect(myGame.state.foo).to.equal(
+                "Hello, world!-0-1-2-3-4-5-6-7-8-9"
+            );
+            expect(myGame.state[0]).to.equal("Yo 0");
+            expect(myGame.state[5]).to.equal("Yo 5");
+            expect(myGame.state[9]).to.equal("Yo 9");
+
+            const revert = buildRevertFunction(myGame.agents, 1);
+            revert(myGame);
+
+            expect(myGame.state.foo).to.equal("Hello, world!");
+            expect(myGame.state[0]).to.be.undefined;
+            expect(myGame.state[5]).to.be.undefined;
+            expect(myGame.state[9]).to.be.undefined;
+        });
+
+        it("Reverting the effects of many events over multiple steps", function() {
+            const init = on("INIT", game => {
+                game.state.foo = "Hello, world!";
+                return noop;
+            });
+
+            const mod = (num: number) =>
+                on(`MOD ${num}`, game => {
+                    game.state.foo += `-${num}`;
+                    game.state[num] = `Yo ${num}`;
+                    return noop;
+                });
+
+            const myGame = new GameInstance();
+            init(myGame);
+
+            for (let x = 0; x < 10; x++) {
+                mod(x)(myGame);
+            }
+
+            expect(myGame.state.foo).to.equal(
+                "Hello, world!-0-1-2-3-4-5-6-7-8-9"
+            );
+            expect(myGame.state[0]).to.equal("Yo 0");
+            expect(myGame.state[5]).to.equal("Yo 5");
+            expect(myGame.state[9]).to.equal("Yo 9");
+
+            buildRevertFunction(myGame.agents, 8)(myGame);
+
+            expect(myGame.state.foo).to.equal("Hello, world!-0-1-2-3-4-5-6");
+            expect(myGame.state[0]).to.equal("Yo 0");
+            expect(myGame.state[5]).to.equal("Yo 5");
+            expect(myGame.state[9]).to.be.undefined;
+
+            buildRevertFunction(myGame.agents, 6)(myGame);
+
+            expect(myGame.state.foo).to.equal("Hello, world!-0-1-2-3-4");
+            expect(myGame.state[0]).to.equal("Yo 0");
+            expect(myGame.state[5]).to.be.undefined;
+            expect(myGame.state[9]).to.be.undefined;
+
+            buildRevertFunction(myGame.agents, 4)(myGame);
+
+            expect(myGame.state.foo).to.equal("Hello, world!-0-1-2");
+            expect(myGame.state[0]).to.equal("Yo 0");
+            expect(myGame.state[5]).to.be.undefined;
+            expect(myGame.state[9]).to.be.undefined;
+
+            buildRevertFunction(myGame.agents, 1)(myGame);
+
+            expect(myGame.state.foo).to.equal("Hello, world!");
+            expect(myGame.state[0]).to.be.undefined;
+            expect(myGame.state[5]).to.be.undefined;
+            expect(myGame.state[9]).to.be.undefined;
+        });
+
+        it("Reverting to before an agent was registered", function() {
+            const init = on("INIT", game => {
+                game.state.foo = "Hello, world!";
+                game.state.dummy = new Dummy("Lars", 10);
+                return noop;
+            });
+
+            const myGame = new GameInstance();
+            init(myGame);
+            buildRevertFunction(myGame.agents, 0)(myGame);
+
+            expect(myGame.state.foo).to.be.undefined;
+            expect(myGame.state.dummy).to.be.undefined;
+            expect(myGame.agents.getAgentProperty(1, "name")).to.be.undefined;
+            expect(myGame.agents.getAgentProperty(1, "health")).to.be.undefined;
+        });
+
+        it("Reverting changes to static agents", function() {
+            const staticDummy = new Dummy("Lars", 15).static();
+
+            const myGame = new GameInstance();
+            on("FUNC", game => {
+                const dummy = staticDummy.register(game);
+                dummy.name = "Jimbo";
+                dummy["bippity"] = "boppity";
+                return noop;
+            })(myGame);
+
+            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Jimbo");
+            expect(myGame.agents.getAgentProperty(1, "health")).to.equal(15);
+            expect(myGame.agents.getAgentProperty(1, "bippity")).to.equal(
+                "boppity"
+            );
+
+            buildRevertFunction(myGame.agents)(myGame);
+
+            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Lars");
+            expect(myGame.agents.getAgentProperty(1, "health")).to.equal(15);
+            expect(myGame.agents.getAgentProperty(1, "bippity")).to.be
+                .undefined;
         });
     });
 });

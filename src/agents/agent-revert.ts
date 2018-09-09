@@ -1,9 +1,8 @@
-import { EventRecord, noop, on } from "../events";
+import { noop, on } from "../events";
 import { Agent } from "./agent-model";
 import { AgentRecord, PropertyChange } from "./agent-record";
 import { InstanceAgents, propertyIsAgentId } from "./instance-agents";
-
-// TODO - test more completely; especially with static agents
+import { StaticAgentRegistry } from "./static-agent";
 
 /**
  * Builds a `TrackedEvent` that reverts all the changes to a given `InstanceAgents` since a specified event.
@@ -11,36 +10,51 @@ import { InstanceAgents, propertyIsAgentId } from "./instance-agents";
  * Does not modify the `InstanceAgents` argument.
  *
  * @param agents The agent history on which the revert function will be based.
- * @param revertTo The id of the `TrackedEvent` to which the state will be reverted.
+ * @param revertTo The id of the `TrackedEvent` to which the state will be reverted. Defaults to 0 (the default event id).
  * @returns A `TrackedEvent` that will perform the revert function onto the `GameInstance` on which it's invoked.
  */
 export const buildRevertFunction = (
     agents: InstanceAgents,
     revertTo: number = 0
 ) => {
-    const agentKeys = Object.keys(agents).filter(propertyIsAgentId);
-    const agentRecords = agentKeys.map(key => agents[key] as AgentRecord);
+    const agentIds = Object.keys(agents)
+        .filter(propertyIsAgentId)
+        .map(idStr => Number.parseInt(idStr, 10));
 
     return on("REVERT", game => {
         const target = game.agents;
 
-        agentRecords.forEach(record => {
+        agentIds.forEach(id => {
+            const record = agents[id] as AgentRecord;
             const recordKeys = Object.keys(record);
-            const id = record.getProperty("_id");
 
+            // Proxy for all changes
             const agent = new Agent(id, target.game);
 
             recordKeys
+                // Exclude game and id properties
                 .filter(key => key !== "game" && key !== "_id")
                 .forEach(key => {
                     const changelog: PropertyChange[] = record[key];
-                    const lastAcceptableChangeIndex = changelog.findIndex(
-                        pc => pc.eventId === revertTo
+
+                    // Get the changes that happened before the target event
+                    const acceptableChanges = changelog.filter(
+                        change => change.eventId <= revertTo
                     );
 
-                    if (lastAcceptableChangeIndex !== -1) {
-                        const lastAcceptableValue =
-                            changelog[lastAcceptableChangeIndex].final;
+                    if (acceptableChanges.length === 0) {
+                        // If all changes to the property happened after the target event, delete/reset it
+                        if (StaticAgentRegistry.hasAgentProperty(id, key)) {
+                            agent[key] = StaticAgentRegistry.getAgentProperty(
+                                id,
+                                key
+                            );
+                        } else {
+                            delete agent[key];
+                        }
+                    } else {
+                        // Otherwise, set the property to its value right after the target event
+                        const lastAcceptableValue = acceptableChanges[0].final;
 
                         if (
                             target.getAgentProperty(id, key) !==
@@ -49,12 +63,6 @@ export const buildRevertFunction = (
                             agent[key] = lastAcceptableValue;
                         }
                     }
-
-                    // if (changelog.length > 1) {
-                    //     const firstValue =
-                    //         changelog[changelog.length - 1].final;
-                    //     agent[key] = firstValue;
-                    // }
                 });
         });
 

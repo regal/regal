@@ -63,6 +63,14 @@ export class InstanceAgents {
             }
         } else {
             value = agentRecord.getProperty(property);
+
+            if (
+                value === undefined &&
+                !agentRecord.propertyWasDeleted(property) &&
+                StaticAgentRegistry.hasAgentProperty(agentId, property)
+            ) {
+                value = StaticAgentRegistry.getAgentProperty(agentId, property);
+            }
         }
 
         if (isAgentReference(value)) {
