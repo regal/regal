@@ -1,4 +1,10 @@
+import * as cosmiconfig from "cosmiconfig";
+import { RegalError } from "../error";
 import { GameOptions } from "./game-options";
+
+const explorer = cosmiconfig("regal", {
+    searchPlaces: ["package.json", "regal.json"]
+});
 
 /**
  * Metadata about the game, such as its title and author.
@@ -26,22 +32,55 @@ export interface GameMetadata {
     options: Partial<GameOptions>;
 }
 
-const accessConfigFile = (): GameMetadata => {
-    throw new Error("Not yet implemented."); // TODO
-};
+const metadataOptionalStrings = [
+    "author",
+    "headline",
+    "description",
+    "homepage",
+    "repository"
+];
 
 export class MetadataManager {
+    public static configLocation: string;
+
     public static getMetadata(): GameMetadata {
-        return this._retrievalFunction();
+        return MetadataManager._retrievalFunction();
     }
 
     public static forceConfig(config: GameMetadata): void {
-        this._retrievalFunction = () => config;
+        MetadataManager._retrievalFunction = () => config;
     }
 
     public static reset(): void {
-        this._retrievalFunction = accessConfigFile;
+        MetadataManager._retrievalFunction = MetadataManager._accessConfigFile;
+        MetadataManager.configLocation = undefined;
     }
 
-    private static _retrievalFunction = accessConfigFile;
+    /* tslint:disable:member-ordering */
+
+    private static _accessConfigFile = (): GameMetadata => {
+        const result =
+            MetadataManager.configLocation === undefined
+                ? explorer.searchSync()
+                : explorer.searchSync(MetadataManager.configLocation);
+
+        if (result.isEmpty) {
+            throw new RegalError("No metadata could be found for the game.");
+        }
+
+        const metadata: GameMetadata = {
+            name: result.config.name as string,
+            options: result.config.options as Partial<GameOptions>
+        };
+
+        metadataOptionalStrings.forEach(key => {
+            if (result.config[key] !== undefined) {
+                metadata[key] = result.config[key];
+            }
+        });
+
+        return metadata;
+    };
+
+    private static _retrievalFunction = MetadataManager._accessConfigFile;
 }

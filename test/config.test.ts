@@ -212,4 +212,14 @@ describe("Config", function() {
             );
         });
     });
+
+    describe("accessConfigFile", function() {
+        it.skip("Throw error when no metadata could be found for the game", function() {
+            MetadataManager.reset();
+            expect(() => MetadataManager.getMetadata()).to.throw(
+                RegalError,
+                "No metadata could be found for the game."
+            );
+        });
+    });
 });

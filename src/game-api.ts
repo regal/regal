@@ -1,6 +1,6 @@
 import { buildRevertFunction, StaticAgentRegistry } from "./agents";
 import { HookManager } from "./api-hooks";
-import { GameOptions, MetadataManager, OPTION_KEYS } from "./config";
+import { GameMetadata, GameOptions, MetadataManager } from "./config";
 import { RegalError } from "./error";
 import GameInstance from "./game-instance";
 import { GameOutput } from "./output";
@@ -64,8 +64,21 @@ const buildLogResponse = (err: RegalError, newInstance: GameInstance) => {
 
 export class Game {
     public static getMetadataCommand(): GameResponse {
-        // TODO
-        throw new Error("Method not implemented.");
+        let metadata: GameMetadata;
+        let err: RegalError;
+
+        try {
+            metadata = MetadataManager.getMetadata();
+        } catch (error) {
+            err = wrapApiErrorAsRegalError(error);
+        }
+
+        const output =
+            err !== undefined
+                ? { error: err, wasSuccessful: false }
+                : { metadata, wasSuccessful: true };
+
+        return { output };
     }
 
     public static postPlayerCommand(
