@@ -1,3 +1,5 @@
+<span style="color:red">**Warning: This page is outdated and should not be used as a reliable reference. It is only being kept in the repository for historical purposes until the next release.**</span>
+
 # Agents
 
 *Regal Specification 0.3*
