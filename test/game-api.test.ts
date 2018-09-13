@@ -429,4 +429,26 @@ describe("Game API", function() {
             expect(undoResponse.instance).to.be.undefined;
         });
     });
+
+    describe("Game.getMetadataCommand", function() {
+        it("Get metadata after it's been set", function() {
+            const response = Game.getMetadataCommand();
+
+            expect(response.instance).to.be.undefined;
+            expect(response.output.wasSuccessful).to.be.true;
+            expect(response.output.metadata).to.deep.equal(getDemoMetadata());
+        });
+
+        it("Catch the error if metadata has not been set", function() {
+            MetadataManager.reset();
+            const response = Game.getMetadataCommand();
+
+            expect(response.instance).to.be.undefined;
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.metadata).to.be.undefined;
+            expect(response.output.error.message).to.equal(
+                "RegalError: Metadata is not defined. Did you remember to load the config?"
+            );
+        });
+    });
 });
