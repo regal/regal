@@ -1,3 +1,4 @@
+import { RegalError } from "../error";
 import { GameOptions } from "./game-options";
 
 /**
@@ -26,22 +27,26 @@ export interface GameMetadata {
     options: Partial<GameOptions>;
 }
 
-const accessConfigFile = (): GameMetadata => {
-    throw new Error("Not yet implemented."); // TODO
-};
-
 export class MetadataManager {
+    public static configLocation: string;
+
     public static getMetadata(): GameMetadata {
-        return this._retrievalFunction();
+        if (MetadataManager._metadata === undefined) {
+            throw new RegalError(
+                "Metadata is not defined. Did you remember to load the config?"
+            );
+        }
+
+        return MetadataManager._metadata;
     }
 
-    public static forceConfig(config: GameMetadata): void {
-        this._retrievalFunction = () => config;
+    public static setMetadata(metadata: GameMetadata): void {
+        MetadataManager._metadata = metadata;
     }
 
     public static reset(): void {
-        this._retrievalFunction = accessConfigFile;
+        MetadataManager._metadata = undefined;
     }
 
-    private static _retrievalFunction = accessConfigFile;
+    private static _metadata: GameMetadata;
 }

@@ -14,7 +14,7 @@ import { getDemoMetadata, metadataWithOptions } from "./test-utils";
 
 describe("Config", function() {
     beforeEach(function() {
-        MetadataManager.forceConfig(getDemoMetadata());
+        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     afterEach(function() {
@@ -50,7 +50,7 @@ describe("Config", function() {
             // allowOverrides cannot be overridden, so the following tests require changing the metadata config
 
             it("GameOptions.allowOverrides VALID: boolean", function() {
-                MetadataManager.forceConfig(
+                MetadataManager.setMetadata(
                     metadataWithOptions({ allowOverrides: true })
                 );
 
@@ -60,7 +60,7 @@ describe("Config", function() {
             });
 
             it("GameOptions.allowOverrides VALID: empty array", function() {
-                MetadataManager.forceConfig(
+                MetadataManager.setMetadata(
                     metadataWithOptions({ allowOverrides: [] })
                 );
 
@@ -70,7 +70,7 @@ describe("Config", function() {
             });
 
             it("GameOptions.allowOverrides VALID: valid array", function() {
-                MetadataManager.forceConfig(
+                MetadataManager.setMetadata(
                     metadataWithOptions({
                         allowOverrides: ["debug", "showMinor"]
                     })
@@ -85,7 +85,7 @@ describe("Config", function() {
             });
 
             it("GameOptions.allowOverrides INVALID: mistype", function() {
-                MetadataManager.forceConfig(
+                MetadataManager.setMetadata(
                     metadataWithOptions(<any>{ allowOverrides: 3 })
                 );
                 expect(() => new GameInstance()).to.throw(
@@ -95,7 +95,7 @@ describe("Config", function() {
             });
 
             it("GameOptions.allowOverrides INVALID: illegal array", function() {
-                MetadataManager.forceConfig(
+                MetadataManager.setMetadata(
                     metadataWithOptions({ allowOverrides: ["debug", "blark"] })
                 );
                 expect(() => new GameInstance()).to.throw(
@@ -105,7 +105,7 @@ describe("Config", function() {
             });
 
             it("GameOptions.allowOverrides INVALID: allowing allowOverrides", function() {
-                MetadataManager.forceConfig(
+                MetadataManager.setMetadata(
                     metadataWithOptions({ allowOverrides: ["allowOverrides"] })
                 );
                 expect(() => new GameInstance()).to.throw(
@@ -202,13 +202,23 @@ describe("Config", function() {
         });
 
         it("InstanceOptions cannot be created with forbidden options", function() {
-            MetadataManager.forceConfig(
+            MetadataManager.setMetadata(
                 metadataWithOptions({ allowOverrides: ["debug"] })
             );
 
             expect(() => new GameInstance({ showMinor: false })).to.throw(
                 RegalError,
                 "The following option overrides are forbidden: <showMinor>."
+            );
+        });
+    });
+
+    describe("Metadata", function() {
+        it("Throw error when no metadata has been set", function() {
+            MetadataManager.reset();
+            expect(() => MetadataManager.getMetadata()).to.throw(
+                RegalError,
+                "Metadata is not defined. Did you remember to load the config?"
             );
         });
     });

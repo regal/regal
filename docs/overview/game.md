@@ -1,3 +1,5 @@
+<span style="color:red">**Warning: This page is outdated and should not be used as a reliable reference. It is only being kept in the repository for historical purposes until the next release.**</span>
+
 # Game
 
 The Regal `Game` object is the API through which games are played. 
@@ -318,6 +320,8 @@ The complete schema of `regal.json` is as follows:
 **options** | object | Default values for the game's options. (See below.)
 
 None of the above properties are required, nor is a `regal.json` file even required. For every property except `headline`, if that property is omitted, its value will be retrieved from `package.json`. If a property exists in both `regal.json` and `package.json`, the value from `regal.json` will be used.
+
+When the game is run via node, the values are accessed dynamically from the Regal config file. TODO: Bundle
 
 #### `GameMetadata` Interface
 

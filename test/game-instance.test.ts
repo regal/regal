@@ -7,7 +7,7 @@ import { getDemoMetadata } from "./test-utils";
 
 describe("GameInstance", function() {
     beforeEach(function() {
-        MetadataManager.forceConfig(getDemoMetadata());
+        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     afterEach(function() {

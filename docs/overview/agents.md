@@ -1,3 +1,5 @@
+<span style="color:red">**Warning: This page is outdated and should not be used as a reliable reference. It is only being kept in the repository for historical purposes until the next release.**</span>
+
 # Agents
 
 Games built on the Regal Framework consist of two main parts: *Event Functions* and *Agents*. Whereas Event Functions can be thought to describe any change that occurs within your game, Agents are the objects on which the changes take place.
