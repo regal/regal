@@ -1,0 +1,14 @@
+{
+    "regal": {
+        "name": "Test game 2",
+        "author": "Bob Developer",
+        "headline": "Test game 2 headline",
+        "description": "Test game 2 description.",
+        "homepage": "Test game homepage 2",
+        "repository": "Test game repo 2",
+        "options": {
+                "debug": true,
+                "allowOverrides": false
+        }
+    }
+}
