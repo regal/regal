@@ -8,7 +8,7 @@ import { getDemoMetadata } from "./test-utils";
 
 describe("Output", function() {
     beforeEach(function() {
-        MetadataManager.forceConfig(getDemoMetadata());
+        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     afterEach(function() {

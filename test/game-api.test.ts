@@ -29,7 +29,7 @@ class Dummy extends Agent {
 describe("Game API", function() {
     beforeEach(function() {
         resetGame();
-        MetadataManager.forceConfig(getDemoMetadata());
+        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     afterEach(function() {
@@ -366,7 +366,7 @@ describe("Game API", function() {
         });
 
         it("Trying to override a forbidden option", function() {
-            MetadataManager.forceConfig(
+            MetadataManager.setMetadata(
                 metadataWithOptions({ allowOverrides: false })
             );
 

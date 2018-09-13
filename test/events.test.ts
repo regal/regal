@@ -20,7 +20,7 @@ import { MetadataManager } from "../src/config";
 
 describe("Events", function() {
     beforeEach(function() {
-        MetadataManager.forceConfig(getDemoMetadata());
+        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     afterEach(function() {

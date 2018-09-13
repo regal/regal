@@ -24,7 +24,7 @@ class Dummy extends Agent {
 describe("Agents", function() {
     beforeEach(function() {
         StaticAgentRegistry.resetRegistry();
-        MetadataManager.forceConfig(getDemoMetadata());
+        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     afterEach(function() {

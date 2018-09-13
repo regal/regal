@@ -17,7 +17,7 @@ import { MetadataManager } from "../src/config";
 describe("API Hooks", function() {
     beforeEach(function() {
         HookManager.resetHooks();
-        MetadataManager.forceConfig(getDemoMetadata());
+        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     afterEach(function() {
