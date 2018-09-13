@@ -213,12 +213,12 @@ describe("Config", function() {
         });
     });
 
-    describe("accessConfigFile", function() {
-        it.skip("Throw error when no metadata could be found for the game", function() {
+    describe("Metadata", function() {
+        it("Throw error when no metadata has been set", function() {
             MetadataManager.reset();
             expect(() => MetadataManager.getMetadata()).to.throw(
                 RegalError,
-                "No metadata could be found for the game."
+                "Metadata is not defined. Did you remember to load the config?"
             );
         });
     });
