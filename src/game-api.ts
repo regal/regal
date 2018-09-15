@@ -1,3 +1,13 @@
+/**
+ * Contains the public-facing API for interaction with a Regal game.
+ *
+ * A client application will consume this API, using the endpoints to
+ * modify the game and receive output.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { buildRevertFunction, StaticAgentRegistry } from "./agents";
 import { HookManager } from "./api-hooks";
 import { GameMetadata, GameOptions, MetadataManager } from "./config";
@@ -5,6 +15,10 @@ import { RegalError } from "./error";
 import GameInstance from "./game-instance";
 import { GameOutput } from "./output";
 
+/**
+ * Throws an error if `instance` or any of its properties are undefined.
+ * @param instance The `GameInstance` to validate.
+ */
 const validateGameInstance = (instance: GameInstance): void => {
     if (
         instance === undefined ||
@@ -17,6 +31,12 @@ const validateGameInstance = (instance: GameInstance): void => {
     }
 };
 
+/**
+ * Wraps an error into a `RegalError` (if it's not already) that is
+ * parseable by a `GameResponse`.
+ *
+ * @param err Some error object; should have `name`, `stack`, and `message` properties.
+ */
 const wrapApiErrorAsRegalError = (err: any): RegalError => {
     if (!err || !err.name || !err.stack || !err.message) {
         return new RegalError("Invalid error object.");
@@ -37,7 +57,17 @@ const wrapApiErrorAsRegalError = (err: any): RegalError => {
     return newErr;
 };
 
-const buildLogResponse = (err: RegalError, newInstance: GameInstance) => {
+/**
+ * Helper function to build a `GameResponse` based on the return values of
+ * `Game.postPlayerCommand` or `Game.postStartCommand`, including any output logs.
+ *
+ * @param err Any error that was thrown. If defined, the response will be considered failed.
+ * @param newInstance The new `GameInstance` to be returned to the client.
+ */
+const buildLogResponse = (
+    err: RegalError,
+    newInstance: GameInstance
+): GameResponse => {
     let response: GameResponse;
 
     if (err !== undefined) {
@@ -62,7 +92,20 @@ const buildLogResponse = (err: RegalError, newInstance: GameInstance) => {
     return response;
 };
 
+/**
+ * Game API static class.
+ *
+ * Each method returns a `GameResponse` and does not modify
+ * any arguments passed into it.
+ */
 export class Game {
+    /**
+     * Gets the game's metadata. Note that this is not specific
+     * to any `GameInstance`, but refers to the game's static context.
+     *
+     * @returns A `GameResponse` containing the game's metadata as output,
+     * if the request was successful. Otherwise, the response will contain an error.
+     */
     public static getMetadataCommand(): GameResponse {
         let metadata: GameMetadata;
         let err: RegalError;
@@ -81,6 +124,16 @@ export class Game {
         return { output };
     }
 
+    /**
+     * Submits a command that was entered by the player, usually to trigger
+     * some effects in the `GameInstance`.
+     *
+     * @param instance The current game instance (will not be modified).
+     * @param command The player's command.
+     * @returns A `GameResponse` containing a new `GameInstance` with updated
+     * values and any output logged during the game cycle's events, if the request
+     * was successful. Otherwise, the response will contain an error.
+     */
     public static postPlayerCommand(
         instance: GameInstance,
         command: string
