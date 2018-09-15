@@ -1,4 +1,19 @@
-export * from "./agents"; // TODO - Decide what to export from agent.ts
+/**
+ * Public exports from the Regal Game Library.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
+export {
+    Agent,
+    AgentRecord,
+    PropertyOperation,
+    PropertyChange,
+    AgentReference,
+    InstanceAgents,
+    InstanceState
+} from "./agents";
 export {
     onPlayerCommand,
     onStartCommand,
