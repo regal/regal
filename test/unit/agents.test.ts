@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../src/game-instance";
-import { RegalError } from "../src/error";
+import GameInstance from "../../src/game-instance";
+import { RegalError } from "../../src/error";
 import {
     Agent,
     StaticAgentRegistry,
@@ -10,10 +10,10 @@ import {
     AgentReference,
     PropertyOperation,
     buildRevertFunction
-} from "../src/agents";
-import { log, getDemoMetadata } from "./test-utils";
-import { on, noop, EventRecord } from "../src/events";
-import { MetadataManager } from "../src/config";
+} from "../../src/agents";
+import { log, getDemoMetadata } from "../test-utils";
+import { on, noop, EventRecord } from "../../src/events";
+import { MetadataManager } from "../../src/config";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {

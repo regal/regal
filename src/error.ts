@@ -16,7 +16,7 @@ export class RegalError extends Error {
      * Constructs a `RegalError` with the given message.
      * @param message The error message, which will be prepended with "RegalError: ".
      */
-    constructor(message: string = "") {
+    constructor(message: string) {
         super(`RegalError: ${message}`);
         Object.setPrototypeOf(this, new.target.prototype);
     }

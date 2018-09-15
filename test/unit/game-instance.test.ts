@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../src/game-instance";
-import { MetadataManager } from "../src/config";
-import { getDemoMetadata } from "./test-utils";
+import GameInstance from "../../src/game-instance";
+import { MetadataManager } from "../../src/config";
+import { getDemoMetadata } from "../test-utils";
 
 describe("GameInstance", function() {
     beforeEach(function() {

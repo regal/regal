@@ -1,16 +1,16 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../src/game-instance";
-import { RegalError } from "../src/error";
+import GameInstance from "../../src/game-instance";
+import { RegalError } from "../../src/error";
 import {
     OPTION_KEYS,
     DEFAULT_GAME_OPTIONS,
     MetadataManager,
     ensureOverridesAllowed
-} from "../src/config";
-import { OutputLineType } from "../src/output";
-import { getDemoMetadata, metadataWithOptions } from "./test-utils";
+} from "../../src/config";
+import { OutputLineType } from "../../src/output";
+import { getDemoMetadata, metadataWithOptions } from "../test-utils";
 
 describe("Config", function() {
     beforeEach(function() {
