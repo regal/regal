@@ -1,9 +1,8 @@
 /**
- * Manager for all events in a GameInstance.
+ * Contains the manager for all events in a `GameInstance`.
  *
- * @since 0.3.0
- * @author Joe Cowman
- * @license MIT (see https://github.com/regal/regal)
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 import GameInstance from "../game-instance";
@@ -18,24 +17,7 @@ import { DEFAULT_EVENT_ID, EventRecord } from "./event-record";
 /**
  * Manager for all events in a GameInstance.
  */
-export class InstanceEvents {
-    /** Contains records of the past events executed during the game cycle. */
-    public history: EventRecord[] = [];
-
-    /** Internal member for the ID of the most recently generated EventRecord. */
-    private _lastEventId;
-    /** Internal queue of events that have yet to be executed. */
-    private _queue: EventRecord[] = [];
-
-    /**
-     * Constructs an InstanceEvents.
-     * @param game The game instance that owns this InstanceEvents.
-     * @param startingEventId Optional starting ID for new `EventRecord`s.
-     */
-    constructor(public game: GameInstance, startingEventId = DEFAULT_EVENT_ID) {
-        this._lastEventId = startingEventId;
-    }
-
+export default class InstanceEvents {
     /** The current EventRecord. */
     get current(): EventRecord {
         let event = this._queue[0];
@@ -51,10 +33,27 @@ export class InstanceEvents {
     get lastEventId() {
         return this._lastEventId;
     }
+    /** Contains records of the past events executed during the game cycle. */
+    public history: EventRecord[] = [];
+
+    /** Internal member for the ID of the most recently generated EventRecord. */
+    private _lastEventId;
+
+    /** Internal queue of events that have yet to be executed. */
+    private _queue: EventRecord[] = [];
+
+    /**
+     * Constructs an InstanceEvents.
+     * @param game The game instance that owns this `InstanceEvents`.
+     * @param startingEventId Optional starting ID for new `EventRecord`s.
+     */
+    constructor(public game: GameInstance, startingEventId = DEFAULT_EVENT_ID) {
+        this._lastEventId = startingEventId;
+    }
 
     /**
      * Executes the given event and all events caused by it.
-     * @param event The TrackedEvent to be invoked.
+     * @param event The `TrackedEvent` to be invoked.
      */
     public invoke(event: TrackedEvent): void {
         this._addEvent(event);
@@ -62,13 +61,23 @@ export class InstanceEvents {
     }
 
     /**
-     * Adds the event to the internal queue. If the event is an EventQueue,
-     * the event's immediateEvents are added to the front of the queue
-     * and the delayedEvents are added to the back of the queue.
-     * @param event The TrackedEvent to be added to the queue.
-     * @param cause The EventRecord to be recorded as the event's cause (optional).
+     * Creates a new `InstanceEvents` for the new game cycle.
+     * **Don't call this unless you know what you're doing.**
+     * @param current The `GameInstance` for the new game cycle.
      */
-    public _addEvent(event: TrackedEvent, cause?: EventRecord): void {
+    public cycle(current: GameInstance): InstanceEvents {
+        return new InstanceEvents(current, this.lastEventId);
+    }
+
+    /**
+     * Adds the event to the internal queue. If the event is an `EventQueue`,
+     * the event's `immediateEvents` are added to the front of the queue
+     * and the `delayedEvents` are added to the back of the queue.
+     *
+     * @param event The `TrackedEvent` to be added to the queue.
+     * @param cause The `EventRecord` to be recorded as the event's cause (optional).
+     */
+    private _addEvent(event: TrackedEvent, cause?: EventRecord): void {
         let immediateEvents: TrackedEvent[];
         let delayedEvents: TrackedEvent[];
 
@@ -96,10 +105,19 @@ export class InstanceEvents {
     }
 
     /**
-     * Executes the current EventRecord and recursively exeuctes
-     * all remaining EventRecords in the queue.
+     * Deletes unnecessary data from the current `EventRecord`
+     * and moves it to the history array.
      */
-    public _executeCurrent(): void {
+    private _archiveCurrent(): void {
+        delete this.current.func;
+        this.history.unshift(this._queue.shift());
+    }
+
+    /**
+     * Executes the current `EventRecord` and recursively exeuctes
+     * all remaining `EventRecords` in the queue.
+     */
+    private _executeCurrent(): void {
         const current = this.current;
         const nextEvent = current.func.target(this.game);
         this._archiveCurrent();
@@ -113,23 +131,5 @@ export class InstanceEvents {
         if (this._queue.length > 0) {
             this._executeCurrent();
         }
-    }
-
-    /**
-     * Deletes unnecessary data from the current EventRecord
-     * and moves it to the history array.
-     */
-    public _archiveCurrent(): void {
-        delete this.current.func;
-        this.history.unshift(this._queue.shift());
-    }
-
-    /**
-     * Creates a new `InstanceEvents` for the new game cycle.
-     * **Don't call this unless you know what you're doing.**
-     * @param current The `GameInstance` for the new game cycle.
-     */
-    public cycle(current: GameInstance): InstanceEvents {
-        return new InstanceEvents(current, this.lastEventId);
     }
 }

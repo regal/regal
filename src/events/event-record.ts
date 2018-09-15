@@ -1,27 +1,26 @@
 /**
- * Record of a TrackedEvent's effects in a game cycle.
+ * Contains the object representation of a tracked event's effects in a game cycle.
  *
- * @since 0.3.0
- * @author Joe Cowman
- * @license MIT (see https://github.com/regal/regal)
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 import { PropertyChange, PropertyOperation } from "../agents";
 import { OutputLine } from "../output";
 import { noop, TrackedEvent } from "./event-model";
 
-/** Event ID for untracked EventFunctions. */
+/** Event ID for untracked `EventFunction`s. */
 export const DEFAULT_EVENT_ID: number = 0;
-/** Name of untracked EventFunctions. */
+/** Name of untracked `EventFunction`s. */
 export const DEFAULT_EVENT_NAME: string = "DEFAULT";
 
 /**
- * Record of a TrackedEvent's effects in a game cycle.
+ * Record of a `TrackedEvent`'s effects in a game cycle.
  */
 export class EventRecord {
-    /** Default EventRecord for untracked EventFunctions. */
+    /** Default `EventRecord` for untracked `EventFunction`s. */
     public static default = new EventRecord();
-    /** The IDs of the OutputLines emitted by the event. */
+    /** The IDs of the `OutputLine`s emitted by the event. */
     public output?: number[];
     /** The ID of the event that caused this event. */
     public causedBy?: number;
@@ -31,10 +30,11 @@ export class EventRecord {
     public changes?: PropertyChange[];
 
     /**
-     * Constructs a new EventRecord.
-     * @param id The event's unique numeric ID.
-     * @param name The event's name.
-     * @param func The event's TrackedEvent.
+     * Constructs a new `EventRecord`.
+     *
+     * @param id The event's unique numeric ID (optional).
+     * @param name The event's name (optional).
+     * @param func The event's `TrackedEvent`. Defaults to `noop`.
      */
     constructor(
         public id: number = DEFAULT_EVENT_ID,
@@ -43,7 +43,7 @@ export class EventRecord {
     ) {}
 
     /**
-     * Appends a reference to an OutputLine to the EventRecord's output log.
+     * Appends a reference to an `OutputLine` to the `EventRecord`'s output log.
      * @param line The line of output emitted by the event.
      */
     public trackOutputWrite(line: OutputLine): void {
@@ -54,9 +54,10 @@ export class EventRecord {
     }
 
     /**
-     * Creates an association between this EventRecord and the caused events,
-     * setting the caused events' causedBy properties to this EventRecord's ID, and
-     * appending the events' IDs to this EventRecord's caused property.
+     * Creates an association between this `EventRecord` and the caused events,
+     * setting the caused events' `causedBy` properties to this `EventRecord`'s ID, and
+     * appending the events' IDs to this `EventRecord`'s `caused` property.
+     *
      * @param events The events that were caused by this event.
      */
     public trackCausedEvent(...events: EventRecord[]): void {
@@ -69,7 +70,8 @@ export class EventRecord {
 
     /**
      * Adds a record of a single change to a registered agent's property to the
-     * EventRecord's changes property.
+     * `EventRecord`'s `changes` property.
+     *
      * @param agentId The registered agent's ID.
      * @param property The property being modified.
      * @param op The type of modification.

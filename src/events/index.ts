@@ -1,9 +1,8 @@
 /**
  * Component for creating and handling events in the Regal Game Library.
  *
- * @since 0.3.0
- * @author Joe Cowman
- * @license MIT (see https://github.com/regal/regal)
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 export {
@@ -18,4 +17,4 @@ export {
     isTrackedEvent
 } from "./event-model";
 export { EventRecord } from "./event-record";
-export { InstanceEvents } from "./instance-events";
+export { default as InstanceEvents } from "./instance-events";

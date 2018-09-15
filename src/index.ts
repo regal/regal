@@ -33,7 +33,7 @@ export {
 } from "./events";
 export { Game, GameResponse } from "./game-api";
 export { GameOptions, GameMetadata } from "./config";
-export * from "./game-instance";
+export { default as GameInstance } from "./game-instance";
 export {
     OutputLineType,
     OutputLine,

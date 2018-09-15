@@ -1,9 +1,8 @@
 /**
- * Interfaces for the different types of events, and functions for manipulating them.
+ * Interfaces for the different types of events and functions for manipulating them.
  *
- * @since 0.3.0
- * @author Joe Cowman
- * @license MIT (see https://github.com/regal/regal)
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 import { RegalError } from "../error";
@@ -11,16 +10,18 @@ import GameInstance from "../game-instance";
 
 /**
  * A function that modifies the game instance.
+ *
  * @param game The game instance to be modified.
- * @returns The next EventFunction to be executed.
+ * @returns The next `EventFunction` to be executed.
  */
 export type EventFunction = (game: GameInstance) => EventFunction;
 
 /**
- * An EventFunction that is tracked by the game instance and can
- * be extended into an EventQueue.
+ * An `EventFunction` that is tracked by the game instance and can
+ * be extended into an `EventQueue`.
+ *
  * @param game The game instance to be modified.
- * @returns The next EventFunction to be executed.
+ * @returns The next `EventFunction` to be executed.
  */
 export interface TrackedEvent extends EventFunction {
     (game: GameInstance): TrackedEvent | EventFunction;
@@ -28,28 +29,30 @@ export interface TrackedEvent extends EventFunction {
     /** The name of the event. */
     eventName: string;
 
-    /** The EventFunction that is wrapped by the TrackedEvent. */
+    /** The `EventFunction` that is wrapped by the `TrackedEvent`. */
     target: EventFunction;
 
     /**
      * Adds events to the front of the event queue.
+     *
      * @param events The events to be added.
-     * @returns An EventQueue with the new events.
+     * @returns An `EventQueue` with the new events.
      */
     then(...events: TrackedEvent[]): EventQueue;
 
     /**
      * Adds events to the end of the event queue.
      *
-     * Equivalent to calling <TrackedEvent>.then(nq(...events))
+     * Equivalent to calling `<TrackedEvent>.then(nq(...events))`
+     *
      * @param events The events to be added.
-     * @returns An EventQueue with the new events.
+     * @returns An `EventQueue` with the new events.
      */
     thenq(...events: TrackedEvent[]): EventQueue;
 }
 
 /**
- * Contains a queue of TrackedEvents to be added to the game instance.
+ * Contains a queue of `TrackedEvents` to be added to the game instance.
  */
 export interface EventQueue extends TrackedEvent {
     /** The events to be added to the beginning of the game's event queue. */
@@ -61,27 +64,27 @@ export interface EventQueue extends TrackedEvent {
     /**
      * Adds events to the end of the event queue.
      * @param events The events to be added.
-     * @returns An EventQueue with the new events.
+     * @returns An `EventQueue` with the new events.
      */
     enqueue(...events: TrackedEvent[]): EventQueue;
 
     /**
-     * Adds events to the end of the event queue. (Alias of EventQueue.enqueue)
+     * Adds events to the end of the event queue. (Alias of `EventQueue.enqueue`)
      * @param events The events to be added.
-     * @returns An EventQueue with the new events.
+     * @returns An `EventQueue` with the new events.
      */
     nq(...events: TrackedEvent[]): EventQueue;
 }
 
-/** Ensures the object is a TrackedEvent. */
+/** Ensures the object is a `TrackedEvent`. */
 export const isTrackedEvent = (o: any): o is TrackedEvent =>
     (o as TrackedEvent).target !== undefined;
 
-/** Ensures the object is an EventQueue. */
+/** Ensures the object is an `EventQueue`. */
 export const isEventQueue = (o: any): o is EventQueue =>
     (o as EventQueue).nq !== undefined;
 
-/** "No operation" - reserved TrackedEvent that signals no more events. */
+/** "No operation" - reserved `TrackedEvent` that signals no more events. */
 export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;
 
@@ -99,10 +102,12 @@ const illegalEventQueueInvocation = () => (game: GameInstance): undefined => {
 };
 
 /**
- * Builds an EventQueue from the given collections of events.
+ * Builds an `EventQueue` from the given collections of events.
+ *
  * @param immediateEvents The collection of events to be executed immediately.
  * @param delayedEvents The collection of events to be executed at the end of the queue.
- * @returns The EventQueue.
+ *
+ * @returns The generated `EventQueue`.
  */
 const buildEventQueue = (
     immediateEvents: TrackedEvent[],
@@ -129,8 +134,8 @@ const buildEventQueue = (
 };
 
 /**
- * Creates the `then` method for a TrackedEvent.
- * @param rootTarget The TrackedEvent.
+ * Creates the `then` method for a `TrackedEvent`.
+ * @param rootTarget The `TrackedEvent` targeted by the new method.
  * @returns The `then` method.
  */
 const thenConstructor = (rootTarget: TrackedEvent) => (
@@ -179,12 +184,12 @@ const thenConstructor = (rootTarget: TrackedEvent) => (
 /**
  * Adds the events to the end of the game's event queue.
  *
- * If the events are EventQueues, any events in the queues'
+ * If the events are `EventQueue`s, any events in the queues'
  * immediateEvents collections will be concatenated, followed
  * by any events in the queues' delayedEvents collections.
  *
  * @param events The events to be added.
- * @returns The EventQueue with all events in the queue's delayedEvent collection.
+ * @returns The `EventQueue` with all events in the queue's `delayedEvent` collection.
  */
 export const enqueue = (...events: TrackedEvent[]): EventQueue => {
     const argImmediateEvents: TrackedEvent[] = [];
@@ -203,22 +208,23 @@ export const enqueue = (...events: TrackedEvent[]): EventQueue => {
 };
 
 /**
- * Adds the events to the end of the game's event queue.
+ * Adds the events to the end of the game's event queue. (Alias of `enqueue`)
  *
- * If the events are EventQueues, any events in the queues'
+ * If the events are `EventQueue`s, any events in the queues'
  * immediateEvents collections will be concatenated, followed
- * by any events in the queues' delayedEvents collections.
+ * by any events in the queues' `delayedEvents` collections.
  *
  * @param events The events to be added.
- * @returns The EventQueue with all events in the queue's delayedEvent collection.
+ * @returns The `EventQueue` with all events in the queue's `delayedEvent` collection.
  */
 export const nq = enqueue;
 
 /**
- * Creates a TrackedEvent around an EventFunction.
- * @param eventName The name of the TrackedEvent.
- * @param eventFunc The EventFunction to be tracked.
- * @returns The TrackedEvent.
+ * Creates a `TrackedEvent` around an `EventFunction`.
+ *
+ * @param eventName The name of the `TrackedEvent`.
+ * @param eventFunc The `EventFunction` to be tracked.
+ * @returns The generated `TrackedEvent`.
  */
 export const on = (
     eventName: string,
