@@ -15,10 +15,10 @@ import {
 import { DEFAULT_EVENT_ID, EventRecord } from "./event-record";
 
 /**
- * Manager for all events in a GameInstance.
+ * Manager for all events in a `GameInstance`.
  */
 export default class InstanceEvents {
-    /** The current EventRecord. */
+    /** The current `EventRecord`. */
     get current(): EventRecord {
         let event = this._queue[0];
 
@@ -36,14 +36,14 @@ export default class InstanceEvents {
     /** Contains records of the past events executed during the game cycle. */
     public history: EventRecord[] = [];
 
-    /** Internal member for the ID of the most recently generated EventRecord. */
+    /** Internal member for the ID of the most recently generated `EventRecord`. */
     private _lastEventId;
 
     /** Internal queue of events that have yet to be executed. */
     private _queue: EventRecord[] = [];
 
     /**
-     * Constructs an InstanceEvents.
+     * Constructs an `InstanceEvents`.
      * @param game The game instance that owns this `InstanceEvents`.
      * @param startingEventId Optional starting ID for new `EventRecord`s.
      */

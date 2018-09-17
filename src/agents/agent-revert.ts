@@ -1,3 +1,10 @@
+/**
+ * Contains the `buildRevertFunction` for reverting changes to the instance state.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { noop, on } from "../events";
 import { Agent } from "./agent-model";
 import { AgentRecord, PropertyChange } from "./agent-record";
@@ -11,6 +18,7 @@ import { StaticAgentRegistry } from "./static-agent";
  *
  * @param agents The agent history on which the revert function will be based.
  * @param revertTo The id of the `TrackedEvent` to which the state will be reverted. Defaults to 0 (the default event id).
+ *
  * @returns A `TrackedEvent` that will perform the revert function onto the `GameInstance` on which it's invoked.
  */
 export const buildRevertFunction = (

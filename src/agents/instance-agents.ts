@@ -1,3 +1,10 @@
+/**
+ * Contains the manager for all agents in a `GameInstance`.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { RegalError } from "../error";
 import { EventRecord } from "../events";
 import GameInstance from "../game-instance";
@@ -6,14 +13,33 @@ import { AgentRecord } from "./agent-record";
 import { AgentReference, isAgentReference } from "./agent-reference";
 import { StaticAgentRegistry } from "./static-agent";
 
-export const propertyIsAgentId = (property: string) => {
+/** Whether the property is a positive integer, meaning its a valid agent id. */
+export const propertyIsAgentId = (property: PropertyKey) => {
     const tryNum = Math.floor(Number(property));
     return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
 };
 
+/**
+ * Manager for all agents in a `GameInstance`.
+ *
+ * For each agent being tracked, the `InstanceAgents` will have a
+ * property of that agent's id that contains an `AgentRecord`.
+ *
+ * Static agents only have instance-specific differences from
+ * their static state stored in the `InstanceAgents`.
+ */
 export class InstanceAgents {
+    /**
+     * Constructs an `InstanceAgents`.
+     * @param game The game instance that owns this `InstanceAgents`.
+     */
     constructor(public game: GameInstance) {}
 
+    /**
+     * Gets the next available agent id by counting the number
+     * of reserved ids in the `StaticAgentRegistry` and the number
+     * of agents already registered with this `InstanceAgents`.
+     */
     public getNextAgentId(): number {
         let i = StaticAgentRegistry.agentCount + 1;
         while (this.hasOwnProperty(i)) {
@@ -22,6 +48,13 @@ export class InstanceAgents {
         return i;
     }
 
+    /**
+     * Adds an agent to this `InstanceAgents`. If the agent is static,
+     * nothing will happen.
+     *
+     * @param agent The agent to be added.
+     * @param event The event during which the agent was added.
+     */
     public addAgent(agent: Agent, event: EventRecord): void {
         if (this.hasOwnProperty(agent.id)) {
             throw new RegalError(
@@ -42,6 +75,7 @@ export class InstanceAgents {
         }
     }
 
+    /** Whether an agent with the given id is static or tracked by this `InstanceAgents`. */
     public hasAgent(agentId: number): boolean {
         return (
             this.hasOwnProperty(agentId) ||
@@ -49,6 +83,13 @@ export class InstanceAgents {
         );
     }
 
+    /**
+     * Get the value of a registered agent's property.
+     *
+     * @param agentId The agent's id.
+     * @param property The name of the property.
+     * @returns The value of the property, if it exists.
+     */
     public getAgentProperty(agentId: number, property: PropertyKey): any {
         const agentRecord: AgentRecord = this[agentId];
         let value;
@@ -64,6 +105,7 @@ export class InstanceAgents {
         } else {
             value = agentRecord.getProperty(property);
 
+            // If the property exists only in the static agent registry and it hasn't been deleted in this instance:
             if (
                 value === undefined &&
                 !agentRecord.propertyWasDeleted(property) &&
@@ -73,6 +115,7 @@ export class InstanceAgents {
             }
         }
 
+        // If the value is an agent reference, return a new proxy agent.
         if (isAgentReference(value)) {
             const psuedoAgent = new Agent(value.refId, this.game);
             value = new Proxy(psuedoAgent, AGENT_PROXY_HANDLER);
@@ -81,7 +124,17 @@ export class InstanceAgents {
         return value;
     }
 
-    // TODO: Register agents within arrays
+    /**
+     * Sets the value of a registered agent's property, or adds the
+     * property if it doesn't yet exist.
+     *
+     * @param agentId The agent's id.
+     * @param property The name of the property.
+     * @param value The new value of the property.
+     * @param event The event during which the change took place.
+     *
+     * @returns Whether the update was successful.
+     */
     public setAgentProperty(
         agentId: number,
         property: PropertyKey,
@@ -117,6 +170,14 @@ export class InstanceAgents {
         return true;
     }
 
+    /**
+     * Whether this `InstanceAgents` has the agent property or if there's
+     * a static agent that has the property, and the property hasn't
+     * been deleted.
+     *
+     * @param agentId The agent id.
+     * @param property The name of the property.
+     */
     public hasAgentProperty(agentId: number, property: PropertyKey): boolean {
         if (!this.hasOwnProperty(agentId)) {
             if (StaticAgentRegistry.hasAgent(agentId)) {
@@ -128,12 +189,22 @@ export class InstanceAgents {
         }
 
         const agentRecord: AgentRecord = this[agentId];
+
         return (
             agentRecord.hasOwnProperty(property) &&
             !agentRecord.propertyWasDeleted(property)
         );
     }
 
+    /**
+     * Deletes the registered agent's property.
+     *
+     * @param agentId The agent's id.
+     * @param property The name of the property.
+     * @param event The event during which the deletion took place.
+     *
+     * @returns Whether the property was deleted.
+     */
     public deleteAgentProperty(
         agentId: number,
         property: PropertyKey,
@@ -160,6 +231,11 @@ export class InstanceAgents {
         return agentRecord.deleteProperty(event, agentId, property);
     }
 
+    /**
+     * Whether this `InstanceAgents` once had the agent property and it was deleted.
+     * @param agentId The agent's id.
+     * @param property The name of the property.
+     */
     public agentPropertyWasDeleted(
         agentId: number,
         property: PropertyKey
