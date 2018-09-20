@@ -27,7 +27,7 @@
   "scripts": {
     "test": "nyc mocha",
     "publish-coverage": "nyc report --reporter=text-lcov | coveralls",
-    "check-coverage": "nyc check-coverage --lines 75 --functions 75 --branches 75",
+    "check-coverage": "nyc check-coverage --lines 99 --functions 99 --branches 99",
     "lint": "node node_modules/tslint/bin/tslint -c tslint.json --format stylish 'src/**/*.ts'",
     "commit": "git-cz",
     "test-release": "npx semantic-release --dry-run"
