@@ -276,6 +276,18 @@ describe("Agents", function() {
             expect(dummy.name).to.be.undefined;
             expect("name" in dummy).to.be.false;
         });
+
+        it("Properties added to an Agent subclass's prototype are not tracked (don't do this)", function() {
+            Dummy.prototype["foo"] = "bar";
+
+            const myGame = new GameInstance();
+            const dummy = new Dummy("D1", 10).register(myGame);
+
+            expect(myGame.agents.hasAgentProperty(dummy.id, "name")).to.be.true;
+            expect(myGame.agents.hasAgentProperty(dummy.id, "foo")).to.be.false;
+
+            delete Dummy.prototype["foo"];
+        });
     });
 
     describe("Static Agents", function() {
