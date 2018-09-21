@@ -6,13 +6,13 @@ import {
     onPlayerCommand,
     onStartCommand,
     onBeforeUndoCommand
-} from "../src/api-hooks";
-import GameInstance from "../src/game-instance";
-import { noop, on } from "../src/events";
-import { log, getDemoMetadata } from "./test-utils";
-import { PropertyOperation } from "../src/agents";
-import { RegalError } from "../src/error";
-import { MetadataManager } from "../src/config";
+} from "../../src/api-hooks";
+import GameInstance from "../../src/game-instance";
+import { noop, on } from "../../src/events";
+import { log, getDemoMetadata } from "../test-utils";
+import { PropertyOperation } from "../../src/agents";
+import { RegalError } from "../../src/error";
+import { MetadataManager } from "../../src/config";
 
 describe("API Hooks", function() {
     beforeEach(function() {

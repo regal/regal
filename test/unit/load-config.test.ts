@@ -2,17 +2,13 @@ import { expect } from "chai";
 import "mocha";
 
 import { resolve } from "path";
-import { readConfigFile, loadConfig } from "../src/load-config";
-import { MetadataManager } from "../src/config";
-import { RegalError } from "../src/error";
+import { readConfigFile, loadConfig } from "../../src/load-config";
+import { MetadataManager } from "../../src/config";
+import { RegalError } from "../../src/error";
+import { expectedPromiseFailure } from "../test-utils";
 
 const dummyConfigPath = (end: any) =>
     resolve(`./test/resources/dummy-config-${end}`);
-
-// Throw this in the promise resolve argument for tests that should have failed promises
-const expectedPromiseFailure = () => {
-    throw new Error("Promise was supposed to fail.");
-};
 
 describe("Load Config Utility", function() {
     it("Constructing a metadata object from a valid regal.json", function() {

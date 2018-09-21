@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../src/game-instance";
-import { RegalError } from "../src/error";
+import GameInstance from "../../src/game-instance";
+import { RegalError } from "../../src/error";
 import {
     on,
     noop,
@@ -12,11 +12,15 @@ import {
     isEventQueue,
     enqueue,
     InstanceEvents
-} from "../src/events";
-import { log, getDemoMetadata } from "./test-utils";
-import { Agent, PropertyOperation, StaticAgentRegistry } from "../src/agents";
-import { OutputLineType } from "../src/output";
-import { MetadataManager } from "../src/config";
+} from "../../src/events";
+import { log, getDemoMetadata } from "../test-utils";
+import {
+    Agent,
+    PropertyOperation,
+    StaticAgentRegistry
+} from "../../src/agents";
+import { OutputLineType } from "../../src/output";
+import { MetadataManager } from "../../src/config";
 
 describe("Events", function() {
     beforeEach(function() {

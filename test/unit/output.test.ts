@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../src/game-instance";
-import { OutputLineType, InstanceOutput } from "../src/output";
-import { MetadataManager } from "../src/config";
-import { getDemoMetadata } from "./test-utils";
+import GameInstance from "../../src/game-instance";
+import { OutputLineType, InstanceOutput } from "../../src/output";
+import { MetadataManager } from "../../src/config";
+import { getDemoMetadata } from "../test-utils";
 
 describe("Output", function() {
     beforeEach(function() {

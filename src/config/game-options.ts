@@ -1,3 +1,10 @@
+/**
+ * Options for configuring a game instance's behavior.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { RegalError } from "../error";
 
 /**
@@ -24,14 +31,24 @@ export interface GameOptions {
     showMinor: boolean;
 }
 
+/**
+ * Default values for every game option.
+ * If any option is not overridden by the developer, its corresponding
+ * value in this object will be used.
+ */
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
     allowOverrides: true,
     debug: false,
     showMinor: true
 };
 
+/** The names of every game option. */
 export const OPTION_KEYS = Object.keys(DEFAULT_GAME_OPTIONS);
 
+/**
+ * Throws an error if any of the given options are invalid.
+ * @param options Any game options.
+ */
 export const validateOptions = (options: Partial<GameOptions>): void => {
     // Ensure no extraneous options were included.
     Object.keys(options).forEach(key => {
@@ -40,6 +57,7 @@ export const validateOptions = (options: Partial<GameOptions>): void => {
         }
     });
 
+    // Helper function that ensures the given property has the correct type if it's defined.
     const checkTypeIfDefined = (
         key: keyof GameOptions,
         expectedType: string
@@ -58,8 +76,10 @@ export const validateOptions = (options: Partial<GameOptions>): void => {
 
     checkTypeIfDefined("debug", "boolean");
 
+    // Validate allowOverrides
     if (options.allowOverrides !== undefined) {
         if (Array.isArray(options.allowOverrides)) {
+            // Ensure every option name in the list is a real option.
             options.allowOverrides.forEach(optionName => {
                 if (!OPTION_KEYS.includes(optionName)) {
                     throw new RegalError(
@@ -68,6 +88,7 @@ export const validateOptions = (options: Partial<GameOptions>): void => {
                 }
             });
 
+            // Ensure that allowOverrides is not included in the list.
             if (options.allowOverrides.includes("allowOverrides")) {
                 throw new RegalError(
                     "The option <allowOverrides> is not allowed to be overridden."

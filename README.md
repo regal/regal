@@ -12,23 +12,11 @@ This library is a package on npm titled `regal`.
 
 ## Status
 
-This package is currently in version `0.2.1` and is not yet recommended for use. The next version will be `0.3.0`.
+Version `0.3.0` marks the first testable release of the library, but the package is still in early development.
 
-### `0.3.0` Details
+The upcoming version `0.4.0` will have significant changes. It's recommended that you don't use the library until the first stable version `1.0.0` is released.
 
-**Regal** `0.3.0` aims to be the first usable version of the library, and is currently under development.
-
-Component | Description | Designed | Implemented | Tested
---- | --- | --- | --- | ---
-**Game** | Public API for consumers of the library | ✔️ | ✔️ | ✔️
-**Agent** | Model for immutable game objects | ✔️ | ✔️ | ✔️
-**Event** | Model for game events | ✔️ | ✔️ | ✔️
-
-✔️ - Complete   
-🔵 - In-Progress    
-⚪- Planned
-
-## Contributors
+## Contributing
 
 Created by Joe Cowman ([jcowman2](https://github.com/jcowman2)).
 

@@ -1,24 +1,22 @@
 import { expect } from "chai";
 import "mocha";
 
-import { Game, GameResponse, resetGame } from "../src/game-api";
+import { Game, GameResponse, resetGame } from "../../src/game-api";
 import {
     onPlayerCommand,
     onStartCommand,
     onBeforeUndoCommand
-} from "../src/api-hooks";
-import { noop } from "../src/events";
-import GameInstance from "../src/game-instance";
-import { OutputLineType } from "../src/output";
-import { log, getDemoMetadata, metadataWithOptions } from "./test-utils";
-import { Agent, buildRevertFunction } from "../src/agents";
+} from "../../src/api-hooks";
+import { noop } from "../../src/events";
+import GameInstance from "../../src/game-instance";
+import { OutputLineType } from "../../src/output";
+import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
+import { Agent } from "../../src/agents";
 import {
     DEFAULT_GAME_OPTIONS,
     OPTION_KEYS,
-    GameOptions,
-    MetadataManager,
-    GameMetadata
-} from "../src/config";
+    MetadataManager
+} from "../../src/config";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {

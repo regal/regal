@@ -5,9 +5,8 @@
  * and can be implemented by the game developer. This allows the
  * developer to modify the behavior of the API.
  *
- * @since 0.3.0
- * @author Joe Cowman
- * @license MIT (see https://github.com/regal/regal)
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 import { RegalError } from "./error";
