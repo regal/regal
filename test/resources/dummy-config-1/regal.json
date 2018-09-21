@@ -1,0 +1,14 @@
+{
+    "name": "My Awesome Game",
+    "author": "Joe Cowman",
+    "headline": "Play my awesome game",
+    "description": "This is the description of my awesome game.",
+    "homepage": "https://github.com/regal/about",
+    "repository": "https://github.com/regal/regal",
+    "options": {
+        "allowOverrides": [
+            "debug"
+        ],
+        "showMinor": false
+    }
+}

@@ -1,0 +1,1 @@
+<span style="color:red">**Warning: Due to the nature of early development, the documentation in this directory is outdated and should not be used as a reliable reference. It is only being kept in the repository for historical purposes until the next release.**</span>
