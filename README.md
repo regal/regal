@@ -12,7 +12,7 @@ This library is a package on npm titled `regal`.
 
 ## Status
 
-Version `0.3.0` marks the first testable release of the library, but the package is still in early developmet.
+Version `0.3.0` marks the first testable release of the library, but the package is still in early development.
 
 The upcoming version `0.4.0` will have significant changes. It's recommended that you don't use the library until the first stable version `1.0.0` is released.
 
