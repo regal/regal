@@ -1,7 +1,7 @@
 {
   "name": "regal",
   "version": "0.2.1",
-  "description": "The adaptable game framework for everyone.",
+  "description": "TypeScript package for games developed in the Regal framework.",
   "author": "Joe Cowman <joe.r.cowman@gmail.com> (http://joecowman.com)",
   "license": "MIT",
   "repository": {
