@@ -63,4 +63,10 @@ Therefore, there should be a way to toggle whether all changes to properties are
 
 ## 6. Fix "Cannot invoke EventQueue" by allowing event queues to be passed into API Hooks
 
-*See issue 30*
+*See issue #30*
+
+## 7. Scrub inaccessible agents when the game instance is cycled
+
+When an agent is no longer referenced by any other agent, it is inaccessible. To save space, these agents should be deleted from the game instance (like garbage collection).
+
+In order to maintain the revertable, event-sourcing model, this scrubbing cannot take place in the same cycle that the agent becomes inaccessible (although they may be flagged as such). Instead, the scrubbing should take place when the game instance is cycled on a new player command.
