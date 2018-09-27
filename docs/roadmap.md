@@ -4,7 +4,7 @@
 
 There's no reason for agents to be mutable before they're being tracked. To streamline everything, agents should not be writable *or* readable until they are "registered" with the `GameInstance`.
 
-The reason "registered" is in quotes is because that term is being deprecated (see below).
+The reason "registered" is in quotes is because that term is being deprecated for the term *active*/*activated*.
 
 ## 2. Replace `Agent.register` method with `GameInstance.using`.
 
@@ -41,7 +41,7 @@ const drop = (_item: Item) =>
 
 ## 3. Eliminate the `Agent.static` method and use context-aware instantiation
 
-Since all agents are immutable until they're being used by the `GameInstance`, there no longer needs to be a functional differentation between static and nonstatic agents.
+Since all agents are immutable until they're being used by the `GameInstance`, there no longer needs to be a functional differentiation between static and nonstatic agents.
 
 All agents, no matter the scope in which they're declared, must be tracked with the game instance before they can be used.
 
