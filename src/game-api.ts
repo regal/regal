@@ -11,6 +11,7 @@
 import { buildRevertFunction, StaticAgentRegistry } from "./agents";
 import { HookManager } from "./api-hooks";
 import { GameMetadata, GameOptions, MetadataManager } from "./config";
+import { ContextManager } from "./context-manager";
 import { RegalError } from "./error";
 import GameInstance from "./game-instance";
 import { GameOutput } from "./output";
@@ -119,6 +120,16 @@ const buildLogResponse = (
  * any arguments passed into it.
  */
 export class Game {
+    public static init(): void {
+        ContextManager.init();
+    }
+
+    public static reset(): void {
+        ContextManager.reset();
+        HookManager.reset();
+        StaticAgentRegistry.reset();
+    }
+
     /**
      * Gets the game's metadata. Note that this is not specific
      * to any `GameInstance`, but refers to the game's static context.
@@ -324,6 +335,5 @@ export class Game {
  * Resets the static context of the game.
  */
 export const resetGame = () => {
-    HookManager.resetHooks();
-    StaticAgentRegistry.resetRegistry();
+    Game.reset();
 };

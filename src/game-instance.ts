@@ -11,7 +11,12 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { InstanceAgents, InstanceState } from "./agents";
+import {
+    activeAgentProxy,
+    buildInstanceAgents,
+    InstanceAgents,
+    recycleInstanceAgents
+} from "./agents";
 import { GameOptions, InstanceOptions } from "./config";
 import { InstanceEvents } from "./events";
 import { InstanceOutput } from "./output";
@@ -50,11 +55,11 @@ export default class GameInstance {
      * Must be allowed by the static configuration's `allowOverrides` option.
      */
     constructor(options: Partial<GameOptions> = {}) {
-        this.agents = new InstanceAgents(this);
+        this.agents = buildInstanceAgents(this);
         this.events = new InstanceEvents(this);
         this.output = new InstanceOutput(this);
         this.options = new InstanceOptions(this, options);
-        this.state = new InstanceState(this);
+        this.state = activeAgentProxy(0, this);
     }
 
     /**
@@ -72,7 +77,7 @@ export default class GameInstance {
 
         const newGame = new GameInstance(opts);
         newGame.events = this.events.cycle(newGame);
-        newGame.agents = this.agents.cycle(newGame);
+        newGame.agents = recycleInstanceAgents(newGame);
         newGame.output = this.output.cycle(newGame);
 
         return newGame;
