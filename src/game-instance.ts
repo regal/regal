@@ -13,6 +13,7 @@
 
 import {
     activeAgentProxy,
+    Agent,
     buildInstanceAgents,
     InstanceAgents,
     recycleInstanceAgents
@@ -81,5 +82,9 @@ export default class GameInstance {
         newGame.output = this.output.cycle(newGame);
 
         return newGame;
+    }
+
+    public using<T extends Agent>(resource: T): T {
+        return activeAgentProxy(resource.id, this) as T;
     }
 }

@@ -20,11 +20,11 @@ export interface InstanceAgents {
 }
 
 export const buildInstanceAgents = (game: GameInstance): InstanceAgents =>
-    new InstanceAgentsObjectImpl(game);
+    new InstanceAgentsImpl(game);
 
 export const recycleInstanceAgents = (game: GameInstance): InstanceAgents => {
     const oldAgents = game.agents;
-    const newAgents = new InstanceAgentsObjectImpl(game);
+    const newAgents = new InstanceAgentsImpl(game);
 
     for (const formerAgent of oldAgents.agentManagers()) {
         const id = formerAgent.id;
@@ -60,8 +60,10 @@ export const propertyIsAgentId = (property: PropertyKey) => {
     return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
 };
 
-class InstanceAgentsObjectImpl implements InstanceAgents {
-    constructor(public game: GameInstance) {}
+class InstanceAgentsImpl implements InstanceAgents {
+    constructor(public game: GameInstance) {
+        this.createAgentManager(0);
+    }
 
     public agentManagers(): AgentManager[] {
         return Object.keys(this)
@@ -98,12 +100,12 @@ class InstanceAgentsObjectImpl implements InstanceAgents {
             }
 
             value = StaticAgentRegistry.getAgentProperty(id, property);
-        }
-
-        if (am.hasPropertyRecord(property)) {
-            value = am.getProperty(property);
-        } else if (StaticAgentRegistry.hasAgent(id)) {
-            value = StaticAgentRegistry.getAgentProperty(id, property);
+        } else {
+            if (am.hasPropertyRecord(property)) {
+                value = am.getProperty(property);
+            } else if (StaticAgentRegistry.hasAgent(id)) {
+                value = StaticAgentRegistry.getAgentProperty(id, property);
+            }
         }
 
         if (isAgentReference(value)) {

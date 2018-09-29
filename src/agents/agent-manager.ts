@@ -7,13 +7,16 @@ export interface AgentManager {
     game: GameInstance;
     hasPropertyRecord(property: PropertyKey): boolean;
     getProperty(property: PropertyKey): any;
+    getPropertyHistory(property: PropertyKey): PropertyChange[];
     propertyWasDeleted(property: PropertyKey): boolean;
     setProperty(property: PropertyKey, value: any): void;
     deleteProperty(property: PropertyKey): void;
 }
 
 export const isAgentManager = (o: any): o is AgentManager => {
-    return (o as AgentManager).hasPropertyRecord !== undefined;
+    return (
+        o !== undefined && (o as AgentManager).hasPropertyRecord !== undefined
+    );
 };
 
 export const buildAgentManager = (
@@ -38,6 +41,10 @@ class AgentManagerImpl implements AgentManager {
         }
 
         return value;
+    }
+
+    public getPropertyHistory(property: PropertyKey): PropertyChange[] {
+        return this[property];
     }
 
     public propertyWasDeleted(property: PropertyKey): boolean {
