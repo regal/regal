@@ -7,50 +7,66 @@ import {
     isContextStatic
 } from "./todo";
 
-const agentReservedProperties = ["id", "game", "isActivated"];
+// const agentReservedProperties = ["id", "game", "isActivated"];
 
-const AGENT_PROXY_HANDLER = {
-    get(target: Agent, property: PropertyKey) {
-        if (agentReservedProperties.includes(property.toString())) {
-            return Reflect.get(target, property);
-        }
+const inactiveAgentProxy = (id?: number): Agent =>
+    new Proxy({} as Agent, {
+        get(target: Agent, property: PropertyKey) {
+            if (property === "id") {
+                return id;
+            }
 
-        if (!target.isActivated) {
             throw new RegalError(
                 "The agent has not been activated; that property is not accessible."
             );
+        },
+
+        set(target: Agent, property: PropertyKey, value: any) {
+            throw new RegalError(
+                "The agent has not been activated; that property cannot be set."
+            );
+        },
+
+        deleteProperty(target: Agent, property: PropertyKey) {
+            throw new RegalError(
+                "The agent ahs not been activated; that property cannot be deleted."
+            );
         }
+    });
 
-        let value = target.game.agents.getAgentProperty(target.id, property);
+const activeAgentProxy = (id: number, game: GameInstance): Agent =>
+    new Proxy({} as Agent, {
+        get(target: Agent, property: PropertyKey) {
+            return game.agents.getAgentProperty(id, property);
+        },
 
-        if (
-            value === undefined &&
-            !target.game.agents.agentPropertyWasDeleted(target.id, property)
-        ) {
-            value = getStaticAgentProperty(target.id, property);
+        set(target: Agent, property: PropertyKey, value: any) {
+            return game.agents.setAgentProperty(id, property, value);
+        },
+
+        has(target: Agent, property: PropertyKey) {
+            return game.agents.hasAgentProperty(id, property);
+        },
+
+        deleteProperty(target: Agent, propertyKey: PropertyKey) {
+            return game.agents.deleteAgentProperty(id, proeprty);
         }
-
-        return value;
-    },
-
-    set(target: Agent, property: PropertyKey, value: any): boolean {
-        // todo
-        return true;
-    }
-};
+    });
 
 export class Agent {
     public id: number;
-    public game: GameInstance;
-    public isActivated: boolean;
+    // public game: GameInstance;
 
     constructor() {
-        this.isActivated = false;
+        let id: number;
 
         if (isContextStatic()) {
-            this.id = getNextStaticAgentId();
+            id = getNextStaticAgentId();
+            this.id = id;
+
             addAgentToStaticRegistry(this);
         }
-        return new Proxy({} as Agent, AGENT_PROXY_HANDLER);
+
+        return inactiveAgentProxy(id);
     }
 }
