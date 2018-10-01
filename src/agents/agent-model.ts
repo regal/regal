@@ -21,9 +21,12 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
 
         set(target: Agent, property: PropertyKey, value: any) {
             if (!ContextManager.isContextStatic()) {
-                throw new RegalError(
-                    "The properties of an inactive agent cannot be set within a game cycle."
-                );
+                // TODO - start looking here
+                if (Reflect.get(target, property) !== undefined) {
+                    throw new RegalError(
+                        "The properties of an inactive agent cannot be set within a game cycle."
+                    );
+                }
             }
 
             return Reflect.set(target, property, value);
