@@ -85,6 +85,20 @@ export default class GameInstance {
     }
 
     public using<T extends Agent>(resource: T): T {
-        return activeAgentProxy(resource.id, this) as T;
+        const id =
+            resource.id !== undefined
+                ? resource.id
+                : this.agents.reserveNewId();
+
+        const agent = activeAgentProxy(id, this) as T;
+
+        // tslint:disable-next-line:no-string-literal
+        const tempValues = resource["tempValues"];
+
+        for (const prop of Object.keys(tempValues)) {
+            agent[prop] = tempValues[prop];
+        }
+
+        return agent;
     }
 }
