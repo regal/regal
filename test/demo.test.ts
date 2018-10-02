@@ -39,10 +39,10 @@ it("Test", function() {
             const attacker = game.using(_dummy);
             const oracle = game.using(_oracle);
 
-            if (!game.state.hasOwnProperty("attackers")) {
-                game.state.attackers = attacker.name;
-            } else {
+            if ("attackers" in game.state) {
                 game.state.attackers += `,${attacker.name}`;
+            } else {
+                game.state.attackers = attacker.name;
             }
 
             game.output.write(
@@ -79,5 +79,10 @@ it("Test", function() {
     console.log("\n\n");
 
     response = Game.postPlayerCommand(response.instance, "Jeff");
+    log(response);
+
+    console.log("\n\n");
+
+    response = Game.postPlayerCommand(response.instance, "Lars II");
     log(response);
 });

@@ -60,7 +60,7 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
 export const activeAgentProxy = (id: number, game: GameInstance): Agent =>
     new Proxy({} as Agent, {
         get(target: Agent, property: PropertyKey) {
-            return target.hasOwnProperty(property)
+            return game.agents.hasAgentProperty(id, property)
                 ? game.agents.getAgentProperty(id, property)
                 : Reflect.get(target, property);
         },
