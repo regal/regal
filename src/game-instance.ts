@@ -78,7 +78,7 @@ export default class GameInstance {
 
         const newGame = new GameInstance(opts);
         newGame.events = this.events.cycle(newGame);
-        newGame.agents = recycleInstanceAgents(newGame);
+        newGame.agents = recycleInstanceAgents(this.agents, newGame);
         newGame.output = this.output.cycle(newGame);
 
         return newGame;

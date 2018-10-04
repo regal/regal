@@ -22,9 +22,11 @@ export interface InstanceAgents {
 export const buildInstanceAgents = (game: GameInstance): InstanceAgents =>
     new InstanceAgentsImpl(game);
 
-export const recycleInstanceAgents = (game: GameInstance): InstanceAgents => {
-    const oldAgents = game.agents;
-    const newAgents = new InstanceAgentsImpl(game);
+export const recycleInstanceAgents = (
+    oldAgents: InstanceAgents,
+    newInstance: GameInstance
+): InstanceAgents => {
+    const newAgents = new InstanceAgentsImpl(newInstance);
 
     for (const formerAgent of oldAgents.agentManagers()) {
         const id = formerAgent.id;
@@ -140,6 +142,7 @@ class InstanceAgentsImpl implements InstanceAgents {
     }
 
     public hasAgentProperty(id: number, property: PropertyKey): boolean {
+        // TODO - start here
         const am = this.getAgentManager(id);
 
         if (!isAgentManager(am)) {
