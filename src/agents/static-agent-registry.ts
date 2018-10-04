@@ -28,13 +28,14 @@ export class StaticAgentRegistry {
     public static addAgent(agent: Agent): void {
         const id = agent.id;
 
-        if (this.hasOwnProperty(id)) {
+        if (id !== this.getNextAvailableId()) {
             throw new RegalError(
-                `An agent with the id <${id}> already exists in the static registry.`
+                `Expected an agent with id <${this.getNextAvailableId()}>.`
             );
         }
 
         this[id] = agent;
+        this._agentCount++;
     }
 
     public static reset(): void {

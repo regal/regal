@@ -1,5 +1,5 @@
 /**
- * Contains mock object that is used in place of  registered agent circular references.
+ * Contains mock object that is used in place of active agent circular references.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
@@ -13,11 +13,11 @@ export const isAgentReference = (o: any): o is AgentReference =>
     o && (o as AgentReference).refId !== undefined;
 
 /**
- * Mock object that is used in place of registered agent circular references.
+ * Mock object that is used in place of active agent circular references.
  */
 export class AgentReference {
     /**
-     * Constructs a new `AgentReference` in place of a registered agent.
+     * Constructs a new `AgentReference` in place of an active agent.
      * @param refId The mocked agent's numeric id.
      */
     constructor(public refId: number) {}
