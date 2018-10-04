@@ -142,20 +142,24 @@ class InstanceAgentsImpl implements InstanceAgents {
     }
 
     public hasAgentProperty(id: number, property: PropertyKey): boolean {
-        // TODO - start here
         const am = this.getAgentManager(id);
+
+        const staticPropExists = StaticAgentRegistry.hasAgentProperty(
+            id,
+            property
+        );
 
         if (!isAgentManager(am)) {
             if (!StaticAgentRegistry.hasAgent(id)) {
                 throw new RegalError(`No agent with the id <${id}> exists.`);
             }
 
-            return StaticAgentRegistry.hasAgentProperty(id, property);
+            return staticPropExists;
         }
 
-        return (
-            am.hasPropertyRecord(property) && !am.propertyWasDeleted(property)
-        );
+        const propExists = am.hasPropertyRecord(property) || staticPropExists;
+
+        return propExists && !am.propertyWasDeleted(property);
     }
 
     public deleteAgentProperty(id: number, property: PropertyKey): boolean {
