@@ -82,13 +82,11 @@ export class Agent {
     public id: number;
 
     constructor() {
-        let id: number;
-
         if (ContextManager.isContextStatic()) {
-            id = StaticAgentRegistry.getNextAvailableId();
-            this.id = id;
-
+            this.id = StaticAgentRegistry.getNextAvailableId();
             StaticAgentRegistry.addAgent(this);
+        } else {
+            this.id = -1;
         }
 
         return inactiveAgentProxy(this);

@@ -14,6 +14,18 @@ class Dummy extends Agent {
     }
 }
 
+class Parent extends Agent {
+    constructor(public child: Dummy) {
+        super();
+    }
+}
+
+class Sibling extends Agent {
+    constructor(public name: string, public sibling?: Sibling) {
+        super();
+    }
+}
+
 describe("Agents", function() {
     beforeEach(function() {
         Game.reset();
@@ -169,6 +181,35 @@ describe("Agents", function() {
                 RegalError,
                 "This static agent must be activated before it may be modified."
             );
+        });
+    });
+
+    describe("Advanced Usage", function() {
+        it("Active agents can have references to each other", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const parent = myGame.using(new Parent(new Dummy("D1", 10)));
+
+            expect(parent.child.name).to.equal("D1");
+            expect(parent.child.health).to.equal(10);
+        });
+
+        it.only("Active agents can have circular references to each other", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const _sib1 = new Sibling("Billy");
+            const _sib2 = new Sibling("Bob", _sib1);
+            _sib1.sibling = _sib2;
+
+            const sib1 = myGame.using(_sib1);
+            const sib2 = myGame.using(_sib2);
+
+            expect(sib1.name).to.equal("Billy");
+            expect(sib2.name).to.equal("Bob");
+            expect(sib1.sibling.name).to.equal("Bob");
+            expect(sib2.sibling.name).to.equal("Billy");
         });
     });
 });

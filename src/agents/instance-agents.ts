@@ -75,7 +75,7 @@ class InstanceAgentsImpl implements InstanceAgents {
 
     public reserveNewId(): number {
         const agentKeys = Object.keys(this).filter(propertyIsAgentId);
-        let id = StaticAgentRegistry.getNextAvailableId() + 1;
+        let id = StaticAgentRegistry.getNextAvailableId();
 
         while (agentKeys.includes(id.toString())) {
             id++;
@@ -103,7 +103,9 @@ class InstanceAgentsImpl implements InstanceAgents {
 
             value = StaticAgentRegistry.getAgentProperty(id, property);
         } else {
-            if (am.hasPropertyRecord(property)) {
+            if (property === "id") {
+                value = id;
+            } else if (am.hasPropertyRecord(property)) {
                 value = am.getProperty(property);
             } else if (StaticAgentRegistry.hasAgent(id)) {
                 value = StaticAgentRegistry.getAgentProperty(id, property);
@@ -133,6 +135,9 @@ class InstanceAgentsImpl implements InstanceAgents {
         }
 
         if (isAgent(value)) {
+            if (value.id < 0) {
+                value = this.game.using(value);
+            }
             value = new AgentReference(value.id);
         }
 
@@ -155,6 +160,10 @@ class InstanceAgentsImpl implements InstanceAgents {
             }
 
             return staticPropExists;
+        }
+
+        if (property === "id") {
+            return true;
         }
 
         const propExists = am.hasPropertyRecord(property) || staticPropExists;

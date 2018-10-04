@@ -85,10 +85,12 @@ export default class GameInstance {
     }
 
     public using<T extends Agent>(resource: T): T {
-        const id =
-            resource.id !== undefined
-                ? resource.id
-                : this.agents.reserveNewId();
+        let id = resource.id;
+
+        if (id < 0) {
+            id = this.agents.reserveNewId();
+            resource.id = id; // TODO - this is throwing error for circular ref
+        }
 
         const agent = activeAgentProxy(id, this) as T;
 
