@@ -89,7 +89,7 @@ export default class GameInstance {
 
         if (id < 0) {
             id = this.agents.reserveNewId();
-            resource.id = id; // TODO - this is throwing error for circular ref
+            resource.id = id;
         }
 
         const agent = activeAgentProxy(id, this) as T;

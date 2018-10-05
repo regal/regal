@@ -195,7 +195,7 @@ describe("Agents", function() {
             expect(parent.child.health).to.equal(10);
         });
 
-        it.only("Active agents can have circular references to each other", function() {
+        it("Active agents can have circular references to each other", function() {
             Game.init();
 
             const myGame = new GameInstance();

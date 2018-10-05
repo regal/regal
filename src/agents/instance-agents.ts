@@ -136,6 +136,8 @@ class InstanceAgentsImpl implements InstanceAgents {
 
         if (isAgent(value)) {
             if (value.id < 0) {
+                const newId = this.reserveNewId();
+                value.id = newId;
                 value = this.game.using(value);
             }
             value = new AgentReference(value.id);

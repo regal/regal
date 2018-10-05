@@ -26,7 +26,10 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
         },
 
         set(target: Agent, property: PropertyKey, value: any) {
-            if (ContextManager.isContextStatic()) {
+            if (
+                ContextManager.isContextStatic() ||
+                (property === "id" && target.id < 0)
+            ) {
                 return Reflect.set(target, property, value);
             } else if (StaticAgentRegistry.hasAgent(target.id)) {
                 throw new RegalError(
