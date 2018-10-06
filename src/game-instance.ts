@@ -80,7 +80,7 @@ export default class GameInstance {
      *
      * @returns The new `GameInstance`, with each manager cycled.
      */
-    public cycle(newOptions?: Partial<GameOptions>): GameInstance {
+    public recycle(newOptions?: Partial<GameOptions>): GameInstance {
         const opts =
             newOptions === undefined ? this.options.overrides : newOptions;
 

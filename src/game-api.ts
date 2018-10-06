@@ -188,7 +188,7 @@ export class Game {
                 );
             }
 
-            newInstance = instance.cycle();
+            newInstance = instance.recycle();
 
             const activatedEvent = HookManager.playerCommandHook(command);
             newInstance.events.invoke(activatedEvent);
@@ -257,7 +257,7 @@ export class Game {
                 throw new RegalError("Undo is not allowed here.");
             }
 
-            newInstance = instance.cycle();
+            newInstance = instance.recycle();
 
             const revert = buildRevertFunction(instance.agents);
             revert(newInstance);
@@ -310,7 +310,7 @@ export class Game {
                 .forEach(key => (newOptions[key] = instance.options[key]));
             newOptionKeys.forEach(key => (newOptions[key] = options[key]));
 
-            newInstance = instance.cycle(newOptions);
+            newInstance = instance.recycle(newOptions);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }

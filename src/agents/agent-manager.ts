@@ -28,16 +28,16 @@ class AgentManagerImpl implements AgentManager {
     constructor(public id: number, public game: GameInstance) {}
 
     public hasPropertyRecord(property: PropertyKey): boolean {
-        const changes: PropertyChange[] = this[property];
-        return changes !== undefined && changes.length > 0;
+        const history: PropertyChange[] = this[property];
+        return history !== undefined && history.length !== undefined;
     }
 
     public getProperty(property: PropertyKey): any {
-        const changes: PropertyChange[] = this[property];
+        const history = this.getPropertyHistory(property);
         let value: any;
 
-        if (changes !== undefined && changes.length > 0) {
-            value = changes[0].final;
+        if (history.length > 0) {
+            value = history[0].final;
         }
 
         return value;
@@ -48,21 +48,20 @@ class AgentManagerImpl implements AgentManager {
     }
 
     public propertyWasDeleted(property: PropertyKey): boolean {
-        const changes: PropertyChange[] = this[property];
+        const history = this.getPropertyHistory(property);
 
         return (
-            changes &&
-            changes.length > 0 &&
-            changes[0].op === PropertyOperation.DELETED
+            history.length > 0 && history[0].op === PropertyOperation.DELETED
         );
     }
 
     public setProperty(property: PropertyKey, value: any): void {
         let initValue;
         let opType: PropertyOperation;
-        let changes: PropertyChange[] = this[property];
 
-        if (!changes) {
+        const history = this.getPropertyHistory(property);
+
+        if (history.length === 0) {
             if (StaticAgentRegistry.hasAgentProperty(this.id, property)) {
                 initValue = StaticAgentRegistry.getAgentProperty(
                     this.id,
@@ -74,11 +73,10 @@ class AgentManagerImpl implements AgentManager {
             }
 
             if (initValue !== value) {
-                changes = [];
-                this[property] = changes;
+                this[property] = history;
             }
         } else {
-            initValue = changes[0].final;
+            initValue = history[0].final;
 
             opType = this.propertyWasDeleted(property)
                 ? PropertyOperation.ADDED
@@ -92,7 +90,7 @@ class AgentManagerImpl implements AgentManager {
         const event = this.game.events.current;
         event.trackChange(this.id, property, opType, initValue, value);
 
-        changes.unshift({
+        history.unshift({
             eventId: event.id,
             eventName: event.name,
             final: value,
@@ -102,29 +100,26 @@ class AgentManagerImpl implements AgentManager {
     }
 
     public deleteProperty(property: PropertyKey): void {
-        if (
-            this.propertyWasDeleted(property) ||
-            (!this.hasPropertyRecord(property) &&
-                !StaticAgentRegistry.hasAgentProperty(this.id, property))
-        ) {
+        if (this.propertyWasDeleted(property)) {
             return;
         }
 
         let initValue;
-        let changes: PropertyChange[] = this[property];
+        const history = this.getPropertyHistory(property);
 
-        if (!changes) {
+        if (history.length === 0) {
             if (StaticAgentRegistry.hasAgentProperty(this.id, property)) {
                 initValue = StaticAgentRegistry.getAgentProperty(
                     this.id,
                     property
                 );
+            } else {
+                return;
             }
 
-            changes = [];
-            this[property] = changes;
+            this[property] = history;
         } else {
-            initValue = changes[0].final;
+            initValue = history[0].final;
         }
 
         const event = this.game.events.current;
@@ -136,7 +131,7 @@ class AgentManagerImpl implements AgentManager {
             undefined
         );
 
-        changes.unshift({
+        history.unshift({
             eventId: event.id,
             eventName: event.name,
             final: undefined,
