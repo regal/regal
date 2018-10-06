@@ -19,6 +19,8 @@ import {
     recycleInstanceAgents
 } from "./agents";
 import { GameOptions, InstanceOptions } from "./config";
+import { ContextManager } from "./context-manager";
+import { RegalError } from "./error";
 import { InstanceEvents } from "./events";
 import { InstanceOutput } from "./output";
 
@@ -56,6 +58,12 @@ export default class GameInstance {
      * Must be allowed by the static configuration's `allowOverrides` option.
      */
     constructor(options: Partial<GameOptions> = {}) {
+        if (ContextManager.isContextStatic()) {
+            throw new RegalError(
+                "Cannot construct a GameInstance outside of a game cycle."
+            );
+        }
+
         this.agents = buildInstanceAgents(this);
         this.events = new InstanceEvents(this);
         this.output = new InstanceOutput(this);
@@ -94,11 +102,12 @@ export default class GameInstance {
 
         const agent = activeAgentProxy(id, this) as T;
 
-        // tslint:disable-next-line:no-string-literal
-        const tempValues = resource["tempValues"];
+        const tempValues = (resource as any).tempValues;
 
-        for (const prop of Object.keys(tempValues)) {
-            agent[prop] = tempValues[prop];
+        if (tempValues !== undefined) {
+            for (const prop of Object.keys(tempValues)) {
+                agent[prop] = tempValues[prop];
+            }
         }
 
         return agent;

@@ -29,7 +29,7 @@ class AgentManagerImpl implements AgentManager {
 
     public hasPropertyRecord(property: PropertyKey): boolean {
         const changes: PropertyChange[] = this[property];
-        return changes && changes.length > 0;
+        return changes !== undefined && changes.length > 0;
     }
 
     public getProperty(property: PropertyKey): any {
@@ -44,7 +44,7 @@ class AgentManagerImpl implements AgentManager {
     }
 
     public getPropertyHistory(property: PropertyKey): PropertyChange[] {
-        return this[property];
+        return this.hasPropertyRecord(property) ? this[property] : [];
     }
 
     public propertyWasDeleted(property: PropertyKey): boolean {
@@ -102,7 +102,11 @@ class AgentManagerImpl implements AgentManager {
     }
 
     public deleteProperty(property: PropertyKey): void {
-        if (this.propertyWasDeleted(property)) {
+        if (
+            this.propertyWasDeleted(property) ||
+            (!this.hasPropertyRecord(property) &&
+                !StaticAgentRegistry.hasAgentProperty(this.id, property))
+        ) {
             return;
         }
 

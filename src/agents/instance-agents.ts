@@ -12,6 +12,7 @@ import { StaticAgentRegistry } from "./static-agent-registry";
 export interface InstanceAgents {
     game: GameInstance;
     agentManagers(): AgentManager[];
+    getAgentManager(id: number): AgentManager;
     reserveNewId(): number;
     getAgentProperty(id: number, property: PropertyKey): any;
     setAgentProperty(id: number, property: PropertyKey, value: any): boolean;
@@ -112,7 +113,9 @@ class InstanceAgentsImpl implements InstanceAgents {
             }
         }
 
-        if (isAgentReference(value)) {
+        if (isAgent(value)) {
+            value = activeAgentProxy(value.id, this.game);
+        } else if (isAgentReference(value)) {
             value = activeAgentProxy(value.refId, this.game);
         }
 
