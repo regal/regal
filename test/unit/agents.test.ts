@@ -211,5 +211,17 @@ describe("Agents", function() {
             expect(sib1.sibling.name).to.equal("Bob");
             expect(sib2.sibling.name).to.equal("Billy");
         });
+
+        it.only("Static agents can have references to each other", function() {
+            const PARENT = new Parent(new Dummy("D1", 10));
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const parent = myGame.using(PARENT);
+
+            expect(parent.child.name).to.equal("D1");
+            expect(parent.child.health).to.equal(10);
+        });
     });
 });
