@@ -1253,7 +1253,120 @@ describe("Agents", function() {
     });
 
     describe("StaticAgentRegistry", function() {
-        // TODO
+        it("StaticAgentRegistry.getNextAvailableId increments by 1 for each static agent", function() {
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+
+            const D = new Dummy("D1", 10);
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(2);
+
+            const P = new Parent(D);
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(3);
+
+            const P2 = new Parent(new Dummy("D2", 5));
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(5);
+        });
+
+        it("StaticAgentRegistry.hasAgentProperty works properly", function() {
+            const D = new Dummy("D1", 10);
+
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "name")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "health")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "foo")).to.be
+                .false;
+        });
+
+        it("StaticAgentRegistry.hasAgentProperty only returns true for properties that were added in the static context", function() {
+            const D = new Dummy("D1", 10);
+            (D as any).foo = true;
+
+            Game.init();
+            const d = new GameInstance().using(D);
+
+            (d as any).bar = true;
+
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "name")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "health")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "foo")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "bar")).to.be
+                .false;
+        });
+
+        it("StaticAgentRegistry.getAgentProperty works properly for literals and objects", function() {
+            const D = new Dummy("D1", 10);
+            const P = new Parent(D);
+
+            expect(StaticAgentRegistry.getAgentProperty(D.id, "name")).to.equal(
+                "D1"
+            );
+            expect(
+                StaticAgentRegistry.getAgentProperty(D.id, "health")
+            ).to.equal(10);
+            expect(StaticAgentRegistry.getAgentProperty(D.id, "foo")).to.be
+                .undefined;
+            expect(
+                StaticAgentRegistry.getAgentProperty(P.id, "child")
+            ).to.equal(D);
+        });
+
+        it("Error check for StaticAgentRegistry.getAgentProperty with an invalid id", function() {
+            expect(() =>
+                StaticAgentRegistry.getAgentProperty(0, "foo")
+            ).to.throw(
+                RegalError,
+                "No agent with the id <0> exists in the static registry."
+            );
+        });
+
+        it("StaticAgentRegistry.hasAgent works properly", function() {
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
+
+            const D = new Dummy("D1", 10);
+
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.true;
+
+            Game.init();
+
+            const p = new GameInstance().using(new Parent(D));
+
+            expect(StaticAgentRegistry.hasAgent(p.id)).to.be.false;
+        });
+
+        it("StaticAgentRegistry.addAgent is called implicitly", function() {
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
+
+            const D = new Dummy("D1", 10);
+
+            expect(StaticAgentRegistry[1]).to.deep.equal(D);
+        });
+
+        it("StaticAgentRegistry.addAgent blocks an illegal id", function() {
+            expect(() => StaticAgentRegistry.addAgent({ id: 23 })).to.throw(
+                RegalError,
+                "Expected an agent with id <1>."
+            );
+        });
+
+        it("StaticAgentRegistry.reset removes all agents and resets the agent count", function() {
+            const D = new Dummy("D1", 10);
+            const P = new Parent(new Dummy("D2", 25));
+
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(2)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(3)).to.be.true;
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(4);
+
+            StaticAgentRegistry.reset();
+
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(2)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(3)).to.be.false;
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+        });
     });
 
     describe("Reverting Agents", function() {
