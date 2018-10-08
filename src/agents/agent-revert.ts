@@ -19,7 +19,7 @@ export const buildRevertFunction = (
             for (const prop of props) {
                 const history = am.getPropertyHistory(prop);
                 const lastChangeIdx = history.findIndex(
-                    change => change.eventId > revertTo
+                    change => change.eventId <= revertTo
                 );
 
                 if (lastChangeIdx === -1) {
