@@ -4,7 +4,11 @@ import "mocha";
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata, log } from "../test-utils";
 import { Game } from "../../src/game-api";
-import { Agent, PropertyOperation } from "../../src/agents";
+import {
+    Agent,
+    PropertyOperation,
+    StaticAgentRegistry
+} from "../../src/agents";
 import GameInstance from "../../src/game-instance";
 import { RegalError } from "../../src/error";
 import {
@@ -970,8 +974,166 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.getAgentProperty gets the correct property from either the instance or static registry", function() {
-            // TODO - write this one
-            // const DUMMY = new Dummy("")
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const d = myGame.using(DUMMY);
+            d.health = 0;
+            d.health += 5;
+            (d as any).foo = true;
+
+            expect(myGame.agents.getAgentProperty(d.id, "name")).to.equal("D1");
+            expect(myGame.agents.getAgentProperty(d.id, "health")).to.equal(5);
+            expect(myGame.agents.getAgentProperty(d.id, "foo")).to.be.true;
+        });
+
+        it("If the static agent hasn't been modified, InstanceAgents.getAgentProperty will call the static registry directly", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const d = myGame.using(DUMMY);
+
+            expect(myGame.agents.getAgentProperty(d.id, "name")).to.equal("D1");
+            expect(myGame.agents.getAgentProperty(d.id, "bad")).to.be.undefined;
+            expect(
+                myGame.agents
+                    .agentManagers()
+                    .map(manager => manager.id)
+                    .includes(d.id)
+            ).to.be.false; // There isn't an agent manager for this agent
+        });
+
+        it("Error check for InstanceAgents.getAgentProperty with an invalid id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(() => myGame.agents.getAgentProperty(1, "foo")).to.throw(
+                RegalError,
+                "No agent with the id <1> exists."
+            );
+        });
+
+        it("InstanceAgents.getAgentProperty returns undefined for an non-existent agent property", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            expect(myGame.agents.getAgentProperty(1, "foo")).to.be.undefined;
+        });
+
+        it("InstanceAgents.getAgentProperty returns an agent proxy when the value of the static agent's property is an agent", function() {
+            const DUMMY = new Dummy("D1", 10);
+            const PARENT = new Parent(DUMMY);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const p = myGame.using(PARENT);
+
+            const child = myGame.agents.getAgentProperty(2, "child");
+            expect(child).to.deep.equal({});
+            expect(child.id).to.equal(DUMMY.id);
+            expect(child.name).to.equal("D1");
+        });
+
+        it("InstanceAgents.setAgentProperty works properly", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            myGame.agents.setAgentProperty(d.id, "name", "Lars");
+
+            expect(d.name).to.equal("Lars");
+        });
+
+        it("InstanceAgents.setAgentProperty implicitly activates an agent", function() {
+            const SIB = new Sibling("Billy");
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            myGame.agents.setAgentProperty(
+                1,
+                "sibling",
+                new Sibling("Bob", SIB)
+            );
+
+            expect(myGame.agents.agentManagers().length).to.equal(3); // State, SIB, SIB's sibling
+            expect(myGame.using(SIB).sibling.name).to.equal("Bob");
+            expect(new GameInstance().using(SIB).sibling).to.be.undefined;
+        });
+
+        it("Error check InstanceAgents.setAgentProperty with id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            myGame.using(new Dummy("D1", 10));
+
+            expect(() => myGame.agents.setAgentProperty(1, "id", 2)).to.throw(
+                RegalError,
+                "The agent's <id> property cannot be set."
+            );
+        });
+
+        it("Error check InstanceAgents.setAgentProperty with game", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            myGame.using(new Dummy("D1", 10));
+
+            expect(() =>
+                myGame.agents.setAgentProperty(1, "game", new GameInstance())
+            ).to.throw(
+                RegalError,
+                "The agent's <game> property cannot be set."
+            );
+        });
+
+        it("Error check InstanceAgents.setAgentProperty with an invalid id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            expect(() =>
+                myGame.agents.setAgentProperty(1, "foo", true)
+            ).to.throw("No agent with the id <1> exists.");
+        });
+
+        it("InstanceAgents.hasAgentProperty works properly with static agents", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "name")).to.be.true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "health")).to.be
+                .true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "foo")).to.be.false;
+        });
+
+        it("InstanceAgents.hasAgentProperty works properly with static agents that have been modified in the cycle", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            myGame.using(DUMMY).health += 15;
+
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "name")).to.be.true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "health")).to.be
+                .true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "foo")).to.be.false;
         });
     });
 });

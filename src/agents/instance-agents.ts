@@ -127,6 +127,12 @@ class InstanceAgentsImpl implements InstanceAgents {
         property: PropertyKey,
         value: any
     ): boolean {
+        if (property === "id" || property === "game") {
+            throw new RegalError(
+                `The agent's <${property}> property cannot be set.`
+            );
+        }
+
         let am = this.getAgentManager(id);
 
         if (!isAgentManager(am)) {
@@ -177,6 +183,12 @@ class InstanceAgentsImpl implements InstanceAgents {
     }
 
     public deleteAgentProperty(id: number, property: PropertyKey): boolean {
+        if (property === "id" || property === "game") {
+            throw new RegalError(
+                `The agent's <${property}> property cannot be deleted.`
+            );
+        }
+
         let am = this.getAgentManager(id);
 
         if (!isAgentManager(am)) {
