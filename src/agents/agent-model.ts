@@ -5,7 +5,7 @@ import { StaticAgentRegistry } from "./static-agent-registry";
 
 /** Determines whether an object is an `Agent`. */
 export const isAgent = (o: any): o is Agent =>
-    o && (o as Agent).id !== undefined;
+    o !== undefined && (o as Agent).id !== undefined;
 
 export const inactiveAgentProxy = (agent: Agent): Agent =>
     new Proxy(agent, {

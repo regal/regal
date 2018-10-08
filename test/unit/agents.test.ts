@@ -673,7 +673,7 @@ describe("Agents", function() {
         });
     });
 
-    describe.only("InstanceAgents", function() {
+    describe("InstanceAgents", function() {
         it("InstanceAgents.recycle creates all new agents that have only the last values of each of the original agent' properties", function() {
             Game.init();
 
@@ -1135,5 +1135,128 @@ describe("Agents", function() {
                 .true;
             expect(myGame.agents.hasAgentProperty(DUMMY.id, "foo")).to.be.false;
         });
+
+        it("InstanceAgents.hasAgentProperty works properly with nonstatic agents", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const dummy = myGame.using(new Dummy("D1", 10));
+
+            expect(myGame.agents.hasAgentProperty(dummy.id, "name")).to.be.true;
+            expect(myGame.agents.hasAgentProperty(dummy.id, "health")).to.be
+                .true;
+            expect(myGame.agents.hasAgentProperty(dummy.id, "foo")).to.be.false;
+        });
+
+        it("Error check for InstanceAgents.hasAgentProperty with an invalid id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(() => myGame.agents.hasAgentProperty(1, "foo")).to.throw(
+                RegalError,
+                "No agent with the id <1> exists."
+            );
+        });
+
+        it("InstanceAgents.deleteAgentProperty works properly for static agents", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(DUMMY);
+
+            myGame.agents.deleteAgentProperty(d.id, "name");
+            myGame.agents.deleteAgentProperty(d.id, "foo");
+
+            expect("name" in d).to.be.false;
+            expect(d.name).to.be.undefined;
+            expect("health" in d).to.be.true;
+
+            expect("name" in new GameInstance().using(DUMMY)).to.be.true;
+        });
+
+        it("InstanceAgents.deleteAgentProperty works properly for nonstatic agents", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            myGame.agents.deleteAgentProperty(d.id, "name");
+            myGame.agents.deleteAgentProperty(d.id, "foo");
+
+            expect("name" in d).to.be.false;
+            expect(d.name).to.be.undefined;
+            expect("health" in d).to.be.true;
+        });
+
+        it("Error check for InstanceAgents.deleteAgentProperty refuse delete of id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const dummy = myGame.using(new Dummy("D1", 10));
+
+            expect(() =>
+                myGame.agents.deleteAgentProperty(dummy.id, "id")
+            ).to.throw(
+                RegalError,
+                "The agent's <id> property cannot be deleted."
+            );
+        });
+
+        it("Error check for InstanceAgents.deleteAgentProperty refuse delete of game", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const dummy = myGame.using(new Dummy("D1", 10));
+
+            expect(() =>
+                myGame.agents.deleteAgentProperty(dummy.id, "game")
+            ).to.throw(
+                RegalError,
+                "The agent's <game> property cannot be deleted."
+            );
+        });
+
+        it("Error check for InstanceAgents.deleteAgentProperty with an invalid id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(() => myGame.agents.deleteAgentProperty(1, "foo")).to.throw(
+                RegalError,
+                "No agent with the id <1> exists."
+            );
+        });
+
+        it("InstanceAgents.getAgentManager returns the correct agent manager", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            expect(
+                myGame.agents.getAgentManager(d.id).getProperty("name")
+            ).to.equal("D1");
+        });
+
+        it("InstanceAgents.getAgentManager returns undefined for an illegal property", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(myGame.agents.getAgentManager(-1)).to.be.undefined;
+        });
+    });
+
+    describe("StaticAgentRegistry", function() {
+        // TODO
+    });
+
+    describe("Reverting Agents", function() {
+        // TODO
     });
 });
