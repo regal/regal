@@ -179,6 +179,8 @@ export class Game {
         try {
             validateGameInstance(instance);
 
+            Game.init();
+
             if (command === undefined) {
                 throw new RegalError("Command must be defined.");
             }
@@ -225,6 +227,8 @@ export class Game {
                 );
             }
 
+            Game.init();
+
             newInstance = new GameInstance(options);
             newInstance.events.invoke(HookManager.startCommandHook);
         } catch (error) {
@@ -252,6 +256,8 @@ export class Game {
 
         try {
             validateGameInstance(instance);
+
+            Game.init();
 
             if (!HookManager.beforeUndoCommandHook(instance)) {
                 throw new RegalError("Undo is not allowed here.");
@@ -300,6 +306,8 @@ export class Game {
         try {
             validateGameInstance(instance);
 
+            Game.init();
+
             const oldOverrideKeys = Object.keys(instance.options.overrides);
             const newOptionKeys = Object.keys(options);
 
@@ -330,10 +338,3 @@ export class Game {
               };
     }
 }
-
-/**
- * Resets the static context of the game.
- */
-export const resetGame = () => {
-    Game.reset();
-};

@@ -5,7 +5,12 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export { Agent, InstanceAgents } from "./agents";
+export {
+    Agent,
+    InstanceAgents,
+    PropertyChange,
+    PropertyOperation
+} from "./agents";
 export {
     onPlayerCommand,
     onStartCommand,
