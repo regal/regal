@@ -11,8 +11,16 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { InstanceAgents, InstanceState } from "./agents";
+import {
+    activeAgentProxy,
+    Agent,
+    buildInstanceAgents,
+    InstanceAgents,
+    recycleInstanceAgents
+} from "./agents";
 import { GameOptions, InstanceOptions } from "./config";
+import { ContextManager } from "./context-manager";
+import { RegalError } from "./error";
 import { InstanceEvents } from "./events";
 import { InstanceOutput } from "./output";
 
@@ -50,11 +58,17 @@ export default class GameInstance {
      * Must be allowed by the static configuration's `allowOverrides` option.
      */
     constructor(options: Partial<GameOptions> = {}) {
-        this.agents = new InstanceAgents(this);
+        if (ContextManager.isContextStatic()) {
+            throw new RegalError(
+                "Cannot construct a GameInstance outside of a game cycle."
+            );
+        }
+
+        this.agents = buildInstanceAgents(this);
         this.events = new InstanceEvents(this);
         this.output = new InstanceOutput(this);
         this.options = new InstanceOptions(this, options);
-        this.state = new InstanceState(this);
+        this.state = activeAgentProxy(0, this);
     }
 
     /**
@@ -66,15 +80,36 @@ export default class GameInstance {
      *
      * @returns The new `GameInstance`, with each manager cycled.
      */
-    public cycle(newOptions?: Partial<GameOptions>): GameInstance {
+    public recycle(newOptions?: Partial<GameOptions>): GameInstance {
         const opts =
             newOptions === undefined ? this.options.overrides : newOptions;
 
         const newGame = new GameInstance(opts);
         newGame.events = this.events.cycle(newGame);
-        newGame.agents = this.agents.cycle(newGame);
+        newGame.agents = recycleInstanceAgents(this.agents, newGame);
         newGame.output = this.output.cycle(newGame);
 
         return newGame;
+    }
+
+    public using<T extends Agent>(resource: T): T {
+        let id = resource.id;
+
+        if (id < 0) {
+            id = this.agents.reserveNewId();
+            resource.id = id;
+        }
+
+        const agent = activeAgentProxy(id, this) as T;
+
+        const tempValues = (resource as any).tempValues;
+
+        if (tempValues !== undefined) {
+            for (const prop of Object.keys(tempValues)) {
+                agent[prop] = tempValues[prop];
+            }
+        }
+
+        return agent;
     }
 }

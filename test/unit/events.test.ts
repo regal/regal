@@ -21,14 +21,12 @@ import {
 } from "../../src/agents";
 import { OutputLineType } from "../../src/output";
 import { MetadataManager } from "../../src/config";
+import { Game } from "../../src/game-api";
 
 describe("Events", function() {
     beforeEach(function() {
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
     });
 
     it("The `on` function does not alter the inner event function", function() {
@@ -36,6 +34,8 @@ describe("Events", function() {
             game.output.write("Hello, world!");
             return noop;
         });
+
+        Game.init();
 
         const myGame = new GameInstance();
         greet(myGame);
@@ -62,6 +62,8 @@ describe("Events", function() {
                 game.output.write(`Hello, ${name}!`);
                 return noop;
             });
+
+        Game.init();
 
         const myGame = new GameInstance();
         greet("Regal")(myGame);
@@ -98,6 +100,8 @@ describe("Events", function() {
                 return date.getHours() < 12 ? morning : afternoon;
             });
 
+        Game.init();
+
         const myGame = new GameInstance();
         const myDate = new Date("August 5, 2018 10:15:00");
 
@@ -126,6 +130,7 @@ describe("Events", function() {
     });
 
     it("noop returns undefined", function() {
+        Game.init();
         expect(noop(new GameInstance())).to.be.undefined;
     });
 
@@ -150,6 +155,8 @@ describe("Events", function() {
                         addItemToInventory(name, "Sword")
                     );
                 });
+
+            Game.init();
 
             const myGame = new GameInstance();
 
@@ -205,6 +212,8 @@ describe("Events", function() {
                     .then(foo("FOUR"));
             });
 
+            Game.init();
+
             const myGame = new GameInstance();
             complex(myGame);
 
@@ -258,6 +267,8 @@ describe("Events", function() {
                     });
                     return queue;
                 });
+
+            Game.init();
 
             const myGame = new GameInstance();
             const items = ["Hat", "Duck", "Spoon"];
@@ -347,6 +358,9 @@ describe("Events", function() {
         it("Attempting to invoke an EventQueue throws an error", function() {
             const nonevent = on("FOO", game => noop);
             const queue = nq(nonevent, nonevent);
+
+            Game.init();
+
             expect(() => queue(new GameInstance())).to.throw(
                 RegalError,
                 "Cannot invoke an EventQueue."
@@ -413,6 +427,8 @@ describe("Events", function() {
                 )} | ${delayed.join(", ")}`, function() {
                     // Test basic queue execution
                     const init = on("INIT", game => q());
+
+                    Game.init();
 
                     let myGame = new GameInstance();
                     init(myGame);
@@ -653,7 +669,7 @@ describe("Events", function() {
 
     describe("Agent Change Tracking", function() {
         it("Agent changes are tracked in GameInstance.events.history", function() {
-            StaticAgentRegistry.resetRegistry();
+            StaticAgentRegistry.reset();
 
             const heal = (target: Dummy, amount: number) =>
                 on("HEAL", game => {
@@ -666,8 +682,10 @@ describe("Events", function() {
                     return noop;
                 });
 
+            Game.init();
+
             const myGame = new GameInstance();
-            const dummy = new Dummy("Lars", 10).register(myGame);
+            const dummy = myGame.using(new Dummy("Lars", 10));
 
             heal(dummy, 15)(myGame);
 
@@ -715,8 +733,10 @@ describe("Events", function() {
                 return noop;
             });
 
-            const addFriend = (target: Dummy, friend: Dummy) =>
+            const addFriend = (target: Dummy, _friend: Dummy) =>
                 on("ADD FRIEND", game => {
+                    const friend = game.using(_friend);
+
                     target["friend"] = friend;
 
                     game.output.write(
@@ -731,8 +751,10 @@ describe("Events", function() {
 
                 game.state.mainAgent = lars;
 
-                return addFriend(lars, bill).thenq(readStatus);
+                return addFriend(game.state.mainAgent, bill).thenq(readStatus);
             });
+
+            Game.init();
 
             const myGame = new GameInstance();
             start(myGame);
@@ -768,20 +790,6 @@ describe("Events", function() {
                         {
                             agentId: 2,
                             op: PropertyOperation.ADDED,
-                            property: "_id",
-                            init: undefined,
-                            final: 2
-                        },
-                        {
-                            agentId: 2,
-                            op: PropertyOperation.ADDED,
-                            property: "game",
-                            init: undefined,
-                            final: myGame
-                        },
-                        {
-                            agentId: 2,
-                            op: PropertyOperation.ADDED,
                             property: "name",
                             init: undefined,
                             final: "Bill"
@@ -809,20 +817,6 @@ describe("Events", function() {
                     name: "START",
                     caused: [2, 3],
                     changes: [
-                        {
-                            agentId: 1,
-                            op: PropertyOperation.ADDED,
-                            property: "_id",
-                            init: undefined,
-                            final: 1
-                        },
-                        {
-                            agentId: 1,
-                            op: PropertyOperation.ADDED,
-                            property: "game",
-                            init: undefined,
-                            final: myGame
-                        },
                         {
                             agentId: 1,
                             op: PropertyOperation.ADDED,
@@ -876,6 +870,8 @@ describe("Events", function() {
                 return noop;
             });
 
+            Game.init();
+
             const myGame = new GameInstance();
 
             expect(myGame.events.lastEventId).to.equal(0);
@@ -890,6 +886,8 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
                 return noop;
             });
+
+            Game.init();
 
             const myGame = new GameInstance();
             myGame.events = new InstanceEvents(myGame, 10);
@@ -906,6 +904,8 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
                 return noop;
             });
+
+            Game.init();
 
             const game1 = new GameInstance();
 

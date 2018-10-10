@@ -11,14 +11,13 @@ import {
 } from "../../src/config";
 import { OutputLineType } from "../../src/output";
 import { getDemoMetadata, metadataWithOptions } from "../test-utils";
+import { Game } from "../../src/game-api";
 
 describe("Config", function() {
     beforeEach(function() {
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
+        Game.init();
     });
 
     describe("Game Options", function() {

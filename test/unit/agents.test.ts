@@ -1,19 +1,22 @@
 import { expect } from "chai";
 import "mocha";
 
+import { MetadataManager } from "../../src/config";
+import { getDemoMetadata, log } from "../test-utils";
+import { Game } from "../../src/game-api";
+import {
+    Agent,
+    PropertyOperation,
+    StaticAgentRegistry,
+    buildRevertFunction
+} from "../../src/agents";
 import GameInstance from "../../src/game-instance";
 import { RegalError } from "../../src/error";
 import {
-    Agent,
-    StaticAgentRegistry,
-    AgentRecord,
-    AgentReference,
-    PropertyOperation,
-    buildRevertFunction
-} from "../../src/agents";
-import { log, getDemoMetadata } from "../test-utils";
-import { on, noop, EventRecord } from "../../src/events";
-import { MetadataManager } from "../../src/config";
+    DEFAULT_EVENT_ID,
+    DEFAULT_EVENT_NAME
+} from "../../src/events/event-record";
+import { on, noop } from "../../src/events";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -21,570 +24,603 @@ class Dummy extends Agent {
     }
 }
 
+class Parent extends Agent {
+    constructor(public child: Dummy) {
+        super();
+    }
+}
+
+class Sibling extends Agent {
+    constructor(public name: string, public sibling?: Sibling) {
+        super();
+    }
+}
+
 describe("Agents", function() {
     beforeEach(function() {
-        StaticAgentRegistry.resetRegistry();
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
     });
 
-    afterEach(function() {
-        MetadataManager.reset();
-    });
-
-    describe("Agent Behavior", function() {
-        it("Registering an agent adds its properties to the instance", function() {
-            const myGame = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(myGame);
-
-            expect(myGame.agents.hasOwnProperty(1)).to.be.true;
-            expect(myGame.agents.hasAgentProperty(1, "name")).to.be.true;
-            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("D1");
-            expect(myGame.agents.hasAgentProperty(1, "health")).to.be.true;
-            expect(myGame.agents.getAgentProperty(1, "health")).to.equal(10);
-        });
-
-        it("It's possible to register an agent with a custom ID", function() {
-            const myGame = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(myGame, 15);
-
-            expect(dummy.id).to.equal(15);
-        });
-
-        it("If setting a custom ID, it must be positive", function() {
-            expect(() =>
-                new Dummy("D1", 10).register(new GameInstance(), -10)
-            ).to.throw(RegalError, "newId must be positive.");
-        });
-
-        it("If setting a custom ID, it cannot already be assigned to a registered agent", function() {
-            const myGame = new GameInstance();
-            const d1 = new Dummy("D1", 10).register(myGame);
-
-            expect(() => new Dummy("D2", 12).register(myGame, 1)).to.throw(
-                RegalError,
-                "An agent with ID <1> has already been registered with the instance."
-            );
-        });
-
-        it("Registering an agent takes the next available agent ID", function() {
-            const myGame = new GameInstance();
-            const d1 = new Dummy("D1", 10).register(myGame);
-            const d2 = new Dummy("D2", 12).register(myGame);
-            const d3 = new Dummy("D3", 0).register(myGame);
-
-            expect(d1.id).to.equal(1);
-            expect(d2.id).to.equal(2);
-            expect(d3.id).to.equal(3);
-        });
-
-        it("Registering an agent takes the next available agent ID (custom IDs)", function() {
-            const myGame = new GameInstance();
-            const d1 = new Dummy("D1", 10).register(myGame, 2);
-            const d2 = new Dummy("D2", 12).register(myGame);
-            const d3 = new Dummy("D3", 0).register(myGame);
-
-            expect(d1.id).to.equal(2);
-            expect(d2.id).to.equal(1);
-            expect(d3.id).to.equal(3);
-        });
-
-        it("An unregistered agent's ID is undefined", function() {
-            expect(new Dummy("D1", 10).id).to.be.undefined;
-        });
-
-        it("An agent's ID can be set exactly once", function() {
-            const dummy = new Dummy("D1", 10);
-            dummy.id = 5;
-
-            expect(dummy.id).to.equal(5);
-            expect(() => (dummy.id = 10)).to.throw(
-                RegalError,
-                "Cannot change an agent's ID once it has been set."
-            );
-        });
-
-        it("The GameInstance must be defined to register the agent.", function() {
-            expect(() => new Dummy("D1", 10).register(undefined)).to.throw(
-                RegalError,
-                "The GameInstance must be defined to register the agent."
-            );
-        });
-
-        it("Cannot register an agent more than once.", function() {
-            const game = new GameInstance();
-
-            expect(() =>
-                new Dummy("D1", 10).register(game).register(game)
-            ).to.throw(RegalError, "Cannot register an agent more than once.");
-        });
-
-        it("Error check for InstanceAgents#getAgentProperty for an unused ID", function() {
-            expect(() =>
-                new GameInstance().agents.getAgentProperty(1, "foo")
-            ).to.throw(
-                RegalError,
-                "No agent with ID <1> exists in the instance or the static registry."
-            );
-        });
-
-        it("Error check for InstanceAgents#setAgentProperty for an unused ID", function() {
-            expect(() =>
-                new GameInstance().agents.setAgentProperty(
-                    1,
-                    "foo",
-                    "bar",
-                    EventRecord.default
-                )
-            ).to.throw(
-                RegalError,
-                "No agent with ID <1> exists in the instance or the static registry."
-            );
-        });
-
-        it("Error check for InstanceAgents#hasAgentProperty for an unused ID", function() {
-            expect(() =>
-                new GameInstance().agents.hasAgentProperty(1, "foo")
-            ).to.throw(
-                RegalError,
-                "No agent with ID <1> exists in the instance or the static registry."
-            );
-        });
-
-        it("Error check for InstanceAgents#deleteAgentProperty for an unused ID", function() {
-            expect(() =>
-                new GameInstance().agents.deleteAgentProperty(
-                    1,
-                    "foo",
-                    EventRecord.default
-                )
-            ).to.throw(
-                RegalError,
-                "No agent with ID <1> exists in the instance or the static registry."
-            );
-        });
-
-        it("Registering an agent registers its property agents as well", function() {
-            const game = new GameInstance();
-            let dummy = new Dummy("D1", 10);
-            const childDummy = new Dummy("D2", 15);
-            dummy["child"] = childDummy;
-
-            dummy = dummy.register(game);
-
-            expect(dummy.isRegistered).to.be.true;
-            expect(childDummy.isRegistered).to.be.true;
-        });
-
-        it("Adding an agent as a property to a registered agent registers it", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
-
-            const childDummy = new Dummy("D2", 15);
-
-            expect(dummy.isRegistered).to.be.true;
-            expect(childDummy.isRegistered).to.be.false;
-
-            dummy["child"] = childDummy;
-
-            expect(dummy.isRegistered).to.be.true;
-            expect(childDummy.isRegistered).to.be.true;
-        });
-
-        it("Agent properties are replaced by AgentReferences", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
-
-            const childDummy = new Dummy("D2", 15);
-            dummy["child"] = childDummy;
-
-            expect(game.agents[1].child[0].final).to.deep.equal(
-                new AgentReference(2)
-            );
-        });
-
-        it("AgentReferences are invisible", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
-
-            const childDummy = new Dummy("D2", 15);
-            dummy["child"] = childDummy;
-
-            expect(dummy["child"].name).to.equal("D2");
-            expect(dummy["child"].health).to.equal(15);
-        });
-
-        it("Properties can be set across AgentReferences", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
-
-            const childDummy = new Dummy("D2", 15);
-            dummy["child"] = childDummy;
-
-            dummy["child"].name = "Paul Blart";
-
-            expect(dummy["child"].name).to.equal("Paul Blart");
-            expect(dummy["child"].health).to.equal(15);
-        });
-
-        it("When a property is set across an AgentReference, the new property is accessible from the original agent definition", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
-
-            const childDummy = new Dummy("D2", 15);
-            dummy["child"] = childDummy;
-
-            dummy["child"].name = "Paul Blart";
-
-            expect(childDummy.name).to.equal("Paul Blart");
-        });
-
-        it("Trying to retrive an undefined property of a registered agent returns undefined", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
-
-            expect(dummy["foo"]).to.be.undefined;
-        });
-
-        it("A non-registered agent's `has` method works properly", function() {
-            const dummy = new Dummy("D1", 10);
-
-            expect("name" in dummy).to.be.true;
-            expect("foo" in dummy).to.be.false;
-        });
-
-        it("Registered agents' properties may be deleted", function() {
-            const myGame = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(myGame);
-
-            expect(dummy.name).to.equal("D1");
-            expect("name" in dummy).to.be.true;
-
-            delete dummy.name;
-
-            expect(dummy.name).to.be.undefined;
-            expect("name" in dummy).to.be.false;
-        });
-
-        it("Unregistered agents' properties may be deleted", function() {
-            const dummy = new Dummy("D1", 10);
-
-            expect(dummy.name).to.equal("D1");
-            expect("name" in dummy).to.be.true;
-
-            delete dummy.name;
-
-            expect(dummy.name).to.be.undefined;
-            expect("name" in dummy).to.be.false;
-        });
-
-        it("Properties added to an Agent subclass's prototype are not tracked (don't do this)", function() {
-            Dummy.prototype["foo"] = "bar";
+    describe("Basic Usage", function() {
+        it("Retrieve the initial properties of an active agent within a game cycle", function() {
+            Game.init();
 
             const myGame = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(myGame);
-
-            expect(myGame.agents.hasAgentProperty(dummy.id, "name")).to.be.true;
-            expect(myGame.agents.hasAgentProperty(dummy.id, "foo")).to.be.false;
-
-            delete Dummy.prototype["foo"];
-        });
-    });
-
-    describe("Static Agents", function() {
-        it("The static agent registry has no agents to begin with", function() {
-            expect(StaticAgentRegistry.agentCount).to.equal(0);
-        });
-
-        it("Defining a static agent lets it retain its original properties", function() {
-            const dummy = new Dummy("D1", 10).static();
+            const dummy = myGame.using(new Dummy("D1", 10));
 
             expect(dummy.name).to.equal("D1");
             expect(dummy.health).to.equal(10);
         });
 
-        it("Defining a static agent assigns it an ID in the order it was made static", function() {
-            const dummy1 = new Dummy("D1", 10).static();
-            let dummy3 = new Dummy("D3", 109);
-            const dummy2 = new Dummy("D2", -2).static();
-            dummy3 = dummy3.static();
+        it("Modify the properties of an active agent within a game cycle", function() {
+            Game.init();
 
-            expect(dummy1.id).to.equal(1);
-            expect(dummy2.id).to.equal(2);
-            expect(dummy3.id).to.equal(3);
-        });
-
-        it("The isStatic property of static agents is appropriately assigned", function() {
-            const dummy = new Dummy("D1", 10);
-
-            expect(dummy.isStatic).to.be.false;
-
-            dummy.static();
-
-            expect(dummy.isStatic).to.be.true;
-        });
-
-        it("Declaring an agent static adds it to the registry", function() {
-            const dummy = new Dummy("D1", 10).static();
-
-            expect(StaticAgentRegistry.agentCount).to.equal(1);
-
-            expect(StaticAgentRegistry.hasAgent(dummy.id)).to.be.true;
-            expect(StaticAgentRegistry.hasAgentProperty(dummy.id, "name")).to.be
-                .true;
-            expect(StaticAgentRegistry.hasAgentProperty(1, "health")).to.be
-                .true;
-
-            expect(StaticAgentRegistry.getAgentProperty(1, "name")).to.equal(
-                "D1"
-            );
-            expect(
-                StaticAgentRegistry.getAgentProperty(dummy.id, "health")
-            ).to.equal(10);
-        });
-
-        it("The static agent registry doesn't have any false positives", function() {
-            const dummy = new Dummy("D1", 10).static();
-
-            expect(StaticAgentRegistry.hasAgent(0)).to.be.false;
-            expect(StaticAgentRegistry.hasAgent(2)).to.be.false;
-            expect(StaticAgentRegistry.hasAgentProperty(dummy.id, "non")).to.be
-                .false;
-            expect(StaticAgentRegistry.hasAgentProperty(2, "name")).to.be.false;
-        });
-
-        it("Cannot declare an agent static multiple times", function() {
-            const dummy = new Dummy("D1", 10).static();
-
-            expect(() => dummy.static()).to.throw(
-                RegalError,
-                "Cannot create more than one static version of an agent."
-            );
-        });
-
-        it("Cannot create a static version of a registered agent.", function() {
-            const dummy = new Dummy("D1", 10).register(new GameInstance());
-
-            expect(() => dummy.static()).to.throw(
-                RegalError,
-                "Cannot create a static version of a registered agent."
-            );
-        });
-
-        it("Error check for StaticAgentRegistry#getAgentProperty", function() {
-            expect(() =>
-                StaticAgentRegistry.getAgentProperty(100, "foo")
-            ).to.throw(
-                RegalError,
-                "No static agent with ID <100> exists in the registry."
-            );
-        });
-
-        it("Registering a static agent does not modify the game instance", function() {
-            const dummy = new Dummy("D1", 10).static();
-            const game = new GameInstance();
-
-            dummy.register(game);
-            expect(game).to.deep.equal(new GameInstance());
-        });
-
-        it("A static agent's #has method includes user-defined agent properties", function() {
-            const dummy = new Dummy("D1", 10).static();
-            expect("name" in dummy).to.be.true;
-        });
-
-        it("Modifying a registered static agent adds the property to the instance state", function() {
-            const dummy = new Dummy("D1", 10).static();
             const myGame = new GameInstance();
+            const dummy = myGame.using(new Dummy("D1", 10));
 
-            on("MODIFY", game => {
-                const myDummy = dummy.register(game);
-                myDummy.health += 15;
-                myDummy["newProp"] = "newValue";
-
-                return noop;
-            })(myGame);
-
-            expect(myGame.agents.getAgentProperty(1, "health")).to.equal(25);
-            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("D1");
-            expect(myGame.agents.getAgentProperty(1, "newProp")).to.equal(
-                "newValue"
-            );
-        });
-
-        it("Modifying a registered static agent does not modify the one in the registry", function() {
-            const dummy = new Dummy("D1", 10).static();
-            const myGame = new GameInstance();
-
-            on("MODIFY", game => {
-                const myDummy = dummy.register(game);
-                myDummy.health += 15;
-                myDummy.name = "Jeff";
-                myDummy["newProp"] = "newValue";
-
-                return noop;
-            })(myGame);
-
-            expect(StaticAgentRegistry.getAgentProperty(1, "health")).to.equal(
-                10
-            );
-            expect(StaticAgentRegistry.getAgentProperty(1, "name")).to.equal(
-                "D1"
-            );
-            expect(StaticAgentRegistry.getAgentProperty(1, "newProp")).to.be
-                .undefined;
-        });
-
-        it("After static agents are created, registering a nonstatic agent will get the next available ID", function() {
-            const staticDummy = new Dummy("D1", 10).static();
-            const game = new GameInstance();
-            const nonstaticDummy = new Dummy("D2", -21).register(game);
-
-            expect(nonstaticDummy.id).to.equal(2);
-        });
-
-        it("If setting a custom ID, it cannot already be assigned to a static agent", function() {
-            const myGame = new GameInstance();
-            const d1 = new Dummy("D1", 10).static().register(myGame);
-
-            expect(() => new Dummy("D2", 12).register(myGame, 1)).to.throw(
-                RegalError,
-                "A static agent already has the ID <1>."
-            );
-        });
-
-        it("A static agent's properties can be deleted", function() {
-            const myGame = new GameInstance();
-            const dummy = new Dummy("D1", 10).static().register(myGame);
+            dummy.health += 15;
+            dummy["foo"] = "bar";
 
             expect(dummy.name).to.equal("D1");
-            expect("name" in dummy).to.be.true;
-
-            delete dummy.name;
-
-            expect(dummy.name).to.be.undefined;
-            expect("name" in dummy).to.be.false;
+            expect(dummy.health).to.equal(25);
+            expect(dummy["foo"]).to.equal("bar");
         });
 
-        it("InstanceAgents#deleteAgentProperty will return false if one tries to delete a static agent property that doesn't exist", function() {
+        it("Check the existence of an active agent's properties within a game cycle", function() {
+            Game.init();
+
             const myGame = new GameInstance();
-            const dummy = new Dummy("D1", 10).static().register(myGame);
+            const dummy = myGame.using(new Dummy("D1", 10));
 
-            expect(
-                myGame.agents.deleteAgentProperty(1, "foo", EventRecord.default)
-            ).to.be.false;
+            delete dummy.health;
+
+            expect("name" in dummy).to.be.true;
+            expect("health" in dummy).to.be.false;
+        });
+
+        it("The properties of an inactive agent cannot be read during a game cycle", function() {
+            Game.init();
+
+            const _dummy = new Dummy("D1", 10);
+
+            expect(() => _dummy.health).to.throw(
+                RegalError,
+                "The properties of an inactive agent cannot be accessed within a game cycle."
+            );
+        });
+
+        it("The properties of an inactive agent can only be set once during a game cycle", function() {
+            Game.init();
+
+            const _dummy = new Dummy("D1", 10);
+
+            expect(() => (_dummy.health = 23)).to.throw(
+                RegalError,
+                "The properties of an inactive agent cannot be set within a game cycle."
+            );
+        });
+
+        it("The properties of an inactive agent cannot be deleted during a game cycle", function() {
+            Game.init();
+
+            const _dummy = new Dummy("D1", 10);
+
+            expect(() => delete _dummy.health).to.throw(
+                RegalError,
+                "The properties of an inactive agent cannot be deleted within a game cycle."
+            );
+        });
+
+        it("Retrieve the initial properties of an active static agent within a game cycle", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const dummy = myGame.using(DUMMY);
+
+            expect(dummy.name).to.equal("D1");
+            expect(dummy.health).to.equal(10);
+        });
+
+        it("Modifying the initial properties of an active static agent within a game cycle does not change the original", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const game1 = new GameInstance();
+            const dummy1 = game1.using(DUMMY);
+
+            dummy1.health += 15;
+            dummy1["foo"] = "bar";
+
+            expect(dummy1.name).to.equal("D1");
+            expect(dummy1.health).to.equal(25);
+            expect("foo" in dummy1).to.be.true;
+            expect(dummy1["foo"]).to.equal("bar");
+
+            const game2 = new GameInstance();
+            const dummy2 = game2.using(DUMMY);
+
+            expect(dummy2.name).to.equal("D1");
+            expect(dummy2.health).to.equal(10);
+            expect("foo" in dummy2).to.be.false;
+            expect(dummy2["foo"]).to.be.undefined;
+        });
+
+        it("Reading and writing the properties of a static agent outside the game cycle is allowed", function() {
+            const DUMMY1 = new Dummy("D1", 10);
+            const DUMMY2 = new Dummy("D2", DUMMY1.health);
+
+            delete DUMMY1.name;
+            DUMMY2.name += " Sr.";
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d1 = myGame.using(DUMMY1);
+            const d2 = myGame.using(DUMMY2);
+
+            expect("name" in d1).to.be.false;
+            expect(d1.name).to.be.undefined;
+            expect(d1.health).to.equal(10);
+
+            expect("name" in d2).to.be.true;
+            expect(d2.name).to.equal("D2 Sr.");
+            expect(d2.health).to.equal(10);
+        });
+
+        it("Reading the properties of an inactive static agent inside the game cycle is not allowed", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            expect(() => DUMMY.health).to.throw(
+                RegalError,
+                "The properties of an inactive agent cannot be accessed within a game cycle."
+            );
+        });
+
+        it("Modifying the properties of an inactive static agent inside the game cycle is not allowed", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            expect(() => (DUMMY.health = 5)).to.throw(
+                RegalError,
+                "This static agent must be activated before it may be modified."
+            );
         });
     });
 
-    describe("Instance State", function() {
-        it("The instance state is automatically registered", function() {
-            expect(new GameInstance().state.isRegistered).to.be.true;
+    describe("Advanced Usage", function() {
+        it("Active agents can have references to each other", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const parent = myGame.using(new Parent(new Dummy("D1", 10)));
+
+            expect(parent.child.name).to.equal("D1");
+            expect(parent.child.health).to.equal(10);
         });
 
-        it("The instance state has a reserved ID of zero", function() {
-            expect(new GameInstance().state.id).to.equal(0);
+        it("Modifying properties through an active agent reference", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const parent = myGame.using(new Parent(new Dummy("D1", 10)));
+
+            parent.child.name += " Jr.";
+            (parent.child as any).foo = "bar";
+            delete parent.child.health;
+
+            expect(parent.child.name).to.equal("D1 Jr.");
+            expect((parent.child as any).foo).to.equal("bar");
+            expect(parent.child.health).to.be.undefined;
+            expect("health" in parent.child).to.be.false;
         });
 
-        it("Properties can be added and read from the instance state", function() {
-            const game = new GameInstance();
-            game.state.foo = "bar";
+        it("Active agents can have circular references to each other", function() {
+            Game.init();
 
-            expect(game.state.foo).to.equal("bar");
+            const myGame = new GameInstance();
+            const _sib1 = new Sibling("Billy");
+            const _sib2 = new Sibling("Bob", _sib1);
+            _sib1.sibling = _sib2;
+
+            const sib1 = myGame.using(_sib1);
+            const sib2 = myGame.using(_sib2);
+
+            expect(sib1.name).to.equal("Billy");
+            expect(sib2.name).to.equal("Bob");
+            expect(sib1.sibling.name).to.equal("Bob");
+            expect(sib2.sibling.name).to.equal("Billy");
         });
 
-        it("Adding an agent to the state implicitly registers it", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10);
+        it("Modifying active agent properties through circular references to each other", function() {
+            Game.init();
 
-            game.state.dum = dummy;
+            const myGame = new GameInstance();
+            const _sib1 = new Sibling("Billy");
+            const _sib2 = new Sibling("Bob", _sib1);
+            _sib1.sibling = _sib2;
 
-            expect(game.state.dum.isRegistered).to.be.true;
-            expect(game.state.dum.id).to.equal(1);
-            expect(game.state.dum.name).to.equal("D1");
-            expect(game.state.dum.health).to.equal(10);
+            const sib1 = myGame.using(_sib1);
+            const sib2 = myGame.using(_sib2);
+
+            sib1.sibling.name = "Bobbort";
+            sib2.sibling.sibling.sibling = new Sibling("Lars");
+
+            expect(sib1.name).to.equal("Billy");
+            expect(sib2.name).to.equal("Bobbort");
+            expect(sib1.sibling.name).to.equal("Bobbort");
+            expect(sib2.sibling.name).to.equal("Lars");
         });
 
-        it("Adding a registered agent to the state uses its existing ID as a reference", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game, 100);
+        it("Static agents can have references to each other", function() {
+            const PARENT = new Parent(new Dummy("D1", 10));
 
-            game.state.dum = dummy;
+            Game.init();
 
-            expect(game.state.dum.isRegistered).to.be.true;
-            expect(game.state.dum.id).to.equal(100);
-            expect(game.state.dum.name).to.equal("D1");
-            expect(game.state.dum.health).to.equal(10);
+            const myGame = new GameInstance();
+            const parent = myGame.using(PARENT);
+
+            expect(parent.child.name).to.equal("D1");
+            expect(parent.child.health).to.equal(10);
+        });
+
+        it("Modifying active static agents through references", function() {
+            const PARENT = new Parent(new Dummy("D1", 10));
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const parent = myGame.using(PARENT);
+
+            parent.child.name += " III";
+            (parent.child as any).foo = "bar";
+            delete parent.child.health;
+
+            expect(parent.child.name).to.equal("D1 III");
+            expect((parent.child as any).foo).to.equal("bar");
+            expect(parent.child.health).to.be.undefined;
+            expect("health" in parent.child).to.be.false;
+        });
+
+        it("Static agents can have circular references to each other", function() {
+            const SIB_1 = new Sibling("Billy");
+            const SIB_2 = new Sibling("Bob", SIB_1);
+            SIB_1.sibling = SIB_2;
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const sib1 = myGame.using(SIB_1);
+            const sib2 = myGame.using(SIB_2);
+
+            expect(sib1.name).to.equal("Billy");
+            expect(sib2.name).to.equal("Bob");
+            expect(sib1.sibling.name).to.equal("Bob");
+            expect(sib2.sibling.name).to.equal("Billy");
+        });
+
+        it("Activating only one agent in a circular static agent reference graph", function() {
+            const SIB_1 = new Sibling("Billy");
+            const SIB_2 = new Sibling("Bob", SIB_1);
+            SIB_1.sibling = SIB_2;
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const sib1 = myGame.using(SIB_1);
+
+            expect(sib1.name).to.equal("Billy");
+            expect(sib1.sibling.name).to.equal("Bob");
+            expect(sib1.sibling.sibling.name).to.equal("Billy");
+        });
+
+        it("Modifying static agent properties through circular references", function() {
+            const SIB_1 = new Sibling("Billy");
+            const SIB_2 = new Sibling("Bob", SIB_1);
+            SIB_1.sibling = SIB_2;
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const sib1 = myGame.using(SIB_1);
+            const sib2 = myGame.using(SIB_2);
+
+            sib1.sibling.name = "Bobbort";
+            sib2.sibling.sibling.sibling = new Sibling("Lars");
+
+            expect(sib1.name).to.equal("Billy");
+            expect(sib2.name).to.equal("Bobbort");
+            expect(sib1.sibling.name).to.equal("Bobbort");
+            expect(sib2.sibling.name).to.equal("Lars");
+        });
+
+        it("Assigning a static agent as a property as an inactive agent", function() {
+            const CHILD = new Dummy("Bab", 1);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const parent = myGame.using(new Parent(CHILD));
+
+            expect(parent.child.name).to.equal("Bab");
+            expect(parent.child.health).to.equal(1);
+        });
+
+        it("Modifying a static agent that's a property of an active agent", function() {
+            const CHILD = new Dummy("Bab", 1);
+
+            Game.init();
+
+            const myGame1 = new GameInstance();
+            const parent1 = myGame1.using(new Parent(CHILD));
+
+            const myGame2 = new GameInstance();
+            const parent2 = myGame2.using(new Parent(CHILD));
+
+            parent1.child.health += 15;
+            parent2.child.name = "Jenkins";
+
+            expect(parent1.child.name).to.equal("Bab");
+            expect(parent1.child.health).to.equal(16);
+
+            expect(parent2.child.name).to.equal("Jenkins");
+            expect(parent2.child.health).to.equal(1);
+        });
+
+        it("Activating an agent multiple times returns a reference to the same agent", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const dummy = myGame.using(new Dummy("D1", 10));
+            dummy.name = "Lars";
+
+            const dummyAlt = myGame.using(dummy);
+            dummyAlt.health = 25;
+
+            (dummy as any).foo = dummy.health;
+
+            expect(dummy.name).to.equal("Lars");
+            expect(dummy.health).to.equal(25);
+            expect((dummy as any).foo).to.equal(25);
+
+            expect(dummyAlt.name).to.equal("Lars");
+            expect(dummyAlt.health).to.equal(25);
+            expect((dummyAlt as any).foo).to.equal(25);
+        });
+
+        it("Activating a static agent multiple times returns a reference to the same agent", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const dummy = myGame.using(DUMMY);
+            dummy.name = "Lars";
+
+            const dummyAlt = myGame.using(DUMMY);
+            dummyAlt.health = 25;
+
+            (dummy as any).foo = dummy.health;
+
+            expect(dummy.name).to.equal("Lars");
+            expect(dummy.health).to.equal(25);
+            expect((dummy as any).foo).to.equal(25);
+
+            expect(dummyAlt.name).to.equal("Lars");
+            expect(dummyAlt.health).to.equal(25);
+            expect((dummyAlt as any).foo).to.equal(25);
         });
     });
 
-    describe("Agent Records", function() {
-        it("getProperty on a nonexistent property returns undefined", function() {
-            expect(new AgentRecord().getProperty("foo")).to.be.undefined;
+    describe("Agent Managers", function() {
+        it("The AgentManager's id matches the agent's id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const d = myGame.using(new Dummy("D1", 15));
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            expect(d.id).to.equal(dr.id);
         });
 
-        it("Registering an agent adds all of its properties to a new record", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
+        it("The AgentManager's id matches the game instance", function() {
+            Game.init();
 
-            expect(game.agents[1]).to.deep.equal({
-                _id: [
-                    {
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        op: PropertyOperation.ADDED,
-                        init: undefined,
-                        final: 1
-                    }
-                ],
+            const myGame = new GameInstance();
 
-                game: [
-                    {
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        op: PropertyOperation.ADDED,
-                        init: undefined,
-                        final: game
-                    }
-                ],
+            const d = myGame.using(new Dummy("D1", 15));
+            const dr = myGame.agents.getAgentManager(d.id);
 
-                name: [
-                    {
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        op: PropertyOperation.ADDED,
-                        init: undefined,
-                        final: "D1"
-                    }
-                ],
-
-                health: [
-                    {
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        op: PropertyOperation.ADDED,
-                        init: undefined,
-                        final: 10
-                    }
-                ]
-            });
+            expect(dr.game).to.equal(myGame);
         });
 
-        it("Modifying a registered agent's property adds a record", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
+        it("AgentManager.hasPropertyRecord returns correct values", function() {
+            Game.init();
 
-            dummy.name = "Jimmy";
+            const myGame = new GameInstance();
 
-            expect(game.agents[1].name).to.deep.equal([
+            const d = myGame.using(new Dummy("D1", 15));
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            delete d.health;
+
+            expect(dr.hasPropertyRecord("name")).to.be.true;
+            expect(dr.hasPropertyRecord("health")).to.be.true;
+            expect(dr.hasPropertyRecord("foo")).to.be.false;
+        });
+
+        it("AgentManager.hasPropertyRecord returns false for properties only in the static agent", function() {
+            const DUMMY = new Dummy("D1", 15);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const d = myGame.using(DUMMY);
+            d.health += 15;
+
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            expect(dr.hasPropertyRecord("name")).to.be.false;
+            expect(dr.hasPropertyRecord("health")).to.be.true;
+        });
+
+        it("AgentManager.getProperty returns the most recent property", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const d = myGame.using(new Dummy("D1", 15));
+            d.health += 15;
+
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            expect(dr.getProperty("name")).to.equal("D1");
+            expect(dr.getProperty("health")).to.equal(30);
+            expect(dr.getProperty("foo")).to.be.undefined;
+        });
+
+        it("AgentManager.getPropertyHistory returns the array of PropertyChanges", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 15));
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            const addHealth = (dummy: Dummy) =>
+                on("ADD HEALTH", game => {
+                    dummy.health += 15;
+                    return noop;
+                });
+
+            addHealth(d)(myGame);
+
+            expect(dr.getPropertyHistory("name")).to.deep.equal([
                 {
-                    eventId: 0,
-                    eventName: "DEFAULT",
+                    eventId: DEFAULT_EVENT_ID,
+                    eventName: DEFAULT_EVENT_NAME,
+                    op: PropertyOperation.ADDED,
+                    init: undefined,
+                    final: "D1"
+                }
+            ]);
+
+            expect(dr.getPropertyHistory("health")).to.deep.equal([
+                {
+                    eventId: DEFAULT_EVENT_ID + 1,
+                    eventName: "ADD HEALTH",
                     op: PropertyOperation.MODIFIED,
-                    init: "D1",
-                    final: "Jimmy"
+                    init: 15,
+                    final: 30
                 },
                 {
-                    eventId: 0,
-                    eventName: "DEFAULT",
+                    eventId: DEFAULT_EVENT_ID,
+                    eventName: DEFAULT_EVENT_NAME,
+                    op: PropertyOperation.ADDED,
+                    init: undefined,
+                    final: 15
+                }
+            ]);
+        });
+
+        it("AgentManager.getPropertyHistory on a static agent returns only the PropertyChanges that differ from the original", function() {
+            const DUMMY = new Dummy("D1", 15);
+            (DUMMY as any).foo = "bar";
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(DUMMY);
+
+            delete (d as any).foo;
+
+            const addHealth = (dummy: Dummy) =>
+                on("ADD HEALTH", game => {
+                    dummy.health += 15;
+                    return noop;
+                });
+
+            addHealth(d)(myGame);
+
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            expect(dr.getPropertyHistory("name")).to.deep.equal([]);
+            expect(dr.getPropertyHistory("health")).to.deep.equal([
+                {
+                    eventId: DEFAULT_EVENT_ID + 1,
+                    eventName: "ADD HEALTH",
+                    op: PropertyOperation.MODIFIED,
+                    init: 15,
+                    final: 30
+                }
+            ]);
+            expect(dr.getPropertyHistory("foo")).to.deep.equal([
+                {
+                    eventId: DEFAULT_EVENT_ID,
+                    eventName: DEFAULT_EVENT_NAME,
+                    op: PropertyOperation.DELETED,
+                    init: "bar",
+                    final: undefined
+                }
+            ]);
+        });
+
+        it("AgentManager.propertyWasDeleted returns true for real properties that were deleted", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(DUMMY);
+
+            delete d.name;
+
+            delete d.health;
+            d.health = 15;
+
+            (d as any).foo1 = "bar";
+
+            (d as any).foo2 = "baz";
+            delete (d as any).foo2;
+
+            delete (d as any).foo3;
+
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            expect(dr.propertyWasDeleted("name")).to.be.true;
+            expect(dr.propertyWasDeleted("health")).to.be.false;
+            expect(dr.propertyWasDeleted("foo1")).to.be.false;
+            expect(dr.propertyWasDeleted("foo2")).to.be.true;
+            expect(dr.propertyWasDeleted("foo3")).to.be.false;
+        });
+
+        it("AgentManager does not add a record for setting a property to the same value", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            d.name = "D1";
+
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            expect(dr.getPropertyHistory("name")).to.deep.equal([
+                {
+                    eventId: DEFAULT_EVENT_ID,
+                    eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
                     final: "D1"
@@ -592,108 +628,56 @@ describe("Agents", function() {
             ]);
         });
 
-        it("Modifying a static agent's property adds only that change to the record", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).static().register(game);
+        it("AgentManager does not add a record for setting a property to its static value", function() {
+            const DUMMY = new Dummy("D1", 10);
 
-            dummy.name = "Jimmy";
-            dummy["foo"] = "bar";
+            Game.init();
 
-            expect(game.agents[1]).to.deep.equal({
-                name: [
-                    {
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        op: PropertyOperation.MODIFIED,
-                        init: "D1",
-                        final: "Jimmy"
-                    }
-                ],
-                foo: [
-                    {
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        op: PropertyOperation.ADDED,
-                        init: undefined,
-                        final: "bar"
-                    }
-                ]
-            });
+            const myGame = new GameInstance();
+            const d = myGame.using(DUMMY);
+
+            d.name = "D1";
+
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            expect(dr.getPropertyHistory("name")).to.deep.equal([]);
         });
 
-        it("Deleting a registered agent's property adds a record", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
+        it("AgentManager does not add a record for deleting a property multiple times", function() {
+            Game.init();
 
-            delete dummy.name;
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
 
-            expect(game.agents[1].name).to.deep.equal([
+            d.name = "D1";
+            delete d.name;
+            delete d.name;
+
+            const dr = myGame.agents.getAgentManager(d.id);
+
+            expect(dr.getPropertyHistory("name")).to.deep.equal([
                 {
-                    eventId: 0,
-                    eventName: "DEFAULT",
+                    eventId: DEFAULT_EVENT_ID,
+                    eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.DELETED,
                     init: "D1",
                     final: undefined
                 },
                 {
-                    eventId: 0,
-                    eventName: "DEFAULT",
+                    eventId: DEFAULT_EVENT_ID,
+                    eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
                     final: "D1"
                 }
             ]);
         });
-
-        it("Deleting a static agent's property adds only that change to the record", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).static().register(game);
-
-            delete dummy.name;
-
-            expect(game.agents[1]).to.deep.equal({
-                name: [
-                    {
-                        eventId: 0,
-                        eventName: "DEFAULT",
-                        op: PropertyOperation.DELETED,
-                        init: "D1",
-                        final: undefined
-                    }
-                ]
-            });
-        });
-
-        it("If you try and delete a nonexistent property of a registered agent, nothing will happen", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(game);
-
-            delete dummy["foo"];
-
-            expect(game.agents[1].foo).to.be.undefined;
-        });
-
-        it("If you try and delete a nonexistent property of a registered static agent, nothing will happen", function() {
-            const game = new GameInstance();
-            const dummy = new Dummy("D1", 10).static().register(game);
-
-            delete dummy["foo"];
-
-            expect(game.agents[1]).to.be.undefined;
-        });
-
-        it("AgentRecord#deleteProperty will return false if one tries to delete a agent property that doesn't exist", function() {
-            const myGame = new GameInstance();
-            const dummy = new Dummy("D1", 10).register(myGame);
-
-            expect(
-                myGame.agents[1].deleteProperty(EventRecord.default, 1, "foo")
-            ).to.be.false;
-        });
     });
 
-    describe("Cycling InstanceAgents", function() {
-        it("InstanceAgents.cycle creates all new Agents that have only the last values of each of the original agents' properties", function() {
+    describe("InstanceAgents", function() {
+        it("InstanceAgents.recycle creates all new agents that have only the last values of each of the original agent' properties", function() {
+            Game.init();
+
             const myGame = new GameInstance();
 
             on("INIT", game => {
@@ -710,24 +694,8 @@ describe("Agents", function() {
             expect(myGame.agents).to.deep.equal({
                 game: myGame,
                 0: {
-                    _id: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: 0,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
-                    game: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: myGame,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
+                    id: 0,
+                    game: myGame,
                     dummy: [
                         {
                             eventId: 1,
@@ -750,24 +718,8 @@ describe("Agents", function() {
                     ]
                 },
                 1: {
-                    _id: [
-                        {
-                            eventId: 1,
-                            eventName: "INIT",
-                            init: undefined,
-                            final: 1,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
-                    game: [
-                        {
-                            eventId: 1,
-                            eventName: "INIT",
-                            init: undefined,
-                            final: myGame,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
+                    id: 1,
+                    game: myGame,
                     name: [
                         {
                             eventId: 2,
@@ -796,31 +748,13 @@ describe("Agents", function() {
                 }
             });
 
-            const game2 = new GameInstance();
-            game2.agents = myGame.agents.cycle(game2);
+            const myGame2 = myGame.recycle();
 
-            // Verify proper cycle
-            expect(game2.agents).to.deep.equal({
-                game: game2,
+            expect(myGame2.agents).to.deep.equal({
+                game: myGame2,
                 0: {
-                    _id: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: 0,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
-                    game: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: game2,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
+                    id: 0,
+                    game: myGame2,
                     dummy: [
                         {
                             eventId: 0,
@@ -843,24 +777,8 @@ describe("Agents", function() {
                     ]
                 },
                 1: {
-                    _id: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: 1,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
-                    game: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: game2,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
+                    id: 1,
+                    game: myGame2,
                     name: [
                         {
                             eventId: 0,
@@ -883,12 +801,15 @@ describe("Agents", function() {
             });
         });
 
-        it("InstanceAgents.cycle copies only the properties of static agents that are different than their initial values", function() {
+        it("InstanceAgents.recycle copies only the properties of static agents that are different than their initial values", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
             const myGame = new GameInstance();
-            const staticDummy = new Dummy("D1", 10).static();
 
             on("INIT", game => {
-                game.state.dummy = staticDummy;
+                game.state.dummy = DUMMY;
 
                 return on("MOD", game => {
                     game.state.dummy.name = "Jimmy";
@@ -897,30 +818,13 @@ describe("Agents", function() {
                 });
             })(myGame);
 
-            const game2 = new GameInstance();
-            game2.agents = myGame.agents.cycle(game2);
+            const game2 = myGame.recycle();
 
             expect(game2.agents).to.deep.equal({
                 game: game2,
                 0: {
-                    _id: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: 0,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
-                    game: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: game2,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
+                    id: 0,
+                    game: game2,
                     dummy: [
                         {
                             eventId: 0,
@@ -943,6 +847,8 @@ describe("Agents", function() {
                     ]
                 },
                 1: {
+                    id: 1,
+                    game: game2,
                     name: [
                         {
                             eventId: 0,
@@ -956,7 +862,9 @@ describe("Agents", function() {
             });
         });
 
-        it("InstanceAgents.cycle does not copy the properties of non-static agents that were most recently deleted", function() {
+        it("InstanceAgents.recycle does not copy the properties of non-static agents that were most recently deleted", function() {
+            Game.init();
+
             const myGame = new GameInstance();
 
             on("INIT", game => {
@@ -969,30 +877,13 @@ describe("Agents", function() {
                 });
             })(myGame);
 
-            const game2 = new GameInstance();
-            game2.agents = myGame.agents.cycle(game2);
+            const game2 = myGame.recycle();
 
             expect(game2.agents).to.deep.equal({
                 game: game2,
                 0: {
-                    _id: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: 0,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
-                    game: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: game2,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
+                    id: 0,
+                    game: game2,
                     dummy: [
                         {
                             eventId: 0,
@@ -1006,24 +897,8 @@ describe("Agents", function() {
                     ]
                 },
                 1: {
-                    _id: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: 1,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
-                    game: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: game2,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
+                    id: 1,
+                    game: game2,
                     health: [
                         {
                             eventId: 0,
@@ -1037,12 +912,15 @@ describe("Agents", function() {
             });
         });
 
-        it("InstanceAgents.cycle DOES copy the properties of STATIC agents that were most recently deleted", function() {
+        it("InstanceAgents.recycle DOES copy the properties of STATIC agents that were most recently deleted", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
             const myGame = new GameInstance();
-            const staticDummy = new Dummy("D1", 10).static();
 
             on("INIT", game => {
-                game.state.dummy = staticDummy;
+                game.state.dummy = DUMMY;
 
                 return on("MOD", game => {
                     delete game.state.dummy.name;
@@ -1050,30 +928,13 @@ describe("Agents", function() {
                 });
             })(myGame);
 
-            const game2 = new GameInstance();
-            game2.agents = myGame.agents.cycle(game2);
+            const game2 = myGame.recycle();
 
             expect(game2.agents).to.deep.equal({
                 game: game2,
                 0: {
-                    _id: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: 0,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
-                    game: [
-                        {
-                            eventId: 0,
-                            eventName: "DEFAULT",
-                            init: undefined,
-                            final: game2,
-                            op: PropertyOperation.ADDED
-                        }
-                    ],
+                    id: 0,
+                    game: game2,
                     dummy: [
                         {
                             eventId: 0,
@@ -1087,6 +948,8 @@ describe("Agents", function() {
                     ]
                 },
                 1: {
+                    id: 1,
+                    game: game2,
                     name: [
                         {
                             eventId: 0,
@@ -1099,39 +962,415 @@ describe("Agents", function() {
                 }
             });
         });
+
+        it("InstanceAgents.reserveNextId starts after the highest static agent and then counts up", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(myGame.agents.reserveNewId()).to.equal(2);
+            expect(myGame.agents.reserveNewId()).to.equal(3);
+        });
+
+        it("InstanceAgents.getAgentProperty gets the correct property from either the instance or static registry", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const d = myGame.using(DUMMY);
+            d.health = 0;
+            d.health += 5;
+            (d as any).foo = true;
+
+            expect(myGame.agents.getAgentProperty(d.id, "name")).to.equal("D1");
+            expect(myGame.agents.getAgentProperty(d.id, "health")).to.equal(5);
+            expect(myGame.agents.getAgentProperty(d.id, "foo")).to.be.true;
+        });
+
+        it("If the static agent hasn't been modified, InstanceAgents.getAgentProperty will call the static registry directly", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const d = myGame.using(DUMMY);
+
+            expect(myGame.agents.getAgentProperty(d.id, "name")).to.equal("D1");
+            expect(myGame.agents.getAgentProperty(d.id, "bad")).to.be.undefined;
+            expect(
+                myGame.agents
+                    .agentManagers()
+                    .map(manager => manager.id)
+                    .includes(d.id)
+            ).to.be.false; // There isn't an agent manager for this agent
+        });
+
+        it("Error check for InstanceAgents.getAgentProperty with an invalid id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(() => myGame.agents.getAgentProperty(1, "foo")).to.throw(
+                RegalError,
+                "No agent with the id <1> exists."
+            );
+        });
+
+        it("InstanceAgents.getAgentProperty returns undefined for an non-existent agent property", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            expect(myGame.agents.getAgentProperty(1, "foo")).to.be.undefined;
+        });
+
+        it("InstanceAgents.getAgentProperty returns an agent proxy when the value of the static agent's property is an agent", function() {
+            const DUMMY = new Dummy("D1", 10);
+            const PARENT = new Parent(DUMMY);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const p = myGame.using(PARENT);
+
+            const child = myGame.agents.getAgentProperty(2, "child");
+            expect(child).to.deep.equal({});
+            expect(child.id).to.equal(DUMMY.id);
+            expect(child.name).to.equal("D1");
+        });
+
+        it("InstanceAgents.setAgentProperty works properly", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            myGame.agents.setAgentProperty(d.id, "name", "Lars");
+
+            expect(d.name).to.equal("Lars");
+        });
+
+        it("InstanceAgents.setAgentProperty implicitly activates an agent", function() {
+            const SIB = new Sibling("Billy");
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            myGame.agents.setAgentProperty(
+                1,
+                "sibling",
+                new Sibling("Bob", SIB)
+            );
+
+            expect(myGame.agents.agentManagers().length).to.equal(3); // State, SIB, SIB's sibling
+            expect(myGame.using(SIB).sibling.name).to.equal("Bob");
+            expect(new GameInstance().using(SIB).sibling).to.be.undefined;
+        });
+
+        it("Error check InstanceAgents.setAgentProperty with id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            myGame.using(new Dummy("D1", 10));
+
+            expect(() => myGame.agents.setAgentProperty(1, "id", 2)).to.throw(
+                RegalError,
+                "The agent's <id> property cannot be set."
+            );
+        });
+
+        it("Error check InstanceAgents.setAgentProperty with game", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            myGame.using(new Dummy("D1", 10));
+
+            expect(() =>
+                myGame.agents.setAgentProperty(1, "game", new GameInstance())
+            ).to.throw(
+                RegalError,
+                "The agent's <game> property cannot be set."
+            );
+        });
+
+        it("Error check InstanceAgents.setAgentProperty with an invalid id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            expect(() =>
+                myGame.agents.setAgentProperty(1, "foo", true)
+            ).to.throw("No agent with the id <1> exists.");
+        });
+
+        it("InstanceAgents.hasAgentProperty works properly with static agents", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "name")).to.be.true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "health")).to.be
+                .true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "foo")).to.be.false;
+        });
+
+        it("InstanceAgents.hasAgentProperty works properly with static agents that have been modified in the cycle", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            myGame.using(DUMMY).health += 15;
+
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "name")).to.be.true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "health")).to.be
+                .true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.id, "foo")).to.be.false;
+        });
+
+        it("InstanceAgents.hasAgentProperty works properly with nonstatic agents", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const dummy = myGame.using(new Dummy("D1", 10));
+
+            expect(myGame.agents.hasAgentProperty(dummy.id, "name")).to.be.true;
+            expect(myGame.agents.hasAgentProperty(dummy.id, "health")).to.be
+                .true;
+            expect(myGame.agents.hasAgentProperty(dummy.id, "foo")).to.be.false;
+        });
+
+        it("Error check for InstanceAgents.hasAgentProperty with an invalid id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(() => myGame.agents.hasAgentProperty(1, "foo")).to.throw(
+                RegalError,
+                "No agent with the id <1> exists."
+            );
+        });
+
+        it("InstanceAgents.deleteAgentProperty works properly for static agents", function() {
+            const DUMMY = new Dummy("D1", 10);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(DUMMY);
+
+            myGame.agents.deleteAgentProperty(d.id, "name");
+            myGame.agents.deleteAgentProperty(d.id, "foo");
+
+            expect("name" in d).to.be.false;
+            expect(d.name).to.be.undefined;
+            expect("health" in d).to.be.true;
+
+            expect("name" in new GameInstance().using(DUMMY)).to.be.true;
+        });
+
+        it("InstanceAgents.deleteAgentProperty works properly for nonstatic agents", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            myGame.agents.deleteAgentProperty(d.id, "name");
+            myGame.agents.deleteAgentProperty(d.id, "foo");
+
+            expect("name" in d).to.be.false;
+            expect(d.name).to.be.undefined;
+            expect("health" in d).to.be.true;
+        });
+
+        it("Error check for InstanceAgents.deleteAgentProperty refuse delete of id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const dummy = myGame.using(new Dummy("D1", 10));
+
+            expect(() =>
+                myGame.agents.deleteAgentProperty(dummy.id, "id")
+            ).to.throw(
+                RegalError,
+                "The agent's <id> property cannot be deleted."
+            );
+        });
+
+        it("Error check for InstanceAgents.deleteAgentProperty refuse delete of game", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const dummy = myGame.using(new Dummy("D1", 10));
+
+            expect(() =>
+                myGame.agents.deleteAgentProperty(dummy.id, "game")
+            ).to.throw(
+                RegalError,
+                "The agent's <game> property cannot be deleted."
+            );
+        });
+
+        it("Error check for InstanceAgents.deleteAgentProperty with an invalid id", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(() => myGame.agents.deleteAgentProperty(1, "foo")).to.throw(
+                RegalError,
+                "No agent with the id <1> exists."
+            );
+        });
+
+        it("InstanceAgents.getAgentManager returns the correct agent manager", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+            const d = myGame.using(new Dummy("D1", 10));
+
+            expect(
+                myGame.agents.getAgentManager(d.id).getProperty("name")
+            ).to.equal("D1");
+        });
+
+        it("InstanceAgents.getAgentManager returns undefined for an illegal property", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            expect(myGame.agents.getAgentManager(-1)).to.be.undefined;
+        });
+    });
+
+    describe("StaticAgentRegistry", function() {
+        it("StaticAgentRegistry.getNextAvailableId increments by 1 for each static agent", function() {
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+
+            const D = new Dummy("D1", 10);
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(2);
+
+            const P = new Parent(D);
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(3);
+
+            const P2 = new Parent(new Dummy("D2", 5));
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(5);
+        });
+
+        it("StaticAgentRegistry.hasAgentProperty works properly", function() {
+            const D = new Dummy("D1", 10);
+
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "name")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "health")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "foo")).to.be
+                .false;
+        });
+
+        it("StaticAgentRegistry.hasAgentProperty only returns true for properties that were added in the static context", function() {
+            const D = new Dummy("D1", 10);
+            (D as any).foo = true;
+
+            Game.init();
+            const d = new GameInstance().using(D);
+
+            (d as any).bar = true;
+
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "name")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "health")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "foo")).to.be
+                .true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.id, "bar")).to.be
+                .false;
+        });
+
+        it("StaticAgentRegistry.getAgentProperty works properly for literals and objects", function() {
+            const D = new Dummy("D1", 10);
+            const P = new Parent(D);
+
+            expect(StaticAgentRegistry.getAgentProperty(D.id, "name")).to.equal(
+                "D1"
+            );
+            expect(
+                StaticAgentRegistry.getAgentProperty(D.id, "health")
+            ).to.equal(10);
+            expect(StaticAgentRegistry.getAgentProperty(D.id, "foo")).to.be
+                .undefined;
+            expect(
+                StaticAgentRegistry.getAgentProperty(P.id, "child")
+            ).to.equal(D);
+        });
+
+        it("Error check for StaticAgentRegistry.getAgentProperty with an invalid id", function() {
+            expect(() =>
+                StaticAgentRegistry.getAgentProperty(0, "foo")
+            ).to.throw(
+                RegalError,
+                "No agent with the id <0> exists in the static registry."
+            );
+        });
+
+        it("StaticAgentRegistry.hasAgent works properly", function() {
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
+
+            const D = new Dummy("D1", 10);
+
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.true;
+
+            Game.init();
+
+            const p = new GameInstance().using(new Parent(D));
+
+            expect(StaticAgentRegistry.hasAgent(p.id)).to.be.false;
+        });
+
+        it("StaticAgentRegistry.addAgent is called implicitly", function() {
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
+
+            const D = new Dummy("D1", 10);
+
+            expect(StaticAgentRegistry[1]).to.deep.equal(D);
+        });
+
+        it("StaticAgentRegistry.addAgent blocks an illegal id", function() {
+            expect(() => StaticAgentRegistry.addAgent({ id: 23 })).to.throw(
+                RegalError,
+                "Expected an agent with id <1>."
+            );
+        });
+
+        it("StaticAgentRegistry.reset removes all agents and resets the agent count", function() {
+            const D = new Dummy("D1", 10);
+            const P = new Parent(new Dummy("D2", 25));
+
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(2)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(3)).to.be.true;
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(4);
+
+            StaticAgentRegistry.reset();
+
+            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(2)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(3)).to.be.false;
+            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+        });
     });
 
     describe("Reverting", function() {
-        it("Reverting the effects of one event to the one before", function() {
-            const start = on("START", game => {
-                game.state.foo = true;
-                game.state.dummy = new Dummy("Lars", 10);
-                return noop;
-            });
-
-            const mod = (name: string) =>
-                on("MOD", game => {
-                    game.state.foo = false;
-                    game.state.dummy.name = name;
-                    return noop;
-                });
-
-            const myGame = new GameInstance();
-            start(myGame);
-            mod("Jimbo")(myGame);
-
-            expect(myGame.state.foo).to.be.false;
-            expect(myGame.state.dummy.name).to.equal("Jimbo");
-            expect(myGame.state.dummy.health).to.equal(10);
-
-            const revert = buildRevertFunction(myGame.agents, 1);
-            revert(myGame);
-
-            expect(myGame.state.foo).to.be.true;
-            expect(myGame.state.dummy.name).to.equal("Lars");
-            expect(myGame.state.dummy.health).to.equal(10);
-        });
-
         it("Reverting the effects of many events back to the first one", function() {
             const init = on("INIT", game => {
                 game.state.foo = "Hello, world!";
@@ -1144,6 +1383,8 @@ describe("Agents", function() {
                     game.state[num] = `Yo ${num}`;
                     return noop;
                 });
+
+            Game.init();
 
             const myGame = new GameInstance();
             init(myGame);
@@ -1180,6 +1421,8 @@ describe("Agents", function() {
                     game.state[num] = `Yo ${num}`;
                     return noop;
                 });
+
+            Game.init();
 
             const myGame = new GameInstance();
             init(myGame);
@@ -1231,6 +1474,8 @@ describe("Agents", function() {
                 return noop;
             });
 
+            Game.init();
+
             const myGame = new GameInstance();
             init(myGame);
             buildRevertFunction(myGame.agents, 0)(myGame);
@@ -1242,11 +1487,13 @@ describe("Agents", function() {
         });
 
         it("Reverting changes to static agents", function() {
-            const staticDummy = new Dummy("Lars", 15).static();
+            const staticDummy = new Dummy("Lars", 15);
+
+            Game.init();
 
             const myGame = new GameInstance();
             on("FUNC", game => {
-                const dummy = staticDummy.register(game);
+                const dummy = game.using(staticDummy);
                 dummy.name = "Jimbo";
                 dummy["bippity"] = "boppity";
                 return noop;

@@ -11,6 +11,7 @@
 import { buildRevertFunction, StaticAgentRegistry } from "./agents";
 import { HookManager } from "./api-hooks";
 import { GameMetadata, GameOptions, MetadataManager } from "./config";
+import { ContextManager } from "./context-manager";
 import { RegalError } from "./error";
 import GameInstance from "./game-instance";
 import { GameOutput } from "./output";
@@ -119,6 +120,16 @@ const buildLogResponse = (
  * any arguments passed into it.
  */
 export class Game {
+    public static init(): void {
+        ContextManager.init();
+    }
+
+    public static reset(): void {
+        ContextManager.reset();
+        HookManager.reset();
+        StaticAgentRegistry.reset();
+    }
+
     /**
      * Gets the game's metadata. Note that this is not specific
      * to any `GameInstance`, but refers to the game's static context.
@@ -168,6 +179,8 @@ export class Game {
         try {
             validateGameInstance(instance);
 
+            Game.init();
+
             if (command === undefined) {
                 throw new RegalError("Command must be defined.");
             }
@@ -177,7 +190,7 @@ export class Game {
                 );
             }
 
-            newInstance = instance.cycle();
+            newInstance = instance.recycle();
 
             const activatedEvent = HookManager.playerCommandHook(command);
             newInstance.events.invoke(activatedEvent);
@@ -214,6 +227,8 @@ export class Game {
                 );
             }
 
+            Game.init();
+
             newInstance = new GameInstance(options);
             newInstance.events.invoke(HookManager.startCommandHook);
         } catch (error) {
@@ -242,11 +257,13 @@ export class Game {
         try {
             validateGameInstance(instance);
 
+            Game.init();
+
             if (!HookManager.beforeUndoCommandHook(instance)) {
                 throw new RegalError("Undo is not allowed here.");
             }
 
-            newInstance = instance.cycle();
+            newInstance = instance.recycle();
 
             const revert = buildRevertFunction(instance.agents);
             revert(newInstance);
@@ -289,6 +306,8 @@ export class Game {
         try {
             validateGameInstance(instance);
 
+            Game.init();
+
             const oldOverrideKeys = Object.keys(instance.options.overrides);
             const newOptionKeys = Object.keys(options);
 
@@ -299,7 +318,7 @@ export class Game {
                 .forEach(key => (newOptions[key] = instance.options[key]));
             newOptionKeys.forEach(key => (newOptions[key] = options[key]));
 
-            newInstance = instance.cycle(newOptions);
+            newInstance = instance.recycle(newOptions);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }
@@ -319,11 +338,3 @@ export class Game {
               };
     }
 }
-
-/**
- * Resets the static context of the game.
- */
-export const resetGame = () => {
-    HookManager.resetHooks();
-    StaticAgentRegistry.resetRegistry();
-};

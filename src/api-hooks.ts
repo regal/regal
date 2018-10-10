@@ -38,7 +38,7 @@ export class HookManager {
     /**
      * Resets the API hooks to their default values.
      */
-    public static resetHooks() {
+    public static reset() {
         this.playerCommandHook = undefined;
         this.startCommandHook = undefined;
         this.beforeUndoCommandHook = returnTrue;

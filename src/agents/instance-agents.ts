@@ -6,169 +6,74 @@
  */
 
 import { RegalError } from "../error";
-import { EventRecord } from "../events";
 import GameInstance from "../game-instance";
-import { Agent, AGENT_PROXY_HANDLER, isAgent } from "./agent-model";
-import { AgentRecord } from "./agent-record";
+import {
+    AgentManager,
+    buildAgentManager,
+    isAgentManager
+} from "./agent-manager";
+import { activeAgentProxy, isAgent } from "./agent-model";
 import { AgentReference, isAgentReference } from "./agent-reference";
-import { StaticAgentRegistry } from "./static-agent";
-
-/** Whether the property is a positive integer, meaning its a valid agent id. */
-export const propertyIsAgentId = (property: PropertyKey) => {
-    const tryNum = Math.floor(Number(property));
-    return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
-};
+import { StaticAgentRegistry } from "./static-agent-registry";
 
 /**
  * Manager for all agents in a `GameInstance`.
  *
- * For each agent being tracked, the `InstanceAgents` will have a
- * property of that agent's id that contains an `AgentRecord`.
- *
- * Static agents only have instance-specific differences from
- * their static state stored in the `InstanceAgents`.
+ * For each active agent, the `InstanceAgents` will have a property
+ * at that agent's id that contains an `AgentManager`.
  */
-export class InstanceAgents {
-    /**
-     * Constructs an `InstanceAgents`.
-     * @param game The game instance that owns this `InstanceAgents`.
-     */
-    constructor(public game: GameInstance) {}
+export interface InstanceAgents {
+    /** The `GameInstance` that owns this `InstanceAgents`. */
+    game: GameInstance;
 
     /**
-     * Gets the next available agent id by counting the number
-     * of reserved ids in the `StaticAgentRegistry` and the number
-     * of agents already registered with this `InstanceAgents`.
-     */
-    public getNextAgentId(): number {
-        let i = StaticAgentRegistry.agentCount + 1;
-        while (this.hasOwnProperty(i)) {
-            i++;
-        }
-        return i;
-    }
-
-    /**
-     * Adds an agent to this `InstanceAgents`. If the agent is static,
-     * nothing will happen.
+     * Gets the `AgentManager` assigned to every agent that is active
+     * within this `GameInstance`.
      *
-     * @param agent The agent to be added.
-     * @param event The event during which the agent was added.
+     * Static agents will only have a manager if they have been modified.
      */
-    public addAgent(agent: Agent, event: EventRecord): void {
-        if (this.hasOwnProperty(agent.id)) {
-            throw new RegalError(
-                `An agent with ID <${
-                    agent.id
-                }> has already been registered with the instance.`
-            );
-        }
-
-        if (!agent.isStatic) {
-            this[agent.id] = new AgentRecord();
-
-            for (const key in agent) {
-                if (agent.hasOwnProperty(key)) {
-                    this.setAgentProperty(agent.id, key, agent[key], event);
-                }
-            }
-        }
-    }
-
-    /** Whether an agent with the given id is static or tracked by this `InstanceAgents`. */
-    public hasAgent(agentId: number): boolean {
-        return (
-            this.hasOwnProperty(agentId) ||
-            StaticAgentRegistry.hasAgent(agentId)
-        );
-    }
+    agentManagers(): AgentManager[];
 
     /**
-     * Get the value of a registered agent's property.
+     * Gets the `AgentManager` for the active agent with the given id.
+     * @param id The agent's manager, or undefined if it doesn't exist.
+     */
+    getAgentManager(id: number): AgentManager;
+
+    /**
+     * Creates an `AgentManager` for the given id and assigns it as a
+     * property to this `GameInstance` with the key as the id.
+     *
+     * @param id The agent's id.
+     * @returns The created `AgentManager`.
+     */
+    createAgentManager(id: number): AgentManager;
+
+    /**
+     * Reserves an id with the `InstanceAgents` for a newly activated agent.
+     * @returns The reserved agent id.
+     */
+    reserveNewId(): number;
+
+    /**
+     * Get the value of an active agent's property.
      *
      * @param agentId The agent's id.
      * @param property The name of the property.
      * @returns The value of the property, if it exists.
      */
-    public getAgentProperty(agentId: number, property: PropertyKey): any {
-        const agentRecord: AgentRecord = this[agentId];
-        let value;
-
-        if (agentRecord === undefined) {
-            if (StaticAgentRegistry.hasAgent(agentId)) {
-                value = StaticAgentRegistry.getAgentProperty(agentId, property);
-            } else {
-                throw new RegalError(
-                    `No agent with ID <${agentId}> exists in the instance or the static registry.`
-                );
-            }
-        } else {
-            value = agentRecord.getProperty(property);
-
-            // If the property exists only in the static agent registry and it hasn't been deleted in this instance:
-            if (
-                value === undefined &&
-                !agentRecord.propertyWasDeleted(property) &&
-                StaticAgentRegistry.hasAgentProperty(agentId, property)
-            ) {
-                value = StaticAgentRegistry.getAgentProperty(agentId, property);
-            }
-        }
-
-        // If the value is an agent reference, return a new proxy agent.
-        if (isAgentReference(value)) {
-            const psuedoAgent = new Agent(value.refId, this.game);
-            value = new Proxy(psuedoAgent, AGENT_PROXY_HANDLER);
-        }
-
-        return value;
-    }
+    getAgentProperty(id: number, property: PropertyKey): any;
 
     /**
-     * Sets the value of a registered agent's property, or adds the
+     * Sets the value of an active agent's property, or adds the
      * property if it doesn't yet exist.
      *
      * @param agentId The agent's id.
      * @param property The name of the property.
      * @param value The new value of the property.
-     * @param event The event during which the change took place.
-     *
      * @returns Whether the update was successful.
      */
-    public setAgentProperty(
-        agentId: number,
-        property: PropertyKey,
-        value: any,
-        event: EventRecord
-    ): boolean {
-        if (!this.hasOwnProperty(agentId)) {
-            if (StaticAgentRegistry.hasAgent(agentId)) {
-                this[agentId] = new AgentRecord();
-            } else {
-                throw new RegalError(
-                    `No agent with ID <${agentId}> exists in the instance or the static registry.`
-                );
-            }
-        }
-
-        const agentRecord: AgentRecord = this[agentId];
-
-        if (isAgent(value)) {
-            if (!value.isRegistered) {
-                const game: GameInstance = this.getAgentProperty(
-                    agentId,
-                    "game"
-                );
-                value = value.register(game);
-            }
-
-            value = new AgentReference(value.id);
-        }
-
-        agentRecord.setProperty(event, agentId, property, value);
-
-        return true;
-    }
+    setAgentProperty(id: number, property: PropertyKey, value: any): boolean;
 
     /**
      * Whether this `InstanceAgents` has the agent property or if there's
@@ -178,127 +83,221 @@ export class InstanceAgents {
      * @param agentId The agent id.
      * @param property The name of the property.
      */
-    public hasAgentProperty(agentId: number, property: PropertyKey): boolean {
-        if (!this.hasOwnProperty(agentId)) {
-            if (StaticAgentRegistry.hasAgent(agentId)) {
-                return StaticAgentRegistry.hasAgentProperty(agentId, property);
-            }
-            throw new RegalError(
-                `No agent with ID <${agentId}> exists in the instance or the static registry.`
-            );
-        }
-
-        const agentRecord: AgentRecord = this[agentId];
-
-        return (
-            agentRecord.hasOwnProperty(property) &&
-            !agentRecord.propertyWasDeleted(property)
-        );
-    }
+    hasAgentProperty(id: number, property: PropertyKey): boolean;
 
     /**
-     * Deletes the registered agent's property.
+     * Deletes the active agent's property.
      *
      * @param agentId The agent's id.
      * @param property The name of the property.
-     * @param event The event during which the deletion took place.
-     *
      * @returns Whether the property was deleted.
      */
-    public deleteAgentProperty(
-        agentId: number,
-        property: PropertyKey,
-        event: EventRecord
-    ): boolean {
-        if (!this.hasOwnProperty(agentId)) {
-            if (StaticAgentRegistry.hasAgent(agentId)) {
-                if (StaticAgentRegistry.hasAgentProperty(agentId, property)) {
-                    this[agentId] = new AgentRecord();
-                } else {
-                    // If the static agent doesn't exist in the instance state, but that agent doesn't
-                    // have the property that someone is attempting to delete, we don't do anything.
-                    return false;
+    deleteAgentProperty(id: number, property: PropertyKey): boolean;
+}
+
+/** Builds an implementation of `InstanceAgents` for the given `GameInstance`. */
+export const buildInstanceAgents = (game: GameInstance): InstanceAgents =>
+    new InstanceAgentsImpl(game);
+
+/**
+ * Creates an `InstanceAgents` for the new game cycle, keeping only
+ * the final properties of every agent from before.
+ *
+ * @param oldAgents     The `InstanceAgents` to recycle data from.
+ * @param newInstance   The new `GameInstance` that will own this `InstanceAgents`.
+ */
+export const recycleInstanceAgents = (
+    oldAgents: InstanceAgents,
+    newInstance: GameInstance
+): InstanceAgents => {
+    const newAgents = new InstanceAgentsImpl(newInstance);
+
+    for (const formerAgent of oldAgents.agentManagers()) {
+        const id = formerAgent.id;
+        const am = newAgents.createAgentManager(id);
+
+        const propsToAdd = Object.keys(formerAgent).filter(
+            key => key !== "game" && key !== "id"
+        );
+
+        // For each updated property on the old agent, add its last value to the new agent.
+        propsToAdd.forEach(prop => {
+            if (formerAgent.propertyWasDeleted(prop)) {
+                if (StaticAgentRegistry.hasAgentProperty(id, prop)) {
+                    am.deleteProperty(prop); // Record deletions to static agents.
                 }
-            } else {
-                throw new RegalError(
-                    `No agent with ID <${agentId}> exists in the instance or the static registry.`
-                );
+
+                return; // If the property was deleted, don't add it to the new record.
+            }
+
+            let formerValue = formerAgent.getProperty(prop);
+
+            if (isAgentReference(formerValue)) {
+                formerValue = new AgentReference(formerValue.refId);
+            }
+
+            am.setProperty(prop, formerValue);
+        });
+    }
+
+    return newAgents;
+};
+
+/** Whether the property is a positive integer, meaning its a valid agent id. */
+export const propertyIsAgentId = (property: PropertyKey) => {
+    const tryNum = Math.floor(Number(property));
+    return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
+};
+
+/** Implementation of `InstanceAgents`. */
+class InstanceAgentsImpl implements InstanceAgents {
+    constructor(public game: GameInstance) {
+        this.createAgentManager(0);
+    }
+
+    public agentManagers(): AgentManager[] {
+        return Object.keys(this)
+            .filter(propertyIsAgentId)
+            .map(key => this[key] as AgentManager);
+    }
+
+    public reserveNewId(): number {
+        const agentKeys = Object.keys(this).filter(propertyIsAgentId);
+        let id = StaticAgentRegistry.getNextAvailableId();
+
+        while (agentKeys.includes(id.toString())) {
+            id++;
+        }
+
+        this.createAgentManager(id);
+
+        return id;
+    }
+
+    public createAgentManager(id: number): AgentManager {
+        const am = buildAgentManager(id, this.game);
+        this[id] = am;
+        return am;
+    }
+
+    public getAgentProperty(id: number, property: PropertyKey) {
+        const am = this.getAgentManager(id);
+        let value: any;
+
+        if (!isAgentManager(am)) {
+            if (!StaticAgentRegistry.hasAgent(id)) {
+                throw new RegalError(`No agent with the id <${id}> exists.`);
+            }
+
+            value = StaticAgentRegistry.getAgentProperty(id, property);
+        } else {
+            if (property === "id") {
+                value = id;
+            } else if (am.hasPropertyRecord(property)) {
+                value = am.getProperty(property);
+            } else if (StaticAgentRegistry.hasAgent(id)) {
+                value = StaticAgentRegistry.getAgentProperty(id, property);
             }
         }
 
-        const agentRecord: AgentRecord = this[agentId];
-
-        return agentRecord.deleteProperty(event, agentId, property);
-    }
-
-    /**
-     * Whether this `InstanceAgents` once had the agent property and it was deleted.
-     * @param agentId The agent's id.
-     * @param property The name of the property.
-     */
-    public agentPropertyWasDeleted(
-        agentId: number,
-        property: PropertyKey
-    ): boolean {
-        return (
-            this.hasOwnProperty(agentId) &&
-            (this[agentId] as AgentRecord).propertyWasDeleted(property)
-        );
-    }
-
-    /**
-     * Creates a new `InstanceAgents` for the new game cycle.
-     * **Don't call this unless you know what you're doing.**
-     * @param current The `GameInstance` for the new game cycle.
-     */
-    public cycle(current: GameInstance): InstanceAgents {
-        const newAgents = new InstanceAgents(current);
-
-        const agentKeys = Object.keys(this).filter(propertyIsAgentId);
-        const agentRecords = agentKeys.map(key => this[key] as AgentRecord);
-
-        for (let i = 0; i < agentRecords.length; i++) {
-            const formerAgent = agentRecords[i];
-            const keysToAdd = Object.keys(formerAgent).filter(
-                key => key !== "game" && key !== "_id"
-            );
-
-            // Create new Agent with the old agent's id and the new GameInstance.
-            const id = Number.parseInt(agentKeys[i], 10);
-            const newAgent = new Agent(id, current);
-            newAgents.addAgent(newAgent, EventRecord.default); // Note: If the agent is static, this won't do anything.
-
-            // For each updated property on the old agent, add its last value to the new agent.
-            keysToAdd.forEach(key => {
-                if (formerAgent.propertyWasDeleted(key)) {
-                    if (StaticAgentRegistry.hasAgentProperty(id, key)) {
-                        newAgents.deleteAgentProperty(
-                            id,
-                            key,
-                            EventRecord.default
-                        ); // Record deletions to static agents.
-                    }
-
-                    return; // If the property was deleted, don't add it to the new record.
-                }
-
-                let formerPropertyValue = formerAgent.getProperty(key);
-
-                if (isAgentReference(formerPropertyValue)) {
-                    formerPropertyValue = new AgentReference(
-                        formerPropertyValue.refId
-                    );
-                }
-
-                newAgents.setAgentProperty(
-                    newAgent.id,
-                    key,
-                    formerPropertyValue,
-                    EventRecord.default
-                );
-            });
+        if (isAgent(value)) {
+            value = activeAgentProxy(value.id, this.game);
+        } else if (isAgentReference(value)) {
+            value = activeAgentProxy(value.refId, this.game);
         }
 
-        return newAgents;
+        return value;
+    }
+
+    public setAgentProperty(
+        id: number,
+        property: PropertyKey,
+        value: any
+    ): boolean {
+        if (property === "id" || property === "game") {
+            throw new RegalError(
+                `The agent's <${property}> property cannot be set.`
+            );
+        }
+
+        let am = this.getAgentManager(id);
+
+        if (!isAgentManager(am)) {
+            if (!StaticAgentRegistry.hasAgent(id)) {
+                throw new RegalError(`No agent with the id <${id}> exists.`);
+            }
+
+            am = this.createAgentManager(id);
+        }
+
+        if (isAgent(value)) {
+            if (value.id < 0) {
+                const newId = this.reserveNewId();
+                value.id = newId;
+                value = this.game.using(value);
+            }
+            value = new AgentReference(value.id);
+        }
+
+        am.setProperty(property, value);
+
+        return true;
+    }
+
+    public hasAgentProperty(id: number, property: PropertyKey): boolean {
+        const am = this.getAgentManager(id);
+
+        const staticPropExists = StaticAgentRegistry.hasAgentProperty(
+            id,
+            property
+        );
+
+        if (!isAgentManager(am)) {
+            if (!StaticAgentRegistry.hasAgent(id)) {
+                throw new RegalError(`No agent with the id <${id}> exists.`);
+            }
+
+            return staticPropExists;
+        }
+
+        if (property === "id") {
+            return true;
+        }
+
+        const propExists = am.hasPropertyRecord(property) || staticPropExists;
+
+        return propExists && !am.propertyWasDeleted(property);
+    }
+
+    public deleteAgentProperty(id: number, property: PropertyKey): boolean {
+        if (property === "id" || property === "game") {
+            throw new RegalError(
+                `The agent's <${property}> property cannot be deleted.`
+            );
+        }
+
+        let am = this.getAgentManager(id);
+
+        if (!isAgentManager(am)) {
+            if (!StaticAgentRegistry.hasAgent(id)) {
+                throw new RegalError(`No agent with the id <${id}> exists.`);
+            }
+
+            am = this.createAgentManager(id);
+        }
+
+        am.deleteProperty(property);
+
+        return true;
+    }
+
+    public getAgentManager(id: number): AgentManager {
+        const result = this[id];
+
+        if (isAgentManager(result)) {
+            return result;
+        }
+
+        return undefined;
     }
 }

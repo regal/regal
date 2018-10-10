@@ -5,14 +5,13 @@ import GameInstance from "../../src/game-instance";
 import { OutputLineType, InstanceOutput } from "../../src/output";
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
+import { Game } from "../../src/game-api";
 
 describe("Output", function() {
     beforeEach(function() {
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
+        Game.init();
     });
 
     describe("Instance Output", function() {

@@ -13,15 +13,13 @@ import { log, getDemoMetadata } from "../test-utils";
 import { PropertyOperation } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import { MetadataManager } from "../../src/config";
+import { Game } from "../../src/game-api";
 
 describe("API Hooks", function() {
     beforeEach(function() {
-        HookManager.resetHooks();
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
+        Game.init();
     });
 
     it("playerCommandHook starts out undefined", function() {

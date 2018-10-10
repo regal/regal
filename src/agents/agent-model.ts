@@ -1,192 +1,151 @@
 /**
- * Contains the Agent model and the handler for proxying interaction with it.
- * Agents are objects in a Regal game that can be modified and tracked by events.
+ * Contains the Agent model and proxies for controlling interaction with agents.
+ *
+ * Agents are objects that are interacted with by the player in a Regal game.
+ * They are managed by the `GameInstance`'s `InstanceAgents` object, which
+ * tracks all modifications made to the agent data.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { ContextManager } from "../context-manager";
 import { RegalError } from "../error";
 import GameInstance from "../game-instance";
-import { StaticAgentRegistry } from "./static-agent";
+import { StaticAgentRegistry } from "./static-agent-registry";
 
 /** Determines whether an object is an `Agent`. */
 export const isAgent = (o: any): o is Agent =>
-    o && (o as Agent).isRegistered !== undefined;
+    o !== undefined && (o as Agent).id !== undefined;
 
 /**
- * Proxy handler that controls access to `Agent` objects.
+ * Builds a proxy for an inactive agent. Before an agent is activated
+ * by a `GameInstance`, it is considered inactive.
+ *
+ * Inactive agents are initialize-only, meaning that their properties
+ * may optionally be set once, but they may not be read or modified
+ * until the agent is activated.
+ *
+ * An exception to this rule is that inactive agents may be read and
+ * modified in the game's static context (i.e. outside of a game cycle).
+ * Agents created in the static context are called static agents, and
+ * they still must be activated by a `GameInstance` before they can be
+ * used in a game cycle.
+ *
+ * @param agent The agent to be proxied.
+ * @returns The inactive agent proxy.
  */
-export const AGENT_PROXY_HANDLER = {
-    // Gets an agent property, either from `InstanceAgents` or the agent itself.
-    get(target: Agent, propertyKey: PropertyKey, receiver: object): any {
-        let value: any;
+export const inactiveAgentProxy = (agent: Agent): Agent =>
+    new Proxy(agent, {
+        /** Hidden property that contains any initialized values. */
+        tempValues: {},
 
-        // If the property exists in the instance state, return it.
-        if (
-            target.isRegistered &&
-            target.game.agents.hasAgentProperty(target.id, propertyKey)
-        ) {
-            value = target.game.agents.getAgentProperty(target.id, propertyKey);
-        }
-        // If the property never existed in the instance state (i.e. wasn't deleted), return the `Reflect.get`.
-        else if (
-            target.game === undefined ||
-            !target.game.agents.agentPropertyWasDeleted(target.id, propertyKey)
-        ) {
-            value = Reflect.get(target, propertyKey, receiver);
-        }
-
-        return value;
-    },
-
-    // Redirects agent property changes to `InstanceAgents` if said agent is registered.
-    set(
-        target: Agent,
-        propertyKey: PropertyKey,
-        value: any,
-        receiver: object
-    ): boolean {
-        let result: boolean;
-
-        if (target.isRegistered) {
-            const currentEvent = target.game.events.current;
-            result = target.game.agents.setAgentProperty(
-                target.id,
-                propertyKey,
-                value,
-                currentEvent
-            );
-        } else {
-            result = Reflect.set(target, propertyKey, value, receiver);
-        }
-
-        return result;
-    },
-
-    // Redirects checking if an agent has a property to `InstanceAgents` if said agent is registered.
-    has(target: Agent, propertyKey: PropertyKey): boolean {
-        return target.isRegistered
-            ? target.game.agents.hasAgentProperty(target.id, propertyKey)
-            : Reflect.has(target, propertyKey);
-    },
-
-    // Redirects deleting an agent property to `InstanceAgents` if said agent is registered.
-    deleteProperty(target: Agent, propertyKey: PropertyKey): boolean {
-        let result: boolean;
-
-        if (
-            target.isRegistered &&
-            target.game.agents.hasAgentProperty(target.id, propertyKey) // No use deleting a property if `InstanceAgents` doesn't have it
-        ) {
-            const currentEvent = target.game.events.current;
-            result = target.game.agents.deleteAgentProperty(
-                target.id,
-                propertyKey,
-                currentEvent
-            );
-        } else {
-            result = Reflect.deleteProperty(target, propertyKey);
-        }
-
-        return result;
-    }
-};
-
-/**
- * A game object that can be modified and tracked by events in a game instance.
- */
-export class Agent {
-    /**
-     * Constructs a new `Agent`. This constructor should almost never be called
-     * directly in the context of a game, but rather should be called with `super()`.
-     *
-     * @param _id The agent's numeric id (use with caution).
-     * @param game The agent's assigned game instance (use with caution).
-     */
-    constructor(private _id?: number, public game?: GameInstance) {
-        return new Proxy(this, AGENT_PROXY_HANDLER);
-    }
-
-    /** Whether the agent is being tracked by a `GameInstance`. */
-    get isRegistered(): boolean {
-        return this.game !== undefined && this.game.agents.hasAgent(this.id);
-    }
-
-    /** Whether the agent is registered in the game's static context. */
-    get isStatic(): boolean {
-        return this._id !== undefined && StaticAgentRegistry.hasAgent(this._id);
-    }
-
-    /** The agent's numeric id. If the agent is not registered, this will not be defined. */
-    get id() {
-        return this._id;
-    }
-
-    /** If you attempt to set the id after one has already been set, an error will be thrown. */
-    set id(value: number) {
-        if (this._id !== undefined) {
-            throw new RegalError(
-                "Cannot change an agent's ID once it has been set."
-            );
-        }
-        this._id = value;
-    }
-
-    /**
-     * Registers the agent with the current game instance's `InstanceAgents`
-     * so that all changes to it are tracked.
-     *
-     * @param game The current game instance.
-     * @param newId The numeric id to assign to the new agent (optional).
-     *
-     * @returns A proxy to manage all interaction with the newly registered agent.
-     */
-    public register(game: GameInstance, newId?: number): this {
-        if (!game) {
-            throw new RegalError(
-                "The GameInstance must be defined to register the agent."
-            );
-        }
-        if (this.isRegistered) {
-            throw new RegalError("Cannot register an agent more than once.");
-        }
-
-        if (newId !== undefined) {
-            if (newId < 0) {
-                throw new RegalError("newId must be positive.");
+        get(target: Agent, property: PropertyKey) {
+            if (property === "tempValues") {
+                return this.tempValues;
             }
-            if (StaticAgentRegistry.hasAgent(newId)) {
+
+            if (property !== "id" && !ContextManager.isContextStatic()) {
                 throw new RegalError(
-                    `A static agent already has the ID <${newId}>.`
+                    "The properties of an inactive agent cannot be accessed within a game cycle."
                 );
             }
 
-            this.id = newId;
-        } else if (!this.isStatic) {
-            this.id = game.agents.getNextAgentId();
+            return Reflect.get(target, property);
+        },
+
+        set(target: Agent, property: PropertyKey, value: any) {
+            if (
+                ContextManager.isContextStatic() ||
+                (property === "id" && target.id < 0)
+            ) {
+                return Reflect.set(target, property, value);
+            } else if (StaticAgentRegistry.hasAgent(target.id)) {
+                throw new RegalError(
+                    "This static agent must be activated before it may be modified."
+                );
+            }
+
+            // Allow initial values to be set (like from a constructor) but ONLY ONCE.
+            if (this.tempValues[property] !== undefined) {
+                throw new RegalError(
+                    "The properties of an inactive agent cannot be set within a game cycle."
+                );
+            }
+
+            this.tempValues[property] = value;
+
+            return true;
+        },
+
+        deleteProperty(target: Agent, property: PropertyKey) {
+            if (!ContextManager.isContextStatic()) {
+                throw new RegalError(
+                    "The properties of an inactive agent cannot be deleted within a game cycle."
+                );
+            }
+
+            return Reflect.deleteProperty(target, property);
         }
+    } as ProxyHandler<Agent>);
 
-        this.game = game;
+/**
+ * Builds a proxy for an active agent. When an inactive agent is activated
+ * by a `GameInstance`, it is considered active.
+ *
+ * The proxy wraps an empty object and has no tangible connection to the agent
+ * which it is imitating. All calls to the proxy are forwarded to the
+ * `GameInstance`'s `InstanceAgents`, simulating the behavior of normal object.
+ *
+ * @param id    The proxy agent's id.
+ * @param game  The `GameInstance` of the current context.
+ */
+export const activeAgentProxy = (id: number, game: GameInstance): Agent =>
+    new Proxy({} as Agent, {
+        get(target: Agent, property: PropertyKey) {
+            return game.agents.hasAgentProperty(id, property)
+                ? game.agents.getAgentProperty(id, property)
+                : Reflect.get(target, property);
+        },
 
-        const currentEvent = game.events.current;
-        game.agents.addAgent(this, currentEvent);
+        set(target: Agent, property: PropertyKey, value: any) {
+            return game.agents.setAgentProperty(id, property, value);
+        },
 
-        return this;
-    }
+        has(target: Agent, property: PropertyKey) {
+            return game.agents.hasAgentProperty(id, property);
+        },
+
+        deleteProperty(target: Agent, property: PropertyKey) {
+            return game.agents.deleteAgentProperty(id, property);
+        }
+    });
+
+/**
+ * An object that is interacted with by the player in a Regal game.
+ *
+ * Every game object should inherit from `Agent`.
+ */
+export class Agent {
+    /** The agent's unique identifier in the context of the current game. */
+    public id: number;
 
     /**
-     * Adds the agent to the game's static agent registry so that
-     * its data is stored in the static context of the game, rather than
-     * every game instance.
+     * Constructs a new `Agent`. This constructor should almost never be called
+     * directly, but rather should be called with `super()`.
      *
-     * Note that modifications to this agent, once it is registered,
-     * will not modify the static version, but rather will record the
-     * changes in the current game instance's `InstanceAgents`.
-     *
-     * @returns A proxy to manage all interaction with the static agent.
+     * If called in the game's static context (i.e. outside of a game cycle), a
+     * static agent will be created, and an id will be reserved for this agent
+     * for all game instances.
      */
-    public static(): this {
-        return StaticAgentRegistry.addAgent(this);
+    constructor() {
+        if (ContextManager.isContextStatic()) {
+            this.id = StaticAgentRegistry.getNextAvailableId();
+            StaticAgentRegistry.addAgent(this);
+        } else {
+            this.id = -1;
+        }
+
+        return inactiveAgentProxy(this);
     }
 }

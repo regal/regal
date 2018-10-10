@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 
-import { Game, GameResponse, resetGame } from "../../src/game-api";
+import { Game, GameResponse } from "../../src/game-api";
 import {
     onPlayerCommand,
     onStartCommand,
@@ -26,12 +26,9 @@ class Dummy extends Agent {
 
 describe("Game API", function() {
     beforeEach(function() {
-        resetGame();
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
+        Game.init();
     });
 
     describe("Game.postPlayerCommand", function() {
