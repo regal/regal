@@ -12,10 +12,11 @@
  */
 
 import {
+    activateAgent,
     activeAgentProxy,
-    Agent,
     buildInstanceAgents,
     InstanceAgents,
+    isAgent,
     recycleInstanceAgents
 } from "./agents";
 import { GameOptions, InstanceOptions } from "./config";
@@ -92,24 +93,41 @@ export default class GameInstance {
         return newGame;
     }
 
-    public using<T extends Agent>(resource: T): T {
-        let id = resource.id;
-
-        if (id < 0) {
-            id = this.agents.reserveNewId();
-            resource.id = id;
+    /**
+     * Activates one or more agents in the current game context. All agents
+     * must be activated before they can be used. Activating an agent multiple
+     * times has no effect.
+     *
+     * @param resource Either a single agent or an object where every property
+     * is an agent to be activated.
+     * @returns Either an activated agent or an object where every property is
+     * an activated agent, depending on the structure of `resource`.
+     */
+    public using<T>(resource: T): T {
+        if (isAgent(resource)) {
+            return activateAgent(this, resource);
         }
 
-        const agent = activeAgentProxy(id, this) as T;
+        if (resource === undefined) {
+            throw new RegalError("Resource must be defined.");
+        }
 
-        const tempValues = (resource as any).tempValues;
+        const returnObj = {} as T;
 
-        if (tempValues !== undefined) {
-            for (const prop of Object.keys(tempValues)) {
-                agent[prop] = tempValues[prop];
+        for (const key in resource) {
+            if (resource.hasOwnProperty(key)) {
+                const agent = resource[key];
+
+                if (isAgent(agent)) {
+                    returnObj[key] = activateAgent(this, agent);
+                } else {
+                    throw new RegalError(
+                        `Invalid agent in resource at key <${key}>.`
+                    );
+                }
             }
         }
 
-        return agent;
+        return returnObj;
     }
 }

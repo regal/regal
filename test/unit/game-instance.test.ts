@@ -7,6 +7,8 @@ import { getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/game-api";
 import { RegalError } from "../../src/error";
 
+// Note: Some tests for GameInstance.using are in agents.test.ts
+
 describe("GameInstance", function() {
     beforeEach(function() {
         Game.reset();
@@ -52,5 +54,27 @@ describe("GameInstance", function() {
             RegalError,
             "Cannot construct a GameInstance outside of a game cycle."
         );
+    });
+
+    it("Throw an error if GameInstance.using is called with undefined", function() {
+        expect(() => new GameInstance().using(undefined)).to.throw(
+            RegalError,
+            "Resource must be defined"
+        );
+    });
+
+    it("Throw an error if GameInstance.using is called with an illegal object", function() {
+        expect(() => new GameInstance().using({ foo: "bar" })).to.throw(
+            RegalError,
+            "Invalid agent in resource at key <foo>."
+        );
+    });
+
+    it("GameInstance.using only references properties on the resource object itself", function() {
+        class WeirdResource {}
+        (WeirdResource as any).prototype.foo = "bar";
+
+        const game = new GameInstance();
+        expect("foo" in game.using(new WeirdResource())).to.be.false;
     });
 });

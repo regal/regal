@@ -422,6 +422,86 @@ describe("Agents", function() {
             expect(dummyAlt.health).to.equal(25);
             expect((dummyAlt as any).foo).to.equal(25);
         });
+
+        it("Activating multiple agents simulataneously using GameInstance.using's compound object argument", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const { d1, d2 } = myGame.using({
+                d1: new Dummy("D1", 15),
+                d2: new Dummy("D2", 100)
+            });
+
+            expect(d1.name).to.equal("D1");
+            expect(d1.health).to.equal(15);
+            expect(d2.name).to.equal("D2");
+            expect(d2.health).to.equal(100);
+            expect(myGame.agents.agentManagers().length).to.equal(3);
+        });
+
+        it("Activating multiple static agents simulataneously", function() {
+            const DUMMY = new Dummy("D1", 15);
+            const PARENT = new Parent(DUMMY);
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            const { d, p } = myGame.using({ d: DUMMY, p: PARENT });
+            p.child.health += 5;
+
+            expect(d.name).to.equal("D1");
+            expect(d.health).to.equal(20);
+            expect(p.child.name).to.equal("D1");
+            expect(p.child.health).to.equal(20);
+            expect(myGame.agents.agentManagers().length).to.equal(2);
+        });
+
+        it("Activating multiple agents as a safety at the beginning of events", function() {
+            const newChild = (_target: Parent) =>
+                on("NEW CHILD", game => {
+                    const { parent, child } = game.using({
+                        parent: _target,
+                        child: new Dummy("D1", 10)
+                    });
+
+                    parent.child = child;
+                    game.state.parent = parent;
+
+                    return noop;
+                });
+
+            const PARENT = new Parent(new Dummy("D0", 0));
+
+            Game.init();
+
+            // Using a static agent that hasn't been activated
+            const myGame1 = new GameInstance();
+            newChild(PARENT)(myGame1);
+
+            expect(myGame1.state.parent.child.id).to.equal(3);
+            expect(myGame1.state.parent.child.name).to.equal("D1");
+            expect(myGame1.state.parent.child.health).to.equal(10);
+
+            // Using a nonstatic agent that's been activated
+            const myGame2 = new GameInstance();
+            const myParent = myGame2.using(new Parent(new Dummy("D2", 2)));
+            newChild(myParent)(myGame2);
+
+            expect(myGame2.state.parent.child.id).to.equal(5);
+            expect(myGame2.state.parent.child.name).to.equal("D1");
+            expect(myGame2.state.parent.child.health).to.equal(10);
+
+            // Using a nonstatic agent that hasn't been activated
+            const myGame3 = new GameInstance();
+            const myParent2 = new Parent(undefined);
+            newChild(myParent2)(myGame3);
+
+            expect(myGame3.state.parent.child.id).to.equal(4);
+            expect(myGame3.state.parent.child.name).to.equal("D1");
+            expect(myGame3.state.parent.child.health).to.equal(10);
+        });
     });
 
     describe("Agent Managers", function() {
