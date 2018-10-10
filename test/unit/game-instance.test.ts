@@ -6,7 +6,6 @@ import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/game-api";
 import { RegalError } from "../../src/error";
-import { Agent } from "http";
 
 // Note: Some tests for GameInstance.using are in agents.test.ts
 
