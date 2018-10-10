@@ -1,3 +1,10 @@
+/**
+ * Contains models for tracking modifications made to active agents.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 /** Type of modification done to an agent's property. */
 export enum PropertyOperation {
     /** The property was added to the agent. */
@@ -11,7 +18,7 @@ export enum PropertyOperation {
 }
 
 /**
- * Describes a single operation on a registered agent's property.
+ * Describes a single operation on an active agent's property.
  */
 export interface PropertyChange {
     /** The numeric id of the `TrackedEvent` during which the change took place (optional). */

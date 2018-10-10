@@ -1,3 +1,14 @@
+/**
+ * Contains the Agent model and proxies for controlling interaction with agents.
+ *
+ * Agents are objects that are interacted with by the player in a Regal game.
+ * They are managed by the `GameInstance`'s `InstanceAgents` object, which
+ * tracks all modifications made to the agent data.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { ContextManager } from "../context-manager";
 import { RegalError } from "../error";
 import GameInstance from "../game-instance";
@@ -7,8 +18,26 @@ import { StaticAgentRegistry } from "./static-agent-registry";
 export const isAgent = (o: any): o is Agent =>
     o !== undefined && (o as Agent).id !== undefined;
 
+/**
+ * Builds a proxy for an inactive agent. Before an agent is activated
+ * by a `GameInstance`, it is considered inactive.
+ *
+ * Inactive agents are initialize-only, meaning that their properties
+ * may optionally be set once, but they may not be read or modified
+ * until the agent is activated.
+ *
+ * An exception to this rule is that inactive agents may be read and
+ * modified in the game's static context (i.e. outside of a game cycle).
+ * Agents created in the static context are called static agents, and
+ * they still must be activated by a `GameInstance` before they can be
+ * used in a game cycle.
+ *
+ * @param agent The agent to be proxied.
+ * @returns The inactive agent proxy.
+ */
 export const inactiveAgentProxy = (agent: Agent): Agent =>
     new Proxy(agent, {
+        /** Hidden property that contains any initialized values. */
         tempValues: {},
 
         get(target: Agent, property: PropertyKey) {
@@ -60,6 +89,17 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
         }
     } as ProxyHandler<Agent>);
 
+/**
+ * Builds a proxy for an active agent. When an inactive agent is activated
+ * by a `GameInstance`, it is considered active.
+ *
+ * The proxy wraps an empty object and has no tangible connection to the agent
+ * which it is imitating. All calls to the proxy are forwarded to the
+ * `GameInstance`'s `InstanceAgents`, simulating the behavior of normal object.
+ *
+ * @param id    The proxy agent's id.
+ * @param game  The `GameInstance` of the current context.
+ */
 export const activeAgentProxy = (id: number, game: GameInstance): Agent =>
     new Proxy({} as Agent, {
         get(target: Agent, property: PropertyKey) {
@@ -81,9 +121,23 @@ export const activeAgentProxy = (id: number, game: GameInstance): Agent =>
         }
     });
 
+/**
+ * An object that is interacted with by the player in a Regal game.
+ *
+ * Every game object should inherit from `Agent`.
+ */
 export class Agent {
+    /** The agent's unique identifier in the context of the current game. */
     public id: number;
 
+    /**
+     * Constructs a new `Agent`. This constructor should almost never be called
+     * directly, but rather should be called with `super()`.
+     *
+     * If called in the game's static context (i.e. outside of a game cycle), a
+     * static agent will be created, and an id will be reserved for this agent
+     * for all game instances.
+     */
     constructor() {
         if (ContextManager.isContextStatic()) {
             this.id = StaticAgentRegistry.getNextAvailableId();
