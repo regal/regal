@@ -16,9 +16,9 @@ import {
     activeAgentProxy,
     buildInstanceAgents,
     InstanceAgents,
+    isAgent,
     recycleInstanceAgents
 } from "./agents";
-import { isAgent } from "./agents/agent-model";
 import { GameOptions, InstanceOptions } from "./config";
 import { ContextManager } from "./context-manager";
 import { RegalError } from "./error";
