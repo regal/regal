@@ -6,7 +6,12 @@
  */
 
 import GameInstance from "../game-instance";
-import { PropertyChange, PropertyOperation } from "./agent-properties";
+import {
+    pcForAgentManager,
+    pcForEventRecord,
+    PropertyChange,
+    PropertyOperation
+} from "./agent-properties";
 import { StaticAgentRegistry } from "./static-agent-registry";
 
 /**
@@ -141,15 +146,20 @@ class AgentManagerImpl implements AgentManager {
         }
 
         const event = this.game.events.current;
-        event.trackChange(this.id, property, opType, initValue, value);
 
-        history.unshift({
+        const propChange: PropertyChange = {
+            agentId: this.id,
             eventId: event.id,
             eventName: event.name,
             final: value,
             init: initValue,
-            op: opType
-        });
+            op: opType,
+            property: property.toString()
+        };
+
+        event.trackChange(pcForEventRecord(propChange));
+
+        history.unshift(pcForAgentManager(propChange));
     }
 
     public deleteProperty(property: PropertyKey): void {
@@ -176,20 +186,19 @@ class AgentManagerImpl implements AgentManager {
         }
 
         const event = this.game.events.current;
-        event.trackChange(
-            this.id,
-            property,
-            PropertyOperation.DELETED,
-            initValue,
-            undefined
-        );
 
-        history.unshift({
+        const propChange: PropertyChange = {
+            agentId: this.id,
             eventId: event.id,
             eventName: event.name,
             final: undefined,
             init: initValue,
-            op: PropertyOperation.DELETED
-        });
+            op: PropertyOperation.DELETED,
+            property: property.toString()
+        };
+
+        event.trackChange(pcForEventRecord(propChange));
+
+        history.unshift(pcForAgentManager(propChange));
     }
 }
