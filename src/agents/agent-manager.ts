@@ -6,7 +6,7 @@
  */
 
 import { RegalError } from "../error";
-import { DEFAULT_EVENT_ID, EventRecord } from "../events/event-record";
+import { DEFAULT_EVENT_ID, EventRecord } from "../events";
 import GameInstance from "../game-instance";
 import {
     pcForAgentManager,
