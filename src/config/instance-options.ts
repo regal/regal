@@ -79,14 +79,10 @@ export const ensureOverridesAllowed = (
  * Read-only container that provides an API to view the game instance's current game options.
  */
 export class InstanceOptions implements GameOptions {
-    /** Game options that can be overridden by a Regal client. */
     public allowOverrides: string[] | boolean;
-
-    /** Whether output of type `DEBUG` should be returned to the client. */
     public debug: boolean;
-
-    /** Whether output of type `MINOR` should be returned to the client. */
     public showMinor: boolean;
+    public trackAgentChanges: boolean;
 
     /** Options that have had their static values overridden by the client. */
     public overrides: Readonly<Partial<GameOptions>>;

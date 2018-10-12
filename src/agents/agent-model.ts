@@ -45,7 +45,11 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
                 return this.tempValues;
             }
 
-            if (property !== "id" && !ContextManager.isContextStatic()) {
+            if (
+                property !== "id" &&
+                property !== "refId" &&
+                !ContextManager.isContextStatic()
+            ) {
                 throw new RegalError(
                     "The properties of an inactive agent cannot be accessed within a game cycle."
                 );

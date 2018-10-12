@@ -5,6 +5,9 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+// tslint:disable-next-line
+true; // This does nothing; it's only so the jsdocs won't conflict
+
 /** Type of modification done to an agent's property. */
 export enum PropertyOperation {
     /** The property was added to the agent. */
@@ -42,3 +45,21 @@ export interface PropertyChange {
     /** The property's name (optional). */
     property?: string;
 }
+
+/** Convert the given `PropertyChange` into the appropriate view for an `AgentManager`. */
+export const pcForAgentManager = (pc: PropertyChange): PropertyChange => ({
+    eventId: pc.eventId,
+    eventName: pc.eventName,
+    final: pc.final,
+    init: pc.init,
+    op: pc.op
+});
+
+/** Convert the given PropertyChange into the appropriate view for an `EventRecord`. */
+export const pcForEventRecord = (pc: PropertyChange): PropertyChange => ({
+    agentId: pc.agentId,
+    final: pc.final,
+    init: pc.init,
+    op: pc.op,
+    property: pc.property
+});

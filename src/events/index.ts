@@ -16,5 +16,9 @@ export {
     isEventQueue,
     isTrackedEvent
 } from "./event-model";
-export { EventRecord } from "./event-record";
+export {
+    EventRecord,
+    DEFAULT_EVENT_ID,
+    DEFAULT_EVENT_NAME
+} from "./event-record";
 export { default as InstanceEvents } from "./instance-events";

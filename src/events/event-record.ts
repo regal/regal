@@ -71,29 +71,12 @@ export class EventRecord {
     /**
      * Adds a record of a single change to a registered agent's property to the
      * `EventRecord`'s `changes` property.
-     *
-     * @param agentId The registered agent's ID.
-     * @param property The property being modified.
-     * @param op The type of modification.
-     * @param init The initial value of the property.
-     * @param final The final value of the property.
      */
-    public trackChange<T>(
-        agentId: number,
-        property: PropertyKey,
-        op: PropertyOperation,
-        init?: T,
-        final?: T
-    ): void {
+    public trackChange(propChange: PropertyChange): void {
         if (this.changes === undefined) {
             this.changes = [];
         }
-        this.changes.push({
-            agentId,
-            final,
-            init,
-            op,
-            property: property.toString()
-        });
+
+        this.changes.push(propChange);
     }
 }

@@ -9,7 +9,7 @@ import {
 } from "../../src/api-hooks";
 import GameInstance from "../../src/game-instance";
 import { noop, on } from "../../src/events";
-import { log, getDemoMetadata } from "../test-utils";
+import { metadataWithOptions } from "../test-utils";
 import { PropertyOperation } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import { MetadataManager } from "../../src/config";
@@ -18,7 +18,9 @@ import { Game } from "../../src/game-api";
 describe("API Hooks", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
+        MetadataManager.setMetadata(
+            metadataWithOptions({ trackAgentChanges: true })
+        );
         Game.init();
     });
 

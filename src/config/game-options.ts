@@ -29,6 +29,16 @@ export interface GameOptions {
 
     /** Whether output of type `MINOR` should be returned to the client. Defaults to true. */
     showMinor: boolean;
+
+    /**
+     * Whether all changes to agent properties are tracked and returned to the client. Defaults to false.
+     *
+     * If `false`, only the values of each property at the beginning and end of each game cycle will be
+     * recorded.
+     *
+     * If `true`, all property changes will be recorded.
+     */
+    trackAgentChanges: boolean;
 }
 
 /**
@@ -39,7 +49,8 @@ export interface GameOptions {
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
     allowOverrides: true,
     debug: false,
-    showMinor: true
+    showMinor: true,
+    trackAgentChanges: false
 };
 
 /** The names of every game option. */
@@ -102,4 +113,5 @@ export const validateOptions = (options: Partial<GameOptions>): void => {
     }
 
     checkTypeIfDefined("showMinor", "boolean");
+    checkTypeIfDefined("trackAgentChanges", "boolean");
 };
