@@ -758,7 +758,7 @@ describe("Agents", function() {
         it("InstanceAgents.recycle creates all new agents that have only the last values of each of the original agent' properties", function() {
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ trackAgentChanges: true });
 
             on("INIT", game => {
                 game.state.dummy = new Dummy("D1", 10);
@@ -814,6 +814,125 @@ describe("Agents", function() {
                             init: undefined,
                             final: "D1",
                             op: PropertyOperation.ADDED
+                        }
+                    ],
+                    health: [
+                        {
+                            eventId: 1,
+                            eventName: "INIT",
+                            init: undefined,
+                            final: 10,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
+                }
+            });
+
+            const myGame2 = myGame.recycle();
+
+            expect(myGame2.agents).to.deep.equal({
+                game: myGame2,
+                0: {
+                    id: 0,
+                    game: myGame2,
+                    dummy: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: {
+                                refId: 1
+                            },
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    foo: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: true,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
+                },
+                1: {
+                    id: 1,
+                    game: myGame2,
+                    name: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: "Jimmy",
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    health: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            init: undefined,
+                            final: 10,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
+                }
+            });
+        });
+
+        it("InstanceAgents.recycle creates all new agents that have only the last values of each of the original agent' properties (without tracking agent properties)", function() {
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            on("INIT", game => {
+                game.state.dummy = new Dummy("D1", 10);
+
+                return on("MOD", game => {
+                    game.state.dummy.name = "Jimmy";
+                    game.state.foo = true;
+                    return noop;
+                });
+            })(myGame);
+
+            // Verify initial condition
+            expect(myGame.agents).to.deep.equal({
+                game: myGame,
+                0: {
+                    id: 0,
+                    game: myGame,
+                    dummy: [
+                        {
+                            eventId: 1,
+                            eventName: "INIT",
+                            init: undefined,
+                            final: {
+                                refId: 1
+                            },
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    foo: [
+                        {
+                            eventId: 2,
+                            eventName: "MOD",
+                            init: undefined,
+                            final: true,
+                            op: PropertyOperation.ADDED
+                        }
+                    ]
+                },
+                1: {
+                    id: 1,
+                    game: myGame,
+                    name: [
+                        {
+                            eventId: 2,
+                            eventName: "MOD",
+                            init: "D1",
+                            final: "Jimmy",
+                            op: PropertyOperation.MODIFIED
                         }
                     ],
                     health: [
@@ -1466,7 +1585,7 @@ describe("Agents", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ trackAgentChanges: true });
             init(myGame);
 
             for (let x = 0; x < 10; x++) {
@@ -1504,7 +1623,7 @@ describe("Agents", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ trackAgentChanges: true });
             init(myGame);
 
             for (let x = 0; x < 10; x++) {

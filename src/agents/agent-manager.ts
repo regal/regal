@@ -5,6 +5,8 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { RegalError } from "../error";
+import { DEFAULT_EVENT_ID, EventRecord } from "../events/event-record";
 import GameInstance from "../game-instance";
 import {
     pcForAgentManager,
@@ -12,6 +14,7 @@ import {
     PropertyChange,
     PropertyOperation
 } from "./agent-properties";
+import { isAgentReference } from "./agent-reference";
 import { StaticAgentRegistry } from "./static-agent-registry";
 
 /**
@@ -141,7 +144,13 @@ class AgentManagerImpl implements AgentManager {
                 : PropertyOperation.MODIFIED;
         }
 
-        if (initValue === value) {
+        // If values are equal, don't record anything.
+        if (
+            initValue === value ||
+            (isAgentReference(initValue) &&
+                isAgentReference(value) &&
+                initValue.refId === value.refId)
+        ) {
             return;
         }
 
@@ -157,9 +166,7 @@ class AgentManagerImpl implements AgentManager {
             property: property.toString()
         };
 
-        event.trackChange(pcForEventRecord(propChange));
-
-        history.unshift(pcForAgentManager(propChange));
+        this.recordChange(event, propChange, history);
     }
 
     public deleteProperty(property: PropertyKey): void {
@@ -197,8 +204,44 @@ class AgentManagerImpl implements AgentManager {
             property: property.toString()
         };
 
-        event.trackChange(pcForEventRecord(propChange));
+        this.recordChange(event, propChange, history);
+    }
 
-        history.unshift(pcForAgentManager(propChange));
+    /**
+     * Internal helper method to record a change in the `AgentManager`'s property
+     * history and the `EventRecord` appropriately, depending on the value of the
+     * `trackAgentChanges` game option.
+     *
+     * @param event The `EventRecord` in which the change is tracked.
+     * @param propChange The `PropertyChange` to record.
+     * @param history The property history to modify.
+     */
+    private recordChange(
+        event: EventRecord,
+        propChange: PropertyChange,
+        history: PropertyChange[]
+    ): void {
+        const trackAgentChanges = this.game.options.trackAgentChanges;
+
+        // If trackAgentChanges is enabled, record it in the event record and the agent manager.
+        if (trackAgentChanges) {
+            event.trackChange(pcForEventRecord(propChange));
+            history.unshift(pcForAgentManager(propChange));
+        } else {
+            if (history.length > 1) {
+                throw new RegalError(
+                    "Property history length cannot be greater than one when trackAgentChanges is disabled."
+                );
+            }
+
+            // If property history has a change, check when the change happened.
+            // If the change's eventId is 0, leave it alone and add in the new change.
+            if (history.length === 1 && history[0].eventId > DEFAULT_EVENT_ID) {
+                history[0] = pcForAgentManager(propChange);
+            } else {
+                // If the change happened after the game cycle began, replace it with the new change.
+                history.unshift(pcForAgentManager(propChange));
+            }
+        }
     }
 }

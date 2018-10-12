@@ -5,6 +5,9 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+// tslint:disable-next-line
+true; // This does nothing; it's only so the jsdocs won't conflict
+
 /** Type of modification done to an agent's property. */
 export enum PropertyOperation {
     /** The property was added to the agent. */

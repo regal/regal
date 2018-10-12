@@ -684,7 +684,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ trackAgentChanges: true });
             const dummy = myGame.using(new Dummy("Lars", 10));
 
             heal(dummy, 15)(myGame);
@@ -756,7 +756,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ trackAgentChanges: true });
             start(myGame);
 
             expect(myGame.events.history).to.deep.equal([
