@@ -502,6 +502,56 @@ describe("Agents", function() {
             expect(myGame3.state.parent.child.name).to.equal("D1");
             expect(myGame3.state.parent.child.health).to.equal(10);
         });
+
+        describe("Agent Arrays", function() {
+            it("Setting an active agent's property to be an empty array is functional", function() {
+                Game.init();
+
+                const myGame = new GameInstance();
+                myGame.state.arr = [];
+
+                expect(myGame.state.arr).to.deep.equal([]);
+            });
+
+            it("Setting an active agent's property to be an empty array is tracked properly", function() {
+                Game.init();
+
+                const myGame = new GameInstance({ trackAgentChanges: true });
+                myGame.state.arr = [];
+
+                expect(myGame.agents).to.deep.equal({
+                    game: myGame,
+                    0: {
+                        id: 0,
+                        game: myGame,
+                        arr: [
+                            {
+                                eventId: DEFAULT_EVENT_ID,
+                                eventName: DEFAULT_EVENT_NAME,
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: []
+                            }
+                        ]
+                    }
+                });
+                expect(myGame.events.history).to.deep.equal([
+                    {
+                        id: DEFAULT_EVENT_ID,
+                        name: DEFAULT_EVENT_NAME,
+                        changes: [
+                            {
+                                agentId: 0,
+                                property: "arr",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: []
+                            }
+                        ]
+                    }
+                ]);
+            });
+        });
     });
 
     describe("Agent Managers", function() {

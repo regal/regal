@@ -23,7 +23,11 @@ export default class InstanceEvents {
         let event = this._queue[0];
 
         if (event === undefined) {
+            // event = EventRecord.default;
+            // this._queue[0] = EventRecord.default;
             event = EventRecord.default;
+            this._queue.unshift(event);
+            this._archiveCurrent();
         }
 
         return event;
@@ -33,6 +37,7 @@ export default class InstanceEvents {
     get lastEventId() {
         return this._lastEventId;
     }
+
     /** Contains records of the past events executed during the game cycle. */
     public history: EventRecord[] = [];
 
