@@ -557,6 +557,41 @@ describe("Agents", function() {
                     }
                 ]);
             });
+
+            // todo - remove
+            it.skip("test", function() {
+                const a = [1, 2, 3];
+                const b = [4, 5, 6];
+
+                const ap = new Proxy(a, {
+                    set(
+                        target: Array<Number>,
+                        property: PropertyKey,
+                        value: any
+                    ): boolean {
+                        log(target, "target");
+                        log(property, "property");
+                        log(value, "value");
+                        return Reflect.set(target, property, value);
+                    }
+                });
+
+                ap.fill(10);
+                log(ap);
+            });
+
+            // todo - remove
+            it.only("test", function() {
+                Game.init();
+                const myGame = new GameInstance({ trackAgentChanges: true });
+                const a = myGame.using(new Agent());
+                on("MOD", function() {
+                    a["foo"] = [true];
+                    a["foo"].push(false);
+                    return noop;
+                })(myGame);
+                log(myGame);
+            });
         });
     });
 

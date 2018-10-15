@@ -12,7 +12,7 @@ import {
     buildAgentManager,
     isAgentManager
 } from "./agent-manager";
-import { activeAgentProxy, isAgent } from "./agent-model";
+import { activeAgentProxy, Agent, isAgent } from "./agent-model";
 import { AgentReference, isAgentReference } from "./agent-reference";
 import { StaticAgentRegistry } from "./static-agent-registry";
 
@@ -236,6 +236,10 @@ class InstanceAgentsImpl implements InstanceAgents {
                 value.id = newId;
                 value = this.game.using(value);
             }
+            value = new AgentReference(value.id);
+        } else if (value instanceof Array) {
+            (value as any).id = this.reserveNewId(); // todo - start here; probably set prototype to Array in the getter
+            value = this.game.using(value);
             value = new AgentReference(value.id);
         }
 
