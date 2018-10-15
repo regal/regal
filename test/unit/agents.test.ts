@@ -513,7 +513,7 @@ describe("Agents", function() {
                 expect(myGame.state.arr).to.deep.equal([]);
             });
 
-            it("Setting an active agent's property to be an empty array is tracked properly", function() {
+            it.skip("Setting an active agent's property to be an empty array is tracked properly", function() {
                 Game.init();
 
                 const myGame = new GameInstance({ trackAgentChanges: true });

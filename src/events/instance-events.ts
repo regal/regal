@@ -23,11 +23,7 @@ export default class InstanceEvents {
         let event = this._queue[0];
 
         if (event === undefined) {
-            // event = EventRecord.default;
-            // this._queue[0] = EventRecord.default;
             event = EventRecord.default;
-            this._queue.unshift(event);
-            this._archiveCurrent();
         }
 
         return event;
