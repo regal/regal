@@ -19,7 +19,7 @@ class Dummy extends Agent {
     }
 }
 
-it("Test", function() {
+it("Demo Runthrough Test 1", function() {
     const _oracle = new Dummy("The Almighty Oracle", 1000);
 
     const consultOracle = on("CONSULT", game => {
@@ -74,15 +74,15 @@ it("Test", function() {
     Game.init();
 
     let response = Game.postStartCommand();
-    log(response);
+    // log(response);
 
-    console.log("\n\n");
+    // console.log("\n\n");
 
     response = Game.postPlayerCommand(response.instance, "Jeff");
-    log(response);
+    // log(response);
 
-    console.log("\n\n");
+    // console.log("\n\n");
 
     response = Game.postPlayerCommand(response.instance, "Lars II");
-    log(response);
+    // log(response);
 });

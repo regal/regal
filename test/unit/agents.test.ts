@@ -508,16 +508,22 @@ describe("Agents", function() {
                 Game.init();
 
                 const myGame = new GameInstance();
-                myGame.state.arr = [];
+                on("MOD", game => {
+                    game.state.arr = [];
+                    return noop;
+                })(myGame);
 
                 expect(myGame.state.arr).to.deep.equal([]);
             });
 
-            it.skip("Setting an active agent's property to be an empty array is tracked properly", function() {
+            it("Setting an active agent's property to be an empty array is tracked properly", function() {
                 Game.init();
 
                 const myGame = new GameInstance({ trackAgentChanges: true });
-                myGame.state.arr = [];
+                on("MOD", game => {
+                    game.state.arr = [];
+                    return noop;
+                })(myGame);
 
                 expect(myGame.agents).to.deep.equal({
                     game: myGame,
@@ -526,8 +532,8 @@ describe("Agents", function() {
                         game: myGame,
                         arr: [
                             {
-                                eventId: DEFAULT_EVENT_ID,
-                                eventName: DEFAULT_EVENT_NAME,
+                                eventId: 1,
+                                eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: []
@@ -537,8 +543,8 @@ describe("Agents", function() {
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
-                        id: DEFAULT_EVENT_ID,
-                        name: DEFAULT_EVENT_NAME,
+                        id: 1,
+                        name: "MOD",
                         changes: [
                             {
                                 agentId: 0,
