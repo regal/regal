@@ -31,6 +31,7 @@ export const activateAgent = <T extends Agent>(
 
     const activeAgent = activeAgentProxy(id, game) as T;
 
+    // TODO - need to handle temp values for agent arrays
     const tempValues = (agent as any).tempValues;
 
     if (tempValues !== undefined) {

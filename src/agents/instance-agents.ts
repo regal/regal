@@ -8,6 +8,10 @@
 import { RegalError } from "../error";
 import GameInstance from "../game-instance";
 import {
+    AgentArrayReference,
+    isAgentArrayReference
+} from "./agent-array-reference";
+import {
     AgentManager,
     buildAgentManager,
     isAgentManager
@@ -204,6 +208,9 @@ class InstanceAgentsImpl implements InstanceAgents {
             value = activeAgentProxy(value.id, this.game);
         } else if (isAgentReference(value)) {
             value = activeAgentProxy(value.refId, this.game);
+        } else if (isAgentArrayReference(value)) {
+            value = activeAgentProxy(value.arRefId, this.game);
+            Object.setPrototypeOf(value, Array);
         }
 
         return value;
@@ -240,7 +247,7 @@ class InstanceAgentsImpl implements InstanceAgents {
         } else if (value instanceof Array) {
             (value as any).id = this.reserveNewId(); // todo - start here; probably set prototype to Array in the getter
             value = this.game.using(value);
-            value = new AgentReference(value.id);
+            value = new AgentArrayReference(value.id);
         }
 
         am.setProperty(property, value);

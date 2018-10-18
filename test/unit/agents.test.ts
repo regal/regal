@@ -585,7 +585,7 @@ describe("Agents", function() {
                 Game.init();
                 const myGame = new GameInstance({ trackAgentChanges: true });
                 const a = myGame.using(new Agent());
-                on("MOD", function() {
+                on("MOD", game => {
                     a["foo"] = [true];
                     a["foo"].push(false);
                     return noop;
