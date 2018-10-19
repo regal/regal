@@ -8,6 +8,7 @@
 
 import GameInstance from "../game-instance";
 import { activeAgentProxy, Agent } from "./agent-model";
+import { propertyIsAgentId } from "./instance-agents";
 
 /**
  * Returns an activated agent within the current game context.
@@ -32,7 +33,20 @@ export const activateAgent = <T extends Agent>(
     const activeAgent = activeAgentProxy(id, game) as T;
 
     // TODO - need to handle temp values for agent arrays
-    const tempValues = (agent as any).tempValues;
+    let tempValues = (agent as any).tempValues;
+
+    if (agent instanceof Array) {
+        if (tempValues === undefined) {
+            tempValues = {};
+        }
+
+        tempValues.length = agent.length;
+        Object.keys(agent)
+            .filter(propertyIsAgentId)
+            .forEach(key => (tempValues[key] = agent[key]));
+
+        Object.setPrototypeOf(activeAgent, Array);
+    }
 
     if (tempValues !== undefined) {
         for (const prop of Object.keys(tempValues)) {
