@@ -89,6 +89,10 @@ class AgentManagerImpl implements AgentManager {
     constructor(public id: number, public game: GameInstance) {}
 
     public hasPropertyRecord(property: PropertyKey): boolean {
+        if (property === "constructor") {
+            return false;
+        }
+
         const history: PropertyChange[] = this[property];
         return history !== undefined && history.length !== undefined;
     }

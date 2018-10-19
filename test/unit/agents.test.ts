@@ -503,7 +503,7 @@ describe("Agents", function() {
             expect(myGame3.state.parent.child.health).to.equal(10);
         });
 
-        describe("Agent Arrays", function() {
+        describe.only("Agent Arrays", function() {
             it("Setting an active agent's property to be an empty array is functional", function() {
                 Game.init();
 
@@ -536,7 +536,20 @@ describe("Agents", function() {
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: []
+                                final: { arRefId: 1 }
+                            }
+                        ]
+                    },
+                    1: {
+                        id: 1,
+                        game: myGame,
+                        length: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 0
                             }
                         ]
                     }
@@ -547,41 +560,420 @@ describe("Agents", function() {
                         name: "MOD",
                         changes: [
                             {
+                                agentId: 1,
+                                property: "length",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 0
+                            },
+                            {
                                 agentId: 0,
                                 property: "arr",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: []
+                                final: { arRefId: 1 }
                             }
                         ]
                     }
                 ]);
             });
 
-            // todo - remove
-            it.skip("test", function() {
-                const a = [1, 2, 3];
-                const b = [4, 5, 6];
+            it("Setting an active agent's property to be an array of primitives is functional", function() {
+                Game.init();
 
-                const ap = new Proxy(a, {
-                    set(
-                        target: Array<Number>,
-                        property: PropertyKey,
-                        value: any
-                    ): boolean {
-                        log(target, "target");
-                        log(property, "property");
-                        log(value, "value");
-                        return Reflect.set(target, property, value);
+                const myGame = new GameInstance();
+                on("MOD", game => {
+                    game.state.arr = [1, false, "foo"];
+                    return noop;
+                })(myGame);
+
+                expect(myGame.state.arr).to.deep.equal([1, false, "foo"]);
+            });
+
+            it("Setting an active agent's property to be an array of primitives is tracked properly", function() {
+                Game.init();
+
+                const myGame = new GameInstance({ trackAgentChanges: true });
+                on("MOD", game => {
+                    game.state.arr = [1, false, "foo"];
+                    return noop;
+                })(myGame);
+
+                expect(myGame.agents).to.deep.equal({
+                    game: myGame,
+                    0: {
+                        id: 0,
+                        game: myGame,
+                        arr: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { arRefId: 1 }
+                            }
+                        ]
+                    },
+                    1: {
+                        id: 1,
+                        game: myGame,
+                        length: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 3
+                            }
+                        ],
+                        0: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 1
+                            }
+                        ],
+                        1: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: false
+                            }
+                        ],
+                        2: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: "foo"
+                            }
+                        ]
                     }
                 });
+                expect(myGame.events.history).to.deep.equal([
+                    {
+                        id: 1,
+                        name: "MOD",
+                        changes: [
+                            {
+                                agentId: 1,
+                                property: "0",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 1
+                            },
+                            {
+                                agentId: 1,
+                                property: "1",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: false
+                            },
+                            {
+                                agentId: 1,
+                                property: "2",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: "foo"
+                            },
+                            {
+                                agentId: 1,
+                                property: "length",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 3
+                            },
+                            {
+                                agentId: 0,
+                                property: "arr",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { arRefId: 1 }
+                            }
+                        ]
+                    }
+                ]);
+            });
 
-                ap.fill(10);
-                log(ap);
+            it("Setting an active agent's property to be an array of activated agents is functional", function() {
+                Game.init();
+
+                const myGame = new GameInstance();
+                const { d1, d2, d3 } = myGame.using({
+                    d1: new Dummy("D1", 5),
+                    d2: new Dummy("D2", 10),
+                    d3: new Dummy("D3", 15)
+                });
+                on("MOD", game => {
+                    game.state.arr = [d1, d2, d3];
+                    return noop;
+                })(myGame);
+
+                expect(myGame.state.arr).to.deep.equal([d1, d2, d3]);
+            });
+
+            it("Setting an active agent's property to be an array of activated agents is tracked properly", function() {
+                Game.init();
+
+                const myGame = new GameInstance({ trackAgentChanges: true });
+                const { d1, d2, d3 } = myGame.using({
+                    d1: new Dummy("D1", 5),
+                    d2: new Dummy("D2", 10),
+                    d3: new Dummy("D3", 15)
+                });
+                on("MOD", game => {
+                    game.state.arr = [d1, d2, d3];
+                    return noop;
+                })(myGame);
+
+                expect(myGame.agents).to.deep.equal({
+                    game: myGame,
+                    0: {
+                        id: 0,
+                        game: myGame,
+                        arr: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { arRefId: 4 }
+                            }
+                        ]
+                    },
+                    1: {
+                        id: 1,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: "D1"
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 5
+                            }
+                        ]
+                    },
+                    2: {
+                        id: 2,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: "D2"
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 10
+                            }
+                        ]
+                    },
+                    3: {
+                        id: 3,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: "D3"
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 15
+                            }
+                        ]
+                    },
+                    4: {
+                        id: 4,
+                        game: myGame,
+                        length: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 3
+                            }
+                        ],
+                        0: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { refId: 1 }
+                            }
+                        ],
+                        1: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { refId: 2 }
+                            }
+                        ],
+                        2: [
+                            {
+                                eventId: 1,
+                                eventName: "MOD",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { refId: 3 }
+                            }
+                        ]
+                    }
+                });
+                expect(myGame.events.history).to.deep.equal([
+                    {
+                        id: 1,
+                        name: "MOD",
+                        changes: [
+                            {
+                                agentId: 4,
+                                property: "0",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { refId: 1 }
+                            },
+                            {
+                                agentId: 4,
+                                property: "1",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { refId: 2 }
+                            },
+                            {
+                                agentId: 4,
+                                property: "2",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { refId: 3 }
+                            },
+                            {
+                                agentId: 4,
+                                property: "length",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: 3
+                            },
+                            {
+                                agentId: 0,
+                                property: "arr",
+                                op: PropertyOperation.ADDED,
+                                init: undefined,
+                                final: { arRefId: 4 }
+                            }
+                        ]
+                    }
+                ]);
+            });
+
+            it("Setting an active agent's property to be an array of inactive agents is implicitly activates them", function() {
+                Game.init();
+
+                const myGame = new GameInstance();
+                on("MOD", game => {
+                    game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
+                    return noop;
+                })(myGame);
+
+                const d1 = myGame.state.arr[0] as Dummy;
+                const d2 = myGame.state.arr[1] as Dummy;
+
+                expect(d1.id).to.equal(2);
+                expect(d1.name).to.equal("D1");
+                expect(d1.health).to.equal(10);
+                expect(d2.id).to.equal(3);
+                expect(d2.name).to.equal("D2");
+                expect(d2.health).to.equal(15);
+            });
+
+            it("Setting a static agent's property to an array of other static agents is functional", function() {
+                const d1 = new Dummy("D1", 10);
+                const d2 = new Dummy("D2", 15);
+                d2["dummies"] = [d1, d2];
+
+                Game.init();
+
+                const myGame = new GameInstance();
+                on("MOD", game => {
+                    game.state.dummy = d2;
+                    return noop;
+                })(myGame);
+
+                expect(myGame.state.dummy.dummies).to.deep.equal([d1, d2]);
+            });
+
+            it("Setting an agent's property to an array of static agents is functional", function() {
+                const d1 = new Dummy("D1", 10);
+                const d2 = new Dummy("D2", 15);
+
+                Game.init();
+
+                const myGame = new GameInstance();
+                on("MOD", game => {
+                    game.state.dummies = [d1, d2];
+                    return noop;
+                })(myGame);
+
+                expect(myGame.state.dummies).to.deep.equal([d1, d2]);
+            });
+
+            it("Array prototype functions work on agent arrays", function() {
+                Game.init();
+
+                const myGame = new GameInstance();
+                myGame.state.dummies = [
+                    new Dummy("D1", 10),
+                    new Dummy("D2", 15)
+                ];
+                myGame.state.dummies.unshift(new Dummy("D3", 15));
+
+                expect(
+                    myGame.state.dummies.map(dummy => {
+                        id: dummy.id;
+                        name: dummy.name;
+                        health: dummy.health;
+                    })
+                ).to.deep.equal([
+                    { id: 2, name: "D1", health: 10 },
+                    { id: 3, name: "D2", health: 15 },
+                    { id: 4, name: "D3", health: 15 }
+                ]);
             });
 
             // todo - remove
-            it.only("test", function() {
+            it.skip("test", function() {
                 Game.init();
                 const myGame = new GameInstance({ trackAgentChanges: true });
                 const a = myGame.using(new Agent());
@@ -647,6 +1039,15 @@ describe("Agents", function() {
 
             expect(dr.hasPropertyRecord("name")).to.be.false;
             expect(dr.hasPropertyRecord("health")).to.be.true;
+        });
+
+        it("AgentManager.hasPropertyRecord returns false for 'constructor', as this causes confusion", function() {
+            Game.init();
+            expect(
+                new GameInstance().agents
+                    .getAgentManager(0)
+                    .hasPropertyRecord("constructor")
+            ).to.be.false;
         });
 
         it("AgentManager.getProperty returns the most recent property", function() {

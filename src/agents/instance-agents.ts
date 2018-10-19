@@ -16,7 +16,11 @@ import {
     buildAgentManager,
     isAgentManager
 } from "./agent-manager";
-import { activeAgentProxy, Agent, isAgent } from "./agent-model";
+import {
+    activeAgentArrayProxy,
+    activeAgentProxy,
+    isAgent
+} from "./agent-model";
 import { AgentReference, isAgentReference } from "./agent-reference";
 import { StaticAgentRegistry } from "./static-agent-registry";
 
@@ -209,8 +213,7 @@ class InstanceAgentsImpl implements InstanceAgents {
         } else if (isAgentReference(value)) {
             value = activeAgentProxy(value.refId, this.game);
         } else if (isAgentArrayReference(value)) {
-            value = activeAgentProxy(value.arRefId, this.game);
-            Object.setPrototypeOf(value, Array);
+            value = activeAgentArrayProxy(value.arRefId, this.game);
         }
 
         return value;
@@ -245,7 +248,7 @@ class InstanceAgentsImpl implements InstanceAgents {
             }
             value = new AgentReference(value.id);
         } else if (value instanceof Array) {
-            (value as any).id = this.reserveNewId(); // todo - start here; probably set prototype to Array in the getter
+            (value as any).id = this.reserveNewId();
             value = this.game.using(value);
             value = new AgentArrayReference(value.id);
         }

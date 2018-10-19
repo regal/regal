@@ -93,6 +93,26 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
         }
     } as ProxyHandler<Agent>);
 
+const activeAgentProxyHandler = (id: number, game: GameInstance) => ({
+    get(target: Agent, property: PropertyKey) {
+        return game.agents.hasAgentProperty(id, property)
+            ? game.agents.getAgentProperty(id, property)
+            : Reflect.get(target, property);
+    },
+
+    set(target: Agent, property: PropertyKey, value: any) {
+        return game.agents.setAgentProperty(id, property, value);
+    },
+
+    has(target: Agent, property: PropertyKey) {
+        return game.agents.hasAgentProperty(id, property);
+    },
+
+    deleteProperty(target: Agent, property: PropertyKey) {
+        return game.agents.deleteAgentProperty(id, property);
+    }
+});
+
 /**
  * Builds a proxy for an active agent. When an inactive agent is activated
  * by a `GameInstance`, it is considered active.
@@ -105,25 +125,10 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
  * @param game  The `GameInstance` of the current context.
  */
 export const activeAgentProxy = (id: number, game: GameInstance): Agent =>
-    new Proxy({} as Agent, {
-        get(target: Agent, property: PropertyKey) {
-            return game.agents.hasAgentProperty(id, property)
-                ? game.agents.getAgentProperty(id, property)
-                : Reflect.get(target, property);
-        },
+    new Proxy({} as any, activeAgentProxyHandler(id, game));
 
-        set(target: Agent, property: PropertyKey, value: any) {
-            return game.agents.setAgentProperty(id, property, value);
-        },
-
-        has(target: Agent, property: PropertyKey) {
-            return game.agents.hasAgentProperty(id, property);
-        },
-
-        deleteProperty(target: Agent, property: PropertyKey) {
-            return game.agents.deleteAgentProperty(id, property);
-        }
-    });
+export const activeAgentArrayProxy = (id: number, game: GameInstance): Agent =>
+    new Proxy([] as any, activeAgentProxyHandler(id, game));
 
 /**
  * An object that is interacted with by the player in a Regal game.
