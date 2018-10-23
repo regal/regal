@@ -122,6 +122,10 @@ const activeAgentProxyHandler = (id: number, game: GameInstance) => ({
 
     ownKeys(target: Agent) {
         return game.agents.getAgentPropertyKeys(id);
+    },
+
+    getPrototypeOf(target: Agent) {
+        return Object.getPrototypeOf(target);
     }
 });
 

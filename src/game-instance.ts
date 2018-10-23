@@ -98,14 +98,14 @@ export default class GameInstance {
      * must be activated before they can be used. Activating an agent multiple
      * times has no effect.
      *
-     * @param resource Either a single agent or an object where every property
-     * is an agent to be activated.
-     * @returns Either an activated agent or an object where every property is
-     * an activated agent, depending on the structure of `resource`.
+     * @param resource Either a single agent, an agent array, or an object
+     * where every property is an agent to be activated.
+     * @returns Either an activated agent, an agent array, or an object where
+     * every property is an activated agent, depending on the structure of `resource`.
      */
     public using<T>(resource: T): T {
-        if (isAgent(resource)) {
-            return activateAgent(this, resource);
+        if (isAgent(resource) || resource instanceof Array) {
+            return activateAgent(this, resource as any);
         }
 
         if (resource === undefined) {

@@ -25,7 +25,7 @@ export const activateAgent = <T extends Agent>(
 ): T => {
     let id = agent.id;
 
-    if (id < 0) {
+    if (id === undefined || id < 0) {
         id = game.agents.reserveNewId();
         agent.id = id;
     }

@@ -264,7 +264,10 @@ class InstanceAgentsImpl implements InstanceAgents {
                 value.id = newId;
                 value = this.game.using(value);
             }
-            value = new AgentReference(value.id);
+            value =
+                value instanceof Array
+                    ? new AgentArrayReference((value as any).id)
+                    : new AgentReference(value.id);
         } else if (value instanceof Array) {
             (value as any).id = this.reserveNewId();
             value = this.game.using(value);

@@ -934,7 +934,7 @@ describe("Agents", function() {
                 expect(myGame.state.dummy.dummies).to.deep.equal([d1, d2]);
             });
 
-            it.skip("Setting an agent's property to an array of static agents is functional", function() {
+            it("Setting an agent's property to an array of static agents is functional", function() {
                 const d1 = new Dummy("D1", 10);
                 const d2 = new Dummy("D2", 15);
 
@@ -946,7 +946,10 @@ describe("Agents", function() {
                     return noop;
                 })(myGame);
 
-                expect(myGame.state.dummies).to.deep.equal([d1, d2]);
+                expect(myGame.state.dummies).to.deep.equal([
+                    { id: 1, name: "D1", health: 10 },
+                    { id: 2, name: "D2", health: 15 }
+                ]);
             });
 
             it("Array.prototype.unshift is functional on agent arrays", function() {
@@ -972,17 +975,96 @@ describe("Agents", function() {
                 ]);
             });
 
-            // todo - remove
-            it.skip("test", function() {
+            it("Array.prototype.concat is functional on agent arrays", function() {
                 Game.init();
-                const myGame = new GameInstance({ trackAgentChanges: true });
-                const a = myGame.using(new Agent());
-                on("MOD", game => {
-                    a["foo"] = [true];
-                    a["foo"].push(false);
+                const myGame = new GameInstance();
+
+                myGame.state.vals1 = [true, new Dummy("D1", 10)];
+                myGame.state.vals2 = [
+                    "hello",
+                    new Dummy("D2", 15),
+                    myGame.state.vals1[1]
+                ];
+                myGame.state.allVals = myGame.state.vals1.concat(
+                    myGame.state.vals2
+                );
+
+                expect(myGame.state.allVals).to.deep.equal([
+                    true,
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    },
+                    "hello",
+                    {
+                        id: 4,
+                        name: "D2",
+                        health: 15
+                    },
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    }
+                ]);
+            });
+
+            it("Length property of agent arrays is functional", function() {
+                Game.init();
+                const myGame = new GameInstance();
+
+                myGame.state.arr = [];
+                expect(myGame.state.arr.length).to.equal(0);
+
+                myGame.state.arr.push(1);
+                myGame.state.arr.push(2);
+                expect(myGame.state.arr.length).to.equal(2);
+
+                expect(myGame.state.arr.shift()).to.equal(1);
+                expect(myGame.state.arr.length).to.equal(1);
+            });
+
+            it("Modifying an agent's properties through an agent array is functional", function() {
+                Game.init();
+                const myGame = new GameInstance();
+
+                on("FOO", game => {
+                    const arr = myGame.using([new Dummy("D1", 15)]);
+                    arr[0].health *= 2;
+                    delete arr[0].name;
+                    (arr[0] as any).foo = true;
+                    game.state.arr = arr;
+
                     return noop;
                 })(myGame);
-                log(myGame);
+
+                expect(myGame.state.arr).to.deep.equal([
+                    {
+                        id: 2,
+                        health: 30,
+                        foo: true
+                    }
+                ]);
+            });
+
+            it.skip("Multi-dimensional agent arrays are functional", function() {
+                Game.init();
+                const myGame = new GameInstance();
+
+                const makeAgents = (startFrom: number, amount: number) => {
+                    let num = startFrom;
+                    let i = amount;
+                    const arr = [];
+
+                    while (i-- > 0) {
+                        arr.push(new Dummy(`D${num++}`, num));
+                    }
+
+                    return arr;
+                };
+
+                log(myGame.using(makeAgents(10, 5)));
             });
         });
     });
