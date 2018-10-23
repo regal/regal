@@ -503,7 +503,7 @@ describe("Agents", function() {
             expect(myGame3.state.parent.child.health).to.equal(10);
         });
 
-        describe.only("Agent Arrays", function() {
+        describe("Agent Arrays", function() {
             it("Setting an active agent's property to be an empty array is functional", function() {
                 Game.init();
 
@@ -934,7 +934,7 @@ describe("Agents", function() {
                 expect(myGame.state.dummy.dummies).to.deep.equal([d1, d2]);
             });
 
-            it("Setting an agent's property to an array of static agents is functional", function() {
+            it.skip("Setting an agent's property to an array of static agents is functional", function() {
                 const d1 = new Dummy("D1", 10);
                 const d2 = new Dummy("D2", 15);
 
@@ -949,7 +949,7 @@ describe("Agents", function() {
                 expect(myGame.state.dummies).to.deep.equal([d1, d2]);
             });
 
-            it("Array prototype functions work on agent arrays", function() {
+            it.only("Array prototype functions work on agent arrays", function() {
                 Game.init();
 
                 const myGame = new GameInstance();
@@ -959,17 +959,25 @@ describe("Agents", function() {
                 ];
                 myGame.state.dummies.unshift(new Dummy("D3", 15));
 
-                expect(
-                    myGame.state.dummies.map(dummy => {
-                        id: dummy.id;
-                        name: dummy.name;
-                        health: dummy.health;
-                    })
-                ).to.deep.equal([
-                    { id: 2, name: "D1", health: 10 },
-                    { id: 3, name: "D2", health: 15 },
-                    { id: 4, name: "D3", health: 15 }
-                ]);
+                // for (let i of myGame.state.dummies) {
+                //     log(i);
+                // }
+
+                log(Object.keys(myGame.state.dummies[0]));
+
+                // myGame.state.dummies.forEach(dummy => log(dummy));
+
+                //     expect(
+                //         myGame.state.dummies.map(dummy => {
+                //             id: dummy.id;
+                //             name: dummy.name;
+                //             health: dummy.health;
+                //         })
+                //     ).to.deep.equal([
+                //         { id: 2, name: "D1", health: 10 },
+                //         { id: 3, name: "D2", health: 15 },
+                //         { id: 4, name: "D3", health: 15 }
+                //     ]);
             });
 
             // todo - remove

@@ -110,6 +110,18 @@ const activeAgentProxyHandler = (id: number, game: GameInstance) => ({
 
     deleteProperty(target: Agent, property: PropertyKey) {
         return game.agents.deleteAgentProperty(id, property);
+    },
+
+    getOwnPropertyDescriptor(target: Agent, property: PropertyKey) {
+        return {
+            configurable: true,
+            enumerable: true,
+            value: this.get(target, property)
+        };
+    },
+
+    ownKeys(target: Agent) {
+        return game.agents.getAgentManager(id).getPropertyKeys();
     }
 });
 
