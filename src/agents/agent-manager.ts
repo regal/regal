@@ -51,8 +51,6 @@ export interface AgentManager {
      */
     getPropertyHistory(property: PropertyKey): PropertyChange[];
 
-    getPropertyKeys(): string[];
-
     /**
      * Whether the property once existed and has since been deleted.
      * @param property The name of the property.
@@ -108,10 +106,6 @@ class AgentManagerImpl implements AgentManager {
         }
 
         return value;
-    }
-
-    public getPropertyKeys(): string[] {
-        return Object.keys(this);
     }
 
     public getPropertyHistory(property: PropertyKey): PropertyChange[] {

@@ -949,7 +949,7 @@ describe("Agents", function() {
                 expect(myGame.state.dummies).to.deep.equal([d1, d2]);
             });
 
-            it.only("Array prototype functions work on agent arrays", function() {
+            it("Array.prototype.unshift is functional on agent arrays", function() {
                 Game.init();
 
                 const myGame = new GameInstance();
@@ -959,25 +959,17 @@ describe("Agents", function() {
                 ];
                 myGame.state.dummies.unshift(new Dummy("D3", 15));
 
-                // for (let i of myGame.state.dummies) {
-                //     log(i);
-                // }
-
-                log(Object.keys(myGame.state.dummies[0]));
-
-                // myGame.state.dummies.forEach(dummy => log(dummy));
-
-                //     expect(
-                //         myGame.state.dummies.map(dummy => {
-                //             id: dummy.id;
-                //             name: dummy.name;
-                //             health: dummy.health;
-                //         })
-                //     ).to.deep.equal([
-                //         { id: 2, name: "D1", health: 10 },
-                //         { id: 3, name: "D2", health: 15 },
-                //         { id: 4, name: "D3", health: 15 }
-                //     ]);
+                expect(
+                    myGame.state.dummies.map(dummy => ({
+                        id: dummy.id,
+                        name: dummy.name,
+                        health: dummy.health
+                    }))
+                ).to.deep.equal([
+                    { id: 4, name: "D3", health: 15 },
+                    { id: 2, name: "D1", health: 10 },
+                    { id: 3, name: "D2", health: 15 }
+                ]);
             });
 
             // todo - remove
@@ -1739,7 +1731,11 @@ describe("Agents", function() {
             const p = myGame.using(PARENT);
 
             const child = myGame.agents.getAgentProperty(2, "child");
-            expect(child).to.deep.equal({});
+            expect(child).to.deep.equal({
+                id: 1,
+                name: "D1",
+                health: 10
+            });
             expect(child.id).to.equal(DUMMY.id);
             expect(child.name).to.equal("D1");
         });

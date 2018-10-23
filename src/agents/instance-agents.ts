@@ -72,6 +72,8 @@ export interface InstanceAgents {
      */
     getAgentProperty(id: number, property: PropertyKey): any;
 
+    getAgentPropertyKeys(id: number): string[];
+
     /**
      * Sets the value of an active agent's property, or adds the
      * property if it doesn't yet exist.
@@ -217,6 +219,22 @@ class InstanceAgentsImpl implements InstanceAgents {
         }
 
         return value;
+    }
+
+    public getAgentPropertyKeys(id: number) {
+        const am = this.getAgentManager(id);
+
+        let keys: string[] = [];
+
+        if (StaticAgentRegistry.hasAgent(id)) {
+            const staticKeys = Object.keys(StaticAgentRegistry[id]);
+            const instanceKeys = am === undefined ? [] : Object.keys(am);
+            keys = [...new Set(staticKeys.concat(instanceKeys))]; // Remove duplicate keys
+        } else if (am !== undefined) {
+            keys = Object.keys(am);
+        }
+
+        return keys.filter(key => this.hasAgentProperty(id, key));
     }
 
     public setAgentProperty(
