@@ -113,11 +113,15 @@ const activeAgentProxyHandler = (id: number, game: GameInstance) => ({
     },
 
     getOwnPropertyDescriptor(target: Agent, property: PropertyKey) {
-        return {
-            configurable: true,
-            enumerable: true,
-            value: this.get(target, property)
-        };
+        if (property === "length" && target instanceof Array) {
+            return Reflect.getOwnPropertyDescriptor(target, property);
+        } else {
+            return {
+                configurable: true,
+                enumerable: true,
+                value: this.get(target, property)
+            };
+        }
     },
 
     ownKeys(target: Agent) {

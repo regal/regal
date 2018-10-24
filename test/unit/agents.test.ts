@@ -36,6 +36,19 @@ class Sibling extends Agent {
     }
 }
 
+function makeAgents(startFrom: number, amount: number) {
+    let num = startFrom;
+    let i = amount;
+    const arr = [];
+
+    while (i-- > 0) {
+        arr.push(new Dummy(`D${num}`, num));
+        num++;
+    }
+
+    return arr;
+}
+
 describe("Agents", function() {
     beforeEach(function() {
         Game.reset();
@@ -1048,23 +1061,383 @@ describe("Agents", function() {
                 ]);
             });
 
-            it.skip("Multi-dimensional agent arrays are functional", function() {
+            it("Multi-dimensional agent arrays are functional", function() {
                 Game.init();
                 const myGame = new GameInstance();
 
-                const makeAgents = (startFrom: number, amount: number) => {
-                    let num = startFrom;
-                    let i = amount;
-                    const arr = [];
+                const arr = myGame.using([makeAgents(10, 5)]);
 
-                    while (i-- > 0) {
-                        arr.push(new Dummy(`D${num++}`, num));
+                expect(arr).to.deep.equal([
+                    [
+                        {
+                            id: 3,
+                            name: "D10",
+                            health: 10
+                        },
+                        {
+                            id: 4,
+                            name: "D11",
+                            health: 11
+                        },
+                        {
+                            id: 5,
+                            name: "D12",
+                            health: 12
+                        },
+                        {
+                            id: 6,
+                            name: "D13",
+                            health: 13
+                        },
+                        {
+                            id: 7,
+                            name: "D14",
+                            health: 14
+                        }
+                    ]
+                ]);
+                expect(arr.length).to.equal(1);
+                expect(arr[0].length).to.equal(5);
+                expect((arr as any).id).to.equal(1);
+
+                arr.push(makeAgents(16, 10));
+
+                expect(myGame.agents.getAgentManager(1)).to.deep.equal({
+                    id: 1,
+                    game: myGame,
+                    0: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            final: {
+                                arRefId: 2
+                            },
+                            init: undefined,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    1: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            final: {
+                                arRefId: 8
+                            },
+                            init: undefined,
+                            op: PropertyOperation.ADDED
+                        }
+                    ],
+                    length: [
+                        {
+                            eventId: 0,
+                            eventName: "DEFAULT",
+                            final: 2,
+                            init: 1,
+                            op: PropertyOperation.MODIFIED
+                        }
+                    ]
+                });
+
+                expect(
+                    arr[1].find(dummy => dummy.health % 9 == 0)
+                ).to.deep.equal({
+                    id: 11,
+                    name: "D18",
+                    health: 18
+                });
+            });
+
+            it("Multi-dimensional agent arrays are tracked properly", function() {
+                Game.init();
+                const myGame = new GameInstance({ trackAgentChanges: true });
+
+                const arr = myGame.using([makeAgents(0, 2)]);
+                arr.unshift(makeAgents(3, 4));
+                myGame.state.arr = arr;
+
+                expect(myGame.agents).to.deep.equal({
+                    game: myGame,
+                    0: {
+                        id: 0,
+                        game: myGame,
+                        arr: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: {
+                                    arRefId: 1
+                                },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    1: {
+                        id: 1,
+                        game: myGame,
+                        0: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: {
+                                    arRefId: 5
+                                },
+                                init: {
+                                    arRefId: 2
+                                },
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: {
+                                    arRefId: 2
+                                },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        1: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: {
+                                    arRefId: 2
+                                },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        length: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 2,
+                                init: 1,
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 1,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    2: {
+                        id: 2,
+                        game: myGame,
+                        0: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: { refId: 3 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        1: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: { refId: 4 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        length: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 2,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    3: {
+                        id: 3,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: "D0",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 0,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    4: {
+                        id: 4,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: "D1",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 1,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    5: {
+                        id: 5,
+                        game: myGame,
+                        0: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: { refId: 6 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        1: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: { refId: 7 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        2: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: { refId: 8 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        3: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: { refId: 9 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        length: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 4,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    6: {
+                        id: 6,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: "D3",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 3,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    7: {
+                        id: 7,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: "D4",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 4,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    8: {
+                        id: 8,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: "D5",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 5,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    9: {
+                        id: 9,
+                        game: myGame,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: "D6",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 6,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
                     }
-
-                    return arr;
-                };
-
-                log(myGame.using(makeAgents(10, 5)));
+                });
             });
         });
     });
@@ -1300,7 +1673,7 @@ describe("Agents", function() {
         it("AgentManager does not add a record for deleting a property multiple times", function() {
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = new GameInstance({ trackAgentChanges: true });
             const d = myGame.using(new Dummy("D1", 10));
 
             d.name = "D1";
@@ -2288,6 +2661,32 @@ describe("Agents", function() {
             expect(myGame.agents.getAgentProperty(1, "health")).to.equal(15);
             expect(myGame.agents.getAgentProperty(1, "bippity")).to.be
                 .undefined;
+        });
+
+        it("Reverting changes to an agent array through the Game API", function() {
+            Game.init();
+            const myGame = new GameInstance();
+            myGame.state.agents = makeAgents(0, 6);
+
+            expect(myGame.state.agents.length).to.equal(6);
+            expect(myGame.state.agents[0].name).to.equal("D0");
+            expect(myGame.state.agents[5].name).to.equal("D5");
+
+            on("REVERSE", game => {
+                const agents = myGame.state.agents as Dummy[];
+                agents.reverse();
+                return noop;
+            })(myGame);
+
+            expect(myGame.state.agents.length).to.equal(6);
+            expect(myGame.state.agents[0].name).to.equal("D5");
+            expect(myGame.state.agents[5].name).to.equal("D0");
+
+            const res = Game.postUndoCommand(myGame).instance;
+
+            expect(res.state.agents.length).to.equal(6);
+            expect(res.state.agents[0].name).to.equal("D0");
+            expect(res.state.agents[5].name).to.equal("D5");
         });
     });
 });
