@@ -33,11 +33,11 @@ export const activateAgent = <T extends Agent>(
     let activeAgent: T;
     let tempValues = (agent as any).tempValues;
 
-    if (agent instanceof Array) {
-        if (tempValues === undefined) {
-            tempValues = {};
-        }
+    if (tempValues === undefined) {
+        tempValues = {};
+    }
 
+    if (agent instanceof Array) {
         tempValues.length = agent.length;
         Object.keys(agent)
             .filter(propertyIsAgentId)
@@ -48,10 +48,8 @@ export const activateAgent = <T extends Agent>(
         activeAgent = activeAgentProxy(id, game) as T;
     }
 
-    if (tempValues !== undefined) {
-        for (const prop of Object.keys(tempValues)) {
-            activeAgent[prop] = tempValues[prop];
-        }
+    for (const prop of Object.keys(tempValues)) {
+        activeAgent[prop] = tempValues[prop];
     }
 
     return activeAgent;

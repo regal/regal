@@ -36,6 +36,12 @@ class Sibling extends Agent {
     }
 }
 
+class MultiParent extends Agent {
+    constructor(public children: Dummy[]) {
+        super();
+    }
+}
+
 function makeAgents(startFrom: number, amount: number) {
     let num = startFrom;
     let i = amount;
@@ -1449,12 +1455,6 @@ describe("Agents", function() {
             });
 
             it("Static agents with agent arrays as properties are functional", function() {
-                class MultiParent extends Agent {
-                    constructor(public children: Dummy[]) {
-                        super();
-                    }
-                }
-
                 const d2 = new Dummy("D2", 10);
                 const p = new MultiParent([new Dummy("D1", 10), d2]);
                 const q = new MultiParent(p.children);
@@ -1553,6 +1553,13 @@ describe("Agents", function() {
                         health: 10
                     }
                 ]);
+            });
+
+            it("An agent array's keys enumerate properly", function() {
+                Game.init();
+
+                const a = new GameInstance().using([1, 2, 3]);
+                expect(Object.keys(a)).to.deep.equal(["0", "1", "2", "id"]);
             });
         });
     });

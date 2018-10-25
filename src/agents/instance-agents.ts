@@ -235,14 +235,8 @@ class InstanceAgentsImpl implements InstanceAgents {
             const instanceKeys = am === undefined ? [] : Object.keys(am);
 
             const keySet = new Set(staticKeys.concat(instanceKeys));
-
-            // For static agents with array properties, "length" must be added explicitly
-            if (StaticAgentRegistry[id] instanceof Array) {
-                keySet.add("length");
-            }
-
             keys = [...keySet]; // Remove duplicate keys
-        } else if (am !== undefined) {
+        } else {
             keys = Object.keys(am);
         }
 
