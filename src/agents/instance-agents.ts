@@ -19,8 +19,7 @@ import {
 import {
     activeAgentArrayProxy,
     activeAgentProxy,
-    isAgent,
-    isAgentArray
+    isAgent
 } from "./agent-model";
 import { AgentReference, isAgentReference } from "./agent-reference";
 import { StaticAgentRegistry } from "./static-agent-registry";

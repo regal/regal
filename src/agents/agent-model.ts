@@ -18,9 +18,6 @@ import { StaticAgentRegistry } from "./static-agent-registry";
 export const isAgent = (o: any): o is Agent =>
     o !== undefined && (o as Agent).id !== undefined;
 
-export const isAgentArray = (o: any): o is Agent =>
-    isAgent(o) && o instanceof Array;
-
 /**
  * Builds a proxy for an inactive agent. Before an agent is activated
  * by a `GameInstance`, it is considered inactive.
