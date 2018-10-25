@@ -18,6 +18,9 @@ import { StaticAgentRegistry } from "./static-agent-registry";
 export const isAgent = (o: any): o is Agent =>
     o !== undefined && (o as Agent).id !== undefined;
 
+export const isAgentArray = (o: any): o is Agent =>
+    isAgent(o) && o instanceof Array;
+
 /**
  * Builds a proxy for an inactive agent. Before an agent is activated
  * by a `GameInstance`, it is considered inactive.
@@ -59,10 +62,17 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
         },
 
         set(target: Agent, property: PropertyKey, value: any) {
-            if (
-                ContextManager.isContextStatic() ||
-                (property === "id" && target.id < 0)
-            ) {
+            if (property === "id" && target.id < 0) {
+                return Reflect.set(target, property, value);
+            }
+
+            if (ContextManager.isContextStatic()) {
+                // When adding an array as a property of a static agent, we need to
+                // treat that array like an agent and register a static id for it
+                if (value instanceof Array && (value as any).id === undefined) {
+                    (value as any).id = StaticAgentRegistry.getNextAvailableId();
+                    StaticAgentRegistry.addAgent(value as any);
+                }
                 return Reflect.set(target, property, value);
             } else if (StaticAgentRegistry.hasAgent(target.id)) {
                 throw new RegalError(

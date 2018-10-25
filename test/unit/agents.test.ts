@@ -944,7 +944,15 @@ describe("Agents", function() {
                     return noop;
                 })(myGame);
 
-                expect(myGame.state.dummy.dummies).to.deep.equal([d1, d2]);
+                expect(myGame.state.dummy.dummies[0]).to.deep.equal(
+                    myGame.using(d1)
+                );
+                expect(myGame.state.dummy.dummies[1].name).to.equal("D2");
+                expect(myGame.state.dummy.dummies[1].dummies[0]).to.deep.equal({
+                    id: 1,
+                    name: "D1",
+                    health: 10
+                });
             });
 
             it("Setting an agent's property to an array of static agents is functional", function() {
@@ -1438,6 +1446,113 @@ describe("Agents", function() {
                         ]
                     }
                 });
+            });
+
+            it("Static agents with agent arrays as properties are functional", function() {
+                class MultiParent extends Agent {
+                    constructor(public children: Dummy[]) {
+                        super();
+                    }
+                }
+
+                const d2 = new Dummy("D2", 10);
+                const p = new MultiParent([new Dummy("D1", 10), d2]);
+                const q = new MultiParent(p.children);
+
+                expect(p.children).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    },
+                    {
+                        id: 1,
+                        name: "D2",
+                        health: 10
+                    }
+                ]);
+
+                Game.init();
+
+                const myGame1 = new GameInstance();
+                const p1 = myGame1.using(p);
+                const c = p1.children;
+
+                c.pop().name += " Jr.";
+
+                expect(p1.children).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    }
+                ]);
+                expect(myGame1.using(q).children).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    }
+                ]);
+                expect(myGame1.using(d2)).to.deep.equal({
+                    id: 1,
+                    name: "D2 Jr.",
+                    health: 10
+                });
+
+                const myGame2 = new GameInstance();
+                const p2 = myGame2.using(p);
+                p2.children.push(new Dummy("D3", 5), d2);
+
+                expect(p2.children).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    },
+                    {
+                        id: 1,
+                        name: "D2",
+                        health: 10
+                    },
+                    {
+                        id: 6,
+                        name: "D3",
+                        health: 5
+                    },
+                    {
+                        id: 1,
+                        name: "D2",
+                        health: 10
+                    }
+                ]);
+                expect(myGame2.using(q).children).to.deep.equal(p2.children);
+
+                // Verify that initial conditions still hold
+                expect(new GameInstance().using(p).children).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    },
+                    {
+                        id: 1,
+                        name: "D2",
+                        health: 10
+                    }
+                ]);
+                expect(new GameInstance().using(q).children).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    },
+                    {
+                        id: 1,
+                        name: "D2",
+                        health: 10
+                    }
+                ]);
             });
         });
     });

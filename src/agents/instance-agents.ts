@@ -19,7 +19,8 @@ import {
 import {
     activeAgentArrayProxy,
     activeAgentProxy,
-    isAgent
+    isAgent,
+    isAgentArray
 } from "./agent-model";
 import { AgentReference, isAgentReference } from "./agent-reference";
 import { StaticAgentRegistry } from "./static-agent-registry";
@@ -211,7 +212,11 @@ class InstanceAgentsImpl implements InstanceAgents {
         }
 
         if (isAgent(value)) {
-            value = activeAgentProxy(value.id, this.game);
+            if (value instanceof Array) {
+                value = activeAgentArrayProxy(value.id, this.game);
+            } else {
+                value = activeAgentProxy(value.id, this.game);
+            }
         } else if (isAgentReference(value)) {
             value = activeAgentProxy(value.refId, this.game);
         } else if (isAgentArrayReference(value)) {
@@ -229,7 +234,15 @@ class InstanceAgentsImpl implements InstanceAgents {
         if (StaticAgentRegistry.hasAgent(id)) {
             const staticKeys = Object.keys(StaticAgentRegistry[id]);
             const instanceKeys = am === undefined ? [] : Object.keys(am);
-            keys = [...new Set(staticKeys.concat(instanceKeys))]; // Remove duplicate keys
+
+            const keySet = new Set(staticKeys.concat(instanceKeys));
+
+            // For static agents with array properties, "length" must be added explicitly
+            if (StaticAgentRegistry[id] instanceof Array) {
+                keySet.add("length");
+            }
+
+            keys = [...keySet]; // Remove duplicate keys
         } else if (am !== undefined) {
             keys = Object.keys(am);
         }
