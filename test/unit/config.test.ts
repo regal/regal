@@ -788,9 +788,15 @@ describe("Config", function() {
                 ]);
             });
 
-            it("Throw an error if a property history is longer than 1 when trackAgentChanges is disabled", function() {
+            it("Throw an error if a property history is longer than two when trackAgentChanges is disabled", function() {
                 const myGame = new GameInstance({ trackAgentChanges: false });
                 const d = myGame.using(new Dummy("D1", 10));
+
+                on("FOO", game => {
+                    d.name = "Jim";
+                    return noop;
+                })(myGame);
+
                 myGame.agents
                     .getAgentManager(1)
                     .getPropertyHistory("name")
@@ -798,7 +804,7 @@ describe("Config", function() {
 
                 expect(() => (d.name = "Foo")).to.throw(
                     RegalError,
-                    "Property history length cannot be greater than one when trackAgentChanges is disabled"
+                    "Property history length cannot be greater than two when trackAgentChanges is disabled"
                 );
             });
         });

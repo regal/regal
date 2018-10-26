@@ -7,10 +7,11 @@
  */
 
 import GameInstance from "../game-instance";
-import { activeAgentProxy, Agent } from "./agent-model";
+import { activeAgentArrayProxy, activeAgentProxy, Agent } from "./agent-model";
+import { propertyIsAgentId } from "./instance-agents";
 
 /**
- * Returns an activated agent within the current game context.
+ * Returns an activated agent or agent array within the current game context.
  *
  * Once an agent is activated, its data is managed by the `GameInstance`.
  * An agent cannot be used until it is activated.
@@ -24,19 +25,31 @@ export const activateAgent = <T extends Agent>(
 ): T => {
     let id = agent.id;
 
-    if (id < 0) {
+    if (id === undefined || id < 0) {
         id = game.agents.reserveNewId();
         agent.id = id;
     }
 
-    const activeAgent = activeAgentProxy(id, game) as T;
+    let activeAgent: T;
+    let tempValues = (agent as any).tempValues;
 
-    const tempValues = (agent as any).tempValues;
+    if (tempValues === undefined) {
+        tempValues = {};
+    }
 
-    if (tempValues !== undefined) {
-        for (const prop of Object.keys(tempValues)) {
-            activeAgent[prop] = tempValues[prop];
-        }
+    if (agent instanceof Array) {
+        tempValues.length = agent.length;
+        Object.keys(agent)
+            .filter(propertyIsAgentId)
+            .forEach(key => (tempValues[key] = agent[key]));
+
+        activeAgent = activeAgentArrayProxy(id, game) as T;
+    } else {
+        activeAgent = activeAgentProxy(id, game) as T;
+    }
+
+    for (const prop of Object.keys(tempValues)) {
+        activeAgent[prop] = tempValues[prop];
     }
 
     return activeAgent;

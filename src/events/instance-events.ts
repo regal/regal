@@ -33,6 +33,7 @@ export default class InstanceEvents {
     get lastEventId() {
         return this._lastEventId;
     }
+
     /** Contains records of the past events executed during the game cycle. */
     public history: EventRecord[] = [];
 

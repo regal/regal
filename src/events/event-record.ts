@@ -18,8 +18,6 @@ export const DEFAULT_EVENT_NAME: string = "DEFAULT";
  * Record of a `TrackedEvent`'s effects in a game cycle.
  */
 export class EventRecord {
-    /** Default `EventRecord` for untracked `EventFunction`s. */
-    public static default = new EventRecord();
     /** The IDs of the `OutputLine`s emitted by the event. */
     public output?: number[];
     /** The ID of the event that caused this event. */
@@ -28,6 +26,11 @@ export class EventRecord {
     public caused?: number[];
     /** The records of all changes to registered agents that were caused by this event. */
     public changes?: PropertyChange[];
+
+    /** Default `EventRecord` for untracked `EventFunction`s. */
+    public static get default() {
+        return new EventRecord();
+    }
 
     /**
      * Constructs a new `EventRecord`.

@@ -89,6 +89,10 @@ class AgentManagerImpl implements AgentManager {
     constructor(public id: number, public game: GameInstance) {}
 
     public hasPropertyRecord(property: PropertyKey): boolean {
+        if (property === "constructor") {
+            return false;
+        }
+
         const history: PropertyChange[] = this[property];
         return history !== undefined && history.length !== undefined;
     }
@@ -228,15 +232,23 @@ class AgentManagerImpl implements AgentManager {
             event.trackChange(pcForEventRecord(propChange));
             history.unshift(pcForAgentManager(propChange));
         } else {
-            if (history.length > 1) {
+            if (history.length > 2) {
                 throw new RegalError(
-                    "Property history length cannot be greater than one when trackAgentChanges is disabled."
+                    "Property history length cannot be greater than two when trackAgentChanges is disabled."
                 );
             }
 
-            // If property history has a change, check when the change happened.
-            // If the change's eventId is 0, leave it alone and add in the new change.
-            if (history.length === 1 && history[0].eventId > DEFAULT_EVENT_ID) {
+            // A change should be replaced if it happened during the same event,
+            // or if the change happened after any potential recycling
+            const shouldReplaceSingle = (pc: PropertyChange) =>
+                pc.eventId === event.id || pc.eventId > DEFAULT_EVENT_ID;
+
+            // If the property history has two changes, update the more recent one.
+            // If property history has only change, check when the change happened.
+            if (
+                history.length === 2 ||
+                (history.length === 1 && shouldReplaceSingle(history[0]))
+            ) {
                 history[0] = pcForAgentManager(propChange);
             } else {
                 // If the change happened after the game cycle began, replace it with the new change.

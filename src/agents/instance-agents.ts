@@ -8,11 +8,19 @@
 import { RegalError } from "../error";
 import GameInstance from "../game-instance";
 import {
+    AgentArrayReference,
+    isAgentArrayReference
+} from "./agent-array-reference";
+import {
     AgentManager,
     buildAgentManager,
     isAgentManager
 } from "./agent-manager";
-import { activeAgentProxy, isAgent } from "./agent-model";
+import {
+    activeAgentArrayProxy,
+    activeAgentProxy,
+    isAgent
+} from "./agent-model";
 import { AgentReference, isAgentReference } from "./agent-reference";
 import { StaticAgentRegistry } from "./static-agent-registry";
 
@@ -63,6 +71,14 @@ export interface InstanceAgents {
      * @returns The value of the property, if it exists.
      */
     getAgentProperty(id: number, property: PropertyKey): any;
+
+    /**
+     * Lists the names of each of the agent's properties.
+     *
+     * @param id The agent's id.
+     * @returns A list of property keys.
+     */
+    getAgentPropertyKeys(id: number): string[];
 
     /**
      * Sets the value of an active agent's property, or adds the
@@ -201,12 +217,36 @@ class InstanceAgentsImpl implements InstanceAgents {
         }
 
         if (isAgent(value)) {
-            value = activeAgentProxy(value.id, this.game);
+            if (value instanceof Array) {
+                value = activeAgentArrayProxy(value.id, this.game);
+            } else {
+                value = activeAgentProxy(value.id, this.game);
+            }
         } else if (isAgentReference(value)) {
             value = activeAgentProxy(value.refId, this.game);
+        } else if (isAgentArrayReference(value)) {
+            value = activeAgentArrayProxy(value.arRefId, this.game);
         }
 
         return value;
+    }
+
+    public getAgentPropertyKeys(id: number) {
+        const am = this.getAgentManager(id);
+
+        let keys: string[] = [];
+
+        if (StaticAgentRegistry.hasAgent(id)) {
+            const staticKeys = Object.keys(StaticAgentRegistry[id]);
+            const instanceKeys = am === undefined ? [] : Object.keys(am);
+
+            const keySet = new Set(staticKeys.concat(instanceKeys));
+            keys = [...keySet]; // Remove duplicate keys
+        } else {
+            keys = Object.keys(am);
+        }
+
+        return keys.filter(key => this.hasAgentProperty(id, key));
     }
 
     public setAgentProperty(
@@ -236,7 +276,14 @@ class InstanceAgentsImpl implements InstanceAgents {
                 value.id = newId;
                 value = this.game.using(value);
             }
-            value = new AgentReference(value.id);
+            value =
+                value instanceof Array
+                    ? new AgentArrayReference((value as any).id)
+                    : new AgentReference(value.id);
+        } else if (value instanceof Array) {
+            (value as any).id = this.reserveNewId();
+            value = this.game.using(value);
+            value = new AgentArrayReference(value.id);
         }
 
         am.setProperty(property, value);

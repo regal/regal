@@ -61,9 +61,7 @@ describe("Game API", function() {
                 if (!game.state.comms) {
                     game.state.comms = [command];
                 } else {
-                    game.state.comms = (<string[]>game.state.comms).concat(
-                        command
-                    );
+                    game.state.comms = game.state.comms.concat(command);
                 }
                 return noop;
             });
