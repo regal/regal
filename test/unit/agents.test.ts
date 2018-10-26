@@ -1561,6 +1561,29 @@ describe("Agents", function() {
                 const a = new GameInstance().using([1, 2, 3]);
                 expect(Object.keys(a)).to.deep.equal(["0", "1", "2", "id"]);
             });
+
+            it("Adding an agent to an array via Array.prototype.push activates the agent", function() {
+                const myEvent = on("FOO", game => {
+                    game.state.list = [];
+                    game.state.list.push(new Dummy("D1", 10));
+                    return noop;
+                });
+
+                Game.init();
+                const myGame = new GameInstance();
+                myEvent(myGame);
+
+                expect(myGame.state.list).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "D1",
+                        health: 10
+                    }
+                ]);
+                expect(myGame.agents.getAgentProperty(2, "name")).to.equal(
+                    "D1"
+                );
+            });
         });
     });
 
