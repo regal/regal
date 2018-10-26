@@ -100,6 +100,7 @@ export const inactiveAgentProxy = (agent: Agent): Agent =>
         }
     } as ProxyHandler<Agent>);
 
+/** Builds the proxy handler for an active agent proxy. */
 const activeAgentProxyHandler = (id: number, game: GameInstance) => ({
     get(target: Agent, property: PropertyKey) {
         return game.agents.hasAgentProperty(id, property)
@@ -154,6 +155,16 @@ const activeAgentProxyHandler = (id: number, game: GameInstance) => ({
 export const activeAgentProxy = (id: number, game: GameInstance): Agent =>
     new Proxy({} as any, activeAgentProxyHandler(id, game));
 
+/**
+ * Builds a proxy for an active agent array. An agent array is an array
+ * that is treated like an agent. All arrays that are properties of
+ * active agents become agent arrays.
+ *
+ * An agent array has all the same methods as a regular array.
+ *
+ * @param id    The agent array's id.
+ * @param game  The `GameInstance` of the current context.
+ */
 export const activeAgentArrayProxy = (id: number, game: GameInstance): Agent =>
     new Proxy([] as any, activeAgentProxyHandler(id, game));
 

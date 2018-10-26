@@ -72,6 +72,12 @@ export interface InstanceAgents {
      */
     getAgentProperty(id: number, property: PropertyKey): any;
 
+    /**
+     * Lists the names of each of the agent's properties.
+     *
+     * @param id The agent's id.
+     * @returns A list of property keys.
+     */
     getAgentPropertyKeys(id: number): string[];
 
     /**

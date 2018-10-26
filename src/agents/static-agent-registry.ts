@@ -1,3 +1,13 @@
+/**
+ * Contains all agents defined in the static context of the game,
+ * known as static agents. These agents have data that is accessible
+ * by all `GameInstances` and therefore is not stored in the instance
+ * itself, but rather the `StaticAgentRegistry`.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent-model";
 import { propertyIsAgentId } from "./instance-agents";
