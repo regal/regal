@@ -127,6 +127,7 @@ export const recycleInstanceAgents = (
     newInstance: GameInstance
 ): InstanceAgents => {
     const newAgents = new InstanceAgentsImpl(newInstance);
+    newAgents._nextId = (oldAgents as InstanceAgentsImpl)._nextId;
 
     for (const formerAgent of oldAgents.agentManagers()) {
         const id = formerAgent.id;
@@ -167,8 +168,11 @@ export const propertyIsAgentId = (property: PropertyKey) => {
 
 /** Implementation of `InstanceAgents`. */
 class InstanceAgentsImpl implements InstanceAgents {
+    public _nextId: number;
+
     constructor(public game: GameInstance) {
         this.createAgentManager(0);
+        this._nextId = StaticAgentRegistry.getNextAvailableId();
     }
 
     public agentManagers(): AgentManager[] {
@@ -178,12 +182,8 @@ class InstanceAgentsImpl implements InstanceAgents {
     }
 
     public reserveNewId(): number {
-        const agentKeys = Object.keys(this).filter(propertyIsAgentId);
-        let id = StaticAgentRegistry.getNextAvailableId();
-
-        while (agentKeys.includes(id.toString())) {
-            id++;
-        }
+        const id = this._nextId;
+        this._nextId++;
 
         this.createAgentManager(id);
 
