@@ -22,6 +22,7 @@ import {
     isAgent
 } from "./agent-model";
 import { AgentReference, isAgentReference } from "./agent-reference";
+import { scrubAgents } from "./agent-scrub";
 import { StaticAgentRegistry } from "./static-agent-registry";
 
 /**
@@ -156,6 +157,8 @@ export const recycleInstanceAgents = (
             am.setProperty(prop, formerValue);
         });
     }
+
+    scrubAgents(newAgents);
 
     return newAgents;
 };

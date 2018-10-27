@@ -8,7 +8,8 @@ import {
     Agent,
     PropertyOperation,
     StaticAgentRegistry,
-    buildRevertFunction
+    buildRevertFunction,
+    scrubAgents
 } from "../../src/agents";
 import GameInstance from "../../src/game-instance";
 import { RegalError } from "../../src/error";
@@ -2847,6 +2848,41 @@ describe("Agents", function() {
     });
 
     describe("Scrubbing", function() {
-        it("Scrubbing an InstanceAgents deletes all agents that have no references to them", function() {});
+        it("Scrubbing an InstanceAgents deletes all agents that have no references to them", function() {
+            Game.init();
+            const myGame = new GameInstance();
+
+            myGame.state.dummy = new Parent(new Dummy("D1", 10));
+            const float = myGame.using(new Dummy("D2", 15));
+
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(myGame.state.dummy).to.deep.equal({
+                id: 1,
+                child: {
+                    id: 2,
+                    name: "D1",
+                    health: 10
+                }
+            });
+            expect(myGame.agents.getAgentProperty(3, "name")).to.equal("D2");
+
+            scrubAgents(myGame.agents);
+
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2]);
+            expect(myGame.state.dummy).to.deep.equal({
+                id: 1,
+                child: {
+                    id: 2,
+                    name: "D1",
+                    health: 10
+                }
+            });
+
+            expect(() => myGame.agents.getAgentProperty(3, "name")).to.throw(RegalError, "No agent with the id <3> exists.");
+        });
     });
 });
