@@ -2882,7 +2882,46 @@ describe("Agents", function() {
                 }
             });
 
-            expect(() => myGame.agents.getAgentProperty(3, "name")).to.throw(RegalError, "No agent with the id <3> exists.");
+            expect(() => myGame.agents.getAgentProperty(3, "name")).to.throw(
+                RegalError,
+                "No agent with the id <3> exists."
+            );
+        });
+
+        it("Scrubbing an InstanceAgents finds agent array references", function() {
+            Game.init();
+            const myGame = new GameInstance();
+
+            const p = myGame.using(
+                new MultiParent([new Dummy("D1", 1), new Dummy("D2", 2)])
+            );
+            myGame.state.arr = [true, new Dummy("D3", 3), p, p.children[0]];
+
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
+            expect(myGame.state.arr[3]).to.deep.equal({
+                id: 3,
+                name: "D1",
+                health: 1
+            });
+
+            scrubAgents(myGame.agents);
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
+
+            (myGame.state.arr as any[]).splice(2, 1);
+            scrubAgents(myGame.agents);
+
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 3, 5, 6]);
+            expect(myGame.state.arr[2]).to.deep.equal({
+                id: 3,
+                name: "D1",
+                health: 1
+            });
         });
     });
 });
