@@ -269,10 +269,11 @@ export class Game {
             }
 
             newInstance = instance.recycle();
-            scrubAgents(newInstance.agents);
 
             const revert = buildRevertFunction(instance.agents);
             revert(newInstance);
+
+            scrubAgents(newInstance.agents);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }

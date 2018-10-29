@@ -9,7 +9,7 @@ import {
 } from "../../src/api-hooks";
 import { noop } from "../../src/events";
 import GameInstance from "../../src/game-instance";
-import { OutputLineType } from "../../src/output";
+import { OutputLineType, GameOutput, InstanceOutput } from "../../src/output";
 import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
 import { Agent } from "../../src/agents";
 import {
@@ -181,6 +181,90 @@ describe("Game API", function() {
                 "RegalError: An error occurred while executing the request. Details: <TypeError: 5.push is not a function>"
             );
             expect(response.instance).to.be.undefined;
+        });
+
+        it("The GameInstance is scrubbed before a new player command is applied", function() {
+            const printDummyNames = (dums: Dummy[], output: InstanceOutput) => {
+                output.write(`Dummies: ${dums.map(d => d.name).join(", ")}.`);
+            };
+            onStartCommand(game => {
+                game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
+                printDummyNames(game.state.arr as Dummy[], game.output);
+                return noop;
+            });
+
+            onPlayerCommand(() => game => {
+                const arr = game.state.arr as Dummy[];
+                arr.pop();
+                printDummyNames(arr, game.output);
+                return noop;
+            });
+
+            const r1 = Game.postStartCommand();
+
+            expect(
+                r1.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+
+            expect(r1.output).to.deep.equal({
+                wasSuccessful: true,
+                log: [
+                    {
+                        data: "Dummies: D1, D2.",
+                        id: 1,
+                        type: OutputLineType.NORMAL
+                    }
+                ]
+            });
+
+            const r2 = Game.postPlayerCommand(r1.instance, "");
+
+            expect(
+                r1.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r2.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+
+            expect(r2.output).to.deep.equal({
+                wasSuccessful: true,
+                log: [
+                    {
+                        data: "Dummies: D1.",
+                        id: 2,
+                        type: OutputLineType.NORMAL
+                    }
+                ]
+            });
+
+            const r3 = Game.postPlayerCommand(r2.instance, "");
+
+            expect(
+                r2.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r3.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2]);
+
+            expect(r3.output).to.deep.equal({
+                wasSuccessful: true,
+                log: [
+                    {
+                        data: "Dummies: .",
+                        id: 3,
+                        type: OutputLineType.NORMAL
+                    }
+                ]
+            });
+
+            const r4 = Game.postPlayerCommand(r3.instance, "");
+
+            expect(
+                r3.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2]);
+            expect(
+                r4.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1]);
         });
     });
 
@@ -421,6 +505,90 @@ describe("Game API", function() {
             );
             expect(undoResponse.instance).to.be.undefined;
         });
+
+        it("Scrubbing doesn't get in the way of undoing", function() {
+            onStartCommand(game => {
+                game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
+                return noop;
+            });
+
+            onPlayerCommand(() => game => {
+                const arr = game.state.arr as Dummy[];
+                arr.pop();
+                return noop;
+            });
+
+            const r1 = Game.postStartCommand();
+
+            expect(
+                r1.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r1.instance.agents.getAgentProperty(0, "arr").length
+            ).to.equal(2);
+
+            const r2 = Game.postPlayerCommand(r1.instance, "");
+
+            expect(
+                r1.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r2.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r2.instance.agents.getAgentProperty(0, "arr").length
+            ).to.equal(1);
+
+            const r3 = Game.postUndoCommand(r2.instance);
+
+            expect(
+                r3.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r3.instance.agents.getAgentProperty(0, "arr").length
+            ).to.equal(2);
+
+            const r4 = Game.postPlayerCommand(r3.instance, "");
+
+            expect(
+                r4.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r4.instance.agents.getAgentProperty(0, "arr").length
+            ).to.equal(1);
+        });
+
+        it("Undo an undo", function() {
+            onStartCommand(game => {
+                game.state.str = "";
+                return noop;
+            });
+
+            onPlayerCommand(cmd => game => {
+                game.state.str += cmd;
+                return noop;
+            });
+
+            const r1 = Game.postStartCommand();
+            expect(r1.instance.state.str).to.equal("");
+
+            const r2 = Game.postPlayerCommand(r1.instance, "foo");
+            expect(r2.instance.state.str).to.equal("foo");
+
+            const r3 = Game.postPlayerCommand(r2.instance, "bar");
+            expect(r3.instance.state.str).to.equal("foobar");
+
+            const r4 = Game.postUndoCommand(r3.instance);
+            expect(r4.instance.state.str).to.equal("foo");
+
+            const r5 = Game.postUndoCommand(r4.instance);
+            expect(r5.instance.state.str).to.equal("foobar");
+
+            const r6 = Game.postUndoCommand(r5.instance);
+            expect(r6.instance.state.str).to.equal("foo");
+        });
+
+        // todo test undoing an undo with agent references
     });
 
     describe("Game.getMetadataCommand", function() {
