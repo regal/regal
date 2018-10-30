@@ -8,7 +8,11 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { buildRevertFunction, StaticAgentRegistry } from "./agents";
+import {
+    buildRevertFunction,
+    scrubAgents,
+    StaticAgentRegistry
+} from "./agents";
 import { HookManager } from "./api-hooks";
 import { GameMetadata, GameOptions, MetadataManager } from "./config";
 import { ContextManager } from "./context-manager";
@@ -191,6 +195,7 @@ export class Game {
             }
 
             newInstance = instance.recycle();
+            scrubAgents(newInstance.agents);
 
             const activatedEvent = HookManager.playerCommandHook(command);
             newInstance.events.invoke(activatedEvent);

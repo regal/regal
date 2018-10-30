@@ -231,6 +231,7 @@ describe("Config", function() {
                 });
 
                 expect(response.instance.agents).to.deep.equal({
+                    _nextId: 1,
                     game: response.instance,
                     "0": {
                         id: 0,
@@ -271,6 +272,7 @@ describe("Config", function() {
                 response = Game.postPlayerCommand(response.instance, "Lars");
 
                 expect(response.instance.agents).to.deep.equal({
+                    _nextId: 2,
                     game: response.instance,
                     "0": {
                         id: 0,
@@ -407,6 +409,7 @@ describe("Config", function() {
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
 
                 expect(response.instance.agents).to.deep.equal({
+                    _nextId: 3,
                     game: response.instance,
                     "0": {
                         id: 0,
@@ -578,6 +581,7 @@ describe("Config", function() {
                 });
 
                 expect(response.instance.agents).to.deep.equal({
+                    _nextId: 1,
                     game: response.instance,
                     "0": {
                         id: 0,
@@ -609,6 +613,7 @@ describe("Config", function() {
                 response = Game.postPlayerCommand(response.instance, "Lars");
 
                 expect(response.instance.agents).to.deep.equal({
+                    _nextId: 2,
                     game: response.instance,
                     "0": {
                         id: 0,
@@ -685,6 +690,7 @@ describe("Config", function() {
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
 
                 expect(response.instance.agents).to.deep.equal({
+                    _nextId: 3,
                     game: response.instance,
                     "0": {
                         id: 0,

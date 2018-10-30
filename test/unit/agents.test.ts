@@ -8,7 +8,8 @@ import {
     Agent,
     PropertyOperation,
     StaticAgentRegistry,
-    buildRevertFunction
+    buildRevertFunction,
+    scrubAgents
 } from "../../src/agents";
 import GameInstance from "../../src/game-instance";
 import { RegalError } from "../../src/error";
@@ -545,6 +546,7 @@ describe("Agents", function() {
                 })(myGame);
 
                 expect(myGame.agents).to.deep.equal({
+                    _nextId: 2,
                     game: myGame,
                     0: {
                         id: 0,
@@ -619,6 +621,7 @@ describe("Agents", function() {
                 })(myGame);
 
                 expect(myGame.agents).to.deep.equal({
+                    _nextId: 2,
                     game: myGame,
                     0: {
                         id: 0,
@@ -751,6 +754,7 @@ describe("Agents", function() {
                 })(myGame);
 
                 expect(myGame.agents).to.deep.equal({
+                    _nextId: 5,
                     game: myGame,
                     0: {
                         id: 0,
@@ -1170,6 +1174,7 @@ describe("Agents", function() {
                 myGame.state.arr = arr;
 
                 expect(myGame.agents).to.deep.equal({
+                    _nextId: 10,
                     game: myGame,
                     0: {
                         id: 0,
@@ -1864,6 +1869,7 @@ describe("Agents", function() {
 
             // Verify initial condition
             expect(myGame.agents).to.deep.equal({
+                _nextId: 2,
                 game: myGame,
                 0: {
                     id: 0,
@@ -1923,6 +1929,7 @@ describe("Agents", function() {
             const myGame2 = myGame.recycle();
 
             expect(myGame2.agents).to.deep.equal({
+                _nextId: 2,
                 game: myGame2,
                 0: {
                     id: 0,
@@ -1990,6 +1997,7 @@ describe("Agents", function() {
 
             // Verify initial condition
             expect(myGame.agents).to.deep.equal({
+                _nextId: 2,
                 game: myGame,
                 0: {
                     id: 0,
@@ -2042,6 +2050,7 @@ describe("Agents", function() {
             const myGame2 = myGame.recycle();
 
             expect(myGame2.agents).to.deep.equal({
+                _nextId: 2,
                 game: myGame2,
                 0: {
                     id: 0,
@@ -2112,6 +2121,7 @@ describe("Agents", function() {
             const game2 = myGame.recycle();
 
             expect(game2.agents).to.deep.equal({
+                _nextId: 2,
                 game: game2,
                 0: {
                     id: 0,
@@ -2171,6 +2181,7 @@ describe("Agents", function() {
             const game2 = myGame.recycle();
 
             expect(game2.agents).to.deep.equal({
+                _nextId: 2,
                 game: game2,
                 0: {
                     id: 0,
@@ -2222,6 +2233,7 @@ describe("Agents", function() {
             const game2 = myGame.recycle();
 
             expect(game2.agents).to.deep.equal({
+                _nextId: 2,
                 game: game2,
                 0: {
                     id: 0,
@@ -2832,6 +2844,84 @@ describe("Agents", function() {
             expect(res.state.agents.length).to.equal(6);
             expect(res.state.agents[0].name).to.equal("D0");
             expect(res.state.agents[5].name).to.equal("D5");
+        });
+    });
+
+    describe("Scrubbing", function() {
+        it("Scrubbing an InstanceAgents deletes all agents that have no references to them", function() {
+            Game.init();
+            const myGame = new GameInstance();
+
+            myGame.state.dummy = new Parent(new Dummy("D1", 10));
+            const float = myGame.using(new Dummy("D2", 15));
+
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(myGame.state.dummy).to.deep.equal({
+                id: 1,
+                child: {
+                    id: 2,
+                    name: "D1",
+                    health: 10
+                }
+            });
+            expect(myGame.agents.getAgentProperty(3, "name")).to.equal("D2");
+
+            scrubAgents(myGame.agents);
+
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2]);
+            expect(myGame.state.dummy).to.deep.equal({
+                id: 1,
+                child: {
+                    id: 2,
+                    name: "D1",
+                    health: 10
+                }
+            });
+
+            expect(() => myGame.agents.getAgentProperty(3, "name")).to.throw(
+                RegalError,
+                "No agent with the id <3> exists."
+            );
+        });
+
+        it("Scrubbing an InstanceAgents finds agent array references", function() {
+            Game.init();
+            const myGame = new GameInstance();
+
+            const p = myGame.using(
+                new MultiParent([new Dummy("D1", 1), new Dummy("D2", 2)])
+            );
+            myGame.state.arr = [true, new Dummy("D3", 3), p, p.children[0]];
+
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
+            expect(myGame.state.arr[3]).to.deep.equal({
+                id: 3,
+                name: "D1",
+                health: 1
+            });
+
+            scrubAgents(myGame.agents);
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
+
+            (myGame.state.arr as any[]).splice(2, 1);
+            scrubAgents(myGame.agents);
+
+            expect(
+                myGame.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 3, 5, 6]);
+            expect(myGame.state.arr[2]).to.deep.equal({
+                id: 3,
+                name: "D1",
+                health: 1
+            });
         });
     });
 });
