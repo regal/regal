@@ -506,7 +506,7 @@ describe("Game API", function() {
             expect(undoResponse.instance).to.be.undefined;
         });
 
-        it("Scrubbing doesn't get in the way of undoing", function() {
+        it("Undoing operations on agent arrays", function() {
             onStartCommand(game => {
                 game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
                 return noop;
@@ -526,6 +526,7 @@ describe("Game API", function() {
             expect(
                 r1.instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(2);
+            expect(r1.instance.state.arr[1].name).to.equal("D2");
 
             const r2 = Game.postPlayerCommand(r1.instance, "");
 
@@ -538,6 +539,7 @@ describe("Game API", function() {
             expect(
                 r2.instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(1);
+            expect(r1.instance.state.arr[0].name).to.equal("D1");
 
             const r3 = Game.postUndoCommand(r2.instance);
 
@@ -547,6 +549,7 @@ describe("Game API", function() {
             expect(
                 r3.instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(2);
+            expect(r1.instance.state.arr[1].name).to.equal("D2");
 
             const r4 = Game.postPlayerCommand(r3.instance, "");
 
@@ -556,6 +559,7 @@ describe("Game API", function() {
             expect(
                 r4.instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(1);
+            expect(r1.instance.state.arr[0].name).to.equal("D1");
         });
 
         it("Undo an undo", function() {
@@ -588,7 +592,38 @@ describe("Game API", function() {
             expect(r6.instance.state.str).to.equal("foo");
         });
 
-        // todo test undoing an undo with agent references
+        it("Undoing an undo with agent references", function() {
+            onStartCommand(game => {
+                game.state.parent = new Dummy("D1", 10);
+                game.state.parent.child = new Dummy("D2", 15);
+                return noop;
+            });
+
+            onPlayerCommand(() => game => {
+                delete game.state.parent;
+                return noop;
+            });
+
+            const r1 = Game.postStartCommand();
+            expect(r1.instance.state.parent.child).to.deep.equal({
+                id: 2,
+                name: "D2",
+                health: 15
+            });
+
+            const r2 = Game.postPlayerCommand(r1.instance, "");
+            expect(r2.instance.state.parent).to.be.undefined;
+
+            const r3 = Game.postUndoCommand(r2.instance);
+            expect(r3.instance.state.parent.child).to.deep.equal({
+                id: 2,
+                name: "D2",
+                health: 15
+            });
+
+            const r4 = Game.postPlayerCommand(r3.instance, "");
+            expect(r4.instance.state.parent).to.be.undefined;
+        });
     });
 
     describe("Game.getMetadataCommand", function() {

@@ -272,8 +272,6 @@ export class Game {
 
             const revert = buildRevertFunction(instance.agents);
             revert(newInstance);
-
-            scrubAgents(newInstance.agents);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }
