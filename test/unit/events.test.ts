@@ -364,16 +364,21 @@ describe("Events", function() {
             ]);
         });
 
-        it("Attempting to invoke an EventQueue throws an error", function() {
-            const nonevent = on("FOO", game => noop);
-            const queue = nq(nonevent, nonevent);
+        it("Invoking an EventQueue works just like any other EventFunction", function() {
+            const spam = on("SPAM", game => {
+                game.output.write("Get spammed.");
+            });
 
             Game.init();
 
-            expect(() => queue(new GameInstance())).to.throw(
-                RegalError,
-                "Cannot invoke an EventQueue."
-            );
+            const myGame = new GameInstance();
+
+            spam.then(spam)(myGame);
+
+            expect(myGame.output.lines).to.deep.equal([
+                { data: "Get spammed.", id: 1, type: OutputLineType.NORMAL },
+                { data: "Get spammed.", id: 2, type: OutputLineType.NORMAL }
+            ]);
         });
 
         describe("QTests", function() {
