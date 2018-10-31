@@ -364,7 +364,7 @@ describe("Events", function() {
             ]);
         });
 
-        it("Invoking an EventQueue does not throw an error", function() {
+        it("Invoking an EventQueue works just like any other EventFunction", function() {
             const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
             });
@@ -374,6 +374,11 @@ describe("Events", function() {
             const myGame = new GameInstance();
 
             spam.then(spam)(myGame);
+
+            expect(myGame.output.lines).to.deep.equal([
+                { data: "Get spammed.", id: 1, type: OutputLineType.NORMAL },
+                { data: "Get spammed.", id: 2, type: OutputLineType.NORMAL }
+            ]);
         });
 
         describe("QTests", function() {
