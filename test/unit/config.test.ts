@@ -12,7 +12,7 @@ import {
 import { OutputLineType } from "../../src/output";
 import { getDemoMetadata, metadataWithOptions, log } from "../test-utils";
 import { Game } from "../../src/game-api";
-import { on, noop } from "../../src/events";
+import { on } from "../../src/events";
 import { onStartCommand, onPlayerCommand } from "../../src/api-hooks";
 import { Agent, PropertyOperation } from "../../src/agents";
 
@@ -200,7 +200,6 @@ describe("Config", function() {
                             .state.dummyCount - 1} have come before me.`
                     );
                     game.state.currentDummy.health += 5;
-                    return noop;
                 });
 
                 const addDummy = (name: string) =>
@@ -216,7 +215,6 @@ describe("Config", function() {
 
                 const init = on("INIT", game => {
                     game.state.dummyCount = 0;
-                    return noop;
                 });
 
                 onStartCommand(init);
@@ -800,7 +798,6 @@ describe("Config", function() {
 
                 on("FOO", game => {
                     d.name = "Jim";
-                    return noop;
                 })(myGame);
 
                 myGame.agents

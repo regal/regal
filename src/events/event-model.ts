@@ -12,9 +12,9 @@ import GameInstance from "../game-instance";
  * A function that modifies the game instance.
  *
  * @param game The game instance to be modified.
- * @returns The next `EventFunction` to be executed.
+ * @returns The next `EventFunction` to be executed, or `void` if there are no more events.
  */
-export type EventFunction = (game: GameInstance) => EventFunction;
+export type EventFunction = (game: GameInstance) => EventFunction | void;
 
 /**
  * An `EventFunction` that is tracked by the game instance and can
@@ -78,11 +78,11 @@ export interface EventQueue extends TrackedEvent {
 
 /** Ensures the object is a `TrackedEvent`. */
 export const isTrackedEvent = (o: any): o is TrackedEvent =>
-    (o as TrackedEvent).target !== undefined;
+    o !== undefined && (o as TrackedEvent).target !== undefined;
 
 /** Ensures the object is an `EventQueue`. */
 export const isEventQueue = (o: any): o is EventQueue =>
-    (o as EventQueue).nq !== undefined;
+    o !== undefined && (o as EventQueue).nq !== undefined;
 
 /** "No operation" - reserved `TrackedEvent` that signals no more events. */
 export const noop: TrackedEvent = (() => {
@@ -233,7 +233,6 @@ export const on = (
     // Make the TrackedEvent callable like a function.
     const event = ((game: GameInstance) => {
         game.events.invoke(event);
-        return noop;
     }) as TrackedEvent;
 
     event.eventName = eventName;

@@ -32,7 +32,6 @@ describe("Events", function() {
     it("The `on` function does not alter the inner event function", function() {
         const greet = on("GREET", game => {
             game.output.write("Hello, world!");
-            return noop;
         });
 
         Game.init();
@@ -60,7 +59,6 @@ describe("Events", function() {
         const greet = (name: string) =>
             on(`GREET <${name}>`, game => {
                 game.output.write(`Hello, ${name}!`);
-                return noop;
             });
 
         Game.init();
@@ -87,12 +85,10 @@ describe("Events", function() {
     it("Returning another EventFunction from inside another executes it", function() {
         const morning = on("MORNING", game => {
             game.output.write("Have a great day!");
-            return noop;
         });
 
         const afternoon = on("AFTERNOON", game => {
             game.output.write("Keep it up!");
-            return noop;
         });
 
         const motivate = (date: Date) =>
@@ -134,18 +130,35 @@ describe("Events", function() {
         expect(noop(new GameInstance())).to.be.undefined;
     });
 
+    it("Returning noop from an EventFunction is the same as returning nothing", function() {
+        Game.init();
+
+        const withNoop = on("FUNC", game => {
+            game.output.write("Test");
+            game.state.foo = [true, new Agent()];
+            return noop;
+        });
+
+        const withoutNoop = on("FUNC", game => {
+            game.output.write("Test");
+            game.state.foo = [true, new Agent()];
+        });
+
+        expect(withNoop(new GameInstance())).to.deep.equal(
+            withoutNoop(new GameInstance())
+        );
+    });
+
     describe("Queueing", function() {
         it("Executing a singleton EventQueue immediately with `then`", function() {
             const learnSkill = (name: string, skill: string) =>
                 on(`LEARN SKILL <${skill}>`, game => {
                     game.output.write(`${name} learned ${skill}!`);
-                    return noop;
                 });
 
             const addItemToInventory = (name: string, item: string) =>
                 on(`ADD ITEM <${item}>`, game => {
                     game.output.write(`Added ${item} to ${name}'s inventory.`);
-                    return noop;
                 });
 
             const makeSword = (name: string) =>
@@ -202,10 +215,7 @@ describe("Events", function() {
         });
 
         it("Chaining n-ary immediate EventQueues with `then`", function() {
-            const foo = (name: string) =>
-                on(`FOO <${name}>`, game => {
-                    return noop;
-                });
+            const foo = (name: string) => on(`FOO <${name}>`, game => {});
             const complex = on("COMPLEX", game => {
                 return foo("ONE")
                     .then(foo("TWO"), foo("THREE"))
@@ -250,7 +260,6 @@ describe("Events", function() {
             const hitGround = (item: string) =>
                 on(`HIT GROUND <${item}>`, game => {
                     game.output.write(`${item} hits the ground. Thud!`);
-                    return noop;
                 });
 
             const fall = (item: string) =>
@@ -679,7 +688,6 @@ describe("Events", function() {
                             target.health
                         }.`
                     );
-                    return noop;
                 });
 
             Game.init();
@@ -718,7 +726,6 @@ describe("Events", function() {
             const changeFriendsHealth = (target: Dummy, amount: number) =>
                 on(`CHANGE <${target["friend"].name}> HEALTH`, game => {
                     target["friend"].health += amount;
-                    return noop;
                 });
 
             const readStatus = on("READ STATUS", game => {
@@ -729,8 +736,6 @@ describe("Events", function() {
                     );
                     agent = agent["friend"];
                 } while (agent);
-
-                return noop;
             });
 
             const addFriend = (target: Dummy, _friend: Dummy) =>
@@ -867,7 +872,6 @@ describe("Events", function() {
         it("InstanceEvents.lastEventId property getter works properly when startingEventId is not set", function() {
             const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
-                return noop;
             });
 
             Game.init();
@@ -884,7 +888,6 @@ describe("Events", function() {
         it("InstanceEvents.lastEventId property getter works properly when startingEventId is a custom value", function() {
             const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
-                return noop;
             });
 
             Game.init();
@@ -902,7 +905,6 @@ describe("Events", function() {
         it("InstanceEvents.cycle creates a new InstanceEvents with the previous instance's lastEventId", function() {
             const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
-                return noop;
             });
 
             Game.init();

@@ -1,15 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 
-import {
-    Game,
-    GameInstance,
-    on,
-    Agent,
-    onStartCommand,
-    noop,
-    onPlayerCommand
-} from "../src";
+import { Game, on, Agent, onStartCommand, onPlayerCommand, noop } from "../src";
 import { log, getDemoMetadata } from "./test-utils";
 import { MetadataManager } from "../src/config";
 
@@ -25,12 +17,10 @@ it("Demo Runthrough Test 1", function() {
     const consultOracle = on("CONSULT", game => {
         const oracle = game.using(_oracle);
         game.output.write(`${oracle.name} says: "Bow down before me!"`);
-        return noop;
     });
 
     const die = on("DIE", game => {
         game.output.write(`${game.using(_oracle)} dies!`);
-        return noop;
     });
 
     const attack = (name: string) =>

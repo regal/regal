@@ -17,7 +17,7 @@ import {
     DEFAULT_EVENT_ID,
     DEFAULT_EVENT_NAME
 } from "../../src/events/event-record";
-import { on, noop } from "../../src/events";
+import { on } from "../../src/events";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -488,8 +488,6 @@ describe("Agents", function() {
 
                     parent.child = child;
                     game.state.parent = parent;
-
-                    return noop;
                 });
 
             const PARENT = new Parent(new Dummy("D0", 0));
@@ -530,7 +528,6 @@ describe("Agents", function() {
                 const myGame = new GameInstance();
                 on("MOD", game => {
                     game.state.arr = [];
-                    return noop;
                 })(myGame);
 
                 expect(myGame.state.arr).to.deep.equal([]);
@@ -542,7 +539,6 @@ describe("Agents", function() {
                 const myGame = new GameInstance({ trackAgentChanges: true });
                 on("MOD", game => {
                     game.state.arr = [];
-                    return noop;
                 })(myGame);
 
                 expect(myGame.agents).to.deep.equal({
@@ -605,7 +601,6 @@ describe("Agents", function() {
                 const myGame = new GameInstance();
                 on("MOD", game => {
                     game.state.arr = [1, false, "foo"];
-                    return noop;
                 })(myGame);
 
                 expect(myGame.state.arr).to.deep.equal([1, false, "foo"]);
@@ -617,7 +612,6 @@ describe("Agents", function() {
                 const myGame = new GameInstance({ trackAgentChanges: true });
                 on("MOD", game => {
                     game.state.arr = [1, false, "foo"];
-                    return noop;
                 })(myGame);
 
                 expect(myGame.agents).to.deep.equal({
@@ -733,7 +727,6 @@ describe("Agents", function() {
                 });
                 on("MOD", game => {
                     game.state.arr = [d1, d2, d3];
-                    return noop;
                 })(myGame);
 
                 expect(myGame.state.arr).to.deep.equal([d1, d2, d3]);
@@ -750,7 +743,6 @@ describe("Agents", function() {
                 });
                 on("MOD", game => {
                     game.state.arr = [d1, d2, d3];
-                    return noop;
                 })(myGame);
 
                 expect(myGame.agents).to.deep.equal({
@@ -927,7 +919,6 @@ describe("Agents", function() {
                 const myGame = new GameInstance();
                 on("MOD", game => {
                     game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
-                    return noop;
                 })(myGame);
 
                 const d1 = myGame.state.arr[0] as Dummy;
@@ -951,7 +942,6 @@ describe("Agents", function() {
                 const myGame = new GameInstance();
                 on("MOD", game => {
                     game.state.dummy = d2;
-                    return noop;
                 })(myGame);
 
                 expect(myGame.state.dummy.dummies[0]).to.deep.equal(
@@ -974,7 +964,6 @@ describe("Agents", function() {
                 const myGame = new GameInstance();
                 on("MOD", game => {
                     game.state.dummies = [d1, d2];
-                    return noop;
                 })(myGame);
 
                 expect(myGame.state.dummies).to.deep.equal([
@@ -1066,8 +1055,6 @@ describe("Agents", function() {
                     delete arr[0].name;
                     (arr[0] as any).foo = true;
                     game.state.arr = arr;
-
-                    return noop;
                 })(myGame);
 
                 expect(myGame.state.arr).to.deep.equal([
@@ -1571,7 +1558,6 @@ describe("Agents", function() {
                 const myEvent = on("FOO", game => {
                     game.state.list = [];
                     game.state.list.push(new Dummy("D1", 10));
-                    return noop;
                 });
 
                 Game.init();
@@ -1680,7 +1666,6 @@ describe("Agents", function() {
             const addHealth = (dummy: Dummy) =>
                 on("ADD HEALTH", game => {
                     dummy.health += 15;
-                    return noop;
                 });
 
             addHealth(d)(myGame);
@@ -1727,7 +1712,6 @@ describe("Agents", function() {
             const addHealth = (dummy: Dummy) =>
                 on("ADD HEALTH", game => {
                     dummy.health += 15;
-                    return noop;
                 });
 
             addHealth(d)(myGame);
@@ -1863,7 +1847,6 @@ describe("Agents", function() {
                 return on("MOD", game => {
                     game.state.dummy.name = "Jimmy";
                     game.state.foo = true;
-                    return noop;
                 });
             })(myGame);
 
@@ -1991,7 +1974,6 @@ describe("Agents", function() {
                 return on("MOD", game => {
                     game.state.dummy.name = "Jimmy";
                     game.state.foo = true;
-                    return noop;
                 });
             })(myGame);
 
@@ -2114,7 +2096,6 @@ describe("Agents", function() {
                 return on("MOD", game => {
                     game.state.dummy.name = "Jimmy";
                     game.state.foo = true;
-                    return noop;
                 });
             })(myGame);
 
@@ -2174,7 +2155,6 @@ describe("Agents", function() {
                 return on("MOD", game => {
                     delete game.state.dummy.name;
                     delete game.state.foo;
-                    return noop;
                 });
             })(myGame);
 
@@ -2226,7 +2206,6 @@ describe("Agents", function() {
 
                 return on("MOD", game => {
                     delete game.state.dummy.name;
-                    return noop;
                 });
             })(myGame);
 
@@ -2681,14 +2660,12 @@ describe("Agents", function() {
         it("Reverting the effects of many events back to the first one", function() {
             const init = on("INIT", game => {
                 game.state.foo = "Hello, world!";
-                return noop;
             });
 
             const mod = (num: number) =>
                 on(`MOD ${num}`, game => {
                     game.state.foo += `-${num}`;
                     game.state[num] = `Yo ${num}`;
-                    return noop;
                 });
 
             Game.init();
@@ -2719,14 +2696,12 @@ describe("Agents", function() {
         it("Reverting the effects of many events over multiple steps", function() {
             const init = on("INIT", game => {
                 game.state.foo = "Hello, world!";
-                return noop;
             });
 
             const mod = (num: number) =>
                 on(`MOD ${num}`, game => {
                     game.state.foo += `-${num}`;
                     game.state[num] = `Yo ${num}`;
-                    return noop;
                 });
 
             Game.init();
@@ -2778,7 +2753,6 @@ describe("Agents", function() {
             const init = on("INIT", game => {
                 game.state.foo = "Hello, world!";
                 game.state.dummy = new Dummy("Lars", 10);
-                return noop;
             });
 
             Game.init();
@@ -2803,7 +2777,6 @@ describe("Agents", function() {
                 const dummy = game.using(staticDummy);
                 dummy.name = "Jimbo";
                 dummy["bippity"] = "boppity";
-                return noop;
             })(myGame);
 
             expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Jimbo");
@@ -2832,7 +2805,6 @@ describe("Agents", function() {
             on("REVERSE", game => {
                 const agents = myGame.state.agents as Dummy[];
                 agents.reverse();
-                return noop;
             })(myGame);
 
             expect(myGame.state.agents.length).to.equal(6);
