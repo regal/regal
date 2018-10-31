@@ -6,7 +6,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { noop, on } from "../events";
+import { on } from "../events";
 import { InstanceAgents } from "./instance-agents";
 import { StaticAgentRegistry } from "./static-agent-registry";
 
@@ -62,5 +62,4 @@ export const buildRevertFunction = (
                 }
             }
         }
-        return noop;
     });
