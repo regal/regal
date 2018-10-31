@@ -35,7 +35,6 @@ describe("Game API", function() {
         it("Sending a good request sends the correct output", function() {
             onPlayerCommand(command => game => {
                 game.output.write(`You typed "${command}".`);
-                return noop;
             });
 
             const response = Game.postPlayerCommand(
@@ -63,7 +62,6 @@ describe("Game API", function() {
                 } else {
                     game.state.comms = game.state.comms.concat(command);
                 }
-                return noop;
             });
 
             const r1 = Game.postPlayerCommand(new GameInstance(), "One");
@@ -88,8 +86,6 @@ describe("Game API", function() {
                 guy[command] = true;
 
                 game.output.write(`Set guy[${command}] to true.`);
-
-                return noop;
             });
 
             const init = Game.postPlayerCommand(new GameInstance(), "init");
@@ -171,7 +167,6 @@ describe("Game API", function() {
         it("A new RegalError is made if an error occurred during the game's runtime", function() {
             onPlayerCommand(() => () => {
                 (<string[]>(<any>5)).push("blarp"); // yum
-                return noop;
             });
 
             const response = Game.postPlayerCommand(new GameInstance(), "foo");
@@ -190,14 +185,12 @@ describe("Game API", function() {
             onStartCommand(game => {
                 game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
                 printDummyNames(game.state.arr as Dummy[], game.output);
-                return noop;
             });
 
             onPlayerCommand(() => game => {
                 const arr = game.state.arr as Dummy[];
                 arr.pop();
                 printDummyNames(arr, game.output);
-                return noop;
             });
 
             const r1 = Game.postStartCommand();
@@ -272,7 +265,6 @@ describe("Game API", function() {
         it("Sending a good request sends the correct output", function() {
             onStartCommand(game => {
                 game.output.write("Hello, world!");
-                return noop;
             });
 
             const response = Game.postStartCommand();
@@ -317,7 +309,6 @@ describe("Game API", function() {
         it("A new RegalError is made if an error occurred during the game's runtime", function() {
             onStartCommand(() => {
                 (<string[]>(<any>"lars")).push("blarp");
-                return noop;
             });
 
             const response = Game.postStartCommand();
@@ -464,13 +455,11 @@ describe("Game API", function() {
             onStartCommand(game => {
                 game.state.foo = true;
                 game.state.dummy = new Dummy("Lars", 10);
-                return noop;
             });
 
             onPlayerCommand(command => game => {
                 game.state.foo = false;
                 game.state.dummy.name = command;
-                return noop;
             });
 
             const initResponse = Game.postPlayerCommand(
@@ -491,7 +480,6 @@ describe("Game API", function() {
         it("When the player uses onBeforeUndoCommand to block the undo, an error is thrown", function() {
             onStartCommand(game => {
                 game.state.foo = false;
-                return noop;
             });
             onBeforeUndoCommand(game => game.state.foo);
 
@@ -509,13 +497,11 @@ describe("Game API", function() {
         it("Undoing operations on agent arrays", function() {
             onStartCommand(game => {
                 game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
-                return noop;
             });
 
             onPlayerCommand(() => game => {
                 const arr = game.state.arr as Dummy[];
                 arr.pop();
-                return noop;
             });
 
             const r1 = Game.postStartCommand();
@@ -565,12 +551,10 @@ describe("Game API", function() {
         it("Undo an undo", function() {
             onStartCommand(game => {
                 game.state.str = "";
-                return noop;
             });
 
             onPlayerCommand(cmd => game => {
                 game.state.str += cmd;
-                return noop;
             });
 
             const r1 = Game.postStartCommand();
@@ -596,12 +580,10 @@ describe("Game API", function() {
             onStartCommand(game => {
                 game.state.parent = new Dummy("D1", 10);
                 game.state.parent.child = new Dummy("D2", 15);
-                return noop;
             });
 
             onPlayerCommand(() => game => {
                 delete game.state.parent;
-                return noop;
             });
 
             const r1 = Game.postStartCommand();
