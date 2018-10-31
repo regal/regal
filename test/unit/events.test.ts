@@ -21,21 +21,20 @@ import {
 } from "../../src/agents";
 import { OutputLineType } from "../../src/output";
 import { MetadataManager } from "../../src/config";
+import { Game } from "../../src/game-api";
 
 describe("Events", function() {
     beforeEach(function() {
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
     });
 
     it("The `on` function does not alter the inner event function", function() {
         const greet = on("GREET", game => {
             game.output.write("Hello, world!");
-            return noop;
         });
+
+        Game.init();
 
         const myGame = new GameInstance();
         greet(myGame);
@@ -60,8 +59,9 @@ describe("Events", function() {
         const greet = (name: string) =>
             on(`GREET <${name}>`, game => {
                 game.output.write(`Hello, ${name}!`);
-                return noop;
             });
+
+        Game.init();
 
         const myGame = new GameInstance();
         greet("Regal")(myGame);
@@ -85,18 +85,18 @@ describe("Events", function() {
     it("Returning another EventFunction from inside another executes it", function() {
         const morning = on("MORNING", game => {
             game.output.write("Have a great day!");
-            return noop;
         });
 
         const afternoon = on("AFTERNOON", game => {
             game.output.write("Keep it up!");
-            return noop;
         });
 
         const motivate = (date: Date) =>
             on("MOTIVATE", game => {
                 return date.getHours() < 12 ? morning : afternoon;
             });
+
+        Game.init();
 
         const myGame = new GameInstance();
         const myDate = new Date("August 5, 2018 10:15:00");
@@ -126,7 +126,27 @@ describe("Events", function() {
     });
 
     it("noop returns undefined", function() {
+        Game.init();
         expect(noop(new GameInstance())).to.be.undefined;
+    });
+
+    it("Returning noop from an EventFunction is the same as returning nothing", function() {
+        Game.init();
+
+        const withNoop = on("FUNC", game => {
+            game.output.write("Test");
+            game.state.foo = [true, new Agent()];
+            return noop;
+        });
+
+        const withoutNoop = on("FUNC", game => {
+            game.output.write("Test");
+            game.state.foo = [true, new Agent()];
+        });
+
+        expect(withNoop(new GameInstance())).to.deep.equal(
+            withoutNoop(new GameInstance())
+        );
     });
 
     describe("Queueing", function() {
@@ -134,13 +154,11 @@ describe("Events", function() {
             const learnSkill = (name: string, skill: string) =>
                 on(`LEARN SKILL <${skill}>`, game => {
                     game.output.write(`${name} learned ${skill}!`);
-                    return noop;
                 });
 
             const addItemToInventory = (name: string, item: string) =>
                 on(`ADD ITEM <${item}>`, game => {
                     game.output.write(`Added ${item} to ${name}'s inventory.`);
-                    return noop;
                 });
 
             const makeSword = (name: string) =>
@@ -150,6 +168,8 @@ describe("Events", function() {
                         addItemToInventory(name, "Sword")
                     );
                 });
+
+            Game.init();
 
             const myGame = new GameInstance();
 
@@ -195,15 +215,14 @@ describe("Events", function() {
         });
 
         it("Chaining n-ary immediate EventQueues with `then`", function() {
-            const foo = (name: string) =>
-                on(`FOO <${name}>`, game => {
-                    return noop;
-                });
+            const foo = (name: string) => on(`FOO <${name}>`, game => {});
             const complex = on("COMPLEX", game => {
                 return foo("ONE")
                     .then(foo("TWO"), foo("THREE"))
                     .then(foo("FOUR"));
             });
+
+            Game.init();
 
             const myGame = new GameInstance();
             complex(myGame);
@@ -241,7 +260,6 @@ describe("Events", function() {
             const hitGround = (item: string) =>
                 on(`HIT GROUND <${item}>`, game => {
                     game.output.write(`${item} hits the ground. Thud!`);
-                    return noop;
                 });
 
             const fall = (item: string) =>
@@ -258,6 +276,8 @@ describe("Events", function() {
                     });
                     return queue;
                 });
+
+            Game.init();
 
             const myGame = new GameInstance();
             const items = ["Hat", "Duck", "Spoon"];
@@ -344,13 +364,21 @@ describe("Events", function() {
             ]);
         });
 
-        it("Attempting to invoke an EventQueue throws an error", function() {
-            const nonevent = on("FOO", game => noop);
-            const queue = nq(nonevent, nonevent);
-            expect(() => queue(new GameInstance())).to.throw(
-                RegalError,
-                "Cannot invoke an EventQueue."
-            );
+        it("Invoking an EventQueue works just like any other EventFunction", function() {
+            const spam = on("SPAM", game => {
+                game.output.write("Get spammed.");
+            });
+
+            Game.init();
+
+            const myGame = new GameInstance();
+
+            spam.then(spam)(myGame);
+
+            expect(myGame.output.lines).to.deep.equal([
+                { data: "Get spammed.", id: 1, type: OutputLineType.NORMAL },
+                { data: "Get spammed.", id: 2, type: OutputLineType.NORMAL }
+            ]);
         });
 
         describe("QTests", function() {
@@ -413,6 +441,8 @@ describe("Events", function() {
                 )} | ${delayed.join(", ")}`, function() {
                     // Test basic queue execution
                     const init = on("INIT", game => q());
+
+                    Game.init();
 
                     let myGame = new GameInstance();
                     init(myGame);
@@ -653,7 +683,7 @@ describe("Events", function() {
 
     describe("Agent Change Tracking", function() {
         it("Agent changes are tracked in GameInstance.events.history", function() {
-            StaticAgentRegistry.resetRegistry();
+            StaticAgentRegistry.reset();
 
             const heal = (target: Dummy, amount: number) =>
                 on("HEAL", game => {
@@ -663,11 +693,12 @@ describe("Events", function() {
                             target.health
                         }.`
                     );
-                    return noop;
                 });
 
-            const myGame = new GameInstance();
-            const dummy = new Dummy("Lars", 10).register(myGame);
+            Game.init();
+
+            const myGame = new GameInstance({ trackAgentChanges: true });
+            const dummy = myGame.using(new Dummy("Lars", 10));
 
             heal(dummy, 15)(myGame);
 
@@ -700,7 +731,6 @@ describe("Events", function() {
             const changeFriendsHealth = (target: Dummy, amount: number) =>
                 on(`CHANGE <${target["friend"].name}> HEALTH`, game => {
                     target["friend"].health += amount;
-                    return noop;
                 });
 
             const readStatus = on("READ STATUS", game => {
@@ -711,12 +741,12 @@ describe("Events", function() {
                     );
                     agent = agent["friend"];
                 } while (agent);
-
-                return noop;
             });
 
-            const addFriend = (target: Dummy, friend: Dummy) =>
+            const addFriend = (target: Dummy, _friend: Dummy) =>
                 on("ADD FRIEND", game => {
+                    const friend = game.using(_friend);
+
                     target["friend"] = friend;
 
                     game.output.write(
@@ -731,10 +761,12 @@ describe("Events", function() {
 
                 game.state.mainAgent = lars;
 
-                return addFriend(lars, bill).thenq(readStatus);
+                return addFriend(game.state.mainAgent, bill).thenq(readStatus);
             });
 
-            const myGame = new GameInstance();
+            Game.init();
+
+            const myGame = new GameInstance({ trackAgentChanges: true });
             start(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -768,20 +800,6 @@ describe("Events", function() {
                         {
                             agentId: 2,
                             op: PropertyOperation.ADDED,
-                            property: "_id",
-                            init: undefined,
-                            final: 2
-                        },
-                        {
-                            agentId: 2,
-                            op: PropertyOperation.ADDED,
-                            property: "game",
-                            init: undefined,
-                            final: myGame
-                        },
-                        {
-                            agentId: 2,
-                            op: PropertyOperation.ADDED,
                             property: "name",
                             init: undefined,
                             final: "Bill"
@@ -809,20 +827,6 @@ describe("Events", function() {
                     name: "START",
                     caused: [2, 3],
                     changes: [
-                        {
-                            agentId: 1,
-                            op: PropertyOperation.ADDED,
-                            property: "_id",
-                            init: undefined,
-                            final: 1
-                        },
-                        {
-                            agentId: 1,
-                            op: PropertyOperation.ADDED,
-                            property: "game",
-                            init: undefined,
-                            final: myGame
-                        },
                         {
                             agentId: 1,
                             op: PropertyOperation.ADDED,
@@ -873,8 +877,9 @@ describe("Events", function() {
         it("InstanceEvents.lastEventId property getter works properly when startingEventId is not set", function() {
             const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
-                return noop;
             });
+
+            Game.init();
 
             const myGame = new GameInstance();
 
@@ -888,8 +893,9 @@ describe("Events", function() {
         it("InstanceEvents.lastEventId property getter works properly when startingEventId is a custom value", function() {
             const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
-                return noop;
             });
+
+            Game.init();
 
             const myGame = new GameInstance();
             myGame.events = new InstanceEvents(myGame, 10);
@@ -904,8 +910,9 @@ describe("Events", function() {
         it("InstanceEvents.cycle creates a new InstanceEvents with the previous instance's lastEventId", function() {
             const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
-                return noop;
             });
+
+            Game.init();
 
             const game1 = new GameInstance();
 

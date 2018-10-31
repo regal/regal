@@ -7,12 +7,9 @@
 
 export {
     Agent,
-    AgentRecord,
-    PropertyOperation,
-    PropertyChange,
-    AgentReference,
     InstanceAgents,
-    InstanceState
+    PropertyChange,
+    PropertyOperation
 } from "./agents";
 export {
     onPlayerCommand,

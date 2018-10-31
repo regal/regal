@@ -8,20 +8,20 @@ import {
     onBeforeUndoCommand
 } from "../../src/api-hooks";
 import GameInstance from "../../src/game-instance";
-import { noop, on } from "../../src/events";
-import { log, getDemoMetadata } from "../test-utils";
+import { on, noop } from "../../src/events";
+import { metadataWithOptions } from "../test-utils";
 import { PropertyOperation } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import { MetadataManager } from "../../src/config";
+import { Game } from "../../src/game-api";
 
 describe("API Hooks", function() {
     beforeEach(function() {
-        HookManager.resetHooks();
-        MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
+        Game.reset();
+        MetadataManager.setMetadata(
+            metadataWithOptions({ trackAgentChanges: true })
+        );
+        Game.init();
     });
 
     it("playerCommandHook starts out undefined", function() {
@@ -41,7 +41,6 @@ describe("API Hooks", function() {
         it("onPlayerCommand allows the developer to set how input is handled (using an EventFunction)", function() {
             onPlayerCommand(command => game => {
                 game.state.input = command;
-                return noop;
             });
 
             const myGame = new GameInstance();
@@ -53,7 +52,6 @@ describe("API Hooks", function() {
         it("Using onPlayerCommand with an EventFunction creates a TrackedEvent called INPUT", function() {
             onPlayerCommand(command => game => {
                 game.state.input = command;
-                return noop;
             });
 
             const myGame = new GameInstance();
@@ -80,7 +78,6 @@ describe("API Hooks", function() {
             const setInput = (command: string) =>
                 on("SET INPUT", game => {
                     game.state.input = command;
-                    return noop;
                 });
 
             onPlayerCommand(setInput);
@@ -95,7 +92,6 @@ describe("API Hooks", function() {
             const setInput = (command: string) =>
                 on("SET INPUT", game => {
                     game.state.input = command;
-                    return noop;
                 });
 
             onPlayerCommand(setInput);
@@ -130,12 +126,10 @@ describe("API Hooks", function() {
             const setInput = (command: string) =>
                 on("SET INPUT", game => {
                     game.state.input = command;
-                    return noop;
                 });
 
             const doubleInput = on("DOUBLE INPUT", game => {
                 game.state.input += ` ${game.state.input}`;
-                return noop;
             });
 
             onPlayerCommand((cmd: string) => setInput(cmd).then(doubleInput));
@@ -150,12 +144,10 @@ describe("API Hooks", function() {
             const setInput = (command: string) =>
                 on("SET INPUT", game => {
                     game.state.input = command;
-                    return noop;
                 });
 
             const doubleInput = on("DOUBLE INPUT", game => {
                 game.state.input += ` ${game.state.input}`;
-                return noop;
             });
 
             onPlayerCommand((cmd: string) => setInput(cmd).then(doubleInput));
@@ -220,7 +212,6 @@ describe("API Hooks", function() {
         it("onStartCommand allows the developer to set how start is handled (using an EventFunction)", function() {
             onStartCommand(game => {
                 game.state.init = true;
-                return noop;
             });
 
             const myGame = new GameInstance();
@@ -232,7 +223,6 @@ describe("API Hooks", function() {
         it("using onStartCommand with an EventFunction creates a TrackedEvent called START", function() {
             onStartCommand(game => {
                 game.state.init = true;
-                return noop;
             });
 
             const myGame = new GameInstance();
@@ -258,7 +248,6 @@ describe("API Hooks", function() {
         it("onStartCommand allows the developer to set how start is handled (using a TrackedEvent)", function() {
             const setInit = on("SET INIT", game => {
                 game.state.init = true;
-                return noop;
             });
 
             onStartCommand(setInit);
@@ -272,7 +261,6 @@ describe("API Hooks", function() {
         it("Using onStartCommand with a TrackedEvent 'X' creates a TrackedEvent called START that causes X", function() {
             const setInit = on("SET INIT", game => {
                 game.state.init = true;
-                return noop;
             });
 
             onStartCommand(setInit);
@@ -307,7 +295,6 @@ describe("API Hooks", function() {
             const setFoo = (val: string) =>
                 on("SET FOO", game => {
                     game.state.foo = val;
-                    return noop;
                 });
 
             const setInit = on("SET INIT", game => {
@@ -318,7 +305,6 @@ describe("API Hooks", function() {
             const appendFoo = (val: string) =>
                 on("APPEND FOO", game => {
                     game.state.foo += val;
-                    return noop;
                 });
 
             onStartCommand(setInit.thenq(appendFoo("Two")));
@@ -334,7 +320,6 @@ describe("API Hooks", function() {
             const setFoo = (val: string) =>
                 on("SET FOO", game => {
                     game.state.foo = val;
-                    return noop;
                 });
 
             const setInit = on("SET INIT", game => {
@@ -345,7 +330,6 @@ describe("API Hooks", function() {
             const appendFoo = (val: string) =>
                 on("APPEND FOO", game => {
                     game.state.foo += val;
-                    return noop;
                 });
 
             onStartCommand(setInit.thenq(appendFoo("Two")));
@@ -430,7 +414,6 @@ describe("API Hooks", function() {
             const setFoo = (val: number) =>
                 on("SET FOO", game => {
                     game.state.foo = val;
-                    return noop;
                 });
 
             const myGame = new GameInstance();

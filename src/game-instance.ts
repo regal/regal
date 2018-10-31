@@ -11,8 +11,17 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { InstanceAgents, InstanceState } from "./agents";
+import {
+    activateAgent,
+    activeAgentProxy,
+    buildInstanceAgents,
+    InstanceAgents,
+    isAgent,
+    recycleInstanceAgents
+} from "./agents";
 import { GameOptions, InstanceOptions } from "./config";
+import { ContextManager } from "./context-manager";
+import { RegalError } from "./error";
 import { InstanceEvents } from "./events";
 import { InstanceOutput } from "./output";
 
@@ -50,11 +59,17 @@ export default class GameInstance {
      * Must be allowed by the static configuration's `allowOverrides` option.
      */
     constructor(options: Partial<GameOptions> = {}) {
-        this.agents = new InstanceAgents(this);
+        if (ContextManager.isContextStatic()) {
+            throw new RegalError(
+                "Cannot construct a GameInstance outside of a game cycle."
+            );
+        }
+
+        this.agents = buildInstanceAgents(this);
         this.events = new InstanceEvents(this);
         this.output = new InstanceOutput(this);
         this.options = new InstanceOptions(this, options);
-        this.state = new InstanceState(this);
+        this.state = activeAgentProxy(0, this);
     }
 
     /**
@@ -66,15 +81,53 @@ export default class GameInstance {
      *
      * @returns The new `GameInstance`, with each manager cycled.
      */
-    public cycle(newOptions?: Partial<GameOptions>): GameInstance {
+    public recycle(newOptions?: Partial<GameOptions>): GameInstance {
         const opts =
             newOptions === undefined ? this.options.overrides : newOptions;
 
         const newGame = new GameInstance(opts);
         newGame.events = this.events.cycle(newGame);
-        newGame.agents = this.agents.cycle(newGame);
+        newGame.agents = recycleInstanceAgents(this.agents, newGame);
         newGame.output = this.output.cycle(newGame);
 
         return newGame;
+    }
+
+    /**
+     * Activates one or more agents in the current game context. All agents
+     * must be activated before they can be used. Activating an agent multiple
+     * times has no effect.
+     *
+     * @param resource Either a single agent, an agent array, or an object
+     * where every property is an agent to be activated.
+     * @returns Either an activated agent, an agent array, or an object where
+     * every property is an activated agent, depending on the structure of `resource`.
+     */
+    public using<T>(resource: T): T {
+        if (isAgent(resource) || resource instanceof Array) {
+            return activateAgent(this, resource as any);
+        }
+
+        if (resource === undefined) {
+            throw new RegalError("Resource must be defined.");
+        }
+
+        const returnObj = {} as T;
+
+        for (const key in resource) {
+            if (resource.hasOwnProperty(key)) {
+                const agent = resource[key];
+
+                if (isAgent(agent)) {
+                    returnObj[key] = activateAgent(this, agent);
+                } else {
+                    throw new RegalError(
+                        `Invalid agent in resource at key <${key}>.`
+                    );
+                }
+            }
+        }
+
+        return returnObj;
     }
 }

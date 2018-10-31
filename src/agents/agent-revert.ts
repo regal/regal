@@ -1,15 +1,14 @@
 /**
- * Contains the `buildRevertFunction` for reverting changes to the instance state.
+ * Contains `buildRevertFunction` for reverting changes made to an
+ * `InstanceAgents` during the context of a game cycle.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { noop, on } from "../events";
-import { Agent } from "./agent-model";
-import { AgentRecord, PropertyChange } from "./agent-record";
-import { InstanceAgents, propertyIsAgentId } from "./instance-agents";
-import { StaticAgentRegistry } from "./static-agent";
+import { on } from "../events";
+import { InstanceAgents } from "./instance-agents";
+import { StaticAgentRegistry } from "./static-agent-registry";
 
 /**
  * Builds a `TrackedEvent` that reverts all the changes to a given `InstanceAgents` since a specified event.
@@ -24,56 +23,43 @@ import { StaticAgentRegistry } from "./static-agent";
 export const buildRevertFunction = (
     agents: InstanceAgents,
     revertTo: number = 0
-) => {
-    const agentIds = Object.keys(agents)
-        .filter(propertyIsAgentId)
-        .map(idStr => Number.parseInt(idStr, 10));
-
-    return on("REVERT", game => {
+) =>
+    on("REVERT", game => {
         const target = game.agents;
 
-        agentIds.forEach(id => {
-            const record = agents[id] as AgentRecord;
-            const recordKeys = Object.keys(record);
+        for (const am of agents.agentManagers()) {
+            const id = am.id;
 
-            // Proxy for all changes
-            const agent = new Agent(id, target.game);
+            const props = Object.keys(am).filter(
+                key => key !== "game" && key !== "id"
+            );
 
-            recordKeys
-                // Exclude game and id properties
-                .filter(key => key !== "game" && key !== "_id")
-                .forEach(key => {
-                    const changelog: PropertyChange[] = record[key];
+            for (const prop of props) {
+                const history = am.getPropertyHistory(prop);
+                const lastChangeIdx = history.findIndex(
+                    change => change.eventId <= revertTo
+                );
 
-                    // Get the changes that happened before the target event
-                    const acceptableChanges = changelog.filter(
-                        change => change.eventId <= revertTo
-                    );
-
-                    if (acceptableChanges.length === 0) {
-                        // If all changes to the property happened after the target event, delete/reset it
-                        if (StaticAgentRegistry.hasAgentProperty(id, key)) {
-                            agent[key] = StaticAgentRegistry.getAgentProperty(
-                                id,
-                                key
-                            );
-                        } else {
-                            delete agent[key];
-                        }
+                if (lastChangeIdx === -1) {
+                    // If all changes to the property happened after the target event, delete/reset it
+                    if (StaticAgentRegistry.hasAgentProperty(id, prop)) {
+                        const newVal = StaticAgentRegistry.getAgentProperty(
+                            id,
+                            prop
+                        );
+                        target.setAgentProperty(id, prop, newVal);
                     } else {
-                        // Otherwise, set the property to its value right after the target event
-                        const lastAcceptableValue = acceptableChanges[0].final;
-
-                        if (
-                            target.getAgentProperty(id, key) !==
-                            lastAcceptableValue
-                        ) {
-                            agent[key] = lastAcceptableValue;
-                        }
+                        target.deleteAgentProperty(id, prop);
                     }
-                });
-        });
+                } else {
+                    // Otherwise, set the property to its value right after the target event
+                    const targetVal = history[lastChangeIdx].final;
+                    const currentVal = target.getAgentProperty(id, prop);
 
-        return noop;
+                    if (targetVal !== currentVal) {
+                        target.setAgentProperty(id, prop, targetVal);
+                    }
+                }
+            }
+        }
     });
-};

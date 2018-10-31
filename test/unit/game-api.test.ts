@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 
-import { Game, GameResponse, resetGame } from "../../src/game-api";
+import { Game, GameResponse } from "../../src/game-api";
 import {
     onPlayerCommand,
     onStartCommand,
@@ -9,7 +9,7 @@ import {
 } from "../../src/api-hooks";
 import { noop } from "../../src/events";
 import GameInstance from "../../src/game-instance";
-import { OutputLineType } from "../../src/output";
+import { OutputLineType, GameOutput, InstanceOutput } from "../../src/output";
 import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
 import { Agent } from "../../src/agents";
 import {
@@ -26,19 +26,15 @@ class Dummy extends Agent {
 
 describe("Game API", function() {
     beforeEach(function() {
-        resetGame();
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
+        Game.init();
     });
 
     describe("Game.postPlayerCommand", function() {
         it("Sending a good request sends the correct output", function() {
             onPlayerCommand(command => game => {
                 game.output.write(`You typed "${command}".`);
-                return noop;
             });
 
             const response = Game.postPlayerCommand(
@@ -64,11 +60,8 @@ describe("Game API", function() {
                 if (!game.state.comms) {
                     game.state.comms = [command];
                 } else {
-                    game.state.comms = (<string[]>game.state.comms).concat(
-                        command
-                    );
+                    game.state.comms = game.state.comms.concat(command);
                 }
-                return noop;
             });
 
             const r1 = Game.postPlayerCommand(new GameInstance(), "One");
@@ -93,8 +86,6 @@ describe("Game API", function() {
                 guy[command] = true;
 
                 game.output.write(`Set guy[${command}] to true.`);
-
-                return noop;
             });
 
             const init = Game.postPlayerCommand(new GameInstance(), "init");
@@ -176,7 +167,6 @@ describe("Game API", function() {
         it("A new RegalError is made if an error occurred during the game's runtime", function() {
             onPlayerCommand(() => () => {
                 (<string[]>(<any>5)).push("blarp"); // yum
-                return noop;
             });
 
             const response = Game.postPlayerCommand(new GameInstance(), "foo");
@@ -187,13 +177,94 @@ describe("Game API", function() {
             );
             expect(response.instance).to.be.undefined;
         });
+
+        it("The GameInstance is scrubbed before a new player command is applied", function() {
+            const printDummyNames = (dums: Dummy[], output: InstanceOutput) => {
+                output.write(`Dummies: ${dums.map(d => d.name).join(", ")}.`);
+            };
+            onStartCommand(game => {
+                game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
+                printDummyNames(game.state.arr as Dummy[], game.output);
+            });
+
+            onPlayerCommand(() => game => {
+                const arr = game.state.arr as Dummy[];
+                arr.pop();
+                printDummyNames(arr, game.output);
+            });
+
+            const r1 = Game.postStartCommand();
+
+            expect(
+                r1.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+
+            expect(r1.output).to.deep.equal({
+                wasSuccessful: true,
+                log: [
+                    {
+                        data: "Dummies: D1, D2.",
+                        id: 1,
+                        type: OutputLineType.NORMAL
+                    }
+                ]
+            });
+
+            const r2 = Game.postPlayerCommand(r1.instance, "");
+
+            expect(
+                r1.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r2.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+
+            expect(r2.output).to.deep.equal({
+                wasSuccessful: true,
+                log: [
+                    {
+                        data: "Dummies: D1.",
+                        id: 2,
+                        type: OutputLineType.NORMAL
+                    }
+                ]
+            });
+
+            const r3 = Game.postPlayerCommand(r2.instance, "");
+
+            expect(
+                r2.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r3.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2]);
+
+            expect(r3.output).to.deep.equal({
+                wasSuccessful: true,
+                log: [
+                    {
+                        data: "Dummies: .",
+                        id: 3,
+                        type: OutputLineType.NORMAL
+                    }
+                ]
+            });
+
+            const r4 = Game.postPlayerCommand(r3.instance, "");
+
+            expect(
+                r3.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2]);
+            expect(
+                r4.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1]);
+        });
     });
 
     describe("Game.postStartCommand", function() {
         it("Sending a good request sends the correct output", function() {
             onStartCommand(game => {
                 game.output.write("Hello, world!");
-                return noop;
             });
 
             const response = Game.postStartCommand();
@@ -238,7 +309,6 @@ describe("Game API", function() {
         it("A new RegalError is made if an error occurred during the game's runtime", function() {
             onStartCommand(() => {
                 (<string[]>(<any>"lars")).push("blarp");
-                return noop;
             });
 
             const response = Game.postStartCommand();
@@ -385,13 +455,11 @@ describe("Game API", function() {
             onStartCommand(game => {
                 game.state.foo = true;
                 game.state.dummy = new Dummy("Lars", 10);
-                return noop;
             });
 
             onPlayerCommand(command => game => {
                 game.state.foo = false;
                 game.state.dummy.name = command;
-                return noop;
             });
 
             const initResponse = Game.postPlayerCommand(
@@ -412,7 +480,6 @@ describe("Game API", function() {
         it("When the player uses onBeforeUndoCommand to block the undo, an error is thrown", function() {
             onStartCommand(game => {
                 game.state.foo = false;
-                return noop;
             });
             onBeforeUndoCommand(game => game.state.foo);
 
@@ -425,6 +492,119 @@ describe("Game API", function() {
                 "RegalError: Undo is not allowed here."
             );
             expect(undoResponse.instance).to.be.undefined;
+        });
+
+        it("Undoing operations on agent arrays", function() {
+            onStartCommand(game => {
+                game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
+            });
+
+            onPlayerCommand(() => game => {
+                const arr = game.state.arr as Dummy[];
+                arr.pop();
+            });
+
+            const r1 = Game.postStartCommand();
+
+            expect(
+                r1.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r1.instance.agents.getAgentProperty(0, "arr").length
+            ).to.equal(2);
+            expect(r1.instance.state.arr[1].name).to.equal("D2");
+
+            const r2 = Game.postPlayerCommand(r1.instance, "");
+
+            expect(
+                r1.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r2.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r2.instance.agents.getAgentProperty(0, "arr").length
+            ).to.equal(1);
+            expect(r1.instance.state.arr[0].name).to.equal("D1");
+
+            const r3 = Game.postUndoCommand(r2.instance);
+
+            expect(
+                r3.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r3.instance.agents.getAgentProperty(0, "arr").length
+            ).to.equal(2);
+            expect(r1.instance.state.arr[1].name).to.equal("D2");
+
+            const r4 = Game.postPlayerCommand(r3.instance, "");
+
+            expect(
+                r4.instance.agents.agentManagers().map(am => am.id)
+            ).to.deep.equal([0, 1, 2, 3]);
+            expect(
+                r4.instance.agents.getAgentProperty(0, "arr").length
+            ).to.equal(1);
+            expect(r1.instance.state.arr[0].name).to.equal("D1");
+        });
+
+        it("Undo an undo", function() {
+            onStartCommand(game => {
+                game.state.str = "";
+            });
+
+            onPlayerCommand(cmd => game => {
+                game.state.str += cmd;
+            });
+
+            const r1 = Game.postStartCommand();
+            expect(r1.instance.state.str).to.equal("");
+
+            const r2 = Game.postPlayerCommand(r1.instance, "foo");
+            expect(r2.instance.state.str).to.equal("foo");
+
+            const r3 = Game.postPlayerCommand(r2.instance, "bar");
+            expect(r3.instance.state.str).to.equal("foobar");
+
+            const r4 = Game.postUndoCommand(r3.instance);
+            expect(r4.instance.state.str).to.equal("foo");
+
+            const r5 = Game.postUndoCommand(r4.instance);
+            expect(r5.instance.state.str).to.equal("foobar");
+
+            const r6 = Game.postUndoCommand(r5.instance);
+            expect(r6.instance.state.str).to.equal("foo");
+        });
+
+        it("Undoing an undo with agent references", function() {
+            onStartCommand(game => {
+                game.state.parent = new Dummy("D1", 10);
+                game.state.parent.child = new Dummy("D2", 15);
+            });
+
+            onPlayerCommand(() => game => {
+                delete game.state.parent;
+            });
+
+            const r1 = Game.postStartCommand();
+            expect(r1.instance.state.parent.child).to.deep.equal({
+                id: 2,
+                name: "D2",
+                health: 15
+            });
+
+            const r2 = Game.postPlayerCommand(r1.instance, "");
+            expect(r2.instance.state.parent).to.be.undefined;
+
+            const r3 = Game.postUndoCommand(r2.instance);
+            expect(r3.instance.state.parent.child).to.deep.equal({
+                id: 2,
+                name: "D2",
+                health: 15
+            });
+
+            const r4 = Game.postPlayerCommand(r3.instance, "");
+            expect(r4.instance.state.parent).to.be.undefined;
         });
     });
 

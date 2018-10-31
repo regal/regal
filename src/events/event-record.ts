@@ -18,8 +18,6 @@ export const DEFAULT_EVENT_NAME: string = "DEFAULT";
  * Record of a `TrackedEvent`'s effects in a game cycle.
  */
 export class EventRecord {
-    /** Default `EventRecord` for untracked `EventFunction`s. */
-    public static default = new EventRecord();
     /** The IDs of the `OutputLine`s emitted by the event. */
     public output?: number[];
     /** The ID of the event that caused this event. */
@@ -28,6 +26,11 @@ export class EventRecord {
     public caused?: number[];
     /** The records of all changes to registered agents that were caused by this event. */
     public changes?: PropertyChange[];
+
+    /** Default `EventRecord` for untracked `EventFunction`s. */
+    public static get default() {
+        return new EventRecord();
+    }
 
     /**
      * Constructs a new `EventRecord`.
@@ -71,29 +74,12 @@ export class EventRecord {
     /**
      * Adds a record of a single change to a registered agent's property to the
      * `EventRecord`'s `changes` property.
-     *
-     * @param agentId The registered agent's ID.
-     * @param property The property being modified.
-     * @param op The type of modification.
-     * @param init The initial value of the property.
-     * @param final The final value of the property.
      */
-    public trackChange<T>(
-        agentId: number,
-        property: PropertyKey,
-        op: PropertyOperation,
-        init?: T,
-        final?: T
-    ): void {
+    public trackChange(propChange: PropertyChange): void {
         if (this.changes === undefined) {
             this.changes = [];
         }
-        this.changes.push({
-            agentId,
-            final,
-            init,
-            op,
-            property: property.toString()
-        });
+
+        this.changes.push(propChange);
     }
 }

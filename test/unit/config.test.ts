@@ -10,15 +10,23 @@ import {
     ensureOverridesAllowed
 } from "../../src/config";
 import { OutputLineType } from "../../src/output";
-import { getDemoMetadata, metadataWithOptions } from "../test-utils";
+import { getDemoMetadata, metadataWithOptions, log } from "../test-utils";
+import { Game } from "../../src/game-api";
+import { on } from "../../src/events";
+import { onStartCommand, onPlayerCommand } from "../../src/api-hooks";
+import { Agent, PropertyOperation } from "../../src/agents";
+
+class Dummy extends Agent {
+    constructor(public name: string, public health: number) {
+        super();
+    }
+}
 
 describe("Config", function() {
     beforeEach(function() {
+        Game.reset();
         MetadataManager.setMetadata(getDemoMetadata());
-    });
-
-    afterEach(function() {
-        MetadataManager.reset();
+        Game.init();
     });
 
     describe("Game Options", function() {
@@ -128,9 +136,19 @@ describe("Config", function() {
                     "RegalError: The option <showMinor> is of type <number>, must be of type <boolean>."
                 );
             });
+
+            it("GameOptions.trackAgentChanges VALID", function() {
+                const myGame = new GameInstance({ trackAgentChanges: true });
+                expect(myGame.options.overrides).to.deep.equal({
+                    trackAgentChanges: true
+                });
+                expect(myGame.options.trackAgentChanges).to.be.true;
+            });
         });
 
         describe("Option Behavior", function() {
+            // debug
+
             it("DEBUG output is not printed when GameOptions.debug is set to false", function() {
                 const myGame = new GameInstance({ debug: false });
                 myGame.output.writeDebug("Hello, world!");
@@ -151,6 +169,8 @@ describe("Config", function() {
                 ]);
             });
 
+            // showMinor
+
             it("MINOR output is not printed when GameOptions.showMinor is set to false", function() {
                 const myGame = new GameInstance({ showMinor: false });
                 myGame.output.writeMinor("Hello, world!");
@@ -169,6 +189,626 @@ describe("Config", function() {
                         data: "Hello, world!"
                     }
                 ]);
+            });
+
+            // trackAgentChanges
+
+            function prepAgentTest() {
+                const introduce = on("INTRODUCE", game => {
+                    game.output.write(
+                        `My name is ${game.state.currentDummy.name}. ${game
+                            .state.dummyCount - 1} have come before me.`
+                    );
+                    game.state.currentDummy.health += 5;
+                });
+
+                const addDummy = (name: string) =>
+                    on("ADD", game => {
+                        const dummy = game.using(new Dummy(name, 10));
+                        dummy.name += " the Great";
+
+                        game.state.currentDummy = dummy;
+                        game.state.dummyCount++;
+
+                        return introduce;
+                    });
+
+                const init = on("INIT", game => {
+                    game.state.dummyCount = 0;
+                });
+
+                onStartCommand(init);
+                onPlayerCommand(addDummy);
+            }
+
+            it("Full agent property history is shown when GameOptions.trackAgentChanges is set to true", function() {
+                prepAgentTest();
+
+                let response = Game.postStartCommand({
+                    trackAgentChanges: true
+                });
+
+                expect(response.instance.agents).to.deep.equal({
+                    _nextId: 1,
+                    game: response.instance,
+                    "0": {
+                        id: 0,
+                        game: response.instance,
+                        dummyCount: [
+                            {
+                                eventId: 2,
+                                eventName: "INIT",
+                                final: 0,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    }
+                });
+                expect(response.instance.events.history).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "INIT",
+                        causedBy: 1,
+                        changes: [
+                            {
+                                agentId: 0,
+                                final: 0,
+                                init: undefined,
+                                op: PropertyOperation.ADDED,
+                                property: "dummyCount"
+                            }
+                        ]
+                    },
+                    {
+                        id: 1,
+                        name: "START",
+                        caused: [2]
+                    }
+                ]);
+
+                response = Game.postPlayerCommand(response.instance, "Lars");
+
+                expect(response.instance.agents).to.deep.equal({
+                    _nextId: 2,
+                    game: response.instance,
+                    "0": {
+                        id: 0,
+                        game: response.instance,
+                        dummyCount: [
+                            {
+                                eventId: 4,
+                                eventName: "ADD",
+                                final: 1,
+                                init: 0,
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 0,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        currentDummy: [
+                            {
+                                eventId: 4,
+                                eventName: "ADD",
+                                final: { refId: 1 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    "1": {
+                        id: 1,
+                        game: response.instance,
+                        name: [
+                            {
+                                eventId: 4,
+                                eventName: "ADD",
+                                final: "Lars the Great",
+                                init: "Lars",
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 4,
+                                eventName: "ADD",
+                                final: "Lars",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 5,
+                                eventName: "INTRODUCE",
+                                final: 15,
+                                init: 10,
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 4,
+                                eventName: "ADD",
+                                final: 10,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    }
+                });
+                expect(response.instance.events.history).to.deep.equal([
+                    {
+                        id: 5,
+                        name: "INTRODUCE",
+                        causedBy: 4,
+                        output: [1],
+                        changes: [
+                            {
+                                agentId: 1,
+                                final: 15,
+                                init: 10,
+                                op: PropertyOperation.MODIFIED,
+                                property: "health"
+                            }
+                        ]
+                    },
+                    {
+                        id: 4,
+                        name: "ADD",
+                        causedBy: 3,
+                        caused: [5],
+                        changes: [
+                            {
+                                agentId: 1,
+                                final: "Lars",
+                                init: undefined,
+                                op: PropertyOperation.ADDED,
+                                property: "name"
+                            },
+                            {
+                                agentId: 1,
+                                final: 10,
+                                init: undefined,
+                                op: PropertyOperation.ADDED,
+                                property: "health"
+                            },
+                            {
+                                agentId: 1,
+                                final: "Lars the Great",
+                                init: "Lars",
+                                op: PropertyOperation.MODIFIED,
+                                property: "name"
+                            },
+                            {
+                                agentId: 0,
+                                final: { refId: 1 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED,
+                                property: "currentDummy"
+                            },
+                            {
+                                agentId: 0,
+                                final: 1,
+                                init: 0,
+                                op: PropertyOperation.MODIFIED,
+                                property: "dummyCount"
+                            }
+                        ]
+                    },
+                    {
+                        id: 3,
+                        name: "INPUT",
+                        caused: [4]
+                    }
+                ]);
+
+                response = Game.postPlayerCommand(response.instance, "Jeffrey");
+
+                expect(response.instance.agents).to.deep.equal({
+                    _nextId: 3,
+                    game: response.instance,
+                    "0": {
+                        id: 0,
+                        game: response.instance,
+                        dummyCount: [
+                            {
+                                eventId: 7,
+                                eventName: "ADD",
+                                final: 2,
+                                init: 1,
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 1,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        currentDummy: [
+                            {
+                                eventId: 7,
+                                eventName: "ADD",
+                                final: { refId: 2 },
+                                init: { refId: 1 },
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: { refId: 1 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    "1": {
+                        id: 1,
+                        game: response.instance,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: "Lars the Great",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 15,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    "2": {
+                        id: 2,
+                        game: response.instance,
+                        name: [
+                            {
+                                eventId: 7,
+                                eventName: "ADD",
+                                final: "Jeffrey the Great",
+                                init: "Jeffrey",
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 7,
+                                eventName: "ADD",
+                                final: "Jeffrey",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 8,
+                                eventName: "INTRODUCE",
+                                final: 15,
+                                init: 10,
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 7,
+                                eventName: "ADD",
+                                final: 10,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    }
+                });
+                expect(response.instance.events.history).to.deep.equal([
+                    {
+                        id: 8,
+                        name: "INTRODUCE",
+                        causedBy: 7,
+                        output: [2],
+                        changes: [
+                            {
+                                agentId: 2,
+                                final: 15,
+                                init: 10,
+                                op: PropertyOperation.MODIFIED,
+                                property: "health"
+                            }
+                        ]
+                    },
+                    {
+                        id: 7,
+                        name: "ADD",
+                        causedBy: 6,
+                        caused: [8],
+                        changes: [
+                            {
+                                agentId: 2,
+                                final: "Jeffrey",
+                                init: undefined,
+                                op: PropertyOperation.ADDED,
+                                property: "name"
+                            },
+                            {
+                                agentId: 2,
+                                final: 10,
+                                init: undefined,
+                                op: PropertyOperation.ADDED,
+                                property: "health"
+                            },
+                            {
+                                agentId: 2,
+                                final: "Jeffrey the Great",
+                                init: "Jeffrey",
+                                op: PropertyOperation.MODIFIED,
+                                property: "name"
+                            },
+                            {
+                                agentId: 0,
+                                final: { refId: 2 },
+                                init: { refId: 1 },
+                                op: PropertyOperation.MODIFIED,
+                                property: "currentDummy"
+                            },
+                            {
+                                agentId: 0,
+                                final: 2,
+                                init: 1,
+                                op: PropertyOperation.MODIFIED,
+                                property: "dummyCount"
+                            }
+                        ]
+                    },
+                    {
+                        id: 6,
+                        name: "INPUT",
+                        caused: [7]
+                    }
+                ]);
+            });
+
+            it("Reduced agent property history is shown when GameOptions.trackAgentChanges is set to false", function() {
+                prepAgentTest();
+
+                let response = Game.postStartCommand({
+                    trackAgentChanges: false
+                });
+
+                expect(response.instance.agents).to.deep.equal({
+                    _nextId: 1,
+                    game: response.instance,
+                    "0": {
+                        id: 0,
+                        game: response.instance,
+                        dummyCount: [
+                            {
+                                eventId: 2,
+                                eventName: "INIT",
+                                final: 0,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    }
+                });
+                expect(response.instance.events.history).to.deep.equal([
+                    {
+                        id: 2,
+                        name: "INIT",
+                        causedBy: 1
+                    },
+                    {
+                        id: 1,
+                        name: "START",
+                        caused: [2]
+                    }
+                ]);
+
+                response = Game.postPlayerCommand(response.instance, "Lars");
+
+                expect(response.instance.agents).to.deep.equal({
+                    _nextId: 2,
+                    game: response.instance,
+                    "0": {
+                        id: 0,
+                        game: response.instance,
+                        dummyCount: [
+                            {
+                                eventId: 4,
+                                eventName: "ADD",
+                                final: 1,
+                                init: 0,
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 0,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        currentDummy: [
+                            {
+                                eventId: 4,
+                                eventName: "ADD",
+                                final: { refId: 1 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    "1": {
+                        id: 1,
+                        game: response.instance,
+                        name: [
+                            {
+                                eventId: 4,
+                                eventName: "ADD",
+                                final: "Lars the Great",
+                                init: "Lars",
+                                op: PropertyOperation.MODIFIED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 5,
+                                eventName: "INTRODUCE",
+                                final: 15,
+                                init: 10,
+                                op: PropertyOperation.MODIFIED
+                            }
+                        ]
+                    }
+                });
+                expect(response.instance.events.history).to.deep.equal([
+                    {
+                        id: 5,
+                        name: "INTRODUCE",
+                        causedBy: 4,
+                        output: [1]
+                    },
+                    {
+                        id: 4,
+                        name: "ADD",
+                        causedBy: 3,
+                        caused: [5]
+                    },
+                    {
+                        id: 3,
+                        name: "INPUT",
+                        caused: [4]
+                    }
+                ]);
+
+                response = Game.postPlayerCommand(response.instance, "Jeffrey");
+
+                expect(response.instance.agents).to.deep.equal({
+                    _nextId: 3,
+                    game: response.instance,
+                    "0": {
+                        id: 0,
+                        game: response.instance,
+                        dummyCount: [
+                            {
+                                eventId: 7,
+                                eventName: "ADD",
+                                final: 2,
+                                init: 1,
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 1,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        currentDummy: [
+                            {
+                                eventId: 7,
+                                eventName: "ADD",
+                                final: { refId: 2 },
+                                init: { refId: 1 },
+                                op: PropertyOperation.MODIFIED
+                            },
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: { refId: 1 },
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    "1": {
+                        id: 1,
+                        game: response.instance,
+                        name: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: "Lars the Great",
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 0,
+                                eventName: "DEFAULT",
+                                final: 15,
+                                init: undefined,
+                                op: PropertyOperation.ADDED
+                            }
+                        ]
+                    },
+                    "2": {
+                        id: 2,
+                        game: response.instance,
+                        name: [
+                            {
+                                eventId: 7,
+                                eventName: "ADD",
+                                final: "Jeffrey the Great",
+                                init: "Jeffrey",
+                                op: PropertyOperation.MODIFIED
+                            }
+                        ],
+                        health: [
+                            {
+                                eventId: 8,
+                                eventName: "INTRODUCE",
+                                final: 15,
+                                init: 10,
+                                op: PropertyOperation.MODIFIED
+                            }
+                        ]
+                    }
+                });
+                expect(response.instance.events.history).to.deep.equal([
+                    {
+                        id: 8,
+                        name: "INTRODUCE",
+                        causedBy: 7,
+                        output: [2]
+                    },
+                    {
+                        id: 7,
+                        name: "ADD",
+                        causedBy: 6,
+                        caused: [8]
+                    },
+                    {
+                        id: 6,
+                        name: "INPUT",
+                        caused: [7]
+                    }
+                ]);
+            });
+
+            it("Throw an error if a property history is longer than two when trackAgentChanges is disabled", function() {
+                const myGame = new GameInstance({ trackAgentChanges: false });
+                const d = myGame.using(new Dummy("D1", 10));
+
+                on("FOO", game => {
+                    d.name = "Jim";
+                })(myGame);
+
+                myGame.agents
+                    .getAgentManager(1)
+                    .getPropertyHistory("name")
+                    .unshift({} as any);
+
+                expect(() => (d.name = "Foo")).to.throw(
+                    RegalError,
+                    "Property history length cannot be greater than two when trackAgentChanges is disabled"
+                );
             });
         });
     });
