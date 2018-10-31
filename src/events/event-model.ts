@@ -82,7 +82,7 @@ export const isTrackedEvent = (o: any): o is TrackedEvent =>
 
 /** Ensures the object is an `EventQueue`. */
 export const isEventQueue = (o: any): o is EventQueue =>
-    o !== undefined && (o as EventQueue).nq !== undefined;
+    o !== undefined && (o as EventQueue).immediateEvents !== undefined;
 
 /** "No operation" - reserved `TrackedEvent` that signals no more events. */
 export const noop: TrackedEvent = (() => {
@@ -96,9 +96,18 @@ export const noop: TrackedEvent = (() => {
     return event;
 })();
 
-/** Creates a function that returns an error upon invocation. */
-const illegalEventQueueInvocation = () => (game: GameInstance): undefined => {
-    throw new RegalError("Cannot invoke an EventQueue.");
+/** Builds an `EventFunction` that allows an `EventQueue` to be invoked like any other `EventFunction`. */
+const queueInvocation = (
+    immediateEvents: TrackedEvent[],
+    delayedEvents: TrackedEvent[]
+): EventFunction => (game: GameInstance) => {
+    // Will seem like an EventQueue to the GameInstance, but has no additional methods
+    const fauxQueue = {
+        delayedEvents,
+        immediateEvents
+    } as EventQueue;
+
+    game.events.invoke(fauxQueue);
 };
 
 /**
@@ -113,8 +122,14 @@ const buildEventQueue = (
     immediateEvents: TrackedEvent[],
     delayedEvents: TrackedEvent[]
 ): EventQueue => {
-    const eq = illegalEventQueueInvocation() as EventQueue;
-    eq.target = illegalEventQueueInvocation();
+    const queueInvocationFunction = queueInvocation(
+        immediateEvents,
+        delayedEvents
+    );
+
+    const eq = queueInvocationFunction as EventQueue;
+    eq.target = queueInvocationFunction;
+
     eq.then = thenConstructor(eq);
     eq.thenq = (...events: TrackedEvent[]) => eq.then(enqueue(...events));
 
