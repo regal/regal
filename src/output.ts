@@ -171,15 +171,6 @@ export class InstanceOutput {
     public writeTitle(line: string) {
         this.writeLine(line, OutputLineType.SECTION_TITLE);
     }
-
-    /**
-     * Creates a new `InstanceOutput` for the new game cycle.
-     * **Don't call this unless you know what you're doing.**
-     * @param current The `GameInstance` for the new game cycle.
-     */
-    public cycle(current: GameInstance): InstanceOutput {
-        return new InstanceOutput(current, this.lineCount);
-    }
 }
 
 /**

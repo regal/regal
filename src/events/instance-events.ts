@@ -62,15 +62,6 @@ export default class InstanceEvents {
     }
 
     /**
-     * Creates a new `InstanceEvents` for the new game cycle.
-     * **Don't call this unless you know what you're doing.**
-     * @param current The `GameInstance` for the new game cycle.
-     */
-    public cycle(current: GameInstance): InstanceEvents {
-        return new InstanceEvents(current, this.lastEventId);
-    }
-
-    /**
      * Adds the event to the internal queue. If the event is an `EventQueue`,
      * the event's `immediateEvents` are added to the front of the queue
      * and the `delayedEvents` are added to the back of the queue.

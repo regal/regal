@@ -207,8 +207,8 @@ describe("Output", function() {
             expect(myGame.output.lineCount).to.equal(11);
         });
 
-        it("InstanceOutput.cycle creates a new InstanceOutput with the previous instance's lineCount", function() {
-            const game1 = new GameInstance();
+        it.skip("InstanceOutput.cycle creates a new InstanceOutput with the previous instance's lineCount", function() {
+            /*const game1 = new GameInstance();
 
             const game2 = new GameInstance();
             const output2 = game1.output.cycle(game2);
@@ -224,7 +224,7 @@ describe("Output", function() {
 
             expect(output3.lineCount).to.equal(3);
             expect(output3.game).to.equal(game3);
-            expect(output3.lines).to.be.empty;
+            expect(output3.lines).to.be.empty;*/
         });
     });
 });

@@ -86,9 +86,9 @@ export default class GameInstance {
             newOptions === undefined ? this.options.overrides : newOptions;
 
         const newGame = new GameInstance(opts);
-        newGame.events = this.events.cycle(newGame);
+        newGame.events = new InstanceEvents(newGame, this.events.lastEventId);
         newGame.agents = recycleInstanceAgents(this.agents, newGame);
-        newGame.output = this.output.cycle(newGame);
+        newGame.output = new InstanceOutput(newGame, this.output.lineCount);
 
         return newGame;
     }

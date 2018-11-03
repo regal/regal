@@ -907,8 +907,8 @@ describe("Events", function() {
             expect(myGame.events.lastEventId).to.equal(13);
         });
 
-        it("InstanceEvents.cycle creates a new InstanceEvents with the previous instance's lastEventId", function() {
-            const spam = on("SPAM", game => {
+        it.skip("InstanceEvents.cycle creates a new InstanceEvents with the previous instance's lastEventId", function() {
+            /*const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
             });
 
@@ -930,7 +930,7 @@ describe("Events", function() {
 
             expect(events3.lastEventId).to.equal(3);
             expect(events3.game).to.equal(game3);
-            expect(events3.history).to.be.empty;
+            expect(events3.history).to.be.empty;*/
         });
     });
 });
