@@ -15,9 +15,21 @@ import {
 import { DEFAULT_EVENT_ID, EventRecord } from "./event-record";
 
 /**
+ * Creates a new `InstanceEvents` for the new game cycle, clearing all
+ * old events but preserving the last event ID.
+ *
+ * @param oldEvents The previous `InstanceEvents`.
+ * @param newInstance The new `GameInstance` that will own this `InstanceEvents`.
+ */
+export const recycleInstanceEvents = (
+    oldEvents: InstanceEvents,
+    newInstance: GameInstance
+) => new InstanceEvents(newInstance, oldEvents.lastEventId);
+
+/**
  * Manager for all events in a `GameInstance`.
  */
-export default class InstanceEvents {
+export class InstanceEvents {
     /** The current `EventRecord`. */
     get current(): EventRecord {
         let event = this._queue[0];

@@ -2,7 +2,11 @@ import { expect } from "chai";
 import "mocha";
 
 import GameInstance from "../../src/game-instance";
-import { OutputLineType, InstanceOutput } from "../../src/output";
+import {
+    OutputLineType,
+    InstanceOutput,
+    recycleInstanceOutput
+} from "../../src/output";
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/game-api";
@@ -207,11 +211,11 @@ describe("Output", function() {
             expect(myGame.output.lineCount).to.equal(11);
         });
 
-        it.skip("InstanceOutput.cycle creates a new InstanceOutput with the previous instance's lineCount", function() {
-            /*const game1 = new GameInstance();
+        it("recycleInstanceOutput creates a new InstanceOutput with the previous instance's lineCount", function() {
+            const game1 = new GameInstance();
 
             const game2 = new GameInstance();
-            const output2 = game1.output.cycle(game2);
+            const output2 = recycleInstanceOutput(game1.output, game2);
 
             expect(output2.lineCount).to.equal(0);
             expect(output2.game).to.equal(game2);
@@ -220,11 +224,11 @@ describe("Output", function() {
             output2.write("Foo", "Bar", "Baz");
 
             const game3 = new GameInstance();
-            const output3 = output2.cycle(game3);
+            const output3 = recycleInstanceOutput(output2, game3);
 
             expect(output3.lineCount).to.equal(3);
             expect(output3.game).to.equal(game3);
-            expect(output3.lines).to.be.empty;*/
+            expect(output3.lines).to.be.empty;
         });
     });
 });

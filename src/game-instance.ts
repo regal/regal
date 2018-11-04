@@ -22,8 +22,8 @@ import {
 import { GameOptions, InstanceOptions } from "./config";
 import { ContextManager } from "./context-manager";
 import { RegalError } from "./error";
-import { InstanceEvents } from "./events";
-import { InstanceOutput } from "./output";
+import { InstanceEvents, recycleInstanceEvents } from "./events";
+import { InstanceOutput, recycleInstanceOutput } from "./output";
 
 /**
  * The current state of the game, unique to each player.
@@ -86,9 +86,9 @@ export default class GameInstance {
             newOptions === undefined ? this.options.overrides : newOptions;
 
         const newGame = new GameInstance(opts);
-        newGame.events = new InstanceEvents(newGame, this.events.lastEventId);
+        newGame.events = recycleInstanceEvents(this.events, newGame);
         newGame.agents = recycleInstanceAgents(this.agents, newGame);
-        newGame.output = new InstanceOutput(newGame, this.output.lineCount);
+        newGame.output = recycleInstanceOutput(this.output, newGame);
 
         return newGame;
     }

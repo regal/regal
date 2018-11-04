@@ -21,4 +21,4 @@ export {
     DEFAULT_EVENT_ID,
     DEFAULT_EVENT_NAME
 } from "./event-record";
-export { default as InstanceEvents } from "./instance-events";
+export { InstanceEvents, recycleInstanceEvents } from "./instance-events";

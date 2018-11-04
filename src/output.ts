@@ -63,6 +63,18 @@ export interface OutputLine {
 }
 
 /**
+ * Creates a new `InstanceOutput` for the new game cycle, clearing all
+ * old output but preserving the line count.
+ *
+ * @param oldOutput The previous `InstanceOutput`.
+ * @param newInstance The new `GameInstance` that will own this `InstanceOutput`.
+ */
+export const recycleInstanceOutput = (
+    oldOutput: InstanceOutput,
+    newInstance: GameInstance
+) => new InstanceOutput(newInstance, oldOutput.lineCount);
+
+/**
  * Manager for output in a `GameInstance`.
  *
  * Contains API for game developers to emit output.

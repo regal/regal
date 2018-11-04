@@ -11,7 +11,8 @@ import {
     nq,
     isEventQueue,
     enqueue,
-    InstanceEvents
+    InstanceEvents,
+    recycleInstanceEvents
 } from "../../src/events";
 import { log, getDemoMetadata } from "../test-utils";
 import {
@@ -907,8 +908,8 @@ describe("Events", function() {
             expect(myGame.events.lastEventId).to.equal(13);
         });
 
-        it.skip("InstanceEvents.cycle creates a new InstanceEvents with the previous instance's lastEventId", function() {
-            /*const spam = on("SPAM", game => {
+        it("recycleInstanceEvents creates a new InstanceEvents with the previous instance's lastEventId", function() {
+            const spam = on("SPAM", game => {
                 game.output.write("Get spammed.");
             });
 
@@ -917,7 +918,7 @@ describe("Events", function() {
             const game1 = new GameInstance();
 
             const game2 = new GameInstance();
-            const events2 = game1.events.cycle(game2);
+            const events2 = recycleInstanceEvents(game1.events, game2);
 
             expect(events2.lastEventId).to.equal(0);
             expect(events2.game).to.equal(game2);
@@ -926,11 +927,11 @@ describe("Events", function() {
             events2.invoke(spam.then(spam).thenq(spam));
 
             const game3 = new GameInstance();
-            const events3 = events2.cycle(game3);
+            const events3 = recycleInstanceEvents(events2, game3);
 
             expect(events3.lastEventId).to.equal(3);
             expect(events3.game).to.equal(game3);
-            expect(events3.history).to.be.empty;*/
+            expect(events3.history).to.be.empty;
         });
     });
 });
