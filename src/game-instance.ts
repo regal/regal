@@ -13,7 +13,7 @@
 
 import {
     activateAgent,
-    activeAgentProxy,
+    buildActiveAgentProxy,
     buildInstanceAgents,
     InstanceAgents,
     isAgent,
@@ -69,7 +69,7 @@ export default class GameInstance {
         this.events = new InstanceEvents(this);
         this.output = new InstanceOutput(this);
         this.options = new InstanceOptions(this, options);
-        this.state = activeAgentProxy(0, this);
+        this.state = buildActiveAgentProxy(0, this);
     }
 
     /**

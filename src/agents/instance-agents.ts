@@ -18,6 +18,9 @@ export interface InstanceAgents {
     /** The `GameInstance` that owns this `InstanceAgents`. */
     game: GameInstance;
 
+    /** The ID that will be assigned to the next activated agent. */
+    readonly nextId: number;
+
     /**
      * Gets the `AgentManager` assigned to every agent that is active
      * within this `GameInstance`.

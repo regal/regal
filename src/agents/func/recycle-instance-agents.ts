@@ -1,6 +1,6 @@
 import GameInstance from "../../game-instance";
 import { AgentReference, isAgentReference } from "../agent-reference";
-import { buildInstanceAgents } from "../impl/instance-agents-impl";
+import { buildInstanceAgents } from "../impl";
 import { InstanceAgents } from "../instance-agents";
 import { StaticAgentRegistry } from "../static-agent-registry";
 
@@ -15,8 +15,7 @@ export const recycleInstanceAgents = (
     oldAgents: InstanceAgents,
     newInstance: GameInstance
 ): InstanceAgents => {
-    const newAgents = buildInstanceAgents(newInstance);
-    (newAgents as any)._nextId = (oldAgents as any)._nextId; // TODO: Fix
+    const newAgents = buildInstanceAgents(newInstance, oldAgents.nextId);
 
     for (const formerAgent of oldAgents.agentManagers()) {
         const id = formerAgent.id;

@@ -10,7 +10,7 @@
  */
 
 import { ContextManager } from "../context-manager";
-import { inactiveAgentProxy } from "./impl/inactive-agent-proxy";
+import { buildInactiveAgentProxy } from "./impl";
 import { StaticAgentRegistry } from "./static-agent-registry";
 
 /** Determines whether an object is an `Agent`. */
@@ -42,6 +42,6 @@ export class Agent {
             this.id = -1;
         }
 
-        return inactiveAgentProxy(this);
+        return buildInactiveAgentProxy(this);
     }
 }

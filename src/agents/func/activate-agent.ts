@@ -8,10 +8,7 @@
 
 import GameInstance from "../../game-instance";
 import { Agent } from "../agent-model";
-import {
-    activeAgentArrayProxy,
-    activeAgentProxy
-} from "../impl/active-agent-proxy";
+import { buildActiveAgentArrayProxy, buildActiveAgentProxy } from "../impl";
 import { propertyIsAgentId } from "../instance-agents";
 
 /**
@@ -47,9 +44,9 @@ export const activateAgent = <T extends Agent>(
             .filter(propertyIsAgentId)
             .forEach(key => (tempValues[key] = agent[key]));
 
-        activeAgent = activeAgentArrayProxy(id, game) as T;
+        activeAgent = buildActiveAgentArrayProxy(id, game) as T;
     } else {
-        activeAgent = activeAgentProxy(id, game) as T;
+        activeAgent = buildActiveAgentProxy(id, game) as T;
     }
 
     for (const prop of Object.keys(tempValues)) {

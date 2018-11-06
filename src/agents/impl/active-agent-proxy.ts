@@ -53,7 +53,7 @@ const activeAgentProxyHandler = (id: number, game: GameInstance) => ({
  * @param id    The proxy agent's id.
  * @param game  The `GameInstance` of the current context.
  */
-export const activeAgentProxy = (id: number, game: GameInstance): Agent =>
+export const buildActiveAgentProxy = (id: number, game: GameInstance): Agent =>
     new Proxy({} as any, activeAgentProxyHandler(id, game));
 
 /**
@@ -66,5 +66,7 @@ export const activeAgentProxy = (id: number, game: GameInstance): Agent =>
  * @param id    The agent array's id.
  * @param game  The `GameInstance` of the current context.
  */
-export const activeAgentArrayProxy = (id: number, game: GameInstance): Agent =>
-    new Proxy([] as any, activeAgentProxyHandler(id, game));
+export const buildActiveAgentArrayProxy = (
+    id: number,
+    game: GameInstance
+): Agent => new Proxy([] as any, activeAgentProxyHandler(id, game));

@@ -9,20 +9,36 @@ import { isAgent } from "../agent-model";
 import { AgentReference, isAgentReference } from "../agent-reference";
 import { InstanceAgents, propertyIsAgentId } from "../instance-agents";
 import { StaticAgentRegistry } from "../static-agent-registry";
-import { activeAgentArrayProxy, activeAgentProxy } from "./active-agent-proxy";
+import {
+    buildActiveAgentArrayProxy,
+    buildActiveAgentProxy
+} from "./active-agent-proxy";
 import { buildAgentManager } from "./agent-manager-impl";
 
-/** Builds an implementation of `InstanceAgents` for the given `GameInstance`. */
-export const buildInstanceAgents = (game: GameInstance): InstanceAgents =>
-    new InstanceAgentsImpl(game);
+/**
+ * Builds an implementation of `InstanceAgents` for the given `GameInstance`
+ * @param game The `GameInstance`.
+ * @param nextId The next agent ID to start activation at (optional).
+ */
+export const buildInstanceAgents = (
+    game: GameInstance,
+    nextId?: number
+): InstanceAgents => new InstanceAgentsImpl(game, nextId);
 
 /** Implementation of `InstanceAgents`. */
 class InstanceAgentsImpl implements InstanceAgents {
-    public _nextId: number;
+    private _nextId: number;
 
-    constructor(public game: GameInstance) {
+    constructor(public game: GameInstance, nextId?: number) {
         this.createAgentManager(0);
-        this._nextId = StaticAgentRegistry.getNextAvailableId();
+        this._nextId =
+            nextId !== undefined
+                ? nextId
+                : StaticAgentRegistry.getNextAvailableId();
+    }
+
+    get nextId(): number {
+        return this._nextId;
     }
 
     public agentManagers(): AgentManager[] {
@@ -68,14 +84,14 @@ class InstanceAgentsImpl implements InstanceAgents {
 
         if (isAgent(value)) {
             if (value instanceof Array) {
-                value = activeAgentArrayProxy(value.id, this.game);
+                value = buildActiveAgentArrayProxy(value.id, this.game);
             } else {
-                value = activeAgentProxy(value.id, this.game);
+                value = buildActiveAgentProxy(value.id, this.game);
             }
         } else if (isAgentReference(value)) {
-            value = activeAgentProxy(value.refId, this.game);
+            value = buildActiveAgentProxy(value.refId, this.game);
         } else if (isAgentArrayReference(value)) {
-            value = activeAgentArrayProxy(value.arRefId, this.game);
+            value = buildActiveAgentArrayProxy(value.arRefId, this.game);
         }
 
         return value;

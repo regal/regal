@@ -20,7 +20,7 @@ import { StaticAgentRegistry } from "../static-agent-registry";
  * @param agent The agent to be proxied.
  * @returns The inactive agent proxy.
  */
-export const inactiveAgentProxy = (agent: Agent): Agent =>
+export const buildInactiveAgentProxy = (agent: Agent): Agent =>
     new Proxy(agent, {
         /** Hidden property that contains any initialized values. */
         tempValues: {},
