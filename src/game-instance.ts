@@ -19,11 +19,14 @@ import {
     isAgent,
     recycleInstanceAgents
 } from "./agents";
-import { GameOptions, InstanceOptions } from "./config";
-import { buildInstanceOptions } from "./config";
+import { buildInstanceOptions, GameOptions, InstanceOptions } from "./config";
 import { ContextManager } from "./context-manager";
 import { RegalError } from "./error";
-import { InstanceEvents, recycleInstanceEvents } from "./events";
+import {
+    buildInstanceEvents,
+    InstanceEvents,
+    recycleInstanceEvents
+} from "./events";
 import { InstanceOutput, recycleInstanceOutput } from "./output";
 
 /**
@@ -67,7 +70,7 @@ export default class GameInstance {
         }
 
         this.agents = buildInstanceAgents(this);
-        this.events = new InstanceEvents(this);
+        this.events = buildInstanceEvents(this);
         this.output = new InstanceOutput(this);
         this.options = buildInstanceOptions(this, options);
         this.state = buildActiveAgentProxy(0, this);

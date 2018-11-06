@@ -7,7 +7,6 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { RegalError } from "../error";
 import { GameOptions } from "./game-options";
 
 /**

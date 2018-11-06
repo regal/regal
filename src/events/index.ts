@@ -6,19 +6,19 @@
  */
 
 export {
-    enqueue,
     EventFunction,
     EventQueue,
     noop,
-    nq,
-    on,
     TrackedEvent,
     isEventQueue,
     isTrackedEvent
-} from "./event-model";
+} from "./event-types";
+export { enqueue, nq, on } from "./func/event-funcs";
 export {
     EventRecord,
     DEFAULT_EVENT_ID,
     DEFAULT_EVENT_NAME
 } from "./event-record";
-export { InstanceEvents, recycleInstanceEvents } from "./instance-events";
+export { InstanceEvents } from "./instance-events";
+export { recycleInstanceEvents } from "./func/recycle-instance-events";
+export { buildInstanceEvents } from "./impl";

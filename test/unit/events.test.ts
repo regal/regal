@@ -11,8 +11,8 @@ import {
     nq,
     isEventQueue,
     enqueue,
-    InstanceEvents,
-    recycleInstanceEvents
+    recycleInstanceEvents,
+    buildInstanceEvents
 } from "../../src/events";
 import { log, getDemoMetadata } from "../test-utils";
 import {
@@ -899,7 +899,7 @@ describe("Events", function() {
             Game.init();
 
             const myGame = new GameInstance();
-            myGame.events = new InstanceEvents(myGame, 10);
+            myGame.events = buildInstanceEvents(myGame, 10);
 
             expect(myGame.events.lastEventId).to.equal(10);
 

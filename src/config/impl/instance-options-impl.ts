@@ -44,7 +44,7 @@ const INSTANCE_OPTIONS_PROXY_HANDLER = {
 export const buildInstanceOptions = (
     game: GameInstance,
     overrides: Partial<GameOptions>
-) => new InstanceOptionsImpl(game, overrides);
+): InstanceOptions => new InstanceOptionsImpl(game, overrides);
 
 class InstanceOptionsImpl implements InstanceOptions {
     public allowOverrides: string[] | boolean;
