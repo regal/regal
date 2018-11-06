@@ -6,9 +6,13 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import GameInstance from "../game-instance";
-import { activeAgentArrayProxy, activeAgentProxy, Agent } from "./agent-model";
-import { propertyIsAgentId } from "./instance-agents";
+import GameInstance from "../../game-instance";
+import { Agent } from "../agent-model";
+import {
+    activeAgentArrayProxy,
+    activeAgentProxy
+} from "../impl/active-agent-proxy";
+import { propertyIsAgentId } from "../instance-agents";
 
 /**
  * Returns an activated agent or agent array within the current game context.

@@ -6,9 +6,9 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { on } from "../events";
-import { InstanceAgents } from "./instance-agents";
-import { StaticAgentRegistry } from "./static-agent-registry";
+import { on } from "../../events";
+import { InstanceAgents } from "../instance-agents";
+import { StaticAgentRegistry } from "../static-agent-registry";
 
 /**
  * Builds a `TrackedEvent` that reverts all the changes to a given `InstanceAgents` since a specified event.

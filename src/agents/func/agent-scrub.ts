@@ -6,8 +6,8 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { isAgent } from "./agent-model";
-import { InstanceAgents, propertyIsAgentId } from "./instance-agents";
+import { isAgent } from "../agent-model";
+import { InstanceAgents, propertyIsAgentId } from "../instance-agents";
 
 /**
  * Traverses all agents that are accessible from the `GameInstance`'s

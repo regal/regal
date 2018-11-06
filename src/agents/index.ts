@@ -5,14 +5,16 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export {
-    InstanceAgents,
-    buildInstanceAgents,
-    recycleInstanceAgents
-} from "./instance-agents";
-export { Agent, activeAgentProxy, isAgent } from "./agent-model";
+export { InstanceAgents } from "./instance-agents";
+export { Agent, isAgent } from "./agent-model";
 export { StaticAgentRegistry } from "./static-agent-registry";
-export { buildRevertFunction } from "./agent-revert";
+export { buildRevertFunction } from "./func/agent-revert";
 export { PropertyChange, PropertyOperation } from "./agent-properties";
-export { activateAgent } from "./activate-agent";
-export { scrubAgents } from "./agent-scrub";
+export { activateAgent } from "./func/activate-agent";
+export { scrubAgents } from "./func/agent-scrub";
+export { buildInstanceAgents } from "./impl/instance-agents-impl";
+export { recycleInstanceAgents } from "./func/recycle-instance-agents";
+export {
+    activeAgentArrayProxy,
+    activeAgentProxy
+} from "./impl/active-agent-proxy";
