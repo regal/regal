@@ -14,7 +14,4 @@ export { activateAgent } from "./func/activate-agent";
 export { scrubAgents } from "./func/agent-scrub";
 export { buildInstanceAgents } from "./impl/instance-agents-impl";
 export { recycleInstanceAgents } from "./func/recycle-instance-agents";
-export {
-    activeAgentArrayProxy,
-    activeAgentProxy
-} from "./impl/active-agent-proxy";
+export { activeAgentProxy } from "./impl/active-agent-proxy";
