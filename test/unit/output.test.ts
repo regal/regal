@@ -4,12 +4,12 @@ import "mocha";
 import GameInstance from "../../src/game-instance";
 import {
     OutputLineType,
-    InstanceOutput,
-    recycleInstanceOutput
+    recycleInstanceOutput,
+    buildInstanceOutput
 } from "../../src/output";
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
-import { Game } from "../../src/game-api";
+import { Game } from "../../src/api";
 
 describe("Output", function() {
     beforeEach(function() {
@@ -202,7 +202,7 @@ describe("Output", function() {
 
         it("The lineCount getter works properly when startingLineCount is not 0", function() {
             const myGame = new GameInstance();
-            myGame.output = new InstanceOutput(myGame, 10);
+            myGame.output = buildInstanceOutput(myGame, 10);
 
             expect(myGame.output.lineCount).to.equal(10);
 

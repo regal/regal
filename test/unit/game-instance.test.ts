@@ -4,7 +4,7 @@ import "mocha";
 import GameInstance from "../../src/game-instance";
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
-import { Game } from "../../src/game-api";
+import { Game } from "../../src/api";
 import { RegalError } from "../../src/error";
 
 // Note: Some tests for GameInstance.using are in agents.test.ts

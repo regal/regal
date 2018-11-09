@@ -1,19 +1,19 @@
 import { expect } from "chai";
 import "mocha";
 
-import {
-    HookManager,
-    onPlayerCommand,
-    onStartCommand,
-    onBeforeUndoCommand
-} from "../../src/api-hooks";
 import GameInstance from "../../src/game-instance";
 import { on, noop } from "../../src/events";
 import { metadataWithOptions } from "../test-utils";
 import { PropertyOperation } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import { MetadataManager } from "../../src/config";
-import { Game } from "../../src/game-api";
+import {
+    Game,
+    HookManager,
+    onPlayerCommand,
+    onStartCommand,
+    onBeforeUndoCommand
+} from "../../src/api";
 
 describe("API Hooks", function() {
     beforeEach(function() {

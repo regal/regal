@@ -22,7 +22,7 @@ import {
 } from "../../src/agents";
 import { OutputLineType } from "../../src/output";
 import { MetadataManager } from "../../src/config";
-import { Game } from "../../src/game-api";
+import { Game } from "../../src/api";
 
 describe("Events", function() {
     beforeEach(function() {

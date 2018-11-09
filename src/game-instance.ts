@@ -27,7 +27,11 @@ import {
     InstanceEvents,
     recycleInstanceEvents
 } from "./events";
-import { InstanceOutput, recycleInstanceOutput } from "./output";
+import {
+    buildInstanceOutput,
+    InstanceOutput,
+    recycleInstanceOutput
+} from "./output";
 
 /**
  * The current state of the game, unique to each player.
@@ -71,7 +75,7 @@ export default class GameInstance {
 
         this.agents = buildInstanceAgents(this);
         this.events = buildInstanceEvents(this);
-        this.output = new InstanceOutput(this);
+        this.output = buildInstanceOutput(this);
         this.options = buildInstanceOptions(this, options);
         this.state = buildActiveAgentProxy(0, this);
     }

@@ -1,15 +1,16 @@
 import { expect } from "chai";
 import "mocha";
 
-import { Game, GameResponse } from "../../src/game-api";
 import {
+    Game,
+    GameResponse,
     onPlayerCommand,
     onStartCommand,
     onBeforeUndoCommand
-} from "../../src/api-hooks";
+} from "../../src/api";
 import { noop } from "../../src/events";
 import GameInstance from "../../src/game-instance";
-import { OutputLineType, GameOutput, InstanceOutput } from "../../src/output";
+import { OutputLineType, InstanceOutput } from "../../src/output";
 import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
 import { Agent } from "../../src/agents";
 import {

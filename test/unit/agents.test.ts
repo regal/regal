@@ -3,7 +3,7 @@ import "mocha";
 
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata, log } from "../test-utils";
-import { Game } from "../../src/game-api";
+import { Game } from "../../src/api";
 import {
     Agent,
     PropertyOperation,

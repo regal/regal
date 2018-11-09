@@ -9,41 +9,13 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { RegalError } from "./error";
-import { EventFunction, isTrackedEvent, on, TrackedEvent } from "./events";
-import GameInstance from "./game-instance";
+import { RegalError } from "../../error";
+import { EventFunction, isTrackedEvent, on } from "../../events";
+import GameInstance from "../../game-instance";
+import { HookManager } from "../api-hook-manager";
 
 /** Default implementation of `beforeUndoCommandHook`; always returns true. */
-const returnTrue = (game: GameInstance) => true;
-
-/**
- * Manager for the Game's API hooks.
- */
-export class HookManager {
-    /** `TrackedEvent` to be executed whenver `Game.postPlayerCommand` is called. */
-    public static playerCommandHook: (command: string) => TrackedEvent;
-
-    /** `TrackedEvent` to be executed whenever `Game.postStartCommand` is called. */
-    public static startCommandHook: TrackedEvent;
-
-    /**
-     * Executes whenever `Game.postUndoCommand` is called, before the undo operation is executed.
-     * Defaults to always return true.
-     * @returns Whether the undo operation is allowed.
-     */
-    public static beforeUndoCommandHook: (
-        game: GameInstance
-    ) => boolean = returnTrue;
-
-    /**
-     * Resets the API hooks to their default values.
-     */
-    public static reset() {
-        this.playerCommandHook = undefined;
-        this.startCommandHook = undefined;
-        this.beforeUndoCommandHook = returnTrue;
-    }
-}
+export const returnTrue = (game: GameInstance) => true;
 
 /**
  * Sets the function to be executed whenever a player command is sent to the Game API

@@ -11,10 +11,9 @@ import {
 } from "../../src/config";
 import { OutputLineType } from "../../src/output";
 import { getDemoMetadata, metadataWithOptions, log } from "../test-utils";
-import { Game } from "../../src/game-api";
 import { on } from "../../src/events";
-import { onStartCommand, onPlayerCommand } from "../../src/api-hooks";
 import { Agent, PropertyOperation } from "../../src/agents";
+import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
