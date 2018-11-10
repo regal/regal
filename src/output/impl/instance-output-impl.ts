@@ -21,7 +21,7 @@ class InstanceOutputImpl implements InstanceOutput {
      */
     private _lineCount: number;
 
-    constructor(public game: GameInstance, startingLineCount: number = 0) {
+    constructor(public game: GameInstance, startingLineCount: number) {
         this._lineCount = startingLineCount;
     }
 
