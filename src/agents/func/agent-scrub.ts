@@ -6,7 +6,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { isAgent } from "../agent-model";
+import { isAgent } from "../agent";
 import { InstanceAgents, propertyIsAgentId } from "../instance-agents";
 
 /**

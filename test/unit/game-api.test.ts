@@ -9,7 +9,6 @@ import {
     onBeforeUndoCommand
 } from "../../src/api";
 import { noop } from "../../src/events";
-import GameInstance from "../../src/game-instance";
 import { OutputLineType, InstanceOutput } from "../../src/output";
 import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
 import { Agent } from "../../src/agents";
@@ -18,6 +17,7 @@ import {
     OPTION_KEYS,
     MetadataManager
 } from "../../src/config";
+import { buildGameInstance, GameInstance } from "../../src/state";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -39,7 +39,7 @@ describe("Game API", function() {
             });
 
             const response = Game.postPlayerCommand(
-                new GameInstance(),
+                buildGameInstance(),
                 "Hello, World!"
             );
 
@@ -65,7 +65,7 @@ describe("Game API", function() {
                 }
             });
 
-            const r1 = Game.postPlayerCommand(new GameInstance(), "One");
+            const r1 = Game.postPlayerCommand(buildGameInstance(), "One");
             const r2 = Game.postPlayerCommand(r1.instance, "Two");
             const r3 = Game.postPlayerCommand(r2.instance, "Three");
 
@@ -89,7 +89,7 @@ describe("Game API", function() {
                 game.output.write(`Set guy[${command}] to true.`);
             });
 
-            const init = Game.postPlayerCommand(new GameInstance(), "init");
+            const init = Game.postPlayerCommand(buildGameInstance(), "init");
 
             let foo: GameResponse;
             for (let i = 0; i < 5; i++) {
@@ -130,7 +130,7 @@ describe("Game API", function() {
             onPlayerCommand(() => noop);
 
             const response = Game.postPlayerCommand(
-                new GameInstance(),
+                buildGameInstance(),
                 undefined
             );
 
@@ -142,7 +142,7 @@ describe("Game API", function() {
         });
 
         it("An error is thrown if the onPlayerCommand hook isn't set", function() {
-            const response = Game.postPlayerCommand(new GameInstance(), "foo");
+            const response = Game.postPlayerCommand(buildGameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
             expect(response.output.error.message).to.equal(
@@ -156,7 +156,7 @@ describe("Game API", function() {
                 throw 5;
             });
 
-            const response = Game.postPlayerCommand(new GameInstance(), "foo");
+            const response = Game.postPlayerCommand(buildGameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
             expect(response.output.error.message).to.equal(
@@ -170,7 +170,7 @@ describe("Game API", function() {
                 (<string[]>(<any>5)).push("blarp"); // yum
             });
 
-            const response = Game.postPlayerCommand(new GameInstance(), "foo");
+            const response = Game.postPlayerCommand(buildGameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
             expect(response.output.error.message).to.equal(
@@ -402,7 +402,7 @@ describe("Game API", function() {
 
     describe("Game.postOptionCommand", function() {
         it("Overriding an allowed option when nothing has yet been overridden", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             expect(myGame.options.debug).to.be.false;
 
@@ -416,7 +416,7 @@ describe("Game API", function() {
         });
 
         it("Overriding options multiple times", function() {
-            let response = Game.postOptionCommand(new GameInstance(), {
+            let response = Game.postOptionCommand(buildGameInstance(), {
                 debug: true,
                 showMinor: false
             });
@@ -439,7 +439,7 @@ describe("Game API", function() {
                 metadataWithOptions({ allowOverrides: false })
             );
 
-            const response = Game.postOptionCommand(new GameInstance(), {
+            const response = Game.postOptionCommand(buildGameInstance(), {
                 debug: true
             });
 

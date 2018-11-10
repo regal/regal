@@ -9,7 +9,7 @@
  */
 
 import { RegalError } from "../error";
-import { Agent, isAgent } from "./agent-model";
+import { Agent, isAgent } from "./agent";
 import { propertyIsAgentId } from "./instance-agents";
 
 /**

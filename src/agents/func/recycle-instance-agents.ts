@@ -1,4 +1,4 @@
-import GameInstance from "../../game-instance";
+import { GameInstance } from "../../state";
 import { AgentReference, isAgentReference } from "../agent-reference";
 import { buildInstanceAgents } from "../impl";
 import { InstanceAgents } from "../instance-agents";

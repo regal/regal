@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../../src/game-instance";
 import { on, noop } from "../../src/events";
 import { metadataWithOptions } from "../test-utils";
 import { PropertyOperation } from "../../src/agents";
@@ -14,6 +13,7 @@ import {
     onStartCommand,
     onBeforeUndoCommand
 } from "../../src/api";
+import { buildGameInstance } from "../../src/state";
 
 describe("API Hooks", function() {
     beforeEach(function() {
@@ -33,7 +33,7 @@ describe("API Hooks", function() {
     });
 
     it("beforeUndoCommandHook's default function just returns true", function() {
-        expect(HookManager.beforeUndoCommandHook(new GameInstance())).to.be
+        expect(HookManager.beforeUndoCommandHook(buildGameInstance())).to.be
             .true;
     });
 
@@ -43,7 +43,7 @@ describe("API Hooks", function() {
                 game.state.input = command;
             });
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
             expect(myGame.state.input).to.equal("Test Command");
@@ -54,7 +54,7 @@ describe("API Hooks", function() {
                 game.state.input = command;
             });
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -82,7 +82,7 @@ describe("API Hooks", function() {
 
             onPlayerCommand(setInput);
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
             expect(myGame.state.input).to.equal("Test Command");
@@ -96,7 +96,7 @@ describe("API Hooks", function() {
 
             onPlayerCommand(setInput);
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -134,7 +134,7 @@ describe("API Hooks", function() {
 
             onPlayerCommand((cmd: string) => setInput(cmd).then(doubleInput));
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
             expect(myGame.state.input).to.equal("Test Command Test Command");
@@ -152,7 +152,7 @@ describe("API Hooks", function() {
 
             onPlayerCommand((cmd: string) => setInput(cmd).then(doubleInput));
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -214,7 +214,7 @@ describe("API Hooks", function() {
                 game.state.init = true;
             });
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.startCommandHook(myGame);
 
             expect(myGame.state.init).to.be.true;
@@ -225,7 +225,7 @@ describe("API Hooks", function() {
                 game.state.init = true;
             });
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.startCommandHook(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -252,7 +252,7 @@ describe("API Hooks", function() {
 
             onStartCommand(setInit);
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.startCommandHook(myGame);
 
             expect(myGame.state.init).to.be.true;
@@ -265,7 +265,7 @@ describe("API Hooks", function() {
 
             onStartCommand(setInit);
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.startCommandHook(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -309,7 +309,7 @@ describe("API Hooks", function() {
 
             onStartCommand(setInit.thenq(appendFoo("Two")));
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.startCommandHook(myGame);
 
             expect(myGame.state.init).to.be.true;
@@ -334,7 +334,7 @@ describe("API Hooks", function() {
 
             onStartCommand(setInit.thenq(appendFoo("Two")));
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             HookManager.startCommandHook(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -416,7 +416,7 @@ describe("API Hooks", function() {
                     game.state.foo = val;
                 });
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             expect(HookManager.beforeUndoCommandHook(myGame)).to.be.false;
 

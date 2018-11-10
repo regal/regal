@@ -9,7 +9,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { ContextManager } from "../context-manager";
+import { ContextManager } from "../state";
 import { buildInactiveAgentProxy } from "./impl";
 import { StaticAgentRegistry } from "./static-agent-registry";
 

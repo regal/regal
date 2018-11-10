@@ -1,7 +1,7 @@
 import { GameMetadata } from "../config";
 import { RegalError } from "../error";
-import GameInstance from "../game-instance";
 import { OutputLine } from "../output";
+import { GameInstance } from "../state";
 
 /**
  * Interface for the response of every `Game` API method,

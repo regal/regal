@@ -1,5 +1,5 @@
-import GameInstance from "../../game-instance";
-import { Agent } from "../agent-model";
+import { GameInstance } from "../../state";
+import { Agent } from "../agent";
 
 /** Builds the proxy handler for an active agent proxy. */
 const activeAgentProxyHandler = (id: number, game: GameInstance) => ({

@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../../src/game-instance";
 import { RegalError } from "../../src/error";
 import {
     on,
@@ -23,6 +22,7 @@ import {
 import { OutputLineType } from "../../src/output";
 import { MetadataManager } from "../../src/config";
 import { Game } from "../../src/api";
+import { buildGameInstance } from "../../src/state";
 
 describe("Events", function() {
     beforeEach(function() {
@@ -37,7 +37,7 @@ describe("Events", function() {
 
         Game.init();
 
-        const myGame = new GameInstance();
+        const myGame = buildGameInstance();
         greet(myGame);
 
         expect(myGame.events.history).to.deep.equal([
@@ -64,7 +64,7 @@ describe("Events", function() {
 
         Game.init();
 
-        const myGame = new GameInstance();
+        const myGame = buildGameInstance();
         greet("Regal")(myGame);
 
         expect(myGame.events.history).to.deep.equal([
@@ -99,7 +99,7 @@ describe("Events", function() {
 
         Game.init();
 
-        const myGame = new GameInstance();
+        const myGame = buildGameInstance();
         const myDate = new Date("August 5, 2018 10:15:00");
 
         motivate(myDate)(myGame);
@@ -128,7 +128,7 @@ describe("Events", function() {
 
     it("noop returns undefined", function() {
         Game.init();
-        expect(noop(new GameInstance())).to.be.undefined;
+        expect(noop(buildGameInstance())).to.be.undefined;
     });
 
     it("Returning noop from an EventFunction is the same as returning nothing", function() {
@@ -145,8 +145,8 @@ describe("Events", function() {
             game.state.foo = [true, new Agent()];
         });
 
-        expect(withNoop(new GameInstance())).to.deep.equal(
-            withoutNoop(new GameInstance())
+        expect(withNoop(buildGameInstance())).to.deep.equal(
+            withoutNoop(buildGameInstance())
         );
     });
 
@@ -172,7 +172,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             makeSword("King Arthur")(myGame);
 
@@ -225,7 +225,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             complex(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -280,7 +280,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             const items = ["Hat", "Duck", "Spoon"];
 
             drop(items)(myGame);
@@ -372,7 +372,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             spam.then(spam)(myGame);
 
@@ -445,7 +445,7 @@ describe("Events", function() {
 
                     Game.init();
 
-                    let myGame = new GameInstance();
+                    let myGame = buildGameInstance();
                     init(myGame);
 
                     let expectedEventNames = ["INIT"].concat(
@@ -698,7 +698,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance({ trackAgentChanges: true });
+            const myGame = buildGameInstance({ trackAgentChanges: true });
             const dummy = myGame.using(new Dummy("Lars", 10));
 
             heal(dummy, 15)(myGame);
@@ -767,7 +767,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance({ trackAgentChanges: true });
+            const myGame = buildGameInstance({ trackAgentChanges: true });
             start(myGame);
 
             expect(myGame.events.history).to.deep.equal([
@@ -882,7 +882,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             expect(myGame.events.lastEventId).to.equal(0);
 
@@ -898,7 +898,7 @@ describe("Events", function() {
 
             Game.init();
 
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             myGame.events = buildInstanceEvents(myGame, 10);
 
             expect(myGame.events.lastEventId).to.equal(10);
@@ -915,9 +915,9 @@ describe("Events", function() {
 
             Game.init();
 
-            const game1 = new GameInstance();
+            const game1 = buildGameInstance();
 
-            const game2 = new GameInstance();
+            const game2 = buildGameInstance();
             const events2 = recycleInstanceEvents(game1.events, game2);
 
             expect(events2.lastEventId).to.equal(0);
@@ -926,7 +926,7 @@ describe("Events", function() {
 
             events2.invoke(spam.then(spam).thenq(spam));
 
-            const game3 = new GameInstance();
+            const game3 = buildGameInstance();
             const events3 = recycleInstanceEvents(events2, game3);
 
             expect(events3.lastEventId).to.equal(3);

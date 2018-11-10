@@ -14,9 +14,8 @@ import {
     StaticAgentRegistry
 } from "../agents";
 import { GameMetadata, GameOptions, MetadataManager } from "../config";
-import { ContextManager } from "../context-manager";
 import { RegalError } from "../error";
-import GameInstance from "../game-instance";
+import { buildGameInstance, ContextManager, GameInstance } from "../state";
 import { HookManager } from "./api-hook-manager";
 import { GameResponse, GameResponseOutput } from "./game-response";
 
@@ -214,7 +213,7 @@ export class Game {
 
             Game.init();
 
-            newInstance = new GameInstance(options);
+            newInstance = buildGameInstance(options);
             newInstance.events.invoke(HookManager.startCommandHook);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);

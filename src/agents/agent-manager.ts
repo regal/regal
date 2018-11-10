@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import GameInstance from "../game-instance";
+import { GameInstance } from "../state";
 import { PropertyChange } from "./agent-properties";
 
 /**

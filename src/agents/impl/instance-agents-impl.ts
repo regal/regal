@@ -1,11 +1,11 @@
 import { RegalError } from "../../error";
-import GameInstance from "../../game-instance";
+import { GameInstance } from "../../state";
+import { isAgent } from "../agent";
 import {
     AgentArrayReference,
     isAgentArrayReference
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
-import { isAgent } from "../agent-model";
 import { AgentReference, isAgentReference } from "../agent-reference";
 import { InstanceAgents, propertyIsAgentId } from "../instance-agents";
 import { StaticAgentRegistry } from "../static-agent-registry";

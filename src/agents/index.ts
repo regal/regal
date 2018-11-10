@@ -6,7 +6,7 @@
  */
 
 export { InstanceAgents } from "./instance-agents";
-export { Agent, isAgent } from "./agent-model";
+export { Agent, isAgent } from "./agent";
 export { StaticAgentRegistry } from "./static-agent-registry";
 export { PropertyChange, PropertyOperation } from "./agent-properties";
 export { activateAgent } from "./func/activate-agent";

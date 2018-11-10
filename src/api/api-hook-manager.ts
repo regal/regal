@@ -1,5 +1,5 @@
 import { TrackedEvent } from "../events";
-import GameInstance from "../game-instance";
+import { GameInstance } from "../state";
 import { returnTrue } from "./func/api-hooks";
 
 /**

@@ -1,11 +1,11 @@
+import { GameInstance } from "../state";
+
 /**
  * Interfaces for the different types of events.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
-
-import GameInstance from "../game-instance";
 
 /**
  * A function that modifies the game instance.

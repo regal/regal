@@ -1,5 +1,5 @@
 import { RegalError } from "../../error";
-import GameInstance from "../../game-instance";
+import { GameInstance } from "../../state";
 import {
     EventFunction,
     EventQueue,

@@ -11,7 +11,7 @@
 
 import { RegalError } from "../../error";
 import { EventFunction, isTrackedEvent, on } from "../../events";
-import GameInstance from "../../game-instance";
+import { GameInstance } from "../../state";
 import { HookManager } from "../api-hook-manager";
 
 /** Default implementation of `beforeUndoCommandHook`; always returns true. */

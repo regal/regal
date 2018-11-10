@@ -1,4 +1,4 @@
-import GameInstance from "../../game-instance";
+import { GameInstance } from "../../state";
 import { DEFAULT_EVENT_ID, EventRecord } from "../event-record";
 import {
     isEventQueue,

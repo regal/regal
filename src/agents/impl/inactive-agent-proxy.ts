@@ -1,6 +1,6 @@
-import { ContextManager } from "../../context-manager";
 import { RegalError } from "../../error";
-import { Agent } from "../agent-model";
+import { ContextManager } from "../../state";
+import { Agent } from "../agent";
 import { StaticAgentRegistry } from "../static-agent-registry";
 
 /**

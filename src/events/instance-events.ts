@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import GameInstance from "../game-instance";
+import { GameInstance } from "../state";
 import { EventRecord } from "./event-record";
 import { TrackedEvent } from "./event-types";
 

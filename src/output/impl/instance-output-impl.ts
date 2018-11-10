@@ -1,4 +1,4 @@
-import GameInstance from "../../game-instance";
+import { GameInstance } from "../../state";
 import { InstanceOutput } from "../instance-output";
 import { OutputLine, OutputLineType } from "../output-line";
 

@@ -6,8 +6,8 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import GameInstance from "../../game-instance";
-import { Agent } from "../agent-model";
+import { GameInstance } from "../../state";
+import { Agent } from "../agent";
 import { buildActiveAgentArrayProxy, buildActiveAgentProxy } from "../impl";
 import { propertyIsAgentId } from "../instance-agents";
 
