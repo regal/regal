@@ -815,7 +815,7 @@ describe("Config", function() {
     describe("InstanceOptions", function() {
         it("The properties of InstanceOptions cannot be modified", function() {
             const myGame = buildGameInstance();
-            expect(() => (myGame.options.debug = true)).to.throw(
+            expect(() => ((myGame.options as any).debug = true)).to.throw(
                 RegalError,
                 "Cannot modify the properties of InstanceOptions."
             );

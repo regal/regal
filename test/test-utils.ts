@@ -18,7 +18,7 @@ export const getDemoMetadata = (): GameMetadata => ({
 
 export const metadataWithOptions = (opts: Partial<GameOptions>) => {
     const metadata = getDemoMetadata();
-    metadata.options = opts;
+    (metadata as any).options = opts;
     return metadata;
 };
 
