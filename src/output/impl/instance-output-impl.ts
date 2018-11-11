@@ -1,3 +1,10 @@
+/**
+ * Contains the current implementation of `InstanceOutput`.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { GameInstance } from "../../state";
 import { InstanceOutput } from "../instance-output";
 import { OutputLine, OutputLineType } from "../output-line";

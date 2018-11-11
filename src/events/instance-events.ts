@@ -23,7 +23,7 @@ export interface InstanceEvents {
     history: EventRecord[];
 
     /** The `GameInstance` that owns this `InstanceEvents`. */
-    game: GameInstance;
+    readonly game: GameInstance;
 
     /**
      * Executes the given event and all events caused by it.

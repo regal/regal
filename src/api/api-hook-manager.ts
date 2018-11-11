@@ -1,3 +1,11 @@
+/**
+ * Contains the `HookManager`, a static class that manages
+ * the API hooks for the library-consuming Regal game.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { TrackedEvent } from "../events";
 import { GameInstance } from "../state";
 import { returnTrue } from "./func/api-hooks";

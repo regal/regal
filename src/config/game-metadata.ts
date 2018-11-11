@@ -14,23 +14,23 @@ import { GameOptions } from "./game-options";
  */
 export interface GameMetadata {
     /** The game's title. */
-    name: string;
+    readonly name: string;
 
     /** The game's author. */
-    author?: string;
+    readonly author?: string;
 
     /** A brief description of the game. */
-    headline?: string;
+    readonly headline?: string;
 
     /** The full description of the game. */
-    description?: string;
+    readonly description?: string;
 
     /** The URL of the project's homepage. */
-    homepage?: string;
+    readonly homepage?: string;
 
     /** The URL of the project's repository */
-    repository?: string;
+    readonly repository?: string;
 
     /** Any options defined in the game's static configuration. */
-    options: Partial<GameOptions>;
+    readonly options: Partial<GameOptions>;
 }

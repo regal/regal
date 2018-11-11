@@ -1,3 +1,10 @@
+/**
+ * Contains interfaces for response objects from the Game API.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { GameMetadata } from "../config";
 import { RegalError } from "../error";
 import { OutputLine } from "../output";

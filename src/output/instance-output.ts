@@ -1,3 +1,10 @@
+/**
+ * Contains the interface for `InstanceOutput`, the game output manager.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { GameInstance } from "../state";
 import { OutputLine, OutputLineType } from "./output-line";
 
@@ -11,7 +18,7 @@ export interface InstanceOutput {
     readonly lineCount: number;
 
     /** The `GameInstance` that owns this `InstanceOutput`. */
-    game: GameInstance;
+    readonly game: GameInstance;
 
     /** The `OutputLine`s generated during the current game cycle. */
     lines: OutputLine[];

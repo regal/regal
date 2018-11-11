@@ -16,7 +16,7 @@ import { AgentManager } from "./agent-manager";
  */
 export interface InstanceAgents {
     /** The `GameInstance` that owns this `InstanceAgents`. */
-    game: GameInstance;
+    readonly game: GameInstance;
 
     /** The ID that will be assigned to the next activated agent. */
     readonly nextId: number;

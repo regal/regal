@@ -1,5 +1,5 @@
 /**
- * Contains the object representation of a tracked event's effects in a game cycle.
+ * Contains the interface for a tracked event's effects in a game cycle.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)

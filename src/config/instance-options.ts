@@ -13,7 +13,7 @@ import { GameOptions } from "./game-options";
  */
 export interface InstanceOptions extends GameOptions {
     /** The `GameInstance that owns this `InstanceOptions` */
-    game: GameInstance;
+    readonly game: GameInstance;
 
     /** Options that have had their static values overridden by the client. */
     readonly overrides: Partial<GameOptions>;

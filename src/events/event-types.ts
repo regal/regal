@@ -1,11 +1,11 @@
-import { GameInstance } from "../state";
-
 /**
- * Interfaces for the different types of events.
+ * Interfaces for the different types of Regal game events.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
+
+import { GameInstance } from "../state";
 
 /**
  * A function that modifies the game instance.
@@ -83,7 +83,10 @@ export const isTrackedEvent = (o: any): o is TrackedEvent =>
 export const isEventQueue = (o: any): o is EventQueue =>
     o !== undefined && (o as EventQueue).immediateEvents !== undefined;
 
-/** "No operation" - reserved `TrackedEvent` that signals no more events. */
+/**
+ * "No operation" - reserved `TrackedEvent` that signals no more events.
+ * Use only in rare cases where an event cannot return `void`.
+ */
 export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;
 

@@ -1,3 +1,11 @@
+/**
+ * Contains the current implementations for building `EventQueue`
+ * and supporting methods.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { RegalError } from "../../error";
 import { GameInstance } from "../../state";
 import {
@@ -6,7 +14,7 @@ import {
     isEventQueue,
     TrackedEvent
 } from "../event-types";
-import { enqueue } from "../func/event-funcs";
+import { enqueue } from "../func/event-builders";
 
 /** Builds an `EventFunction` that allows an `EventQueue` to be invoked like any other `EventFunction`. */
 const queueInvocation = (

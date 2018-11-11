@@ -17,19 +17,19 @@ export interface GameOptions {
      * Can be an array of strings or a boolean. Defaults to true.
      *
      * If an array of strings, these options will be configurable by a Regal client.
-     * Note that `allowOptions` is never configurable, and including it will throw an error.
+     * Note that `allowOverrides` is never configurable, and including it will throw an error.
      *
      * If `true`, all options except `allowOverrides` will be configurable.
      *
      * If `false`, no options will be configurable.
      */
-    allowOverrides: string[] | boolean;
+    readonly allowOverrides: string[] | boolean;
 
     /** Whether output of type `DEBUG` should be returned to the client. Defaults to false. */
-    debug: boolean;
+    readonly debug: boolean;
 
     /** Whether output of type `MINOR` should be returned to the client. Defaults to true. */
-    showMinor: boolean;
+    readonly showMinor: boolean;
 
     /**
      * Whether all changes to agent properties are tracked and returned to the client. Defaults to false.
@@ -39,7 +39,7 @@ export interface GameOptions {
      *
      * If `true`, all property changes will be recorded.
      */
-    trackAgentChanges: boolean;
+    readonly trackAgentChanges: boolean;
 }
 
 /**

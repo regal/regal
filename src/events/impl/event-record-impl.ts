@@ -1,3 +1,10 @@
+/**
+ * Contains the current implementation for `EventRecord`.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { PropertyChange } from "../../agents";
 import { OutputLine } from "../../output";
 import {

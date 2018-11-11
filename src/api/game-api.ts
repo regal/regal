@@ -103,10 +103,15 @@ const buildLogResponse = (
  * any arguments passed into it.
  */
 export class Game {
+    /**
+     * Initializes the game's static classes.
+     * This rarely needs to be called explicitly by an API consumer.
+     */
     public static init(): void {
         ContextManager.init();
     }
 
+    /** Resets the game's static classes. */
     public static reset(): void {
         ContextManager.reset();
         HookManager.reset();

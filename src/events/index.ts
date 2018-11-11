@@ -1,5 +1,5 @@
 /**
- * Component for creating and handling events in the Regal Game Library.
+ * Component for creating and handling game events in the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
@@ -13,7 +13,7 @@ export {
     isEventQueue,
     isTrackedEvent
 } from "./event-types";
-export { enqueue, nq, on } from "./func/event-funcs";
+export { enqueue, nq, on } from "./func/event-builders";
 export {
     EventRecord,
     DEFAULT_EVENT_ID,

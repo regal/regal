@@ -1,3 +1,10 @@
+/**
+ * Contains the current implementation of `InstanceEvents`.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { GameInstance } from "../../state";
 import { DEFAULT_EVENT_ID, EventRecord } from "../event-record";
 import {

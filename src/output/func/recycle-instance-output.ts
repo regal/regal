@@ -1,3 +1,12 @@
+/**
+ * Contains the `recycleInstanceOutput` function. This is a standalone
+ * function rather than a method on `InstanceOutput` so that it is not
+ * run accidentally by consumers of the library.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { GameInstance } from "../../state";
 import { buildInstanceOutput } from "../impl";
 import { InstanceOutput } from "../instance-output";
