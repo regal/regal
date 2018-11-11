@@ -9,7 +9,7 @@
  */
 
 import { RegalError } from "../error";
-import { Agent, isAgent } from "./agent-model";
+import { Agent, isAgent } from "./agent";
 import { propertyIsAgentId } from "./instance-agents";
 
 /**
@@ -24,8 +24,9 @@ export class StaticAgentRegistry {
     /**
      * Returns whether the registry contains a static agent with the given id
      * and that agent has the given property.
-     * @param id        The agent's id.
-     * @param property  The agent's property.
+     *
+     * @param id The agent's id.
+     * @param property The agent's property.
      */
     public static hasAgentProperty(id: number, property: PropertyKey): boolean {
         return this.hasAgent(id) && this[id].hasOwnProperty(property);
@@ -34,9 +35,9 @@ export class StaticAgentRegistry {
     /**
      * Gets a property of a static agent.
      *
-     * @param agentId       The agent's id.
-     * @param propertyKey   The name of the property.
-     * @returns             The value of the property.
+     * @param agentId The agent's id.
+     * @param propertyKey The name of the property.
+     * @returns The value of the property.
      */
     public static getAgentProperty(id: number, property: PropertyKey): any {
         if (!this.hasAgent(id)) {
@@ -56,7 +57,7 @@ export class StaticAgentRegistry {
     /**
      * Adds an agent to the registry. Will error if the agent's id doesn't
      * equal the registry's next available id.
-     * @param agent     The agent to be added.
+     * @param agent The agent to be added.
      */
     public static addAgent(agent: Agent): void {
         const id = agent.id;

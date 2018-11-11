@@ -6,15 +6,13 @@
 
 ## Introduction
 
-The **Regal Game Library** is a TypeScript package designed for games that are built on the [**Regal Framework**](https://github.com/regal/about), a project designed to help developers bring text-driven games and story experiences to players in exciting new ways. 
-
-This library is a package on npm titled `regal`.
+The **Regal Game Library** is the official TypeScript library used by games on the [**Regal Framework**](https://github.com/regal/about), a project designed to help developers bring text-driven games and story experiences to players in exciting new ways. 
 
 ## Status
 
-Version `0.3.0` marks the first testable release of the library, but the package is still in early development.
+The library is currently at version `0.4.0`, and is considered pre-stable release. In other words, big things might change.
 
-The upcoming version `0.4.0` will have significant changes. It's recommended that you don't use the library until the first stable version `1.0.0` is released.
+While you're welcome to help test the early versions, it's recommended that you don't use the library for any major projects until `1.0.0` is released.
 
 ## Contributing
 

@@ -11,11 +11,6 @@ export {
     PropertyChange,
     PropertyOperation
 } from "./agents";
-export {
-    onPlayerCommand,
-    onStartCommand,
-    onBeforeUndoCommand
-} from "./api-hooks";
 export { RegalError } from "./error";
 export {
     EventFunction,
@@ -28,12 +23,14 @@ export {
     nq,
     on
 } from "./events";
-export { Game, GameResponse } from "./game-api";
-export { GameOptions, GameMetadata } from "./config";
-export { default as GameInstance } from "./game-instance";
 export {
-    OutputLineType,
-    OutputLine,
-    InstanceOutput,
-    GameOutput
-} from "./output";
+    Game,
+    GameResponse,
+    GameResponseOutput,
+    onPlayerCommand,
+    onStartCommand,
+    onBeforeUndoCommand
+} from "./api";
+export { GameOptions, GameMetadata } from "./config";
+export { GameInstance, buildGameInstance } from "./state";
+export { OutputLineType, OutputLine, InstanceOutput } from "./output";
