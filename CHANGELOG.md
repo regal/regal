@@ -2,6 +2,10 @@
 
 ## Pre-Initial Release
 
+### v0.4.1
+
+* Update dependencies
+
 ### v0.4.0
 
 **Agents**
