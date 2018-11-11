@@ -1,3 +1,10 @@
+/**
+ * Contains the current implementation of `AgentManager`.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { RegalError } from "../../error";
 import { DEFAULT_EVENT_ID, EventRecord } from "../../events";
 import { GameInstance } from "../../state";

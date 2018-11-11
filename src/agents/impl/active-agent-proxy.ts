@@ -1,3 +1,10 @@
+/**
+ * Contains constructors for active agent proxies.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { GameInstance } from "../../state";
 import { Agent } from "../agent";
 

@@ -1,5 +1,5 @@
 /**
- * Component for controlling tracked game objects called Agents within the Regal Game Library.
+ * Component for controlling tracked game objects (called Agents) within the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
