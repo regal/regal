@@ -1,7 +1,13 @@
+import { GameInstance } from "../state";
+
 export interface InstanceRandom {
+    readonly game: GameInstance;
+
     readonly seed: string;
 
-    int(minInclusive: number, maxExclusive: number): number;
+    readonly numGenerations: number;
+
+    int(min: number, max: number): number;
 
     decimal(): number;
 

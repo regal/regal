@@ -6,6 +6,7 @@
  */
 
 import { RegalError } from "../../error";
+import { generateSeed } from "../../random";
 import { GameInstance } from "../../state";
 import {
     ensureOverridesAllowed,
@@ -58,6 +59,7 @@ class InstanceOptionsImpl implements InstanceOptions {
     public debug: boolean;
     public showMinor: boolean;
     public trackAgentChanges: boolean;
+    public seed: string;
 
     public readonly overrides: Partial<GameOptions>;
 
@@ -82,6 +84,10 @@ class InstanceOptionsImpl implements InstanceOptions {
             .forEach(key => (this[key] = configOpts[key]));
 
         overrideKeys.forEach(key => (this[key] = overrides[key]));
+
+        if (this.seed === undefined) {
+            this.seed = generateSeed();
+        }
 
         this.overrides = new Proxy(overrides, OPTION_OVERRIDES_PROXY_HANDLER);
         return new Proxy(this, INSTANCE_OPTIONS_PROXY_HANDLER);

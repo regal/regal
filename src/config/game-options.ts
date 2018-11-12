@@ -40,6 +40,8 @@ export interface GameOptions {
      * If `true`, all property changes will be recorded.
      */
     readonly trackAgentChanges: boolean;
+
+    readonly seed: string | undefined;
 }
 
 /**
@@ -50,6 +52,7 @@ export interface GameOptions {
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
     allowOverrides: true,
     debug: false,
+    seed: undefined,
     showMinor: true,
     trackAgentChanges: false
 };

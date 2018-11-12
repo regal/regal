@@ -53,7 +53,8 @@
     "tabWidth": 4
   },
   "dependencies": {
-    "cosmiconfig": "^5.0.6"
+    "cosmiconfig": "^5.0.6",
+    "prando": "^4.0.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
