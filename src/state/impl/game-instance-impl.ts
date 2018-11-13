@@ -29,6 +29,11 @@ import {
     InstanceOutput,
     recycleInstanceOutput
 } from "../../output";
+import {
+    buildInstanceRandom,
+    InstanceRandom,
+    recycleInstanceRandom
+} from "../../random";
 import { ContextManager } from "../context-manager";
 import { GameInstance } from "../game-instance";
 
@@ -47,6 +52,7 @@ class GameInstanceImpl implements GameInstance {
     public events: InstanceEvents;
     public output: InstanceOutput;
     public options: InstanceOptions;
+    public random: InstanceRandom;
     public state: any;
 
     constructor(options: Partial<GameOptions>) {
@@ -60,6 +66,7 @@ class GameInstanceImpl implements GameInstance {
         this.events = buildInstanceEvents(this);
         this.output = buildInstanceOutput(this);
         this.options = buildInstanceOptions(this, options);
+        this.random = buildInstanceRandom(this);
         this.state = buildActiveAgentProxy(0, this);
     }
 
@@ -71,6 +78,7 @@ class GameInstanceImpl implements GameInstance {
         newGame.events = recycleInstanceEvents(this.events, newGame);
         newGame.agents = recycleInstanceAgents(this.agents, newGame);
         newGame.output = recycleInstanceOutput(this.output, newGame);
+        newGame.random = recycleInstanceRandom(this.random, newGame);
 
         return newGame;
     }
