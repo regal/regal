@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "cosmiconfig": "^5.0.6",
-    "prando": "^4.0.0"
+    "prando": "^5.0.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
