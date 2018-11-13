@@ -14,6 +14,7 @@ import { on } from "../../src/events";
 import { Agent, PropertyOperation } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
+import { SEED_LENGTH } from "../../src/random/func/generate-seed";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -31,11 +32,16 @@ describe("Config", function() {
     describe("Game Options", function() {
         it("Test defaults", function() {
             const myGame = buildGameInstance();
-            OPTION_KEYS.forEach(key => {
+
+            const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
+
+            keysBesidesSeed.forEach(key => {
                 expect(myGame.options[key]).to.deep.equal(
                     DEFAULT_GAME_OPTIONS[key]
                 );
             });
+
+            expect(myGame.options.seed.length).to.equal(SEED_LENGTH);
         });
 
         describe("GameOption Validation", function() {
