@@ -66,6 +66,7 @@ export const validateOptions = (options: Partial<GameOptions>): void => {
 
     checkTypeIfDefined("showMinor", "boolean");
     checkTypeIfDefined("trackAgentChanges", "boolean");
+    checkTypeIfDefined("seed", "string");
 };
 
 /**

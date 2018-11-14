@@ -18,12 +18,15 @@ import {
     MetadataManager
 } from "../../src/config";
 import { buildGameInstance, GameInstance } from "../../src/state";
+import { SEED_LENGTH } from "../../src/random/func/generate-seed";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
         super();
     }
 }
+
+const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
 
 describe("Game API", function() {
     beforeEach(function() {
@@ -328,9 +331,11 @@ describe("Game API", function() {
             const options = response.instance.options;
 
             expect(options.overrides).to.deep.equal({});
-            OPTION_KEYS.forEach(key =>
+            keysBesidesSeed.forEach(key =>
                 expect(options[key]).to.equal(DEFAULT_GAME_OPTIONS[key])
             );
+
+            expect(options.seed.length).to.equal(SEED_LENGTH);
         });
 
         it("Sending an empty start request uses the default option values", function() {
@@ -340,9 +345,11 @@ describe("Game API", function() {
             const options = response.instance.options;
 
             expect(options.overrides).to.deep.equal({});
-            OPTION_KEYS.forEach(key =>
+            keysBesidesSeed.forEach(key =>
                 expect(options[key]).to.equal(DEFAULT_GAME_OPTIONS[key])
             );
+
+            expect(options.seed.length).to.equal(SEED_LENGTH);
         });
 
         it("Sending a start request with options overrides the defaults", function() {

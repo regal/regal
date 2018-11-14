@@ -40,6 +40,16 @@ export interface GameOptions {
      * If `true`, all property changes will be recorded.
      */
     readonly trackAgentChanges: boolean;
+
+    /**
+     * Optional string used to initialize pseudorandom number generation in each game instance.
+     *
+     * When multiple instances have the same seed, they will generate the same sequence of random numbers
+     * through the `InstanceRandom` API.
+     *
+     * If left undefined, a random seed will be generated.
+     */
+    readonly seed: string | undefined;
 }
 
 /**
@@ -50,6 +60,7 @@ export interface GameOptions {
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
     allowOverrides: true,
     debug: false,
+    seed: undefined,
     showMinor: true,
     trackAgentChanges: false
 };

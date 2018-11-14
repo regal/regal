@@ -15,6 +15,7 @@ import { InstanceAgents } from "../agents";
 import { GameOptions, InstanceOptions } from "../config";
 import { InstanceEvents } from "../events";
 import { InstanceOutput } from "../output";
+import { InstanceRandom } from "../random";
 
 /**
  * The current state of the game, unique to each player.
@@ -34,6 +35,9 @@ export interface GameInstance {
 
     /** Contains all options in the instance (read-only). */
     options: InstanceOptions;
+
+    /** The manager for generating repeatable random numbers through the game instance. */
+    random: InstanceRandom;
 
     /**
      * Free-form agent to contain any instance state desired by the game developer.

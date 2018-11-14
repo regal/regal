@@ -17,17 +17,19 @@ describe("GameInstance", function() {
     });
 
     it("Sanity check", function() {
-        const myGame = buildGameInstance();
+        const myGame = buildGameInstance({ seed: "foo" });
         let game2 = myGame;
 
         expect(myGame).to.equal(game2);
-        expect(myGame).to.not.equal(buildGameInstance());
-        expect(myGame).to.deep.equal(buildGameInstance());
+        expect(myGame).to.not.equal(buildGameInstance({ seed: "foo" }));
+        expect(myGame).to.deep.equal(buildGameInstance({ seed: "foo" }));
     });
 
     it("Cycling a new GameInstance is equivalent to instantiating a new one", function() {
-        const game = buildGameInstance();
-        expect(game.recycle()).to.deep.equal(buildGameInstance());
+        const game = buildGameInstance({ seed: "foo" });
+        expect(game.recycle()).to.deep.equal(
+            buildGameInstance({ seed: "foo" })
+        );
     });
 
     it("A cycled GameInstance is not equal to its former instance", function() {
@@ -39,7 +41,8 @@ describe("GameInstance", function() {
 
     it("Cycling a game instance copies its options", function() {
         const former = buildGameInstance({
-            debug: true
+            debug: true,
+            seed: "foo"
         });
         const current = former.recycle();
 
