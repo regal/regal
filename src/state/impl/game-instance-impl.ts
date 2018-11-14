@@ -55,7 +55,12 @@ class GameInstanceImpl implements GameInstance {
     public random: InstanceRandom;
     public state: any;
 
-    constructor(options: Partial<GameOptions>) {
+    /**
+     * Constructs a `GameInstanceImpl`.
+     * @param options Option overrides
+     * @param generatedSeed Include if the previous GameInstance had a default-generated seed
+     */
+    constructor(options: Partial<GameOptions>, generatedSeed?: string) {
         if (ContextManager.isContextStatic()) {
             throw new RegalError(
                 "Cannot construct a GameInstance outside of a game cycle."
@@ -65,7 +70,7 @@ class GameInstanceImpl implements GameInstance {
         this.agents = buildInstanceAgents(this);
         this.events = buildInstanceEvents(this);
         this.output = buildInstanceOutput(this);
-        this.options = buildInstanceOptions(this, options);
+        this.options = buildInstanceOptions(this, options, generatedSeed);
         this.random = buildInstanceRandom(this);
         this.state = buildActiveAgentProxy(0, this);
     }
@@ -74,7 +79,13 @@ class GameInstanceImpl implements GameInstance {
         const opts =
             newOptions === undefined ? this.options.overrides : newOptions;
 
-        const newGame = new GameInstanceImpl(opts);
+        // Include this instance's seed if it was generated (not specified by the user)
+        let genSeed: string;
+        if (opts.seed === undefined) {
+            genSeed = this.options.seed;
+        }
+
+        const newGame = new GameInstanceImpl(opts, genSeed);
         newGame.events = recycleInstanceEvents(this.events, newGame);
         newGame.agents = recycleInstanceAgents(this.agents, newGame);
         newGame.output = recycleInstanceOutput(this.output, newGame);

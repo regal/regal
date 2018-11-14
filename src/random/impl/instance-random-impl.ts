@@ -1,6 +1,7 @@
 import Prando from "prando";
 import { RegalError } from "../../error";
 import { GameInstance } from "../../state";
+import { EXPANDED_CHARSET } from "../charsets";
 import { InstanceRandom } from "../instance-random";
 
 export const buildInstanceRandom = (
@@ -33,6 +34,12 @@ class InstanceRandomImpl implements InstanceRandom {
     }
 
     public int(min: number, max: number): number {
+        if (min > max) {
+            throw new RegalError(
+                `Min <${min}> must be less than or equal to max <${max}>.`
+            );
+        }
+
         this._numGenerations++;
         return this._generator.nextInt(min, max);
     }
@@ -42,15 +49,28 @@ class InstanceRandomImpl implements InstanceRandom {
         return this._generator.next(0, 1);
     }
 
-    public string(
-        length: number,
-        charset: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    ) {
+    public string(length: number, charset: string = EXPANDED_CHARSET) {
+        if (length <= 0) {
+            throw new RegalError(
+                `Length <${length}> must be greater than zero.`
+            );
+        }
+
+        if (charset.length < 2) {
+            throw new RegalError(
+                `Charset <${charset}> must be at least two characters long.`
+            );
+        }
+
         this._numGenerations++;
         return this._generator.nextString(length, charset);
     }
 
     public choice<T>(array: T[]): T {
+        if (array === undefined) {
+            throw new RegalError("Array must be defined.");
+        }
+
         this._numGenerations++;
         return this._generator.nextArrayItem(array);
     }
