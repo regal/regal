@@ -2,6 +2,16 @@
 
 ## Pre-Initial Release
 
+### v0.5.0
+
+* Refactors the library structure
+
+**Random**
+* Adds the Random component (through `InstanceRandom`)
+
+**Config**
+* Adds `seed` config option for controlling the Random component
+
 ### v0.4.1
 
 * Update dependencies
