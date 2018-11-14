@@ -14,7 +14,10 @@ import { on } from "../../src/events";
 import { Agent, PropertyOperation } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
-import { SEED_LENGTH } from "../../src/random/func/generate-seed";
+import {
+    SEED_LENGTH,
+    DEFAULT_SEED_CHARSET
+} from "../../src/random/func/generate-seed";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -45,6 +48,8 @@ describe("Config", function() {
         });
 
         describe("GameOption Validation", function() {
+            // debug
+
             it("GameOptions.debug VALID", function() {
                 const myGame = buildGameInstance({ debug: true });
                 expect(myGame.options.overrides).to.deep.equal({
@@ -127,6 +132,8 @@ describe("Config", function() {
                 );
             });
 
+            // showMinor
+
             it("GameOptions.showMinor VALID", function() {
                 const myGame = buildGameInstance({ showMinor: true });
                 expect(myGame.options.overrides).to.deep.equal({
@@ -142,12 +149,41 @@ describe("Config", function() {
                 );
             });
 
+            // trackAgentChanges
+
             it("GameOptions.trackAgentChanges VALID", function() {
                 const myGame = buildGameInstance({ trackAgentChanges: true });
                 expect(myGame.options.overrides).to.deep.equal({
                     trackAgentChanges: true
                 });
                 expect(myGame.options.trackAgentChanges).to.be.true;
+            });
+
+            it("GameOptions.trackAgentChanges INVALID", function() {
+                expect(() =>
+                    buildGameInstance(<any>{ trackAgentChanges: "true" })
+                ).to.throw(
+                    RegalError,
+                    "RegalError: The option <trackAgentChanges> is of type <string>, must be of type <boolean>."
+                );
+            });
+
+            // seed
+
+            it("GameOptions.seed VALID", function() {
+                const seed = "goof123@~";
+                const myGame = buildGameInstance({ seed });
+                expect(myGame.options.overrides).to.deep.equal({
+                    seed
+                });
+                expect(myGame.options.seed).to.equal(seed);
+            });
+
+            it("GameOptions.seed INVALID", function() {
+                expect(() => buildGameInstance(<any>{ seed: 1234 })).to.throw(
+                    RegalError,
+                    "RegalError: The option <seed> is of type <number>, must be of type <string>."
+                );
             });
         });
 
@@ -814,6 +850,26 @@ describe("Config", function() {
                     RegalError,
                     "Property history length cannot be greater than two when trackAgentChanges is disabled"
                 );
+            });
+
+            // seed (randomness testing is in random.test.ts)
+
+            it("If seed is not specified, it will default to a random string of given length", function() {
+                const myGame = buildGameInstance();
+                const seed = myGame.options.seed;
+
+                expect(seed.length).to.equal(SEED_LENGTH);
+                for (let i = 0; i < seed.length; i++) {
+                    expect(DEFAULT_SEED_CHARSET.includes(seed[i])).to.be.true;
+                }
+                expect(myGame.random.seed).to.equal(seed);
+            });
+
+            it("If seed is specified, it will be the instance's seed", function() {
+                const seed = "hello1234";
+                const myGame = buildGameInstance({ seed });
+                expect(myGame.options.seed).to.equal(seed);
+                expect(myGame.random.seed).to.equal(seed);
             });
         });
     });
