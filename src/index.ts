@@ -34,3 +34,4 @@ export {
 export { GameOptions, GameMetadata } from "./config";
 export { GameInstance, buildGameInstance } from "./state";
 export { OutputLineType, OutputLine, InstanceOutput } from "./output";
+export { loadConfig } from "./load-config";
