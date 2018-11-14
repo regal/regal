@@ -1,5 +1,5 @@
 /**
- * Contains the interface to the random component.
+ * Contains the API for the Regal Game Library random component.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
@@ -41,14 +41,20 @@ export interface InstanceRandom {
     decimal(): number;
 
     /**
-     * Generates a string of random characters (duplicate characters allowed).
+     * Generates a string of psudeo- random characters (duplicate characters allowed).
      * @param length The length of the string to generate.
      * @param charset A string containing the characters to choose from when
-     * generating the string. Must be at least two characters long.
+     * generating the string. Duplicates are okay, but the charset must have at
+     * least two unique characters.
      */
     string(length: number, charset?: string);
 
+    /**
+     * Returns a psuedo-random element from the given array without modifying anything.
+     * @param array The array to select from.
+     */
     choice<T>(array: T[]): T;
 
+    /** Generates either `true` or `false` psuedo-randomly. */
     boolean(): boolean;
 }

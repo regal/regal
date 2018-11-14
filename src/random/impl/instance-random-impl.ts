@@ -1,9 +1,22 @@
+/**
+ * Contains the current implementation of `InstanceRandom`.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import Prando from "prando";
 import { RegalError } from "../../error";
 import { GameInstance } from "../../state";
 import { EXPANDED_CHARSET } from "../charsets";
 import { InstanceRandom } from "../instance-random";
 
+/**
+ * Constructs an `InstanceRandom` using the current implementation.
+ * @param game The managing `GameInstance`.
+ * @param numGenerations The number of generations to start from.
+ * Defaults to zero.
+ */
 export const buildInstanceRandom = (
     game: GameInstance,
     numGenerations: number = 0
