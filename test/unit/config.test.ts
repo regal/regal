@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../../src/game-instance";
 import { RegalError } from "../../src/error";
 import {
     OPTION_KEYS,
@@ -11,10 +10,14 @@ import {
 } from "../../src/config";
 import { OutputLineType } from "../../src/output";
 import { getDemoMetadata, metadataWithOptions, log } from "../test-utils";
-import { Game } from "../../src/game-api";
 import { on } from "../../src/events";
-import { onStartCommand, onPlayerCommand } from "../../src/api-hooks";
 import { Agent, PropertyOperation } from "../../src/agents";
+import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
+import { buildGameInstance } from "../../src/state";
+import {
+    SEED_LENGTH,
+    DEFAULT_SEED_CHARSET
+} from "../../src/random/func/generate-seed";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -31,17 +34,24 @@ describe("Config", function() {
 
     describe("Game Options", function() {
         it("Test defaults", function() {
-            const myGame = new GameInstance();
-            OPTION_KEYS.forEach(key => {
+            const myGame = buildGameInstance();
+
+            const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
+
+            keysBesidesSeed.forEach(key => {
                 expect(myGame.options[key]).to.deep.equal(
                     DEFAULT_GAME_OPTIONS[key]
                 );
             });
+
+            expect(myGame.options.seed.length).to.equal(SEED_LENGTH);
         });
 
         describe("GameOption Validation", function() {
+            // debug
+
             it("GameOptions.debug VALID", function() {
-                const myGame = new GameInstance({ debug: true });
+                const myGame = buildGameInstance({ debug: true });
                 expect(myGame.options.overrides).to.deep.equal({
                     debug: true
                 });
@@ -49,7 +59,7 @@ describe("Config", function() {
             });
 
             it("GameOptions.debug INVALID", function() {
-                expect(() => new GameInstance(<any>{ debug: 3 })).to.throw(
+                expect(() => buildGameInstance(<any>{ debug: 3 })).to.throw(
                     RegalError,
                     "RegalError: The option <debug> is of type <number>, must be of type <boolean>."
                 );
@@ -62,7 +72,7 @@ describe("Config", function() {
                     metadataWithOptions({ allowOverrides: true })
                 );
 
-                const myGame = new GameInstance();
+                const myGame = buildGameInstance();
                 expect(myGame.options.overrides).to.deep.equal({});
                 expect(myGame.options.allowOverrides).to.be.true;
             });
@@ -72,7 +82,7 @@ describe("Config", function() {
                     metadataWithOptions({ allowOverrides: [] })
                 );
 
-                const myGame = new GameInstance();
+                const myGame = buildGameInstance();
                 expect(myGame.options.overrides).to.deep.equal({});
                 expect(myGame.options.allowOverrides).to.deep.equal([]);
             });
@@ -84,7 +94,7 @@ describe("Config", function() {
                     })
                 );
 
-                const myGame = new GameInstance();
+                const myGame = buildGameInstance();
                 expect(myGame.options.overrides).to.deep.equal({});
                 expect(myGame.options.allowOverrides).to.deep.equal([
                     "debug",
@@ -96,7 +106,7 @@ describe("Config", function() {
                 MetadataManager.setMetadata(
                     metadataWithOptions(<any>{ allowOverrides: 3 })
                 );
-                expect(() => new GameInstance()).to.throw(
+                expect(() => buildGameInstance()).to.throw(
                     RegalError,
                     "RegalError: The option <allowOverrides> is of type <number>, must be of type <boolean> or <string[]>."
                 );
@@ -106,7 +116,7 @@ describe("Config", function() {
                 MetadataManager.setMetadata(
                     metadataWithOptions({ allowOverrides: ["debug", "blark"] })
                 );
-                expect(() => new GameInstance()).to.throw(
+                expect(() => buildGameInstance()).to.throw(
                     RegalError,
                     "RegalError: The option <blark> does not exist."
                 );
@@ -116,14 +126,16 @@ describe("Config", function() {
                 MetadataManager.setMetadata(
                     metadataWithOptions({ allowOverrides: ["allowOverrides"] })
                 );
-                expect(() => new GameInstance()).to.throw(
+                expect(() => buildGameInstance()).to.throw(
                     RegalError,
                     "RegalError: The option <allowOverrides> is not allowed to be overridden."
                 );
             });
 
+            // showMinor
+
             it("GameOptions.showMinor VALID", function() {
-                const myGame = new GameInstance({ showMinor: true });
+                const myGame = buildGameInstance({ showMinor: true });
                 expect(myGame.options.overrides).to.deep.equal({
                     showMinor: true
                 });
@@ -131,18 +143,47 @@ describe("Config", function() {
             });
 
             it("GameOptions.showMinor INVALID", function() {
-                expect(() => new GameInstance(<any>{ showMinor: 3 })).to.throw(
+                expect(() => buildGameInstance(<any>{ showMinor: 3 })).to.throw(
                     RegalError,
                     "RegalError: The option <showMinor> is of type <number>, must be of type <boolean>."
                 );
             });
 
+            // trackAgentChanges
+
             it("GameOptions.trackAgentChanges VALID", function() {
-                const myGame = new GameInstance({ trackAgentChanges: true });
+                const myGame = buildGameInstance({ trackAgentChanges: true });
                 expect(myGame.options.overrides).to.deep.equal({
                     trackAgentChanges: true
                 });
                 expect(myGame.options.trackAgentChanges).to.be.true;
+            });
+
+            it("GameOptions.trackAgentChanges INVALID", function() {
+                expect(() =>
+                    buildGameInstance(<any>{ trackAgentChanges: "true" })
+                ).to.throw(
+                    RegalError,
+                    "RegalError: The option <trackAgentChanges> is of type <string>, must be of type <boolean>."
+                );
+            });
+
+            // seed
+
+            it("GameOptions.seed VALID", function() {
+                const seed = "goof123@~";
+                const myGame = buildGameInstance({ seed });
+                expect(myGame.options.overrides).to.deep.equal({
+                    seed
+                });
+                expect(myGame.options.seed).to.equal(seed);
+            });
+
+            it("GameOptions.seed INVALID", function() {
+                expect(() => buildGameInstance(<any>{ seed: 1234 })).to.throw(
+                    RegalError,
+                    "RegalError: The option <seed> is of type <number>, must be of type <string>."
+                );
             });
         });
 
@@ -150,14 +191,14 @@ describe("Config", function() {
             // debug
 
             it("DEBUG output is not printed when GameOptions.debug is set to false", function() {
-                const myGame = new GameInstance({ debug: false });
+                const myGame = buildGameInstance({ debug: false });
                 myGame.output.writeDebug("Hello, world!");
 
                 expect(myGame.output.lines).to.deep.equal([]);
             });
 
             it("DEBUG output is printed when GameOptions.debug is set to true", function() {
-                const myGame = new GameInstance({ debug: true });
+                const myGame = buildGameInstance({ debug: true });
                 myGame.output.writeDebug("Hello, world!");
 
                 expect(myGame.output.lines).to.deep.equal([
@@ -172,14 +213,14 @@ describe("Config", function() {
             // showMinor
 
             it("MINOR output is not printed when GameOptions.showMinor is set to false", function() {
-                const myGame = new GameInstance({ showMinor: false });
+                const myGame = buildGameInstance({ showMinor: false });
                 myGame.output.writeMinor("Hello, world!");
 
                 expect(myGame.output.lines).to.deep.equal([]);
             });
 
             it("MINOR output is printed when GameOptions.showMinor is set to true", function() {
-                const myGame = new GameInstance({ showMinor: true });
+                const myGame = buildGameInstance({ showMinor: true });
                 myGame.output.writeMinor("Hello, world!");
 
                 expect(myGame.output.lines).to.deep.equal([
@@ -793,7 +834,7 @@ describe("Config", function() {
             });
 
             it("Throw an error if a property history is longer than two when trackAgentChanges is disabled", function() {
-                const myGame = new GameInstance({ trackAgentChanges: false });
+                const myGame = buildGameInstance({ trackAgentChanges: false });
                 const d = myGame.using(new Dummy("D1", 10));
 
                 on("FOO", game => {
@@ -810,20 +851,40 @@ describe("Config", function() {
                     "Property history length cannot be greater than two when trackAgentChanges is disabled"
                 );
             });
+
+            // seed (randomness testing is in random.test.ts)
+
+            it("If seed is not specified, it will default to a random string of given length", function() {
+                const myGame = buildGameInstance();
+                const seed = myGame.options.seed;
+
+                expect(seed.length).to.equal(SEED_LENGTH);
+                for (let i = 0; i < seed.length; i++) {
+                    expect(DEFAULT_SEED_CHARSET.includes(seed[i])).to.be.true;
+                }
+                expect(myGame.random.seed).to.equal(seed);
+            });
+
+            it("If seed is specified, it will be the instance's seed", function() {
+                const seed = "hello1234";
+                const myGame = buildGameInstance({ seed });
+                expect(myGame.options.seed).to.equal(seed);
+                expect(myGame.random.seed).to.equal(seed);
+            });
         });
     });
 
     describe("InstanceOptions", function() {
         it("The properties of InstanceOptions cannot be modified", function() {
-            const myGame = new GameInstance();
-            expect(() => (myGame.options.debug = true)).to.throw(
+            const myGame = buildGameInstance();
+            expect(() => ((myGame.options as any).debug = true)).to.throw(
                 RegalError,
                 "Cannot modify the properties of InstanceOptions."
             );
         });
 
         it("The properties of InstanceOptions.overrides cannot be modified", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
             expect(
                 () => ((<any>myGame.options.overrides).debug = true)
             ).to.throw(
@@ -846,7 +907,7 @@ describe("Config", function() {
                 metadataWithOptions({ allowOverrides: ["debug"] })
             );
 
-            expect(() => new GameInstance({ showMinor: false })).to.throw(
+            expect(() => buildGameInstance({ showMinor: false })).to.throw(
                 RegalError,
                 "The following option overrides are forbidden: <showMinor>."
             );

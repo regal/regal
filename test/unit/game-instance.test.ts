@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../../src/game-instance";
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
-import { Game } from "../../src/game-api";
+import { Game } from "../../src/api";
 import { RegalError } from "../../src/error";
+import { buildGameInstance } from "../../src/state";
 
 // Note: Some tests for GameInstance.using are in agents.test.ts
 
@@ -17,29 +17,32 @@ describe("GameInstance", function() {
     });
 
     it("Sanity check", function() {
-        const myGame = new GameInstance();
+        const myGame = buildGameInstance({ seed: "foo" });
         let game2 = myGame;
 
         expect(myGame).to.equal(game2);
-        expect(myGame).to.not.equal(new GameInstance());
-        expect(myGame).to.deep.equal(new GameInstance());
+        expect(myGame).to.not.equal(buildGameInstance({ seed: "foo" }));
+        expect(myGame).to.deep.equal(buildGameInstance({ seed: "foo" }));
     });
 
     it("Cycling a new GameInstance is equivalent to instantiating a new one", function() {
-        const game = new GameInstance();
-        expect(game.recycle()).to.deep.equal(new GameInstance());
+        const game = buildGameInstance({ seed: "foo" });
+        expect(game.recycle()).to.deep.equal(
+            buildGameInstance({ seed: "foo" })
+        );
     });
 
     it("A cycled GameInstance is not equal to its former instance", function() {
-        const former = new GameInstance();
+        const former = buildGameInstance();
         const current = former.recycle();
 
         expect(former).to.not.equal(current);
     });
 
     it("Cycling a game instance copies its options", function() {
-        const former = new GameInstance({
-            debug: true
+        const former = buildGameInstance({
+            debug: true,
+            seed: "foo"
         });
         const current = former.recycle();
 
@@ -50,21 +53,21 @@ describe("GameInstance", function() {
     it("Throw an error if a GameInstance is instantiated in the static context", function() {
         Game.reset();
 
-        expect(() => new GameInstance()).to.throw(
+        expect(() => buildGameInstance()).to.throw(
             RegalError,
             "Cannot construct a GameInstance outside of a game cycle."
         );
     });
 
     it("Throw an error if GameInstance.using is called with undefined", function() {
-        expect(() => new GameInstance().using(undefined)).to.throw(
+        expect(() => buildGameInstance().using(undefined)).to.throw(
             RegalError,
             "Resource must be defined"
         );
     });
 
     it("Throw an error if GameInstance.using is called with an illegal object", function() {
-        expect(() => new GameInstance().using({ foo: "bar" })).to.throw(
+        expect(() => buildGameInstance().using({ foo: "bar" })).to.throw(
             RegalError,
             "Invalid agent in resource at key <foo>."
         );
@@ -74,7 +77,7 @@ describe("GameInstance", function() {
         class WeirdResource {}
         (WeirdResource as any).prototype.foo = "bar";
 
-        const game = new GameInstance();
+        const game = buildGameInstance();
         expect("foo" in game.using(new WeirdResource())).to.be.false;
     });
 });

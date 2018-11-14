@@ -1,15 +1,15 @@
 import { expect } from "chai";
 import "mocha";
 
-import { Game, GameResponse } from "../../src/game-api";
 import {
+    Game,
+    GameResponse,
     onPlayerCommand,
     onStartCommand,
     onBeforeUndoCommand
-} from "../../src/api-hooks";
+} from "../../src/api";
 import { noop } from "../../src/events";
-import GameInstance from "../../src/game-instance";
-import { OutputLineType, GameOutput, InstanceOutput } from "../../src/output";
+import { OutputLineType, InstanceOutput } from "../../src/output";
 import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
 import { Agent } from "../../src/agents";
 import {
@@ -17,12 +17,16 @@ import {
     OPTION_KEYS,
     MetadataManager
 } from "../../src/config";
+import { buildGameInstance, GameInstance } from "../../src/state";
+import { SEED_LENGTH } from "../../src/random/func/generate-seed";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
         super();
     }
 }
+
+const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
 
 describe("Game API", function() {
     beforeEach(function() {
@@ -38,7 +42,7 @@ describe("Game API", function() {
             });
 
             const response = Game.postPlayerCommand(
-                new GameInstance(),
+                buildGameInstance(),
                 "Hello, World!"
             );
 
@@ -64,7 +68,7 @@ describe("Game API", function() {
                 }
             });
 
-            const r1 = Game.postPlayerCommand(new GameInstance(), "One");
+            const r1 = Game.postPlayerCommand(buildGameInstance(), "One");
             const r2 = Game.postPlayerCommand(r1.instance, "Two");
             const r3 = Game.postPlayerCommand(r2.instance, "Three");
 
@@ -88,7 +92,7 @@ describe("Game API", function() {
                 game.output.write(`Set guy[${command}] to true.`);
             });
 
-            const init = Game.postPlayerCommand(new GameInstance(), "init");
+            const init = Game.postPlayerCommand(buildGameInstance(), "init");
 
             let foo: GameResponse;
             for (let i = 0; i < 5; i++) {
@@ -129,7 +133,7 @@ describe("Game API", function() {
             onPlayerCommand(() => noop);
 
             const response = Game.postPlayerCommand(
-                new GameInstance(),
+                buildGameInstance(),
                 undefined
             );
 
@@ -141,7 +145,7 @@ describe("Game API", function() {
         });
 
         it("An error is thrown if the onPlayerCommand hook isn't set", function() {
-            const response = Game.postPlayerCommand(new GameInstance(), "foo");
+            const response = Game.postPlayerCommand(buildGameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
             expect(response.output.error.message).to.equal(
@@ -155,7 +159,7 @@ describe("Game API", function() {
                 throw 5;
             });
 
-            const response = Game.postPlayerCommand(new GameInstance(), "foo");
+            const response = Game.postPlayerCommand(buildGameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
             expect(response.output.error.message).to.equal(
@@ -169,7 +173,7 @@ describe("Game API", function() {
                 (<string[]>(<any>5)).push("blarp"); // yum
             });
 
-            const response = Game.postPlayerCommand(new GameInstance(), "foo");
+            const response = Game.postPlayerCommand(buildGameInstance(), "foo");
 
             expect(response.output.wasSuccessful).to.be.false;
             expect(response.output.error.message).to.equal(
@@ -327,9 +331,11 @@ describe("Game API", function() {
             const options = response.instance.options;
 
             expect(options.overrides).to.deep.equal({});
-            OPTION_KEYS.forEach(key =>
+            keysBesidesSeed.forEach(key =>
                 expect(options[key]).to.equal(DEFAULT_GAME_OPTIONS[key])
             );
+
+            expect(options.seed.length).to.equal(SEED_LENGTH);
         });
 
         it("Sending an empty start request uses the default option values", function() {
@@ -339,9 +345,11 @@ describe("Game API", function() {
             const options = response.instance.options;
 
             expect(options.overrides).to.deep.equal({});
-            OPTION_KEYS.forEach(key =>
+            keysBesidesSeed.forEach(key =>
                 expect(options[key]).to.equal(DEFAULT_GAME_OPTIONS[key])
             );
+
+            expect(options.seed.length).to.equal(SEED_LENGTH);
         });
 
         it("Sending a start request with options overrides the defaults", function() {
@@ -401,7 +409,7 @@ describe("Game API", function() {
 
     describe("Game.postOptionCommand", function() {
         it("Overriding an allowed option when nothing has yet been overridden", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             expect(myGame.options.debug).to.be.false;
 
@@ -415,7 +423,7 @@ describe("Game API", function() {
         });
 
         it("Overriding options multiple times", function() {
-            let response = Game.postOptionCommand(new GameInstance(), {
+            let response = Game.postOptionCommand(buildGameInstance(), {
                 debug: true,
                 showMinor: false
             });
@@ -438,7 +446,7 @@ describe("Game API", function() {
                 metadataWithOptions({ allowOverrides: false })
             );
 
-            const response = Game.postOptionCommand(new GameInstance(), {
+            const response = Game.postOptionCommand(buildGameInstance(), {
                 debug: true
             });
 

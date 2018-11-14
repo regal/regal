@@ -1,24 +1,24 @@
 /**
- * Component for creating and handling events in the Regal Game Library.
+ * Component for creating and handling game events in the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 export {
-    enqueue,
     EventFunction,
     EventQueue,
     noop,
-    nq,
-    on,
     TrackedEvent,
     isEventQueue,
     isTrackedEvent
-} from "./event-model";
+} from "./event-types";
+export { enqueue, nq, on } from "./func/event-builders";
 export {
     EventRecord,
     DEFAULT_EVENT_ID,
     DEFAULT_EVENT_NAME
 } from "./event-record";
-export { default as InstanceEvents } from "./instance-events";
+export { InstanceEvents } from "./instance-events";
+export { recycleInstanceEvents } from "./func/recycle-instance-events";
+export { buildInstanceEvents } from "./impl";

@@ -5,7 +5,8 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { RegalError } from "../error";
+// tslint:disable-next-line
+true; // This does nothing; it's only so the jsdocs won't conflict
 
 /**
  * Represents game options that are configurable by a Regal client.
@@ -16,19 +17,19 @@ export interface GameOptions {
      * Can be an array of strings or a boolean. Defaults to true.
      *
      * If an array of strings, these options will be configurable by a Regal client.
-     * Note that `allowOptions` is never configurable, and including it will throw an error.
+     * Note that `allowOverrides` is never configurable, and including it will throw an error.
      *
      * If `true`, all options except `allowOverrides` will be configurable.
      *
      * If `false`, no options will be configurable.
      */
-    allowOverrides: string[] | boolean;
+    readonly allowOverrides: string[] | boolean;
 
     /** Whether output of type `DEBUG` should be returned to the client. Defaults to false. */
-    debug: boolean;
+    readonly debug: boolean;
 
     /** Whether output of type `MINOR` should be returned to the client. Defaults to true. */
-    showMinor: boolean;
+    readonly showMinor: boolean;
 
     /**
      * Whether all changes to agent properties are tracked and returned to the client. Defaults to false.
@@ -38,7 +39,17 @@ export interface GameOptions {
      *
      * If `true`, all property changes will be recorded.
      */
-    trackAgentChanges: boolean;
+    readonly trackAgentChanges: boolean;
+
+    /**
+     * Optional string used to initialize pseudorandom number generation in each game instance.
+     *
+     * When multiple instances have the same seed, they will generate the same sequence of random numbers
+     * through the `InstanceRandom` API.
+     *
+     * If left undefined, a random seed will be generated.
+     */
+    readonly seed: string | undefined;
 }
 
 /**
@@ -49,69 +60,10 @@ export interface GameOptions {
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
     allowOverrides: true,
     debug: false,
+    seed: undefined,
     showMinor: true,
     trackAgentChanges: false
 };
 
 /** The names of every game option. */
 export const OPTION_KEYS = Object.keys(DEFAULT_GAME_OPTIONS);
-
-/**
- * Throws an error if any of the given options are invalid.
- * @param options Any game options.
- */
-export const validateOptions = (options: Partial<GameOptions>): void => {
-    // Ensure no extraneous options were included.
-    Object.keys(options).forEach(key => {
-        if (!OPTION_KEYS.includes(key)) {
-            throw new RegalError(`Invalid option name <${key}>.`);
-        }
-    });
-
-    // Helper function that ensures the given property has the correct type if it's defined.
-    const checkTypeIfDefined = (
-        key: keyof GameOptions,
-        expectedType: string
-    ): void => {
-        const value = options[key];
-        const actualType = typeof value;
-
-        if (options[key] !== undefined) {
-            if (actualType !== expectedType) {
-                throw new RegalError(
-                    `The option <${key}> is of type <${actualType}>, must be of type <${expectedType}>.`
-                );
-            }
-        }
-    };
-
-    checkTypeIfDefined("debug", "boolean");
-
-    // Validate allowOverrides
-    if (options.allowOverrides !== undefined) {
-        if (Array.isArray(options.allowOverrides)) {
-            // Ensure every option name in the list is a real option.
-            options.allowOverrides.forEach(optionName => {
-                if (!OPTION_KEYS.includes(optionName)) {
-                    throw new RegalError(
-                        `The option <${optionName}> does not exist.`
-                    );
-                }
-            });
-
-            // Ensure that allowOverrides is not included in the list.
-            if (options.allowOverrides.includes("allowOverrides")) {
-                throw new RegalError(
-                    "The option <allowOverrides> is not allowed to be overridden."
-                );
-            }
-        } else if (typeof options.allowOverrides !== "boolean") {
-            throw new RegalError(
-                `The option <allowOverrides> is of type <${typeof options.allowOverrides}>, must be of type <boolean> or <string[]>.`
-            );
-        }
-    }
-
-    checkTypeIfDefined("showMinor", "boolean");
-    checkTypeIfDefined("trackAgentChanges", "boolean");
-};

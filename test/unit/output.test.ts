@@ -1,11 +1,15 @@
 import { expect } from "chai";
 import "mocha";
 
-import GameInstance from "../../src/game-instance";
-import { OutputLineType, InstanceOutput } from "../../src/output";
+import {
+    OutputLineType,
+    recycleInstanceOutput,
+    buildInstanceOutput
+} from "../../src/output";
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
-import { Game } from "../../src/game-api";
+import { Game } from "../../src/api";
+import { buildGameInstance } from "../../src/state";
 
 describe("Output", function() {
     beforeEach(function() {
@@ -16,7 +20,7 @@ describe("Output", function() {
 
     describe("Instance Output", function() {
         it("InstanceOutput.writeLine writes a normal line by default", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             myGame.output.writeLine("Hello, world!");
 
@@ -30,7 +34,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.writeLine accepts an optional OutputLineType", function() {
-            const myGame = new GameInstance({ debug: true });
+            const myGame = buildGameInstance({ debug: true });
 
             myGame.output.writeLine("Hello, world!", OutputLineType.DEBUG);
 
@@ -44,7 +48,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.write writes NORMAL lines", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             myGame.output.write("Line 1", "Line 2");
 
@@ -63,7 +67,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.writeNormal writes NORMAL lines", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             myGame.output.writeNormal("Line 1", "Line 2");
 
@@ -82,7 +86,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.writeMajor writes MAJOR lines", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             myGame.output.writeMajor("Line 1", "Line 2");
 
@@ -101,7 +105,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.writeMinor writes MINOR lines", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             myGame.output.writeMinor("Line 1", "Line 2");
 
@@ -120,7 +124,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.writeDebug writes DEBUG lines", function() {
-            const myGame = new GameInstance({ debug: true });
+            const myGame = buildGameInstance({ debug: true });
 
             myGame.output.writeDebug("Line 1", "Line 2");
 
@@ -139,7 +143,7 @@ describe("Output", function() {
         });
 
         it("InstanceOutput.writeTitle write a SECTION_TITLE line", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             myGame.output.writeTitle("Title");
 
@@ -153,7 +157,7 @@ describe("Output", function() {
         });
 
         it("Multiple line types with InstanceOutput", function() {
-            const myGame = new GameInstance({ debug: true });
+            const myGame = buildGameInstance({ debug: true });
 
             myGame.output.writeDebug("Room loaded.");
             myGame.output.writeTitle("West of House");
@@ -187,7 +191,7 @@ describe("Output", function() {
         });
 
         it("The lineCount getter works properly when startingLineCount = 0", function() {
-            const myGame = new GameInstance();
+            const myGame = buildGameInstance();
 
             expect(myGame.output.lineCount).to.equal(0);
 
@@ -197,8 +201,8 @@ describe("Output", function() {
         });
 
         it("The lineCount getter works properly when startingLineCount is not 0", function() {
-            const myGame = new GameInstance();
-            myGame.output = new InstanceOutput(myGame, 10);
+            const myGame = buildGameInstance();
+            myGame.output = buildInstanceOutput(myGame, 10);
 
             expect(myGame.output.lineCount).to.equal(10);
 
@@ -207,11 +211,11 @@ describe("Output", function() {
             expect(myGame.output.lineCount).to.equal(11);
         });
 
-        it("InstanceOutput.cycle creates a new InstanceOutput with the previous instance's lineCount", function() {
-            const game1 = new GameInstance();
+        it("recycleInstanceOutput creates a new InstanceOutput with the previous instance's lineCount", function() {
+            const game1 = buildGameInstance();
 
-            const game2 = new GameInstance();
-            const output2 = game1.output.cycle(game2);
+            const game2 = buildGameInstance();
+            const output2 = recycleInstanceOutput(game1.output, game2);
 
             expect(output2.lineCount).to.equal(0);
             expect(output2.game).to.equal(game2);
@@ -219,8 +223,8 @@ describe("Output", function() {
 
             output2.write("Foo", "Bar", "Baz");
 
-            const game3 = new GameInstance();
-            const output3 = output2.cycle(game3);
+            const game3 = buildGameInstance();
+            const output3 = recycleInstanceOutput(output2, game3);
 
             expect(output3.lineCount).to.equal(3);
             expect(output3.game).to.equal(game3);

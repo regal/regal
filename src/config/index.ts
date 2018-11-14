@@ -5,11 +5,12 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export { InstanceOptions, ensureOverridesAllowed } from "./instance-options";
+export { InstanceOptions } from "./instance-options";
 export {
-    GameOptions,
-    DEFAULT_GAME_OPTIONS,
-    OPTION_KEYS,
+    ensureOverridesAllowed,
     validateOptions
-} from "./game-options";
-export { GameMetadata, MetadataManager } from "./metadata";
+} from "./func/validate-options";
+export { GameOptions, DEFAULT_GAME_OPTIONS, OPTION_KEYS } from "./game-options";
+export { GameMetadata } from "./game-metadata";
+export { MetadataManager } from "./metadata-manager";
+export { buildInstanceOptions } from "./impl";
