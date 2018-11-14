@@ -258,6 +258,12 @@ describe("Random", function() {
                     RegalError,
                     "Charset <OOO> must have at least two unique characters."
                 );
+                expect(myGame.random.numGenerations).to.equal(0);
+            });
+
+            it("Allows duplicates if there are at least two unique characters", function() {
+                const myGame = buildGameInstance({ seed: "lars" });
+                expect(myGame.random.string(5, "abababab")).to.equal("ababb");
             });
         });
 
