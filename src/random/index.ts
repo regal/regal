@@ -1,3 +1,10 @@
+/**
+ * Component for generating deterministic psuedo-random data in the Regal Game Library.
+ *
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 export { generateSeed } from "./func/generate-seed";
 export { InstanceRandom } from "./instance-random";
 export { buildInstanceRandom } from "./impl";

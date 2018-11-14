@@ -41,6 +41,14 @@ export interface GameOptions {
      */
     readonly trackAgentChanges: boolean;
 
+    /**
+     * Optional string used to initialize psuedorandom number generation in each game instance.
+     *
+     * When multiple instances have the same seed, they will generate the same sequence of random numbers
+     * through the `InstanceRandom` API.
+     *
+     * If left undefined, a random seed will be generated.
+     */
     readonly seed: string | undefined;
 }
 

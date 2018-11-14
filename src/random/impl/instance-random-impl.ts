@@ -56,9 +56,9 @@ class InstanceRandomImpl implements InstanceRandom {
             );
         }
 
-        if (charset.length < 2) {
+        if (new Set(charset).size < 2) {
             throw new RegalError(
-                `Charset <${charset}> must be at least two characters long.`
+                `Charset <${charset}> must have at least two unique characters.`
             );
         }
 

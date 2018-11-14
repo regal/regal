@@ -240,7 +240,7 @@ describe("Random", function() {
                 const myGame = buildGameInstance();
                 expect(() => myGame.random.string(5, "a")).to.throw(
                     RegalError,
-                    "Charset <a> must be at least two characters long."
+                    "Charset <a> must have at least two unique characters."
                 );
                 expect(myGame.random.numGenerations).to.equal(0);
             });
@@ -249,6 +249,14 @@ describe("Random", function() {
                 const myGame = buildGameInstance({ seed: "lars" });
                 expect(myGame.random.string(16, "01")).to.equal(
                     "1111010110110000"
+                );
+            });
+
+            it("Throws an error if charset does not have at least two unique characters", function() {
+                const myGame = buildGameInstance();
+                expect(() => myGame.random.string(5, "OOO")).to.throw(
+                    RegalError,
+                    "Charset <OOO> must have at least two unique characters."
                 );
             });
         });
