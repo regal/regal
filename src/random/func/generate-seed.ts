@@ -16,7 +16,7 @@ export const SEED_LENGTH = 10;
 export const DEFAULT_SEED_CHARSET = EXPANDED_CHARSET;
 
 /**
- * Generates a psuedo-random seed to use in further psuedo-random data generation.
+ * Generates a pseudo-random seed to use in further pseudo-random data generation.
  */
 export const generateSeed = () =>
     new Prando().nextString(SEED_LENGTH, DEFAULT_SEED_CHARSET);
