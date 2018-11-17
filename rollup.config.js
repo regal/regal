@@ -3,6 +3,13 @@ import resolve from "rollup-plugin-node-resolve";
 
 import pkg from "./package.json";
 
+const bundleHeader = `/**
+ * Source code for Regal (a.k.a. the Regal Game Library), part of the Regal Framework.
+ * 
+ * Copyright (c) 2018 Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */`
+
 const supressCircularImportWarnings = (message, defaultFunc) => {
     if (message.code === "CIRCULAR_DEPENDENCY") {
         return;
@@ -25,16 +32,19 @@ export default {
     output: [
         {
             file: pkg.main,
-            format: "cjs"
+            format: "cjs",
+            banner: bundleHeader
         },
         {
             file: pkg.module,
-            format: "esm"
+            format: "esm",
+            banner: bundleHeader
         },
         {
             file: pkg.browser,
             format: "umd",
-            name: "Regal"
+            name: "Regal",
+            banner: bundleHeader
         }
     ],
     onwarn: supressCircularImportWarnings

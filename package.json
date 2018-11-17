@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "test": "nyc mocha",
-    "build": "rollup -c && tsc -d --emitDeclarationOnly",
+    "build": "rollup -c && tsc -d --emitDeclarationOnly --declarationDir ./dist/types",
     "publish-coverage": "nyc report --reporter=text-lcov | coveralls",
     "check-coverage": "nyc check-coverage --lines 99 --functions 99 --branches 99",
     "lint": "node node_modules/tslint/bin/tslint -c tslint.json --format stylish 'src/**/*.ts'",
