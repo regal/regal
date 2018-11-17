@@ -3,6 +3,7 @@
         "module": "commonjs",
         "target": "es2016",
         "outDir": "./dist",
+        "declarationDir": "./dist/types",
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "sourceMap": false
