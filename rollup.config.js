@@ -3,7 +3,7 @@ import resolve from "rollup-plugin-node-resolve";
 
 import pkg from "./package.json";
 
-const bundleHeader = `/**
+const banner = `/**
  * Source code for Regal (a.k.a. the Regal Game Library), part of the Regal Framework.
  * 
  * Copyright (c) 2018 Joseph R Cowman
@@ -17,35 +17,34 @@ const supressCircularImportWarnings = (message, defaultFunc) => {
     defaultFunc(message);
 }
 
-export default {
-    input: "./src/index.ts",
-    plugins: [
-        typescript({
-            tsconfigOverride: {
-                compilerOptions: {
-                    module: "ES2015"
-                }
-            }
-        }),
-        resolve()
-    ],
-    output: [
-        {
-            file: pkg.main,
-            format: "cjs",
-            banner: bundleHeader
-        },
-        {
-            file: pkg.module,
-            format: "esm",
-            banner: bundleHeader
-        },
-        {
-            file: pkg.browser,
-            format: "umd",
-            name: "Regal",
-            banner: bundleHeader
+const tsPlugin = typescript({
+    tsconfigOverride: {
+        compilerOptions: {
+            module: "ES2015"
         }
-    ],
-    onwarn: supressCircularImportWarnings
-}
+    }
+});
+
+export default [
+    {
+        input: "./src/index.ts",
+        output: [
+            { file: pkg.main, format: "cjs", banner },
+            { file: pkg.module, format: "esm", banner }
+        ],
+        plugins: [
+            tsPlugin,
+            resolve()
+        ],
+        onwarn: supressCircularImportWarnings
+    },
+    {
+        input: "./src/index.ts",
+        output: { file: pkg.browser, format: "umd", name: "Regal", banner },
+        plugins: [
+            tsPlugin,
+            resolve()
+        ],
+        onwarn: supressCircularImportWarnings
+    }
+]
