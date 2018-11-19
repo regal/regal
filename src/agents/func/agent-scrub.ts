@@ -1,4 +1,4 @@
-/**
+/*
  * Contains `scrubAgents` function, which deletes all agents in an
  * `InstanceAgents` that are not accessible from the instance's state.
  *

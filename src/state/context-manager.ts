@@ -1,12 +1,9 @@
-/**
+/*
  * Contains the static class that manages the game's context.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
-
-// tslint:disable-next-line
-true; // This does nothing; it's only so the jsdocs won't conflict
 
 /**
  * Manages the game's context by keeping track of whether the

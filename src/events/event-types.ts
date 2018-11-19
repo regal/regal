@@ -1,4 +1,4 @@
-/**
+/*
  * Interfaces for the different types of Regal game events.
  *
  * Copyright (c) 2018 Joseph R Cowman

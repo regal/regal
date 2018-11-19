@@ -1,4 +1,4 @@
-/**
+/*
  * Contains `MetadataManager`, the static class that manages game metadata.
  *
  * Copyright (c) 2018 Joseph R Cowman

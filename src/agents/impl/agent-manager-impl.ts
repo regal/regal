@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the current implementation of `AgentManager`.
  *
  * Copyright (c) 2018 Joseph R Cowman

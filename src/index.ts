@@ -1,4 +1,4 @@
-/**
+/*
  * Public exports from the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman

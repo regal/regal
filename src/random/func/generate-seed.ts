@@ -1,4 +1,4 @@
-/**
+/*
  * Contains generateSeed function and related configuration.
  *
  * Copyright (c) 2018 Joseph R Cowman

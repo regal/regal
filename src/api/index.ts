@@ -1,4 +1,4 @@
-/**
+/*
  * Component for interfacing with the game via the Game API.
  * A game that consumes the Regal Game Library becomes exposed via this API.
  *

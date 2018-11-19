@@ -1,4 +1,4 @@
-/**
+/*
  * Contains `buildRevertFunction` for reverting changes made to an
  * `InstanceAgents` during the context of a game cycle.
  *

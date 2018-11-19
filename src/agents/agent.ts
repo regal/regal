@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the Agent model and proxies for controlling interaction with agents.
  *
  * Agents are objects that are interacted with by the player in a Regal game.

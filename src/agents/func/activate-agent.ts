@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the function implementation for activating a single agent
  * within the current game context.
  *

@@ -1,4 +1,4 @@
-/**
+/*
  * Contains constructors for active agent proxies.
  *
  * Copyright (c) 2018 Joseph R Cowman

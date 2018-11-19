@@ -1,4 +1,4 @@
-/**
+/*
  * Contains functions for constructing and modifying game events.
  *
  * Copyright (c) 2018 Joseph R Cowman

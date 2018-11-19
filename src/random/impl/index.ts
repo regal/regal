@@ -1,4 +1,4 @@
-/**
+/*
  * The purpose of this file is to abstract all random-related implementations
  * by re-exporting their constructors from a single file.
  *

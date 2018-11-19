@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the `HookManager`, a static class that manages
  * the API hooks for the library-consuming Regal game.
  *

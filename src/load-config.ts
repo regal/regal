@@ -1,4 +1,4 @@
-/**
+/*
  * Contains functions for loading the static configuration of a Regal game
  * from a `regal.json` file or `package.json`'s `regal` property using cosmiconfig.
  *
