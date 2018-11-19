@@ -1,4 +1,4 @@
-/**
+/*
  * Contains implementation of `InstanceAgents`.
  *
  * Copyright (c) 2018 Joseph R Cowman

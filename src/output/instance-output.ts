@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the interface for `InstanceOutput`, the game output manager.
  *
  * Copyright (c) 2018 Joseph R Cowman

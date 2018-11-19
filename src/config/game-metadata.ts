@@ -1,4 +1,4 @@
-/**
+/*
  * Contains metadata about the Regal game. This metadata is defined
  * in the game's static context, meaning that it is the same for all
  * instances of the game.

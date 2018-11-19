@@ -1,4 +1,4 @@
-/**
+/*
  * A `GameInstance` is the object representation of a game's instance state.
  *
  * Instance state is a snapshot of a Regal game that is unique to a player,

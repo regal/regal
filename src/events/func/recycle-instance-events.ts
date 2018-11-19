@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the `recycleInstanceEvents` function. This is a standalone
  * function rather than a method on `InstanceEvents` so that it is not
  * run accidentally by consumers of the library.

@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the current implementations for building `EventQueue`
  * and supporting methods.
  *

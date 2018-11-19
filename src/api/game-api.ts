@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the public-facing API for interaction with a Regal game.
  *
  * A client application will consume this API, using the endpoints to

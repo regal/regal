@@ -1,13 +1,10 @@
-/**
+/*
  * Contains interfaces that represent lines of output generated
  * within a Regal game.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
-
-// tslint:disable-next-line
-true; // This does nothing; it's only so the jsdocs won't conflict
 
 /**
  * Conveys semantic meaning of an `OutputLine` to the client.

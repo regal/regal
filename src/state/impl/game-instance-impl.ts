@@ -1,4 +1,4 @@
-/**
+/*
  * Contians the current implementation of `GameInstance`.
  *
  * Copyright (c) 2018 Joseph R Cowman

@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the current implementation of `InstanceOutput`.
  *
  * Copyright (c) 2018 Joseph R Cowman

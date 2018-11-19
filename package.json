@@ -19,13 +19,16 @@
     "gamedev",
     "typescript"
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/regal.cjs.js",
+  "module": "dist/regal.esm.js",
+  "browser": "dist/regal.umd.min.js",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist/"
   ],
   "scripts": {
     "test": "nyc mocha",
+    "build": "rollup -c && tsc -d --emitDeclarationOnly --declarationDir ./dist/types",
     "publish-coverage": "nyc report --reporter=text-lcov | coveralls",
     "check-coverage": "nyc check-coverage --lines 99 --functions 99 --branches 99",
     "lint": "node node_modules/tslint/bin/tslint -c tslint.json --format stylish 'src/**/*.ts'",
@@ -68,6 +71,11 @@
     "nyc": "^12.0.2",
     "prettier": "1.14.2",
     "readline": "^1.3.0",
+    "rollup": "^0.67.3",
+    "rollup-plugin-cleanup": "^3.0.0",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "rollup-plugin-terser": "^2.0.2",
+    "rollup-plugin-typescript2": "^0.18.0",
     "source-map-support": "^0.5.9",
     "ts-node": "^6.2.0",
     "tslint": "^5.11.0",

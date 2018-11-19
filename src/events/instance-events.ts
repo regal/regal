@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the manager for all events in a `GameInstance`.
  *
  * Copyright (c) 2018 Joseph R Cowman

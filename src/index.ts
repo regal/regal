@@ -1,4 +1,4 @@
-/**
+/*
  * Public exports from the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman
@@ -34,3 +34,4 @@ export {
 export { GameOptions, GameMetadata } from "./config";
 export { GameInstance, buildGameInstance } from "./state";
 export { OutputLineType, OutputLine, InstanceOutput } from "./output";
+// export { loadConfig } from "./load-config";

@@ -1,4 +1,4 @@
-/**
+/*
  * Component for controlling tracked game objects (called Agents) within the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman

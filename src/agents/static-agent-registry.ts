@@ -1,4 +1,4 @@
-/**
+/*
  * Contains all agents defined in the static context of the game,
  * known as static agents. These agents have data that is accessible
  * by all `GameInstances` and therefore is not stored in the instance

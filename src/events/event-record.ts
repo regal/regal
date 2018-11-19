@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the interface for a tracked event's effects in a game cycle.
  *
  * Copyright (c) 2018 Joseph R Cowman

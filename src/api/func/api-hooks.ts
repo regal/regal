@@ -1,4 +1,4 @@
-/**
+/*
  * Functions for hooking into the Regal Game Library's Game API.
  *
  * A hook is a function that is called internally by the Game API

@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the read-only container for all options in a `GameInstance`.
  *
  * Copyright (c) 2018 Joseph R Cowman

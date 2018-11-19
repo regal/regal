@@ -1,12 +1,9 @@
-/**
+/*
  * Contains mock object that is used in place of references to active agent arrays.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
-
-// tslint:disable-next-line
-true; // This does nothing; it's only so the jsdocs won't conflict
 
 /** Whether the given object is an `AgentArrayReference`. */
 export const isAgentArrayReference = (o: any): o is AgentArrayReference =>

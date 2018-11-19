@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the `recycleInstanceAgents` function, which generates
  * a cleaned `InstanceAgents` for a new game cycle.
  *
