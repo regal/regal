@@ -8,11 +8,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import {
-    buildRevertFunction,
-    scrubAgents,
-    StaticAgentRegistry
-} from "../agents";
+import { StaticAgentRegistry } from "../agents";
 import { GameMetadata, GameOptions, MetadataManager } from "../config";
 import { RegalError } from "../error";
 import { buildGameInstance, ContextManager, GameInstance } from "../state";
@@ -179,7 +175,7 @@ export class Game {
             }
 
             newInstance = instance.recycle();
-            scrubAgents(newInstance.agents);
+            newInstance.agents.scrubAgents();
 
             const activatedEvent = HookManager.playerCommandHook(command);
             newInstance.events.invoke(activatedEvent);
@@ -253,9 +249,7 @@ export class Game {
             }
 
             newInstance = instance.recycle();
-
-            const revert = buildRevertFunction(instance.agents);
-            revert(newInstance);
+            newInstance.agents.simulateRevert(instance.agents);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }

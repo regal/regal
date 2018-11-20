@@ -5,12 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export {
-    Agent,
-    InstanceAgentsInternal,
-    PropertyChange,
-    PropertyOperation
-} from "./agents";
+export { Agent } from "./agents";
 export { RegalError } from "./error";
 export {
     EventFunction,

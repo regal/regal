@@ -96,6 +96,33 @@ export interface InstanceAgentsInternal {
      * @returns Whether the property was deleted.
      */
     deleteAgentProperty(id: number, property: PropertyKey): boolean;
+
+    /**
+     * Creates an `InstanceAgentsInternal` for the new game cycle, keeping only
+     * the final properties of every agent from before.
+     *
+     * @param newInstance The new `GameInstance` that will own the new `InstanceAgentsInternal`.
+     */
+    recycle(newInstance: GameInstance): InstanceAgentsInternal;
+
+    /**
+     * Traverses all agents that are accessible from the `GameInstance`'s
+     * state via breadth-first search. All remaining agents (the ones with
+     * no references to them) are deleted from the `InstanceAgentsInternal`.
+     *
+     * If run at the improper time, this will break event sourcing and/or
+     * instance reverting. Make sure to use this correctly.
+     */
+    scrubAgents(): void;
+
+    /**
+     * Builds and executes a `TrackedEvent` that reverts all changes in this
+     * `InstanceAgentsInternal` since a specified event.
+     *
+     * @param source The agent history on which the revert function will be based. Is not modified.
+     * @param revertTo The id of the `TrackedEvent` to which the state will be reverted.
+     */
+    simulateRevert(source: InstanceAgentsInternal, revertTo?: number): void;
 }
 
 /** Whether the property is a positive integer, meaning its a valid agent id. */

@@ -6,6 +6,7 @@
  */
 
 import { RegalError } from "../../error";
+import { on } from "../../events";
 import { GameInstance } from "../../state";
 import { isAgent } from "../agent";
 import {
@@ -14,7 +15,10 @@ import {
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
 import { AgentReference, isAgentReference } from "../agent-reference";
-import { InstanceAgentsInternal, propertyIsAgentId } from "../instance-agents";
+import {
+    InstanceAgentsInternal,
+    propertyIsAgentId
+} from "../instance-agents-internal";
 import { StaticAgentRegistry } from "../static-agent-registry";
 import {
     buildActiveAgentArrayProxy,
@@ -219,5 +223,110 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         }
 
         return undefined;
+    }
+
+    public recycle(newInstance: GameInstance): InstanceAgentsInternal {
+        const newAgents = buildInstanceAgents(newInstance, this.nextId);
+
+        for (const formerAgent of this.agentManagers()) {
+            const id = formerAgent.id;
+            const am = newAgents.createAgentManager(id);
+
+            const propsToAdd = Object.keys(formerAgent).filter(
+                key => key !== "game" && key !== "id"
+            );
+
+            // For each updated property on the old agent, add its last value to the new agent.
+            propsToAdd.forEach(prop => {
+                if (formerAgent.propertyWasDeleted(prop)) {
+                    if (StaticAgentRegistry.hasAgentProperty(id, prop)) {
+                        am.deleteProperty(prop); // Record deletions to static agents.
+                    }
+
+                    return; // If the property was deleted, don't add it to the new record.
+                }
+
+                let formerValue = formerAgent.getProperty(prop);
+
+                if (isAgentReference(formerValue)) {
+                    formerValue = new AgentReference(formerValue.refId);
+                }
+
+                am.setProperty(prop, formerValue);
+            });
+        }
+
+        return newAgents;
+    }
+
+    public scrubAgents(): void {
+        const seen = new Set<number>();
+        const q = [0]; // Start at the state, which always has an id of zero
+
+        while (q.length > 0) {
+            const id = q.shift();
+            seen.add(id);
+
+            for (const prop of this.getAgentPropertyKeys(id)) {
+                const val = this.getAgentProperty(id, prop);
+                if (isAgent(val) && !seen.has(val.id)) {
+                    q.push(val.id);
+                }
+            }
+        }
+
+        const waste = Object.keys(this)
+            .filter(propertyIsAgentId)
+            .filter(id => !seen.has(Number(id)));
+
+        for (const id of waste) {
+            delete this[id];
+        }
+    }
+
+    public simulateRevert(
+        source: InstanceAgentsInternal,
+        revertTo: number = 0
+    ): void {
+        // Build revert function
+        on("REVERT", game => {
+            const target = game.agents;
+
+            for (const am of source.agentManagers()) {
+                const id = am.id;
+
+                const props = Object.keys(am).filter(
+                    key => key !== "game" && key !== "id"
+                );
+
+                for (const prop of props) {
+                    const history = am.getPropertyHistory(prop);
+                    const lastChangeIdx = history.findIndex(
+                        change => change.eventId <= revertTo
+                    );
+
+                    if (lastChangeIdx === -1) {
+                        // If all changes to the property happened after the target event, delete/reset it
+                        if (StaticAgentRegistry.hasAgentProperty(id, prop)) {
+                            const newVal = StaticAgentRegistry.getAgentProperty(
+                                id,
+                                prop
+                            );
+                            target.setAgentProperty(id, prop, newVal);
+                        } else {
+                            target.deleteAgentProperty(id, prop);
+                        }
+                    } else {
+                        // Otherwise, set the property to its value right after the target event
+                        const targetVal = history[lastChangeIdx].final;
+                        const currentVal = target.getAgentProperty(id, prop);
+
+                        if (targetVal !== currentVal) {
+                            target.setAgentProperty(id, prop, targetVal);
+                        }
+                    }
+                }
+            }
+        })(this.game); // Execute the revert function on this instance
     }
 }

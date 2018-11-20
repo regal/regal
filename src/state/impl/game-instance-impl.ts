@@ -10,8 +10,7 @@ import {
     buildActiveAgentProxy,
     buildInstanceAgents,
     InstanceAgentsInternal,
-    isAgent,
-    recycleInstanceAgents
+    isAgent
 } from "../../agents";
 import {
     buildInstanceOptions,
@@ -87,7 +86,7 @@ class GameInstanceImpl implements GameInstance {
 
         const newGame = new GameInstanceImpl(opts, genSeed);
         newGame.events = recycleInstanceEvents(this.events, newGame);
-        newGame.agents = recycleInstanceAgents(this.agents, newGame);
+        newGame.agents = this.agents.recycle(newGame);
         newGame.output = recycleInstanceOutput(this.output, newGame);
         newGame.random = recycleInstanceRandom(this.random, newGame);
 
