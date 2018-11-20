@@ -32,6 +32,5 @@ export {
     onBeforeUndoCommand
 } from "./api";
 export { GameOptions, GameMetadata } from "./config";
-export { GameInstance, buildGameInstance } from "./state";
+export { GameInstance } from "./state";
 export { OutputLineType, OutputLine, InstanceOutput } from "./output";
-// export { loadConfig } from "./load-config";
