@@ -55,7 +55,7 @@ const activeAgentProxyHandler = (id: number, game: GameInstance) => ({
  *
  * The proxy wraps an empty object and has no tangible connection to the agent
  * which it is imitating. All calls to the proxy are forwarded to the
- * `GameInstance`'s `InstanceAgents`, simulating the behavior of normal object.
+ * `GameInstance`'s `InstanceAgentsInternal`, simulating the behavior of normal object.
  *
  * @param id    The proxy agent's id.
  * @param game  The `GameInstance` of the current context.

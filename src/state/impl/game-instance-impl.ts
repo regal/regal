@@ -9,7 +9,7 @@ import {
     activateAgent,
     buildActiveAgentProxy,
     buildInstanceAgents,
-    InstanceAgents,
+    InstanceAgentsInternal,
     isAgent,
     recycleInstanceAgents
 } from "../../agents";
@@ -48,7 +48,7 @@ export const buildGameInstance = (
 ): GameInstance => new GameInstanceImpl(options);
 
 class GameInstanceImpl implements GameInstance {
-    public agents: InstanceAgents;
+    public agents: InstanceAgentsInternal;
     public events: InstanceEvents;
     public output: InstanceOutput;
     public options: InstanceOptions;

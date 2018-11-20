@@ -1,6 +1,6 @@
 /*
- * Contains the `recycleInstanceAgents` function, which generates
- * a cleaned `InstanceAgents` for a new game cycle.
+ * Contains the `recycleInstanceAgentsInternal` function, which generates
+ * a cleaned `InstanceAgentsInternal` for a new game cycle.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
@@ -9,20 +9,20 @@
 import { GameInstance } from "../../state";
 import { AgentReference, isAgentReference } from "../agent-reference";
 import { buildInstanceAgents } from "../impl";
-import { InstanceAgents } from "../instance-agents";
+import { InstanceAgentsInternal } from "../instance-agents";
 import { StaticAgentRegistry } from "../static-agent-registry";
 
 /**
- * Creates an `InstanceAgents` for the new game cycle, keeping only
+ * Creates an `InstanceAgentsInternal` for the new game cycle, keeping only
  * the final properties of every agent from before.
  *
- * @param oldAgents The `InstanceAgents` to recycle data from.
- * @param newInstance The new `GameInstance` that will own this `InstanceAgents`.
+ * @param oldAgents The `InstanceAgentsInternal` to recycle data from.
+ * @param newInstance The new `GameInstance` that will own this `InstanceAgentsInternal`.
  */
 export const recycleInstanceAgents = (
-    oldAgents: InstanceAgents,
+    oldAgents: InstanceAgentsInternal,
     newInstance: GameInstance
-): InstanceAgents => {
+): InstanceAgentsInternal => {
     const newAgents = buildInstanceAgents(newInstance, oldAgents.nextId);
 
     for (const formerAgent of oldAgents.agentManagers()) {

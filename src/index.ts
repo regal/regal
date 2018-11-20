@@ -7,7 +7,7 @@
 
 export {
     Agent,
-    InstanceAgents,
+    InstanceAgentsInternal,
     PropertyChange,
     PropertyOperation
 } from "./agents";

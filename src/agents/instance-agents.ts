@@ -11,11 +11,11 @@ import { AgentManager } from "./agent-manager";
 /**
  * Manager for all agents in a `GameInstance`.
  *
- * For each active agent, the `InstanceAgents` will have a property
+ * For each active agent, the `InstanceAgentsInternal` will have a property
  * at that agent's id that contains an `AgentManager`.
  */
-export interface InstanceAgents {
-    /** The `GameInstance` that owns this `InstanceAgents`. */
+export interface InstanceAgentsInternal {
+    /** The `GameInstance` that owns this `InstanceAgentsInternal`. */
     readonly game: GameInstance;
 
     /** The ID that will be assigned to the next activated agent. */
@@ -45,7 +45,7 @@ export interface InstanceAgents {
     createAgentManager(id: number): AgentManager;
 
     /**
-     * Reserves an id with the `InstanceAgents` for a newly activated agent.
+     * Reserves an id with the `InstanceAgentsInternal` for a newly activated agent.
      * @returns The reserved agent id.
      */
     reserveNewId(): number;
@@ -79,7 +79,7 @@ export interface InstanceAgents {
     setAgentProperty(id: number, property: PropertyKey, value: any): boolean;
 
     /**
-     * Whether this `InstanceAgents` has the agent property or if there's
+     * Whether this `InstanceAgentsInternal` has the agent property or if there's
      * a static agent that has the property, and the property hasn't
      * been deleted.
      *

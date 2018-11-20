@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export { InstanceAgents } from "./instance-agents";
+export { InstanceAgentsInternal } from "./instance-agents";
 export { Agent, isAgent } from "./agent";
 export { StaticAgentRegistry } from "./static-agent-registry";
 export { PropertyChange, PropertyOperation } from "./agent-properties";

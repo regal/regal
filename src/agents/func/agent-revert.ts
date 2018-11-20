@@ -1,19 +1,19 @@
 /*
  * Contains `buildRevertFunction` for reverting changes made to an
- * `InstanceAgents` during the context of a game cycle.
+ * `InstanceAgentsInternal` during the context of a game cycle.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 import { on } from "../../events";
-import { InstanceAgents } from "../instance-agents";
+import { InstanceAgentsInternal } from "../instance-agents";
 import { StaticAgentRegistry } from "../static-agent-registry";
 
 /**
- * Builds a `TrackedEvent` that reverts all the changes to a given `InstanceAgents` since a specified event.
+ * Builds a `TrackedEvent` that reverts all the changes to a given `InstanceAgentsInternal` since a specified event.
  *
- * Does not modify the `InstanceAgents` argument.
+ * Does not modify the `InstanceAgentsInternal` argument.
  *
  * @param agents The agent history on which the revert function will be based.
  * @param revertTo The id of the `TrackedEvent` to which the state will be reverted. Defaults to 0 (the default event id).
@@ -21,7 +21,7 @@ import { StaticAgentRegistry } from "../static-agent-registry";
  * @returns A `TrackedEvent` that will perform the revert function onto the `GameInstance` on which it's invoked.
  */
 export const buildRevertFunction = (
-    agents: InstanceAgents,
+    agents: InstanceAgentsInternal,
     revertTo: number = 0
 ) =>
     on("REVERT", game => {

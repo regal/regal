@@ -11,7 +11,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { InstanceAgents } from "../agents";
+import { InstanceAgentsInternal } from "../agents";
 import { GameOptions, InstanceOptions } from "../config";
 import { InstanceEvents } from "../events";
 import { InstanceOutput } from "../output";
@@ -25,7 +25,7 @@ import { InstanceRandom } from "../random";
  */
 export interface GameInstance {
     /** The manager for all agents in the instance. */
-    agents: InstanceAgents;
+    agents: InstanceAgentsInternal;
 
     /** The manager for all events in the instance. */
     events: InstanceEvents;

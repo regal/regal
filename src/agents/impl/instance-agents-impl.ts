@@ -1,5 +1,5 @@
 /*
- * Contains implementation of `InstanceAgents`.
+ * Contains implementation of `InstanceAgentsInternal`.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
@@ -14,7 +14,7 @@ import {
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
 import { AgentReference, isAgentReference } from "../agent-reference";
-import { InstanceAgents, propertyIsAgentId } from "../instance-agents";
+import { InstanceAgentsInternal, propertyIsAgentId } from "../instance-agents";
 import { StaticAgentRegistry } from "../static-agent-registry";
 import {
     buildActiveAgentArrayProxy,
@@ -23,17 +23,17 @@ import {
 import { buildAgentManager } from "./agent-manager-impl";
 
 /**
- * Builds an implementation of `InstanceAgents` for the given `GameInstance`
+ * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`
  * @param game The `GameInstance`.
  * @param nextId The next agent ID to start activation at (optional).
  */
 export const buildInstanceAgents = (
     game: GameInstance,
     nextId?: number
-): InstanceAgents => new InstanceAgentsImpl(game, nextId);
+): InstanceAgentsInternal => new InstanceAgentsImpl(game, nextId);
 
-/** Implementation of `InstanceAgents`. */
-class InstanceAgentsImpl implements InstanceAgents {
+/** Implementation of `InstanceAgentsInternal`. */
+class InstanceAgentsImpl implements InstanceAgentsInternal {
     private _nextId: number;
 
     constructor(public game: GameInstance, nextId?: number) {
