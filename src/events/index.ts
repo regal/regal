@@ -13,12 +13,11 @@ export {
     isEventQueue,
     isTrackedEvent
 } from "./event-types";
-export { enqueue, nq, on } from "./func/event-builders";
 export {
     EventRecord,
     DEFAULT_EVENT_ID,
     DEFAULT_EVENT_NAME
 } from "./event-record";
 export { InstanceEvents } from "./instance-events";
-export { recycleInstanceEvents } from "./func/recycle-instance-events";
-export { buildInstanceEvents } from "./impl";
+export { InstanceEventsInternal } from "./instance-events-internal";
+export { buildInstanceEvents, enqueue, nq, on } from "./impl";

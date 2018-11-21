@@ -14,7 +14,7 @@ import {
     isEventQueue,
     TrackedEvent
 } from "../event-types";
-import { enqueue } from "../func/event-builders";
+import { enqueue } from "./event-builders";
 
 /** Builds an `EventFunction` that allows an `EventQueue` to be invoked like any other `EventFunction`. */
 const queueInvocation = (

@@ -12,7 +12,6 @@ export {
     TrackedEvent,
     EventQueue,
     noop,
-    EventRecord,
     InstanceEvents,
     enqueue,
     nq,

@@ -13,7 +13,7 @@
 
 import { InstanceAgentsInternal } from "../agents";
 import { GameOptions, InstanceOptions } from "../config";
-import { InstanceEvents } from "../events";
+import { InstanceEventsInternal } from "../events";
 import { InstanceOutput } from "../output";
 import { InstanceRandom } from "../random";
 
@@ -28,7 +28,7 @@ export interface GameInstance {
     agents: InstanceAgentsInternal;
 
     /** The manager for all events in the instance. */
-    events: InstanceEvents;
+    events: InstanceEventsInternal;
 
     /** The manager for all output in the instance. */
     output: InstanceOutput;
