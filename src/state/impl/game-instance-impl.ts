@@ -9,33 +9,21 @@ import {
     activateAgent,
     buildActiveAgentProxy,
     buildInstanceAgents,
-    InstanceAgents,
-    isAgent,
-    recycleInstanceAgents
+    InstanceAgentsInternal,
+    isAgent
 } from "../../agents";
 import {
     buildInstanceOptions,
     GameOptions,
-    InstanceOptions
+    InstanceOptionsInternal
 } from "../../config";
 import { RegalError } from "../../error";
-import {
-    buildInstanceEvents,
-    InstanceEvents,
-    recycleInstanceEvents
-} from "../../events";
-import {
-    buildInstanceOutput,
-    InstanceOutput,
-    recycleInstanceOutput
-} from "../../output";
-import {
-    buildInstanceRandom,
-    InstanceRandom,
-    recycleInstanceRandom
-} from "../../random";
+import { buildInstanceEvents, InstanceEventsInternal } from "../../events";
+import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
+import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
 import { ContextManager } from "../context-manager";
 import { GameInstance } from "../game-instance";
+import { GameInstanceInternal } from "../game-instance-internal";
 
 /**
  * Constructs a new `GameInstance` with optional `GameOption` overrides.
@@ -45,14 +33,14 @@ import { GameInstance } from "../game-instance";
  */
 export const buildGameInstance = (
     options: Partial<GameOptions> = {}
-): GameInstance => new GameInstanceImpl(options);
+): GameInstanceInternal => new GameInstanceImpl(options);
 
-class GameInstanceImpl implements GameInstance {
-    public agents: InstanceAgents;
-    public events: InstanceEvents;
-    public output: InstanceOutput;
-    public options: InstanceOptions;
-    public random: InstanceRandom;
+class GameInstanceImpl implements GameInstanceInternal {
+    public agents: InstanceAgentsInternal;
+    public events: InstanceEventsInternal;
+    public output: InstanceOutputInternal;
+    public options: InstanceOptionsInternal;
+    public random: InstanceRandomInternal;
     public state: any;
 
     /**
@@ -75,7 +63,7 @@ class GameInstanceImpl implements GameInstance {
         this.state = buildActiveAgentProxy(0, this);
     }
 
-    public recycle(newOptions?: Partial<GameOptions>): GameInstance {
+    public recycle(newOptions?: Partial<GameOptions>): GameInstanceImpl {
         const opts =
             newOptions === undefined ? this.options.overrides : newOptions;
 
@@ -86,10 +74,10 @@ class GameInstanceImpl implements GameInstance {
         }
 
         const newGame = new GameInstanceImpl(opts, genSeed);
-        newGame.events = recycleInstanceEvents(this.events, newGame);
-        newGame.agents = recycleInstanceAgents(this.agents, newGame);
-        newGame.output = recycleInstanceOutput(this.output, newGame);
-        newGame.random = recycleInstanceRandom(this.random, newGame);
+        newGame.events = this.events.recycle(newGame);
+        newGame.agents = this.agents.recycle(newGame);
+        newGame.output = this.output.recycle(newGame);
+        newGame.random = this.random.recycle(newGame);
 
         return newGame;
     }

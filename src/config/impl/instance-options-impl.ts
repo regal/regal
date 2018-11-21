@@ -7,14 +7,11 @@
 
 import { RegalError } from "../../error";
 import { generateSeed } from "../../random";
-import { GameInstance } from "../../state";
-import {
-    ensureOverridesAllowed,
-    validateOptions
-} from "../func/validate-options";
+import { GameInstance, GameInstanceInternal } from "../../state";
 import { DEFAULT_GAME_OPTIONS, GameOptions } from "../game-options";
-import { InstanceOptions } from "../instance-options";
+import { InstanceOptionsInternal } from "../instance-options-internal";
 import { MetadataManager } from "../metadata-manager";
+import { ensureOverridesAllowed, validateOptions } from "./validate-options";
 
 /** Prevents `InstanceOptions.overrides` from being modified. */
 const OPTION_OVERRIDES_PROXY_HANDLER = {
@@ -27,7 +24,11 @@ const OPTION_OVERRIDES_PROXY_HANDLER = {
 
 /** Prevents `InstanceOptions` from being modified. */
 const INSTANCE_OPTIONS_PROXY_HANDLER = {
-    get(target: InstanceOptions, propertyKey: PropertyKey, receiver: object) {
+    get(
+        target: InstanceOptionsInternal,
+        propertyKey: PropertyKey,
+        receiver: object
+    ) {
         // If the option hasn't been overridden, get the default value.
         return target[propertyKey] === undefined
             ? DEFAULT_GAME_OPTIONS[propertyKey]
@@ -51,12 +52,13 @@ const INSTANCE_OPTIONS_PROXY_HANDLER = {
  * @param generatedSeed Include if the previous GameInstance had a default-generated seed
  */
 export const buildInstanceOptions = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     overrides: Partial<GameOptions>,
     generatedSeed?: string
-): InstanceOptions => new InstanceOptionsImpl(game, overrides, generatedSeed);
+): InstanceOptionsInternal =>
+    new InstanceOptionsImpl(game, overrides, generatedSeed);
 
-class InstanceOptionsImpl implements InstanceOptions {
+class InstanceOptionsImpl implements InstanceOptionsInternal {
     public allowOverrides: string[] | boolean;
     public debug: boolean;
     public showMinor: boolean;
@@ -66,7 +68,7 @@ class InstanceOptionsImpl implements InstanceOptions {
     public readonly overrides: Partial<GameOptions>;
 
     constructor(
-        public game: GameInstance,
+        public game: GameInstanceInternal,
         overrides: Partial<GameOptions>,
         generatedSeed?: string
     ) {

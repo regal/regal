@@ -8,12 +8,10 @@ import {
     ALPHABET_CHARSET,
     NUMBERS_CHARSET,
     InstanceRandom,
-    buildInstanceRandom
-} from "../../src/random";
-import {
+    buildInstanceRandom,
     SEED_LENGTH,
     DEFAULT_SEED_CHARSET
-} from "../../src/random/func/generate-seed";
+} from "../../src/random";
 import { buildGameInstance } from "../../src/state";
 import { RegalError } from "../../src/error";
 import { log, getDemoMetadata } from "../test-utils";

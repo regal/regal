@@ -10,7 +10,7 @@
 
 import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent";
-import { propertyIsAgentId } from "./instance-agents";
+import { propertyIsAgentId } from "./instance-agents-internal";
 
 /**
  * Static class that manages all static agents used in the game.

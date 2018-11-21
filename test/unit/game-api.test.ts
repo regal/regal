@@ -15,10 +15,15 @@ import { Agent } from "../../src/agents";
 import {
     DEFAULT_GAME_OPTIONS,
     OPTION_KEYS,
-    MetadataManager
+    MetadataManager,
+    InstanceOptionsInternal
 } from "../../src/config";
-import { buildGameInstance, GameInstance } from "../../src/state";
-import { SEED_LENGTH } from "../../src/random/func/generate-seed";
+import {
+    buildGameInstance,
+    GameInstance,
+    GameInstanceInternal
+} from "../../src/state";
+import { SEED_LENGTH } from "../../src/random";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -198,9 +203,10 @@ describe("Game API", function() {
             });
 
             const r1 = Game.postStartCommand();
+            const r1_instance = r1.instance as GameInstanceInternal;
 
             expect(
-                r1.instance.agents.agentManagers().map(am => am.id)
+                r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
 
             expect(r1.output).to.deep.equal({
@@ -215,12 +221,13 @@ describe("Game API", function() {
             });
 
             const r2 = Game.postPlayerCommand(r1.instance, "");
+            const r2_instance = r2.instance as GameInstanceInternal;
 
             expect(
-                r1.instance.agents.agentManagers().map(am => am.id)
+                r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r2.instance.agents.agentManagers().map(am => am.id)
+                r2_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
 
             expect(r2.output).to.deep.equal({
@@ -235,12 +242,13 @@ describe("Game API", function() {
             });
 
             const r3 = Game.postPlayerCommand(r2.instance, "");
+            const r3_instance = r3.instance as GameInstanceInternal;
 
             expect(
-                r2.instance.agents.agentManagers().map(am => am.id)
+                r2_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r3.instance.agents.agentManagers().map(am => am.id)
+                r3_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2]);
 
             expect(r3.output).to.deep.equal({
@@ -255,12 +263,13 @@ describe("Game API", function() {
             });
 
             const r4 = Game.postPlayerCommand(r3.instance, "");
+            const r4_instance = r4.instance as GameInstanceInternal;
 
             expect(
-                r3.instance.agents.agentManagers().map(am => am.id)
+                r3_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2]);
             expect(
-                r4.instance.agents.agentManagers().map(am => am.id)
+                r4_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1]);
         });
     });
@@ -328,7 +337,8 @@ describe("Game API", function() {
             onStartCommand(game => noop);
 
             const response = Game.postStartCommand();
-            const options = response.instance.options;
+            const options = response.instance
+                .options as InstanceOptionsInternal;
 
             expect(options.overrides).to.deep.equal({});
             keysBesidesSeed.forEach(key =>
@@ -342,7 +352,8 @@ describe("Game API", function() {
             onStartCommand(game => noop);
 
             const response = Game.postStartCommand({});
-            const options = response.instance.options;
+            const options = response.instance
+                .options as InstanceOptionsInternal;
 
             expect(options.overrides).to.deep.equal({});
             keysBesidesSeed.forEach(key =>
@@ -358,7 +369,8 @@ describe("Game API", function() {
             const response = Game.postStartCommand({
                 debug: true
             });
-            const options = response.instance.options;
+            const options = response.instance
+                .options as InstanceOptionsInternal;
 
             expect(options.overrides).to.deep.equal({
                 debug: true
@@ -417,7 +429,9 @@ describe("Game API", function() {
 
             expect(response.output.wasSuccessful).to.be.true;
             expect(response.instance.options.debug).to.be.true;
-            expect(response.instance.options.overrides).to.deep.equal({
+            expect(
+                (response.instance.options as InstanceOptionsInternal).overrides
+            ).to.deep.equal({
                 debug: true
             });
         });
@@ -435,7 +449,9 @@ describe("Game API", function() {
             expect(response.output.wasSuccessful).to.be.true;
             expect(response.instance.options.debug).to.be.false;
             expect(response.instance.options.showMinor).to.be.false;
-            expect(response.instance.options.overrides).to.deep.equal({
+            expect(
+                (response.instance.options as InstanceOptionsInternal).overrides
+            ).to.deep.equal({
                 debug: false,
                 showMinor: false
             });
@@ -513,45 +529,49 @@ describe("Game API", function() {
             });
 
             const r1 = Game.postStartCommand();
+            const r1_instance = r1.instance as GameInstanceInternal;
 
             expect(
-                r1.instance.agents.agentManagers().map(am => am.id)
+                r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r1.instance.agents.getAgentProperty(0, "arr").length
+                r1_instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(2);
             expect(r1.instance.state.arr[1].name).to.equal("D2");
 
             const r2 = Game.postPlayerCommand(r1.instance, "");
+            const r2_instance = r2.instance as GameInstanceInternal;
 
             expect(
-                r1.instance.agents.agentManagers().map(am => am.id)
+                r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r2.instance.agents.agentManagers().map(am => am.id)
+                r2_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r2.instance.agents.getAgentProperty(0, "arr").length
+                r2_instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(1);
             expect(r1.instance.state.arr[0].name).to.equal("D1");
 
             const r3 = Game.postUndoCommand(r2.instance);
+            const r3_instance = r3.instance as GameInstanceInternal;
 
             expect(
-                r3.instance.agents.agentManagers().map(am => am.id)
+                r3_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r3.instance.agents.getAgentProperty(0, "arr").length
+                r3_instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(2);
-            expect(r1.instance.state.arr[1].name).to.equal("D2");
+            expect(r1_instance.state.arr[1].name).to.equal("D2");
 
             const r4 = Game.postPlayerCommand(r3.instance, "");
+            const r4_instance = r4.instance as GameInstanceInternal;
 
             expect(
-                r4.instance.agents.agentManagers().map(am => am.id)
+                r4_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r4.instance.agents.getAgentProperty(0, "arr").length
+                r4_instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(1);
             expect(r1.instance.state.arr[0].name).to.equal("D1");
         });

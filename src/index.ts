@@ -5,19 +5,13 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export {
-    Agent,
-    InstanceAgents,
-    PropertyChange,
-    PropertyOperation
-} from "./agents";
+export { Agent } from "./agents";
 export { RegalError } from "./error";
 export {
     EventFunction,
     TrackedEvent,
     EventQueue,
     noop,
-    EventRecord,
     InstanceEvents,
     enqueue,
     nq,
@@ -31,7 +25,6 @@ export {
     onStartCommand,
     onBeforeUndoCommand
 } from "./api";
-export { GameOptions, GameMetadata } from "./config";
-export { GameInstance, buildGameInstance } from "./state";
+export { GameOptions, GameMetadata, InstanceOptions } from "./config";
+export { GameInstance } from "./state";
 export { OutputLineType, OutputLine, InstanceOutput } from "./output";
-// export { loadConfig } from "./load-config";

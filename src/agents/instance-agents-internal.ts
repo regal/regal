@@ -5,18 +5,18 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../state";
+import { GameInstanceInternal } from "../state";
 import { AgentManager } from "./agent-manager";
 
 /**
  * Manager for all agents in a `GameInstance`.
  *
- * For each active agent, the `InstanceAgents` will have a property
+ * For each active agent, the `InstanceAgentsInternal` will have a property
  * at that agent's id that contains an `AgentManager`.
  */
-export interface InstanceAgents {
-    /** The `GameInstance` that owns this `InstanceAgents`. */
-    readonly game: GameInstance;
+export interface InstanceAgentsInternal {
+    /** The `GameInstance` that owns this `InstanceAgentsInternal`. */
+    readonly game: GameInstanceInternal;
 
     /** The ID that will be assigned to the next activated agent. */
     readonly nextId: number;
@@ -45,7 +45,7 @@ export interface InstanceAgents {
     createAgentManager(id: number): AgentManager;
 
     /**
-     * Reserves an id with the `InstanceAgents` for a newly activated agent.
+     * Reserves an id with the `InstanceAgentsInternal` for a newly activated agent.
      * @returns The reserved agent id.
      */
     reserveNewId(): number;
@@ -79,7 +79,7 @@ export interface InstanceAgents {
     setAgentProperty(id: number, property: PropertyKey, value: any): boolean;
 
     /**
-     * Whether this `InstanceAgents` has the agent property or if there's
+     * Whether this `InstanceAgentsInternal` has the agent property or if there's
      * a static agent that has the property, and the property hasn't
      * been deleted.
      *
@@ -96,6 +96,33 @@ export interface InstanceAgents {
      * @returns Whether the property was deleted.
      */
     deleteAgentProperty(id: number, property: PropertyKey): boolean;
+
+    /**
+     * Creates an `InstanceAgentsInternal` for the new game cycle, keeping only
+     * the final properties of every agent from before.
+     *
+     * @param newInstance The new `GameInstance` that will own the new `InstanceAgentsInternal`.
+     */
+    recycle(newInstance: GameInstanceInternal): InstanceAgentsInternal;
+
+    /**
+     * Traverses all agents that are accessible from the `GameInstance`'s
+     * state via breadth-first search. All remaining agents (the ones with
+     * no references to them) are deleted from the `InstanceAgentsInternal`.
+     *
+     * If run at the improper time, this will break event sourcing and/or
+     * instance reverting. Make sure to use this correctly.
+     */
+    scrubAgents(): void;
+
+    /**
+     * Builds and executes a `TrackedEvent` that reverts all changes in this
+     * `InstanceAgentsInternal` since a specified event.
+     *
+     * @param source The agent history on which the revert function will be based. Is not modified.
+     * @param revertTo The id of the `TrackedEvent` to which the state will be reverted.
+     */
+    simulateRevert(source: InstanceAgentsInternal, revertTo?: number): void;
 }
 
 /** Whether the property is a positive integer, meaning its a valid agent id. */

@@ -12,7 +12,7 @@ import {
     isEventQueue,
     TrackedEvent
 } from "../event-types";
-import { buildEventQueue, buildThenMethod } from "../impl";
+import { buildEventQueue, buildThenMethod } from "./event-queue-impl";
 
 /**
  * Adds the events to the end of the game's event queue.

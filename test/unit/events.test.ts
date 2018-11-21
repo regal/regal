@@ -10,7 +10,6 @@ import {
     nq,
     isEventQueue,
     enqueue,
-    recycleInstanceEvents,
     buildInstanceEvents
 } from "../../src/events";
 import { log, getDemoMetadata } from "../test-utils";
@@ -918,7 +917,7 @@ describe("Events", function() {
             const game1 = buildGameInstance();
 
             const game2 = buildGameInstance();
-            const events2 = recycleInstanceEvents(game1.events, game2);
+            const events2 = game1.events.recycle(game2);
 
             expect(events2.lastEventId).to.equal(0);
             expect(events2.game).to.equal(game2);
@@ -927,7 +926,7 @@ describe("Events", function() {
             events2.invoke(spam.then(spam).thenq(spam));
 
             const game3 = buildGameInstance();
-            const events3 = recycleInstanceEvents(events2, game3);
+            const events3 = events2.recycle(game3);
 
             expect(events3.lastEventId).to.equal(3);
             expect(events3.game).to.equal(game3);

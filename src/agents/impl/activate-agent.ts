@@ -6,10 +6,13 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
-import { buildActiveAgentArrayProxy, buildActiveAgentProxy } from "../impl";
-import { propertyIsAgentId } from "../instance-agents";
+import { propertyIsAgentId } from "../instance-agents-internal";
+import {
+    buildActiveAgentArrayProxy,
+    buildActiveAgentProxy
+} from "./active-agent-proxy";
 
 /**
  * Returns an activated agent or agent array within the current game context.
@@ -21,7 +24,7 @@ import { propertyIsAgentId } from "../instance-agents";
  * @param agent The agent to be activated (not modified).
  */
 export const activateAgent = <T extends Agent>(
-    game: GameInstance,
+    game: GameInstanceInternal,
     agent: T
 ): T => {
     let id = agent.id;

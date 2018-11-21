@@ -7,9 +7,7 @@ import { Game } from "../../src/api";
 import {
     Agent,
     PropertyOperation,
-    StaticAgentRegistry,
-    buildRevertFunction,
-    scrubAgents
+    StaticAgentRegistry
 } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import {
@@ -2684,8 +2682,7 @@ describe("Agents", function() {
             expect(myGame.state[5]).to.equal("Yo 5");
             expect(myGame.state[9]).to.equal("Yo 9");
 
-            const revert = buildRevertFunction(myGame.agents, 1);
-            revert(myGame);
+            myGame.agents.simulateRevert(myGame.agents, 1);
 
             expect(myGame.state.foo).to.equal("Hello, world!");
             expect(myGame.state[0]).to.be.undefined;
@@ -2720,28 +2717,28 @@ describe("Agents", function() {
             expect(myGame.state[5]).to.equal("Yo 5");
             expect(myGame.state[9]).to.equal("Yo 9");
 
-            buildRevertFunction(myGame.agents, 8)(myGame);
+            myGame.agents.simulateRevert(myGame.agents, 8);
 
             expect(myGame.state.foo).to.equal("Hello, world!-0-1-2-3-4-5-6");
             expect(myGame.state[0]).to.equal("Yo 0");
             expect(myGame.state[5]).to.equal("Yo 5");
             expect(myGame.state[9]).to.be.undefined;
 
-            buildRevertFunction(myGame.agents, 6)(myGame);
+            myGame.agents.simulateRevert(myGame.agents, 6);
 
             expect(myGame.state.foo).to.equal("Hello, world!-0-1-2-3-4");
             expect(myGame.state[0]).to.equal("Yo 0");
             expect(myGame.state[5]).to.be.undefined;
             expect(myGame.state[9]).to.be.undefined;
 
-            buildRevertFunction(myGame.agents, 4)(myGame);
+            myGame.agents.simulateRevert(myGame.agents, 4);
 
             expect(myGame.state.foo).to.equal("Hello, world!-0-1-2");
             expect(myGame.state[0]).to.equal("Yo 0");
             expect(myGame.state[5]).to.be.undefined;
             expect(myGame.state[9]).to.be.undefined;
 
-            buildRevertFunction(myGame.agents, 1)(myGame);
+            myGame.agents.simulateRevert(myGame.agents, 1);
 
             expect(myGame.state.foo).to.equal("Hello, world!");
             expect(myGame.state[0]).to.be.undefined;
@@ -2759,7 +2756,7 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
             init(myGame);
-            buildRevertFunction(myGame.agents, 0)(myGame);
+            myGame.agents.simulateRevert(myGame.agents, 0);
 
             expect(myGame.state.foo).to.be.undefined;
             expect(myGame.state.dummy).to.be.undefined;
@@ -2785,7 +2782,7 @@ describe("Agents", function() {
                 "boppity"
             );
 
-            buildRevertFunction(myGame.agents)(myGame);
+            myGame.agents.simulateRevert(myGame.agents);
 
             expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Lars");
             expect(myGame.agents.getAgentProperty(1, "health")).to.equal(15);
@@ -2840,7 +2837,7 @@ describe("Agents", function() {
             });
             expect(myGame.agents.getAgentProperty(3, "name")).to.equal("D2");
 
-            scrubAgents(myGame.agents);
+            myGame.agents.scrubAgents();
 
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
@@ -2878,13 +2875,13 @@ describe("Agents", function() {
                 health: 1
             });
 
-            scrubAgents(myGame.agents);
+            myGame.agents.scrubAgents();
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
 
             (myGame.state.arr as any[]).splice(2, 1);
-            scrubAgents(myGame.agents);
+            myGame.agents.scrubAgents();
 
             expect(
                 myGame.agents.agentManagers().map(am => am.id)

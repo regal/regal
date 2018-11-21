@@ -13,11 +13,8 @@ import { getDemoMetadata, metadataWithOptions, log } from "../test-utils";
 import { on } from "../../src/events";
 import { Agent, PropertyOperation } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
-import { buildGameInstance } from "../../src/state";
-import {
-    SEED_LENGTH,
-    DEFAULT_SEED_CHARSET
-} from "../../src/random/func/generate-seed";
+import { buildGameInstance, GameInstanceInternal } from "../../src/state";
+import { SEED_LENGTH, DEFAULT_SEED_CHARSET } from "../../src/random";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -269,7 +266,9 @@ describe("Config", function() {
                     trackAgentChanges: true
                 });
 
-                expect(response.instance.agents).to.deep.equal({
+                let responseInstance = response.instance as GameInstanceInternal;
+
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 1,
                     game: response.instance,
                     "0": {
@@ -286,7 +285,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 2,
                         name: "INIT",
@@ -309,8 +308,9 @@ describe("Config", function() {
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Lars");
+                responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 2,
                     game: response.instance,
                     "0": {
@@ -379,7 +379,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 5,
                         name: "INTRODUCE",
@@ -446,8 +446,9 @@ describe("Config", function() {
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
+                responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 3,
                     game: response.instance,
                     "0": {
@@ -545,7 +546,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 8,
                         name: "INTRODUCE",
@@ -618,8 +619,9 @@ describe("Config", function() {
                 let response = Game.postStartCommand({
                     trackAgentChanges: false
                 });
+                let responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 1,
                     game: response.instance,
                     "0": {
@@ -636,7 +638,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 2,
                         name: "INIT",
@@ -650,8 +652,9 @@ describe("Config", function() {
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Lars");
+                responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 2,
                     game: response.instance,
                     "0": {
@@ -706,7 +709,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 5,
                         name: "INTRODUCE",
@@ -727,8 +730,9 @@ describe("Config", function() {
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
+                responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 3,
                     game: response.instance,
                     "0": {
@@ -812,7 +816,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 8,
                         name: "INTRODUCE",
