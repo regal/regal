@@ -12,5 +12,5 @@ export {
     onPlayerCommand,
     onStartCommand,
     onBeforeUndoCommand
-} from "./func/api-hooks";
+} from "./api-hooks";
 export { HookManager } from "./api-hook-manager";
