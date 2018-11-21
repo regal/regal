@@ -12,7 +12,7 @@
  */
 
 import { InstanceAgentsInternal } from "../agents";
-import { GameOptions, InstanceOptions } from "../config";
+import { GameOptions, InstanceOptionsInternal } from "../config";
 import { InstanceEventsInternal } from "../events";
 import { InstanceOutputInternal } from "../output";
 import { InstanceRandom } from "../random";
@@ -34,7 +34,7 @@ export interface GameInstance {
     output: InstanceOutputInternal;
 
     /** Contains all options in the instance (read-only). */
-    options: InstanceOptions;
+    options: InstanceOptionsInternal;
 
     /** The manager for generating repeatable random numbers through the game instance. */
     random: InstanceRandom;

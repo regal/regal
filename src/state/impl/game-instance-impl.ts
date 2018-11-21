@@ -15,7 +15,7 @@ import {
 import {
     buildInstanceOptions,
     GameOptions,
-    InstanceOptions
+    InstanceOptionsInternal
 } from "../../config";
 import { RegalError } from "../../error";
 import { buildInstanceEvents, InstanceEventsInternal } from "../../events";
@@ -42,7 +42,7 @@ class GameInstanceImpl implements GameInstance {
     public agents: InstanceAgentsInternal;
     public events: InstanceEventsInternal;
     public output: InstanceOutputInternal;
-    public options: InstanceOptions;
+    public options: InstanceOptionsInternal;
     public random: InstanceRandom;
     public state: any;
 

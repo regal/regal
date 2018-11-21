@@ -25,6 +25,6 @@ export {
     onStartCommand,
     onBeforeUndoCommand
 } from "./api";
-export { GameOptions, GameMetadata } from "./config";
+export { GameOptions, GameMetadata, InstanceOptions } from "./config";
 export { GameInstance } from "./state";
 export { OutputLineType, OutputLine, InstanceOutput } from "./output";
