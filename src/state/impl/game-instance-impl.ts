@@ -19,11 +19,7 @@ import {
 } from "../../config";
 import { RegalError } from "../../error";
 import { buildInstanceEvents, InstanceEventsInternal } from "../../events";
-import {
-    buildInstanceOutput,
-    InstanceOutput,
-    recycleInstanceOutput
-} from "../../output";
+import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
 import {
     buildInstanceRandom,
     InstanceRandom,
@@ -45,7 +41,7 @@ export const buildGameInstance = (
 class GameInstanceImpl implements GameInstance {
     public agents: InstanceAgentsInternal;
     public events: InstanceEventsInternal;
-    public output: InstanceOutput;
+    public output: InstanceOutputInternal;
     public options: InstanceOptions;
     public random: InstanceRandom;
     public state: any;
@@ -83,7 +79,7 @@ class GameInstanceImpl implements GameInstance {
         const newGame = new GameInstanceImpl(opts, genSeed);
         newGame.events = this.events.recycle(newGame);
         newGame.agents = this.agents.recycle(newGame);
-        newGame.output = recycleInstanceOutput(this.output, newGame);
+        newGame.output = this.output.recycle(newGame);
         newGame.random = recycleInstanceRandom(this.random, newGame);
 
         return newGame;

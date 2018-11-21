@@ -6,7 +6,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export { recycleInstanceOutput } from "./func/recycle-instance-output";
 export { buildInstanceOutput } from "./impl";
 export { InstanceOutput } from "./instance-output";
 export { OutputLine, OutputLineType } from "./output-line";
+export { InstanceOutputInternal } from "./instance-output-internal";

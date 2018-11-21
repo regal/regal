@@ -1,11 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 
-import {
-    OutputLineType,
-    recycleInstanceOutput,
-    buildInstanceOutput
-} from "../../src/output";
+import { OutputLineType, buildInstanceOutput } from "../../src/output";
 import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/api";
@@ -211,11 +207,11 @@ describe("Output", function() {
             expect(myGame.output.lineCount).to.equal(11);
         });
 
-        it("recycleInstanceOutput creates a new InstanceOutput with the previous instance's lineCount", function() {
+        it("InstanceOutput.recycle creates a new InstanceOutput with the previous instance's lineCount", function() {
             const game1 = buildGameInstance();
 
             const game2 = buildGameInstance();
-            const output2 = recycleInstanceOutput(game1.output, game2);
+            const output2 = game1.output.recycle(game2);
 
             expect(output2.lineCount).to.equal(0);
             expect(output2.game).to.equal(game2);
@@ -224,7 +220,7 @@ describe("Output", function() {
             output2.write("Foo", "Bar", "Baz");
 
             const game3 = buildGameInstance();
-            const output3 = recycleInstanceOutput(output2, game3);
+            const output3 = output2.recycle(game3);
 
             expect(output3.lineCount).to.equal(3);
             expect(output3.game).to.equal(game3);

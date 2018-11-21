@@ -6,20 +6,24 @@
  */
 
 import { GameInstance } from "../../state";
-import { InstanceOutput } from "../instance-output";
+import { InstanceOutputInternal } from "../instance-output-internal";
 import { OutputLine, OutputLineType } from "../output-line";
 
 /**
- * Constructs an `InstanceOutput`.
- * @param game The `GameInstance` that owns this `InstanceOutput`.
+ * Constructs an `InstanceOutputInternal`.
+ * @param game The `GameInstance` that owns this `InstanceOutputInternal`.
  * @param startingLineCount Optional starting ID for new `OutputLine`s. Defaults to 0.
  */
 export const buildInstanceOutput = (
     game: GameInstance,
     startingLineCount: number = 0
-): InstanceOutput => new InstanceOutputImpl(game, startingLineCount);
+): InstanceOutputInternal => new InstanceOutputImpl(game, startingLineCount);
 
-class InstanceOutputImpl implements InstanceOutput {
+class InstanceOutputImpl implements InstanceOutputInternal {
+    get lineCount() {
+        return this._lineCount;
+    }
+
     public lines: OutputLine[] = [];
 
     /**
@@ -32,8 +36,8 @@ class InstanceOutputImpl implements InstanceOutput {
         this._lineCount = startingLineCount;
     }
 
-    get lineCount() {
-        return this._lineCount;
+    public recycle(newInstance: GameInstance): InstanceOutputInternal {
+        return new InstanceOutputImpl(newInstance, this.lineCount);
     }
 
     public writeLine(
