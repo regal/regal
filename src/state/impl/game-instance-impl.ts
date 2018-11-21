@@ -23,6 +23,7 @@ import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
 import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
 import { ContextManager } from "../context-manager";
 import { GameInstance } from "../game-instance";
+import { GameInstanceInternal } from "../game-instance-internal";
 
 /**
  * Constructs a new `GameInstance` with optional `GameOption` overrides.
@@ -32,9 +33,9 @@ import { GameInstance } from "../game-instance";
  */
 export const buildGameInstance = (
     options: Partial<GameOptions> = {}
-): GameInstance => new GameInstanceImpl(options);
+): GameInstanceInternal => new GameInstanceImpl(options);
 
-class GameInstanceImpl implements GameInstance {
+class GameInstanceImpl implements GameInstanceInternal {
     public agents: InstanceAgentsInternal;
     public events: InstanceEventsInternal;
     public output: InstanceOutputInternal;
@@ -62,7 +63,7 @@ class GameInstanceImpl implements GameInstance {
         this.state = buildActiveAgentProxy(0, this);
     }
 
-    public recycle(newOptions?: Partial<GameOptions>): GameInstance {
+    public recycle(newOptions?: Partial<GameOptions>): GameInstanceImpl {
         const opts =
             newOptions === undefined ? this.options.overrides : newOptions;
 

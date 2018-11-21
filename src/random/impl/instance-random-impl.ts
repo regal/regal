@@ -7,7 +7,7 @@
 
 import Prando from "prando";
 import { RegalError } from "../../error";
-import { GameInstance } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { EXPANDED_CHARSET } from "../charsets";
 import { InstanceRandomInternal } from "../instance-random-internal";
 
@@ -18,7 +18,7 @@ import { InstanceRandomInternal } from "../instance-random-internal";
  * Defaults to zero.
  */
 export const buildInstanceRandom = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     numGenerations: number = 0
 ): InstanceRandomInternal => new InstanceRandomImpl(game, numGenerations);
 
@@ -34,7 +34,7 @@ class InstanceRandomImpl implements InstanceRandomInternal {
         return this._numGenerations;
     }
 
-    constructor(public game: GameInstance, numGenerations: number) {
+    constructor(public game: GameInstanceInternal, numGenerations: number) {
         if (this.seed === undefined) {
             throw new RegalError(
                 "Seed must be defined before an InstanceRandom can be constructed."
@@ -46,7 +46,7 @@ class InstanceRandomImpl implements InstanceRandomInternal {
         this._generator.skip(numGenerations);
     }
 
-    public recycle(newInstance: GameInstance): InstanceRandomInternal {
+    public recycle(newInstance: GameInstanceInternal): InstanceRandomInternal {
         return new InstanceRandomImpl(newInstance, this.numGenerations);
     }
 

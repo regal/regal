@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../state";
+import { GameInstanceInternal } from "../state";
 import { EventRecord } from "./event-record";
 import { InstanceEvents } from "./instance-events";
 
@@ -24,7 +24,7 @@ export interface InstanceEventsInternal extends InstanceEvents {
     history: EventRecord[];
 
     /** The `GameInstance` that owns this `InstanceEventsInternal`. */
-    readonly game: GameInstance;
+    readonly game: GameInstanceInternal;
 
     /**
      * Creates a new `InstanceEventsInternal` for the new game cycle, clearing all
@@ -32,5 +32,5 @@ export interface InstanceEventsInternal extends InstanceEvents {
      *
      * @param newInstance The new `GameInstance` that will own this `InstanceEventsInternal`.
      */
-    recycle(newInstance: GameInstance): InstanceEventsInternal;
+    recycle(newInstance: GameInstanceInternal): InstanceEventsInternal;
 }

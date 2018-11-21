@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../state";
+import { GameInstanceInternal } from "../state";
 import { AgentManager } from "./agent-manager";
 
 /**
@@ -16,7 +16,7 @@ import { AgentManager } from "./agent-manager";
  */
 export interface InstanceAgentsInternal {
     /** The `GameInstance` that owns this `InstanceAgentsInternal`. */
-    readonly game: GameInstance;
+    readonly game: GameInstanceInternal;
 
     /** The ID that will be assigned to the next activated agent. */
     readonly nextId: number;
@@ -103,7 +103,7 @@ export interface InstanceAgentsInternal {
      *
      * @param newInstance The new `GameInstance` that will own the new `InstanceAgentsInternal`.
      */
-    recycle(newInstance: GameInstance): InstanceAgentsInternal;
+    recycle(newInstance: GameInstanceInternal): InstanceAgentsInternal;
 
     /**
      * Traverses all agents that are accessible from the `GameInstance`'s

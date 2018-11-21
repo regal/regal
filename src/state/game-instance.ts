@@ -1,3 +1,8 @@
+import { InstanceOptions } from "../config";
+import { InstanceEvents } from "../events";
+import { InstanceOutput } from "../output";
+import { InstanceRandom } from "../random";
+
 /*
  * A `GameInstance` is the object representation of a game's instance state.
  *
@@ -11,33 +16,24 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { InstanceAgentsInternal } from "../agents";
-import { GameOptions, InstanceOptionsInternal } from "../config";
-import { InstanceEventsInternal } from "../events";
-import { InstanceOutputInternal } from "../output";
-import { InstanceRandomInternal } from "../random";
-
 /**
  * The current state of the game, unique to each player.
  *
- * Contains all internal APIs used by game developers to
- * read and write to the game's instance state.
+ * Contains all APIs used by game developers to read and write
+ * to the game's instance state.
  */
 export interface GameInstance {
-    /** The manager for all agents in the instance. */
-    agents: InstanceAgentsInternal;
-
     /** The manager for all events in the instance. */
-    events: InstanceEventsInternal;
+    events: InstanceEvents;
 
     /** The manager for all output in the instance. */
-    output: InstanceOutputInternal;
+    output: InstanceOutput;
 
     /** Contains all options in the instance (read-only). */
-    options: InstanceOptionsInternal;
+    options: InstanceOptions;
 
     /** The manager for generating repeatable random numbers through the game instance. */
-    random: InstanceRandomInternal;
+    random: InstanceRandom;
 
     /**
      * Free-form agent to contain any instance state desired by the game developer.
@@ -46,17 +42,6 @@ export interface GameInstance {
      * it should be used to store long-term state.
      */
     state: any;
-
-    /**
-     * Creates a new `GameInstance` for the new game cycle, leaving this object unchanged.
-     * **Don't call this unless you know what you're doing.**
-     *
-     * @param newOptions Any option overrides preferred for this specific instance.
-     * Must be allowed by the static configuration's `allowOverrides` option.
-     *
-     * @returns The new `GameInstance`, with each manager cycled.
-     */
-    recycle(newOptions?: Partial<GameOptions>): GameInstance;
 
     /**
      * Activates one or more agents in the current game context. All agents

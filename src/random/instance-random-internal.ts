@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../state";
+import { GameInstanceInternal } from "../state";
 import { InstanceRandom } from "./instance-random";
 
 /**
@@ -13,7 +13,7 @@ import { InstanceRandom } from "./instance-random";
  */
 export interface InstanceRandomInternal extends InstanceRandom {
     /** The `GameInstance` that manages this `InstanceRandom`. */
-    readonly game: GameInstance;
+    readonly game: GameInstanceInternal;
 
     /**
      * The number of values that have been generated over the lifetime of the game.
@@ -29,5 +29,5 @@ export interface InstanceRandomInternal extends InstanceRandom {
      *
      * @param newInstance The new managing `GameInstance`.
      */
-    recycle(newInstance: GameInstance): InstanceRandomInternal;
+    recycle(newInstance: GameInstanceInternal): InstanceRandomInternal;
 }

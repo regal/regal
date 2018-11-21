@@ -7,7 +7,7 @@
 
 import { RegalError } from "../../error";
 import { generateSeed } from "../../random";
-import { GameInstance } from "../../state";
+import { GameInstance, GameInstanceInternal } from "../../state";
 import { DEFAULT_GAME_OPTIONS, GameOptions } from "../game-options";
 import { InstanceOptionsInternal } from "../instance-options-internal";
 import { MetadataManager } from "../metadata-manager";
@@ -52,7 +52,7 @@ const INSTANCE_OPTIONS_PROXY_HANDLER = {
  * @param generatedSeed Include if the previous GameInstance had a default-generated seed
  */
 export const buildInstanceOptions = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     overrides: Partial<GameOptions>,
     generatedSeed?: string
 ): InstanceOptionsInternal =>
@@ -68,7 +68,7 @@ class InstanceOptionsImpl implements InstanceOptionsInternal {
     public readonly overrides: Partial<GameOptions>;
 
     constructor(
-        public game: GameInstance,
+        public game: GameInstanceInternal,
         overrides: Partial<GameOptions>,
         generatedSeed?: string
     ) {

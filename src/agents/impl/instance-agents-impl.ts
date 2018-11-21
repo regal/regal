@@ -7,7 +7,7 @@
 
 import { RegalError } from "../../error";
 import { on } from "../../events";
-import { GameInstance } from "../../state";
+import { GameInstance, GameInstanceInternal } from "../../state";
 import { isAgent } from "../agent";
 import {
     AgentArrayReference,
@@ -32,7 +32,7 @@ import { buildAgentManager } from "./agent-manager-impl";
  * @param nextId The next agent ID to start activation at (optional).
  */
 export const buildInstanceAgents = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     nextId?: number
 ): InstanceAgentsInternal => new InstanceAgentsImpl(game, nextId);
 
@@ -40,7 +40,7 @@ export const buildInstanceAgents = (
 class InstanceAgentsImpl implements InstanceAgentsInternal {
     private _nextId: number;
 
-    constructor(public game: GameInstance, nextId?: number) {
+    constructor(public game: GameInstanceInternal, nextId?: number) {
         this.createAgentManager(0);
         this._nextId =
             nextId !== undefined
@@ -225,7 +225,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return undefined;
     }
 
-    public recycle(newInstance: GameInstance): InstanceAgentsInternal {
+    public recycle(newInstance: GameInstanceInternal): InstanceAgentsInternal {
         const newAgents = buildInstanceAgents(newInstance, this.nextId);
 
         for (const formerAgent of this.agentManagers()) {
@@ -289,7 +289,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         revertTo: number = 0
     ): void {
         // Build revert function
-        on("REVERT", game => {
+        on("REVERT", (game: GameInstanceInternal) => {
             const target = game.agents;
 
             for (const am of source.agentManagers()) {

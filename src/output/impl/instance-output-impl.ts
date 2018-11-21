@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { InstanceOutputInternal } from "../instance-output-internal";
 import { OutputLine, OutputLineType } from "../output-line";
 
@@ -15,15 +15,11 @@ import { OutputLine, OutputLineType } from "../output-line";
  * @param startingLineCount Optional starting ID for new `OutputLine`s. Defaults to 0.
  */
 export const buildInstanceOutput = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     startingLineCount: number = 0
 ): InstanceOutputInternal => new InstanceOutputImpl(game, startingLineCount);
 
 class InstanceOutputImpl implements InstanceOutputInternal {
-    get lineCount() {
-        return this._lineCount;
-    }
-
     public lines: OutputLine[] = [];
 
     /**
@@ -32,11 +28,15 @@ class InstanceOutputImpl implements InstanceOutputInternal {
      */
     private _lineCount: number;
 
-    constructor(public game: GameInstance, startingLineCount: number) {
+    constructor(public game: GameInstanceInternal, startingLineCount: number) {
         this._lineCount = startingLineCount;
     }
 
-    public recycle(newInstance: GameInstance): InstanceOutputInternal {
+    get lineCount() {
+        return this._lineCount;
+    }
+
+    public recycle(newInstance: GameInstanceInternal): InstanceOutputInternal {
         return new InstanceOutputImpl(newInstance, this.lineCount);
     }
 

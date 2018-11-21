@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../state";
+import { GameInstanceInternal } from "../state";
 import { InstanceOutput } from "./instance-output";
 
 /**
@@ -13,7 +13,7 @@ import { InstanceOutput } from "./instance-output";
  */
 export interface InstanceOutputInternal extends InstanceOutput {
     /** The `GameInstance` that owns this `InstanceOutput`. */
-    readonly game: GameInstance;
+    readonly game: GameInstanceInternal;
 
     /**
      * Creates a new `InstanceOutput` for the new game cycle, clearing all
@@ -21,5 +21,5 @@ export interface InstanceOutputInternal extends InstanceOutput {
      *
      * @param newInstance The new `GameInstance` that will own this `InstanceOutput`.
      */
-    recycle(newInstance: GameInstance): InstanceOutputInternal;
+    recycle(newInstance: GameInstanceInternal): InstanceOutputInternal;
 }

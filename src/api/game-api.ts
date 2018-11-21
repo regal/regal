@@ -11,7 +11,12 @@
 import { StaticAgentRegistry } from "../agents";
 import { GameMetadata, GameOptions, MetadataManager } from "../config";
 import { RegalError } from "../error";
-import { buildGameInstance, ContextManager, GameInstance } from "../state";
+import {
+    buildGameInstance,
+    ContextManager,
+    GameInstance,
+    GameInstanceInternal
+} from "../state";
 import { HookManager } from "./api-hook-manager";
 import { GameResponse, GameResponseOutput } from "./game-response";
 
@@ -19,7 +24,7 @@ import { GameResponse, GameResponseOutput } from "./game-response";
  * Throws an error if `instance` or any of its properties are undefined.
  * @param instance The `GameInstance` to validate.
  */
-const validateGameInstance = (instance: GameInstance): void => {
+const validateGameInstance = (instance: GameInstanceInternal): void => {
     if (
         instance === undefined ||
         instance.agents === undefined ||
@@ -157,11 +162,12 @@ export class Game {
         instance: GameInstance,
         command: string
     ): GameResponse {
-        let newInstance: GameInstance;
+        let newInstance: GameInstanceInternal;
         let err: RegalError;
 
         try {
-            validateGameInstance(instance);
+            const oldInstance = instance as GameInstanceInternal;
+            validateGameInstance(oldInstance);
 
             Game.init();
 
@@ -174,7 +180,7 @@ export class Game {
                 );
             }
 
-            newInstance = instance.recycle();
+            newInstance = oldInstance.recycle();
             newInstance.agents.scrubAgents();
 
             const activatedEvent = HookManager.playerCommandHook(command);
@@ -236,11 +242,12 @@ export class Game {
      * values, if the request was successful. Otherwise, the response will contain an error.
      */
     public static postUndoCommand(instance: GameInstance): GameResponse {
-        let newInstance: GameInstance;
+        let newInstance: GameInstanceInternal;
         let err: RegalError;
 
         try {
-            validateGameInstance(instance);
+            const oldInstance = instance as GameInstanceInternal;
+            validateGameInstance(oldInstance);
 
             Game.init();
 
@@ -248,8 +255,8 @@ export class Game {
                 throw new RegalError("Undo is not allowed here.");
             }
 
-            newInstance = instance.recycle();
-            newInstance.agents.simulateRevert(instance.agents);
+            newInstance = oldInstance.recycle();
+            newInstance.agents.simulateRevert(oldInstance.agents);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }
@@ -283,25 +290,26 @@ export class Game {
         instance: GameInstance,
         options: Partial<GameOptions>
     ): GameResponse {
-        let newInstance: GameInstance;
+        let newInstance: GameInstanceInternal;
         let err: RegalError;
 
         try {
-            validateGameInstance(instance);
+            const oldInstance = instance as GameInstanceInternal;
+            validateGameInstance(oldInstance);
 
             Game.init();
 
-            const oldOverrideKeys = Object.keys(instance.options.overrides);
+            const oldOverrideKeys = Object.keys(oldInstance.options.overrides);
             const newOptionKeys = Object.keys(options);
 
             const newOptions: Partial<GameOptions> = {};
 
             oldOverrideKeys
                 .filter(key => !newOptionKeys.includes(key))
-                .forEach(key => (newOptions[key] = instance.options[key]));
+                .forEach(key => (newOptions[key] = oldInstance.options[key]));
             newOptionKeys.forEach(key => (newOptions[key] = options[key]));
 
-            newInstance = instance.recycle(newOptions);
+            newInstance = oldInstance.recycle(newOptions);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }

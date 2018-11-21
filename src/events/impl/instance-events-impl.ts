@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { DEFAULT_EVENT_ID, EventRecord } from "../event-record";
 import {
     isEventQueue,
@@ -22,7 +22,7 @@ import { buildEventRecord } from "./event-record-impl";
  * @param startingEventId Optional starting ID for new `EventRecord`s.
  */
 export const buildInstanceEvents = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     startingEventId?: number
 ): InstanceEventsInternal =>
     startingEventId !== undefined
@@ -30,6 +30,21 @@ export const buildInstanceEvents = (
         : new InstanceEventsImpl(game);
 
 class InstanceEventsImpl implements InstanceEventsInternal {
+    public history: EventRecord[] = [];
+
+    /** Internal member for the ID of the most recently generated `EventRecord`. */
+    private _lastEventId: number;
+
+    /** Internal queue of events that have yet to be executed. */
+    private _queue: EventRecord[] = [];
+
+    constructor(
+        public game: GameInstanceInternal,
+        startingEventId = DEFAULT_EVENT_ID
+    ) {
+        this._lastEventId = startingEventId;
+    }
+
     get current(): EventRecord {
         let event = this._queue[0];
 
@@ -43,24 +58,13 @@ class InstanceEventsImpl implements InstanceEventsInternal {
     get lastEventId() {
         return this._lastEventId;
     }
-    public history: EventRecord[] = [];
-
-    /** Internal member for the ID of the most recently generated `EventRecord`. */
-    private _lastEventId: number;
-
-    /** Internal queue of events that have yet to be executed. */
-    private _queue: EventRecord[] = [];
-
-    constructor(public game: GameInstance, startingEventId = DEFAULT_EVENT_ID) {
-        this._lastEventId = startingEventId;
-    }
 
     public invoke(event: TrackedEvent): void {
         this._addEvent(event);
         this._executeCurrent();
     }
 
-    public recycle(newInstance: GameInstance): InstanceEventsInternal {
+    public recycle(newInstance: GameInstanceInternal): InstanceEventsInternal {
         return new InstanceEventsImpl(newInstance, this.lastEventId);
     }
 
