@@ -9,5 +9,8 @@ export { InstanceAgentsInternal } from "./instance-agents-internal";
 export { Agent, isAgent } from "./agent";
 export { StaticAgentRegistry } from "./static-agent-registry";
 export { PropertyChange, PropertyOperation } from "./agent-properties";
-export { activateAgent } from "./activate-agent";
-export { buildActiveAgentProxy, buildInstanceAgents } from "./impl";
+export {
+    buildActiveAgentProxy,
+    buildInstanceAgents,
+    activateAgent
+} from "./impl";
