@@ -20,11 +20,7 @@ import {
 import { RegalError } from "../../error";
 import { buildInstanceEvents, InstanceEventsInternal } from "../../events";
 import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
-import {
-    buildInstanceRandom,
-    InstanceRandom,
-    recycleInstanceRandom
-} from "../../random";
+import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
 import { ContextManager } from "../context-manager";
 import { GameInstance } from "../game-instance";
 
@@ -43,7 +39,7 @@ class GameInstanceImpl implements GameInstance {
     public events: InstanceEventsInternal;
     public output: InstanceOutputInternal;
     public options: InstanceOptionsInternal;
-    public random: InstanceRandom;
+    public random: InstanceRandomInternal;
     public state: any;
 
     /**
@@ -80,7 +76,7 @@ class GameInstanceImpl implements GameInstance {
         newGame.events = this.events.recycle(newGame);
         newGame.agents = this.agents.recycle(newGame);
         newGame.output = this.output.recycle(newGame);
-        newGame.random = recycleInstanceRandom(this.random, newGame);
+        newGame.random = this.random.recycle(newGame);
 
         return newGame;
     }

@@ -14,10 +14,7 @@ import { on } from "../../src/events";
 import { Agent, PropertyOperation } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
-import {
-    SEED_LENGTH,
-    DEFAULT_SEED_CHARSET
-} from "../../src/random/func/generate-seed";
+import { SEED_LENGTH, DEFAULT_SEED_CHARSET } from "../../src/random";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {

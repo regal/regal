@@ -9,7 +9,7 @@ import Prando from "prando";
 import { RegalError } from "../../error";
 import { GameInstance } from "../../state";
 import { EXPANDED_CHARSET } from "../charsets";
-import { InstanceRandom } from "../instance-random";
+import { InstanceRandomInternal } from "../instance-random-internal";
 
 /**
  * Constructs an `InstanceRandom` using the current implementation.
@@ -20,11 +20,19 @@ import { InstanceRandom } from "../instance-random";
 export const buildInstanceRandom = (
     game: GameInstance,
     numGenerations: number = 0
-): InstanceRandom => new InstanceRandomImpl(game, numGenerations);
+): InstanceRandomInternal => new InstanceRandomImpl(game, numGenerations);
 
-class InstanceRandomImpl implements InstanceRandom {
+class InstanceRandomImpl implements InstanceRandomInternal {
     private _numGenerations: number;
     private _generator: Prando;
+
+    public get seed() {
+        return this.game.options.seed;
+    }
+
+    public get numGenerations() {
+        return this._numGenerations;
+    }
 
     constructor(public game: GameInstance, numGenerations: number) {
         if (this.seed === undefined) {
@@ -38,12 +46,8 @@ class InstanceRandomImpl implements InstanceRandom {
         this._generator.skip(numGenerations);
     }
 
-    public get seed() {
-        return this.game.options.seed;
-    }
-
-    public get numGenerations() {
-        return this._numGenerations;
+    public recycle(newInstance: GameInstance): InstanceRandomInternal {
+        return new InstanceRandomImpl(newInstance, this.numGenerations);
     }
 
     public int(min: number, max: number): number {

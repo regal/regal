@@ -18,7 +18,7 @@ import {
     MetadataManager
 } from "../../src/config";
 import { buildGameInstance, GameInstance } from "../../src/state";
-import { SEED_LENGTH } from "../../src/random/func/generate-seed";
+import { SEED_LENGTH } from "../../src/random";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {

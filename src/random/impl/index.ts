@@ -7,3 +7,8 @@
  */
 
 export { buildInstanceRandom } from "./instance-random-impl";
+export {
+    generateSeed,
+    SEED_LENGTH,
+    DEFAULT_SEED_CHARSET
+} from "./generate-seed";

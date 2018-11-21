@@ -5,10 +5,14 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export { generateSeed } from "./func/generate-seed";
 export { InstanceRandom } from "./instance-random";
-export { buildInstanceRandom } from "./impl";
-export { recycleInstanceRandom } from "./func/recycle-instance-random";
+export { InstanceRandomInternal } from "./instance-random-internal";
+export {
+    buildInstanceRandom,
+    generateSeed,
+    SEED_LENGTH,
+    DEFAULT_SEED_CHARSET
+} from "./impl";
 export {
     EXPANDED_CHARSET,
     ALHPANUMERIC_CHARSET,
