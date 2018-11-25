@@ -56,7 +56,7 @@ function makeAgents(startFrom: number, amount: number) {
 const MD = getDemoMetadata();
 
 describe("Agents", function() {
-    beforeEach(function() {
+    afterEach(function() {
         Game.reset();
     });
 

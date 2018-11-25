@@ -97,6 +97,9 @@ const buildLogResponse = (
     return response;
 };
 
+const NOT_INITALIZED_ERROR_MSG =
+    "Game has not been initalized. Did you remember to call Game.init?";
+
 /**
  * Game API static class.
  *
@@ -104,6 +107,11 @@ const buildLogResponse = (
  * any arguments passed into it.
  */
 export class Game {
+    /** Whether `Game.init` has been called. */
+    public static get isInitialized() {
+        return this._isInitialized;
+    }
+
     /**
      * Initializes the game with the given metadata.
      * This must be called before any game commands may be executed.
@@ -111,12 +119,18 @@ export class Game {
      * @param metadata The game's configuration metadata.
      */
     public static init(metadata: GameMetadata): void {
+        if (Game._isInitialized) {
+            throw new RegalError("Game has already been initialized.");
+        }
+        Game._isInitialized = true;
+
         ContextManager.init();
         MetadataManager.setMetadata(metadata);
     }
 
     /** Resets the game's static classes. */
     public static reset(): void {
+        Game._isInitialized = false;
         ContextManager.reset();
         HookManager.reset();
         StaticAgentRegistry.reset();
@@ -135,6 +149,9 @@ export class Game {
         let err: RegalError;
 
         try {
+            if (!Game._isInitialized) {
+                throw new RegalError(NOT_INITALIZED_ERROR_MSG);
+            }
             metadata = MetadataManager.getMetadata();
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
@@ -170,6 +187,9 @@ export class Game {
         let err: RegalError;
 
         try {
+            if (!Game._isInitialized) {
+                throw new RegalError(NOT_INITALIZED_ERROR_MSG);
+            }
             const oldInstance = instance as GameInstanceInternal;
             validateGameInstance(oldInstance);
 
@@ -214,6 +234,9 @@ export class Game {
         let err: RegalError;
 
         try {
+            if (!Game._isInitialized) {
+                throw new RegalError(NOT_INITALIZED_ERROR_MSG);
+            }
             if (HookManager.startCommandHook === undefined) {
                 throw new RegalError(
                     "onStartCommand has not been implemented by the game developer."
@@ -246,6 +269,9 @@ export class Game {
         let err: RegalError;
 
         try {
+            if (!Game._isInitialized) {
+                throw new RegalError(NOT_INITALIZED_ERROR_MSG);
+            }
             const oldInstance = instance as GameInstanceInternal;
             validateGameInstance(oldInstance);
 
@@ -292,6 +318,9 @@ export class Game {
         let err: RegalError;
 
         try {
+            if (!Game._isInitialized) {
+                throw new RegalError(NOT_INITALIZED_ERROR_MSG);
+            }
             const oldInstance = instance as GameInstanceInternal;
             validateGameInstance(oldInstance);
 
@@ -324,4 +353,7 @@ export class Game {
                   }
               };
     }
+
+    /** Internal variable to track whether Game.init has been called. */
+    private static _isInitialized: boolean = false;
 }
