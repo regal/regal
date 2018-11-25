@@ -2,7 +2,6 @@ import { expect } from "chai";
 import "mocha";
 
 import { OutputLineType, buildInstanceOutput } from "../../src/output";
-import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
@@ -10,8 +9,7 @@ import { buildGameInstance } from "../../src/state";
 describe("Output", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
     });
 
     describe("Instance Output", function() {

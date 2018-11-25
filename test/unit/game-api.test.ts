@@ -15,7 +15,6 @@ import { Agent } from "../../src/agents";
 import {
     DEFAULT_GAME_OPTIONS,
     OPTION_KEYS,
-    MetadataManager,
     InstanceOptionsInternal
 } from "../../src/config";
 import {
@@ -36,8 +35,7 @@ const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
 describe("Game API", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
     });
 
     describe("Game.postPlayerCommand", function() {
@@ -458,9 +456,7 @@ describe("Game API", function() {
         });
 
         it("Trying to override a forbidden option", function() {
-            MetadataManager.setMetadata(
-                metadataWithOptions({ allowOverrides: false })
-            );
+            Game.init(metadataWithOptions({ allowOverrides: false }));
 
             const response = Game.postOptionCommand(buildGameInstance(), {
                 debug: true
@@ -646,7 +642,7 @@ describe("Game API", function() {
         });
 
         it("Catch the error if metadata has not been set", function() {
-            MetadataManager.reset();
+            Game.reset();
             const response = Game.getMetadataCommand();
 
             expect(response.instance).to.be.undefined;

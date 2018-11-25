@@ -16,14 +16,12 @@ import { buildGameInstance } from "../../src/state";
 import { RegalError } from "../../src/error";
 import { log, getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/api";
-import { MetadataManager } from "../../src/config";
 import { Agent, isAgent } from "../../src/agents";
 
 describe("Random", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
     });
 
     describe("Generate Seed", function() {

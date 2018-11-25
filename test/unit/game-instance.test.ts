@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import "mocha";
 
-import { MetadataManager } from "../../src/config";
 import { getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/api";
 import { RegalError } from "../../src/error";
@@ -12,8 +11,7 @@ import { buildGameInstance } from "../../src/state";
 describe("GameInstance", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
     });
 
     it("Sanity check", function() {

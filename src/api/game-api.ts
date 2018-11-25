@@ -105,11 +105,14 @@ const buildLogResponse = (
  */
 export class Game {
     /**
-     * Initializes the game's static classes.
-     * This rarely needs to be called explicitly by an API consumer.
+     * Initializes the game with the given metadata.
+     * This must be called before any game commands may be executed.
+     *
+     * @param metadata The game's configuration metadata.
      */
-    public static init(): void {
+    public static init(metadata: GameMetadata): void {
         ContextManager.init();
+        MetadataManager.setMetadata(metadata);
     }
 
     /** Resets the game's static classes. */
@@ -117,6 +120,7 @@ export class Game {
         ContextManager.reset();
         HookManager.reset();
         StaticAgentRegistry.reset();
+        MetadataManager.reset();
     }
 
     /**
@@ -169,8 +173,6 @@ export class Game {
             const oldInstance = instance as GameInstanceInternal;
             validateGameInstance(oldInstance);
 
-            Game.init();
-
             if (command === undefined) {
                 throw new RegalError("Command must be defined.");
             }
@@ -218,8 +220,6 @@ export class Game {
                 );
             }
 
-            Game.init();
-
             newInstance = buildGameInstance(options);
             newInstance.events.invoke(HookManager.startCommandHook);
         } catch (error) {
@@ -248,8 +248,6 @@ export class Game {
         try {
             const oldInstance = instance as GameInstanceInternal;
             validateGameInstance(oldInstance);
-
-            Game.init();
 
             if (!HookManager.beforeUndoCommandHook(instance)) {
                 throw new RegalError("Undo is not allowed here.");
@@ -296,8 +294,6 @@ export class Game {
         try {
             const oldInstance = instance as GameInstanceInternal;
             validateGameInstance(oldInstance);
-
-            Game.init();
 
             const oldOverrideKeys = Object.keys(oldInstance.options.overrides);
             const newOptionKeys = Object.keys(options);

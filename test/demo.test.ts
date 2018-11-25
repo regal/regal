@@ -3,7 +3,6 @@ import "mocha";
 
 import { Game, on, Agent, onStartCommand, onPlayerCommand, noop } from "../src";
 import { log, getDemoMetadata } from "./test-utils";
-import { MetadataManager } from "../src/config";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -60,8 +59,7 @@ it("Demo Runthrough Test 1", function() {
         return consultOracle.then(attack(command));
     });
 
-    MetadataManager.setMetadata(getDemoMetadata());
-    Game.init();
+    Game.init(getDemoMetadata());
 
     let response = Game.postStartCommand();
     // log(response);

@@ -2,10 +2,9 @@ import { expect } from "chai";
 import "mocha";
 
 import { on, noop } from "../../src/events";
-import { metadataWithOptions } from "../test-utils";
+import { metadataWithOptions, getDemoMetadata } from "../test-utils";
 import { PropertyOperation } from "../../src/agents";
 import { RegalError } from "../../src/error";
-import { MetadataManager } from "../../src/config";
 import {
     Game,
     HookManager,
@@ -18,10 +17,7 @@ import { buildGameInstance } from "../../src/state";
 describe("API Hooks", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(
-            metadataWithOptions({ trackAgentChanges: true })
-        );
-        Game.init();
+        Game.init(metadataWithOptions({ trackAgentChanges: true }));
     });
 
     it("playerCommandHook starts out undefined", function() {
