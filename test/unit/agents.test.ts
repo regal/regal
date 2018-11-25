@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import "mocha";
 
-import { MetadataManager } from "../../src/config";
 import { getDemoMetadata, log } from "../test-utils";
 import { Game } from "../../src/api";
 import {
@@ -54,15 +53,16 @@ function makeAgents(startFrom: number, amount: number) {
     return arr;
 }
 
+const MD = getDemoMetadata();
+
 describe("Agents", function() {
-    beforeEach(function() {
+    afterEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     describe("Basic Usage", function() {
         it("Retrieve the initial properties of an active agent within a game cycle", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const dummy = myGame.using(new Dummy("D1", 10));
@@ -72,7 +72,7 @@ describe("Agents", function() {
         });
 
         it("Modify the properties of an active agent within a game cycle", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const dummy = myGame.using(new Dummy("D1", 10));
@@ -86,7 +86,7 @@ describe("Agents", function() {
         });
 
         it("Check the existence of an active agent's properties within a game cycle", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const dummy = myGame.using(new Dummy("D1", 10));
@@ -98,7 +98,7 @@ describe("Agents", function() {
         });
 
         it("The properties of an inactive agent cannot be read during a game cycle", function() {
-            Game.init();
+            Game.init(MD);
 
             const _dummy = new Dummy("D1", 10);
 
@@ -109,7 +109,7 @@ describe("Agents", function() {
         });
 
         it("The properties of an inactive agent can only be set once during a game cycle", function() {
-            Game.init();
+            Game.init(MD);
 
             const _dummy = new Dummy("D1", 10);
 
@@ -120,7 +120,7 @@ describe("Agents", function() {
         });
 
         it("The properties of an inactive agent cannot be deleted during a game cycle", function() {
-            Game.init();
+            Game.init(MD);
 
             const _dummy = new Dummy("D1", 10);
 
@@ -133,7 +133,7 @@ describe("Agents", function() {
         it("Retrieve the initial properties of an active static agent within a game cycle", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const dummy = myGame.using(DUMMY);
@@ -145,7 +145,7 @@ describe("Agents", function() {
         it("Modifying the initial properties of an active static agent within a game cycle does not change the original", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const game1 = buildGameInstance();
             const dummy1 = game1.using(DUMMY);
@@ -174,7 +174,7 @@ describe("Agents", function() {
             delete DUMMY1.name;
             DUMMY2.name += " Sr.";
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d1 = myGame.using(DUMMY1);
@@ -192,7 +192,7 @@ describe("Agents", function() {
         it("Reading the properties of an inactive static agent inside the game cycle is not allowed", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             expect(() => DUMMY.health).to.throw(
                 RegalError,
@@ -203,7 +203,7 @@ describe("Agents", function() {
         it("Modifying the properties of an inactive static agent inside the game cycle is not allowed", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             expect(() => (DUMMY.health = 5)).to.throw(
                 RegalError,
@@ -214,7 +214,7 @@ describe("Agents", function() {
 
     describe("Advanced Usage", function() {
         it("Active agents can have references to each other", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const parent = myGame.using(new Parent(new Dummy("D1", 10)));
@@ -224,7 +224,7 @@ describe("Agents", function() {
         });
 
         it("Modifying properties through an active agent reference", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const parent = myGame.using(new Parent(new Dummy("D1", 10)));
@@ -240,7 +240,7 @@ describe("Agents", function() {
         });
 
         it("Active agents can have circular references to each other", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const _sib1 = new Sibling("Billy");
@@ -257,7 +257,7 @@ describe("Agents", function() {
         });
 
         it("Modifying active agent properties through circular references to each other", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const _sib1 = new Sibling("Billy");
@@ -279,7 +279,7 @@ describe("Agents", function() {
         it("Static agents can have references to each other", function() {
             const PARENT = new Parent(new Dummy("D1", 10));
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const parent = myGame.using(PARENT);
@@ -291,7 +291,7 @@ describe("Agents", function() {
         it("Modifying active static agents through references", function() {
             const PARENT = new Parent(new Dummy("D1", 10));
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const parent = myGame.using(PARENT);
@@ -311,7 +311,7 @@ describe("Agents", function() {
             const SIB_2 = new Sibling("Bob", SIB_1);
             SIB_1.sibling = SIB_2;
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -329,7 +329,7 @@ describe("Agents", function() {
             const SIB_2 = new Sibling("Bob", SIB_1);
             SIB_1.sibling = SIB_2;
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -345,7 +345,7 @@ describe("Agents", function() {
             const SIB_2 = new Sibling("Bob", SIB_1);
             SIB_1.sibling = SIB_2;
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -364,7 +364,7 @@ describe("Agents", function() {
         it("Assigning a static agent as a property as an inactive agent", function() {
             const CHILD = new Dummy("Bab", 1);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -377,7 +377,7 @@ describe("Agents", function() {
         it("Modifying a static agent that's a property of an active agent", function() {
             const CHILD = new Dummy("Bab", 1);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame1 = buildGameInstance();
             const parent1 = myGame1.using(new Parent(CHILD));
@@ -396,7 +396,7 @@ describe("Agents", function() {
         });
 
         it("Activating an agent multiple times returns a reference to the same agent", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -420,7 +420,7 @@ describe("Agents", function() {
         it("Activating a static agent multiple times returns a reference to the same agent", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -442,7 +442,7 @@ describe("Agents", function() {
         });
 
         it("Activating multiple agents simulataneously using GameInstance.using's compound object argument", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -462,7 +462,7 @@ describe("Agents", function() {
             const DUMMY = new Dummy("D1", 15);
             const PARENT = new Parent(DUMMY);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -490,7 +490,7 @@ describe("Agents", function() {
 
             const PARENT = new Parent(new Dummy("D0", 0));
 
-            Game.init();
+            Game.init(MD);
 
             // Using a static agent that hasn't been activated
             const myGame1 = buildGameInstance();
@@ -521,7 +521,7 @@ describe("Agents", function() {
 
         describe("Agent Arrays", function() {
             it("Setting an active agent's property to be an empty array is functional", function() {
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance();
                 on("MOD", game => {
@@ -532,7 +532,7 @@ describe("Agents", function() {
             });
 
             it("Setting an active agent's property to be an empty array is tracked properly", function() {
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance({ trackAgentChanges: true });
                 on("MOD", game => {
@@ -594,7 +594,7 @@ describe("Agents", function() {
             });
 
             it("Setting an active agent's property to be an array of primitives is functional", function() {
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance();
                 on("MOD", game => {
@@ -605,7 +605,7 @@ describe("Agents", function() {
             });
 
             it("Setting an active agent's property to be an array of primitives is tracked properly", function() {
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance({ trackAgentChanges: true });
                 on("MOD", game => {
@@ -715,7 +715,7 @@ describe("Agents", function() {
             });
 
             it("Setting an active agent's property to be an array of activated agents is functional", function() {
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance();
                 const { d1, d2, d3 } = myGame.using({
@@ -731,7 +731,7 @@ describe("Agents", function() {
             });
 
             it("Setting an active agent's property to be an array of activated agents is tracked properly", function() {
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance({ trackAgentChanges: true });
                 const { d1, d2, d3 } = myGame.using({
@@ -912,7 +912,7 @@ describe("Agents", function() {
             });
 
             it("Setting an active agent's property to be an array of inactive agents is implicitly activates them", function() {
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance();
                 on("MOD", game => {
@@ -935,7 +935,7 @@ describe("Agents", function() {
                 const d2 = new Dummy("D2", 15);
                 d2["dummies"] = [d1, d2];
 
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance();
                 on("MOD", game => {
@@ -957,7 +957,7 @@ describe("Agents", function() {
                 const d1 = new Dummy("D1", 10);
                 const d2 = new Dummy("D2", 15);
 
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance();
                 on("MOD", game => {
@@ -971,7 +971,7 @@ describe("Agents", function() {
             });
 
             it("Array.prototype.unshift is functional on agent arrays", function() {
-                Game.init();
+                Game.init(MD);
 
                 const myGame = buildGameInstance();
                 myGame.state.dummies = [
@@ -994,7 +994,7 @@ describe("Agents", function() {
             });
 
             it("Array.prototype.concat is functional on agent arrays", function() {
-                Game.init();
+                Game.init(MD);
                 const myGame = buildGameInstance();
 
                 myGame.state.vals1 = [true, new Dummy("D1", 10)];
@@ -1029,7 +1029,7 @@ describe("Agents", function() {
             });
 
             it("Length property of agent arrays is functional", function() {
-                Game.init();
+                Game.init(MD);
                 const myGame = buildGameInstance();
 
                 myGame.state.arr = [];
@@ -1044,7 +1044,7 @@ describe("Agents", function() {
             });
 
             it("Modifying an agent's properties through an agent array is functional", function() {
-                Game.init();
+                Game.init(MD);
                 const myGame = buildGameInstance();
 
                 on("FOO", game => {
@@ -1065,7 +1065,7 @@ describe("Agents", function() {
             });
 
             it("Multi-dimensional agent arrays are functional", function() {
-                Game.init();
+                Game.init(MD);
                 const myGame = buildGameInstance();
 
                 const arr = myGame.using([makeAgents(10, 5)]);
@@ -1151,7 +1151,7 @@ describe("Agents", function() {
             });
 
             it("Multi-dimensional agent arrays are tracked properly", function() {
-                Game.init();
+                Game.init(MD);
                 const myGame = buildGameInstance({ trackAgentChanges: true });
 
                 const arr = myGame.using([makeAgents(0, 2)]);
@@ -1462,7 +1462,7 @@ describe("Agents", function() {
                     }
                 ]);
 
-                Game.init();
+                Game.init(MD);
 
                 const myGame1 = buildGameInstance();
                 const p1 = myGame1.using(p);
@@ -1546,7 +1546,7 @@ describe("Agents", function() {
             });
 
             it("An agent array's keys enumerate properly", function() {
-                Game.init();
+                Game.init(MD);
 
                 const a = buildGameInstance().using([1, 2, 3]);
                 expect(Object.keys(a)).to.deep.equal(["0", "1", "2", "id"]);
@@ -1558,7 +1558,7 @@ describe("Agents", function() {
                     game.state.list.push(new Dummy("D1", 10));
                 });
 
-                Game.init();
+                Game.init(MD);
                 const myGame = buildGameInstance();
                 myEvent(myGame);
 
@@ -1578,7 +1578,7 @@ describe("Agents", function() {
 
     describe("Agent Managers", function() {
         it("The AgentManager's id matches the agent's id", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -1589,7 +1589,7 @@ describe("Agents", function() {
         });
 
         it("The AgentManager's id matches the game instance", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -1600,7 +1600,7 @@ describe("Agents", function() {
         });
 
         it("AgentManager.hasPropertyRecord returns correct values", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -1617,7 +1617,7 @@ describe("Agents", function() {
         it("AgentManager.hasPropertyRecord returns false for properties only in the static agent", function() {
             const DUMMY = new Dummy("D1", 15);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -1631,7 +1631,7 @@ describe("Agents", function() {
         });
 
         it("AgentManager.hasPropertyRecord returns false for 'constructor', as this causes confusion", function() {
-            Game.init();
+            Game.init(MD);
             expect(
                 buildGameInstance()
                     .agents.getAgentManager(0)
@@ -1640,7 +1640,7 @@ describe("Agents", function() {
         });
 
         it("AgentManager.getProperty returns the most recent property", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -1655,7 +1655,7 @@ describe("Agents", function() {
         });
 
         it("AgentManager.getPropertyHistory returns the array of PropertyChanges", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 15));
@@ -1700,7 +1700,7 @@ describe("Agents", function() {
             const DUMMY = new Dummy("D1", 15);
             (DUMMY as any).foo = "bar";
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(DUMMY);
@@ -1740,7 +1740,7 @@ describe("Agents", function() {
         it("AgentManager.propertyWasDeleted returns true for real properties that were deleted", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(DUMMY);
@@ -1767,7 +1767,7 @@ describe("Agents", function() {
         });
 
         it("AgentManager does not add a record for setting a property to the same value", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 10));
@@ -1790,7 +1790,7 @@ describe("Agents", function() {
         it("AgentManager does not add a record for setting a property to its static value", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(DUMMY);
@@ -1803,7 +1803,7 @@ describe("Agents", function() {
         });
 
         it("AgentManager does not add a record for deleting a property multiple times", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance({ trackAgentChanges: true });
             const d = myGame.using(new Dummy("D1", 10));
@@ -1835,7 +1835,7 @@ describe("Agents", function() {
 
     describe("InstanceAgents", function() {
         it("InstanceAgents.recycle creates all new agents that have only the last values of each of the original agent' properties", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance({ trackAgentChanges: true });
 
@@ -1962,7 +1962,7 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.recycle creates all new agents that have only the last values of each of the original agent' properties (without tracking agent properties)", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2084,7 +2084,7 @@ describe("Agents", function() {
         it("InstanceAgents.recycle copies only the properties of static agents that are different than their initial values", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2143,7 +2143,7 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.recycle does not copy the properties of non-static agents that were most recently deleted", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2195,7 +2195,7 @@ describe("Agents", function() {
         it("InstanceAgents.recycle DOES copy the properties of STATIC agents that were most recently deleted", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2246,7 +2246,7 @@ describe("Agents", function() {
         it("InstanceAgents.reserveNextId starts after the highest static agent and then counts up", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2257,7 +2257,7 @@ describe("Agents", function() {
         it("InstanceAgents.getAgentProperty gets the correct property from either the instance or static registry", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2274,7 +2274,7 @@ describe("Agents", function() {
         it("If the static agent hasn't been modified, InstanceAgents.getAgentProperty will call the static registry directly", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2291,7 +2291,7 @@ describe("Agents", function() {
         });
 
         it("Error check for InstanceAgents.getAgentProperty with an invalid id", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2302,7 +2302,7 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.getAgentProperty returns undefined for an non-existent agent property", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 10));
@@ -2314,7 +2314,7 @@ describe("Agents", function() {
             const DUMMY = new Dummy("D1", 10);
             const PARENT = new Parent(DUMMY);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const p = myGame.using(PARENT);
@@ -2330,7 +2330,7 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.setAgentProperty works properly", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 10));
@@ -2343,7 +2343,7 @@ describe("Agents", function() {
         it("InstanceAgents.setAgentProperty implicitly activates an agent", function() {
             const SIB = new Sibling("Billy");
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2359,7 +2359,7 @@ describe("Agents", function() {
         });
 
         it("Error check InstanceAgents.setAgentProperty with id", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             myGame.using(new Dummy("D1", 10));
@@ -2371,7 +2371,7 @@ describe("Agents", function() {
         });
 
         it("Error check InstanceAgents.setAgentProperty with game", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             myGame.using(new Dummy("D1", 10));
@@ -2385,7 +2385,7 @@ describe("Agents", function() {
         });
 
         it("Error check InstanceAgents.setAgentProperty with an invalid id", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             expect(() =>
@@ -2396,7 +2396,7 @@ describe("Agents", function() {
         it("InstanceAgents.hasAgentProperty works properly with static agents", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2409,7 +2409,7 @@ describe("Agents", function() {
         it("InstanceAgents.hasAgentProperty works properly with static agents that have been modified in the cycle", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2422,7 +2422,7 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.hasAgentProperty works properly with nonstatic agents", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const dummy = myGame.using(new Dummy("D1", 10));
@@ -2434,7 +2434,7 @@ describe("Agents", function() {
         });
 
         it("Error check for InstanceAgents.hasAgentProperty with an invalid id", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2447,7 +2447,7 @@ describe("Agents", function() {
         it("InstanceAgents.deleteAgentProperty works properly for static agents", function() {
             const DUMMY = new Dummy("D1", 10);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(DUMMY);
@@ -2463,7 +2463,7 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.deleteAgentProperty works properly for nonstatic agents", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 10));
@@ -2477,7 +2477,7 @@ describe("Agents", function() {
         });
 
         it("Error check for InstanceAgents.deleteAgentProperty refuse delete of id", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2492,7 +2492,7 @@ describe("Agents", function() {
         });
 
         it("Error check for InstanceAgents.deleteAgentProperty refuse delete of game", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2507,7 +2507,7 @@ describe("Agents", function() {
         });
 
         it("Error check for InstanceAgents.deleteAgentProperty with an invalid id", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2518,7 +2518,7 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.getAgentManager returns the correct agent manager", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 10));
@@ -2529,7 +2529,7 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.getAgentManager returns undefined for an illegal property", function() {
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -2566,7 +2566,7 @@ describe("Agents", function() {
             const D = new Dummy("D1", 10);
             (D as any).foo = true;
 
-            Game.init();
+            Game.init(MD);
             const d = buildGameInstance().using(D);
 
             (d as any).bar = true;
@@ -2614,7 +2614,7 @@ describe("Agents", function() {
 
             expect(StaticAgentRegistry.hasAgent(1)).to.be.true;
 
-            Game.init();
+            Game.init(MD);
 
             const p = buildGameInstance().using(new Parent(D));
 
@@ -2666,7 +2666,7 @@ describe("Agents", function() {
                     game.state[num] = `Yo ${num}`;
                 });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance({ trackAgentChanges: true });
             init(myGame);
@@ -2701,7 +2701,7 @@ describe("Agents", function() {
                     game.state[num] = `Yo ${num}`;
                 });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance({ trackAgentChanges: true });
             init(myGame);
@@ -2752,7 +2752,7 @@ describe("Agents", function() {
                 game.state.dummy = new Dummy("Lars", 10);
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             init(myGame);
@@ -2767,7 +2767,7 @@ describe("Agents", function() {
         it("Reverting changes to static agents", function() {
             const staticDummy = new Dummy("Lars", 15);
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             on("FUNC", game => {
@@ -2791,7 +2791,7 @@ describe("Agents", function() {
         });
 
         it("Reverting changes to an agent array through the Game API", function() {
-            Game.init();
+            Game.init(MD);
             const myGame = buildGameInstance();
             myGame.state.agents = makeAgents(0, 6);
 
@@ -2818,7 +2818,7 @@ describe("Agents", function() {
 
     describe("Scrubbing", function() {
         it("Scrubbing an InstanceAgents deletes all agents that have no references to them", function() {
-            Game.init();
+            Game.init(MD);
             const myGame = buildGameInstance();
 
             myGame.state.dummy = new Parent(new Dummy("D1", 10));
@@ -2858,7 +2858,7 @@ describe("Agents", function() {
         });
 
         it("Scrubbing an InstanceAgents finds agent array references", function() {
-            Game.init();
+            Game.init(MD);
             const myGame = buildGameInstance();
 
             const p = myGame.using(

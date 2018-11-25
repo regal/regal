@@ -25,8 +25,7 @@ class Dummy extends Agent {
 describe("Config", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
     });
 
     describe("Game Options", function() {

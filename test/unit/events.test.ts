@@ -19,14 +19,14 @@ import {
     StaticAgentRegistry
 } from "../../src/agents";
 import { OutputLineType } from "../../src/output";
-import { MetadataManager } from "../../src/config";
 import { Game } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
+
+const MD = getDemoMetadata();
 
 describe("Events", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     it("The `on` function does not alter the inner event function", function() {
@@ -34,7 +34,7 @@ describe("Events", function() {
             game.output.write("Hello, world!");
         });
 
-        Game.init();
+        Game.init(MD);
 
         const myGame = buildGameInstance();
         greet(myGame);
@@ -61,7 +61,7 @@ describe("Events", function() {
                 game.output.write(`Hello, ${name}!`);
             });
 
-        Game.init();
+        Game.init(MD);
 
         const myGame = buildGameInstance();
         greet("Regal")(myGame);
@@ -96,7 +96,7 @@ describe("Events", function() {
                 return date.getHours() < 12 ? morning : afternoon;
             });
 
-        Game.init();
+        Game.init(MD);
 
         const myGame = buildGameInstance();
         const myDate = new Date("August 5, 2018 10:15:00");
@@ -126,12 +126,12 @@ describe("Events", function() {
     });
 
     it("noop returns undefined", function() {
-        Game.init();
+        Game.init(MD);
         expect(noop(buildGameInstance())).to.be.undefined;
     });
 
     it("Returning noop from an EventFunction is the same as returning nothing", function() {
-        Game.init();
+        Game.init(MD);
 
         const withNoop = on("FUNC", game => {
             game.output.write("Test");
@@ -169,7 +169,7 @@ describe("Events", function() {
                     );
                 });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -222,7 +222,7 @@ describe("Events", function() {
                     .then(foo("FOUR"));
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             complex(myGame);
@@ -277,7 +277,7 @@ describe("Events", function() {
                     return queue;
                 });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const items = ["Hat", "Duck", "Spoon"];
@@ -369,7 +369,7 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -442,7 +442,7 @@ describe("Events", function() {
                     // Test basic queue execution
                     const init = on("INIT", game => q());
 
-                    Game.init();
+                    Game.init(MD);
 
                     let myGame = buildGameInstance();
                     init(myGame);
@@ -695,7 +695,7 @@ describe("Events", function() {
                     );
                 });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance({ trackAgentChanges: true });
             const dummy = myGame.using(new Dummy("Lars", 10));
@@ -764,7 +764,7 @@ describe("Events", function() {
                 return addFriend(game.state.mainAgent, bill).thenq(readStatus);
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance({ trackAgentChanges: true });
             start(myGame);
@@ -879,7 +879,7 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -895,7 +895,7 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             myGame.events = buildInstanceEvents(myGame, 10);
@@ -912,7 +912,7 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
             });
 
-            Game.init();
+            Game.init(MD);
 
             const game1 = buildGameInstance();
 

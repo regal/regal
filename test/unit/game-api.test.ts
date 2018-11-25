@@ -6,24 +6,27 @@ import {
     GameResponse,
     onPlayerCommand,
     onStartCommand,
-    onBeforeUndoCommand
+    onBeforeUndoCommand,
+    HookManager
 } from "../../src/api";
 import { noop } from "../../src/events";
 import { OutputLineType, InstanceOutput } from "../../src/output";
 import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
-import { Agent } from "../../src/agents";
+import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
     DEFAULT_GAME_OPTIONS,
     OPTION_KEYS,
-    MetadataManager,
-    InstanceOptionsInternal
+    InstanceOptionsInternal,
+    MetadataManager
 } from "../../src/config";
 import {
     buildGameInstance,
     GameInstance,
-    GameInstanceInternal
+    GameInstanceInternal,
+    ContextManager
 } from "../../src/state";
 import { SEED_LENGTH } from "../../src/random";
+import { RegalError } from "../../src/error";
 
 class Dummy extends Agent {
     constructor(public name: string, public health: number) {
@@ -32,12 +35,58 @@ class Dummy extends Agent {
 }
 
 const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
+const NO_INIT_MSG =
+    "RegalError: Game has not been initalized. Did you remember to call Game.init?";
 
 describe("Game API", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
+    });
+
+    describe("Initialization", function() {
+        it("Game.isInitialized defaults to false", function() {
+            Game.reset();
+            expect(Game.isInitialized).to.be.false;
+        });
+
+        it("Game.init sets Game.isInitialized to true", function() {
+            expect(Game.isInitialized).to.be.true;
+        });
+
+        it("Calling Game.init multiple times throws an error", function() {
+            expect(() => Game.init(getDemoMetadata())).to.throw(
+                RegalError,
+                "Game has already been initialized."
+            );
+        });
+
+        it("Game.init sets the game's metadata", function() {
+            expect(MetadataManager.getMetadata()).to.deep.equal(
+                getDemoMetadata()
+            );
+        });
+
+        it("Game.init sets context to non-static", function() {
+            expect(ContextManager.isContextStatic()).to.be.false;
+        });
+    });
+
+    it("Game.reset properly resets the static classes", function() {
+        Game.reset();
+
+        expect(Game.isInitialized).to.be.false;
+        expect(ContextManager.isContextStatic()).to.be.true;
+
+        expect(HookManager.playerCommandHook).to.be.undefined;
+        expect(HookManager.startCommandHook).to.be.undefined;
+        expect(HookManager.beforeUndoCommandHook(undefined)).to.be.true; // Always return true
+
+        expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+        expect(() => MetadataManager.getMetadata()).to.throw(
+            RegalError,
+            "Metadata is not defined. Did you remember to load the config?"
+        );
     });
 
     describe("Game.postPlayerCommand", function() {
@@ -272,6 +321,17 @@ describe("Game API", function() {
                 r4_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1]);
         });
+
+        it("Calling before initialization throws an error", function() {
+            const i = buildGameInstance();
+            Game.reset();
+
+            const response = Game.postPlayerCommand(i, "foo");
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
+        });
     });
 
     describe("Game.postStartCommand", function() {
@@ -417,6 +477,16 @@ describe("Game API", function() {
             );
             expect(response.instance).to.be.undefined;
         });
+
+        it("Calling before initialization throws an error", function() {
+            Game.reset();
+
+            const response = Game.postStartCommand();
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
+        });
     });
 
     describe("Game.postOptionCommand", function() {
@@ -458,9 +528,8 @@ describe("Game API", function() {
         });
 
         it("Trying to override a forbidden option", function() {
-            MetadataManager.setMetadata(
-                metadataWithOptions({ allowOverrides: false })
-            );
+            Game.reset();
+            Game.init(metadataWithOptions({ allowOverrides: false }));
 
             const response = Game.postOptionCommand(buildGameInstance(), {
                 debug: true
@@ -471,6 +540,17 @@ describe("Game API", function() {
             expect(response.output.error.message).to.equal(
                 "RegalError: No option overrides are allowed."
             );
+        });
+
+        it("Calling before initialization throws an error", function() {
+            const i = buildGameInstance();
+            Game.reset();
+
+            const response = Game.postOptionCommand(i, { debug: false });
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
         });
     });
 
@@ -634,6 +714,17 @@ describe("Game API", function() {
             const r4 = Game.postPlayerCommand(r3.instance, "");
             expect(r4.instance.state.parent).to.be.undefined;
         });
+
+        it("Calling before initialization throws an error", function() {
+            const i = buildGameInstance();
+            Game.reset();
+
+            const response = Game.postUndoCommand(i);
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
+        });
     });
 
     describe("Game.getMetadataCommand", function() {
@@ -655,6 +746,16 @@ describe("Game API", function() {
             expect(response.output.error.message).to.equal(
                 "RegalError: Metadata is not defined. Did you remember to load the config?"
             );
+        });
+
+        it("Calling before initialization throws an error", function() {
+            Game.reset();
+
+            const response = Game.getMetadataCommand();
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
         });
     });
 });
