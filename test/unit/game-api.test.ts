@@ -11,7 +11,12 @@ import {
 } from "../../src/api";
 import { noop } from "../../src/events";
 import { OutputLineType, InstanceOutput } from "../../src/output";
-import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
+import {
+    log,
+    getDemoMetadata,
+    metadataWithOptions,
+    metadataWithVersion
+} from "../test-utils";
 import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
     DEFAULT_GAME_OPTIONS,
@@ -63,7 +68,7 @@ describe("Game API", function() {
 
         it("Game.init sets the game's metadata", function() {
             expect(MetadataManager.getMetadata()).to.deep.equal(
-                getDemoMetadata()
+                metadataWithVersion(getDemoMetadata())
             );
         });
 
@@ -733,7 +738,9 @@ describe("Game API", function() {
 
             expect(response.instance).to.be.undefined;
             expect(response.output.wasSuccessful).to.be.true;
-            expect(response.output.metadata).to.deep.equal(getDemoMetadata());
+            expect(response.output.metadata).to.deep.equal(
+                metadataWithVersion(getDemoMetadata())
+            );
         });
 
         it("Catch the error if metadata has not been set", function() {

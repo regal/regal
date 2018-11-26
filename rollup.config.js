@@ -2,6 +2,7 @@ import typescript from "rollup-plugin-typescript2";
 import resolve from "rollup-plugin-node-resolve";
 import cleanup from "rollup-plugin-cleanup";
 import { terser } from "rollup-plugin-terser";
+import json from "rollup-plugin-json";
 
 import pkg from "./package.json";
 
@@ -21,9 +22,7 @@ const supressCircularImportWarnings = (message, defaultFunc) => {
 
 const tsPlugin = typescript({
     tsconfigOverride: {
-        compilerOptions: {
-            module: "ES2015"
-        }
+        compilerOptions: { module: "ES2015" }
     }
 });
 
@@ -35,6 +34,7 @@ export default [
             { file: pkg.module, format: "esm", banner }
         ],
         plugins: [
+            json({ include: "package.json" }),
             tsPlugin,
             resolve(),
             cleanup({
@@ -49,6 +49,7 @@ export default [
         input: "./src/index.ts",
         output: { file: pkg.browser, format: "umd", name: "Regal" },
         plugins: [
+            json({ include: "package.json" }),
             tsPlugin,
             resolve(),
             terser({
