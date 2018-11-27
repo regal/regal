@@ -13,10 +13,7 @@ export {
     SEED_LENGTH,
     DEFAULT_SEED_CHARSET
 } from "./impl";
-export {
-    EXPANDED_CHARSET,
-    ALHPANUMERIC_CHARSET,
-    ALPHABET_CHARSET,
-    NUMBERS_CHARSET
-} from "./charsets";
 export { RandomRecord } from "./random-record";
+
+import * as Charsets from "./charsets";
+export { Charsets };

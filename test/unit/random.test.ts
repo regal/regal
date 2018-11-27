@@ -3,10 +3,7 @@ import "mocha";
 
 import {
     generateSeed,
-    ALHPANUMERIC_CHARSET,
-    EXPANDED_CHARSET,
-    ALPHABET_CHARSET,
-    NUMBERS_CHARSET,
+    Charsets,
     InstanceRandom,
     buildInstanceRandom,
     SEED_LENGTH,
@@ -173,14 +170,8 @@ describe("Random", function() {
             it("Generates a random string of the given length with the given charset", function() {
                 const myGame = buildGameInstance();
                 let len = 0;
-                const charsets = [
-                    EXPANDED_CHARSET,
-                    ALHPANUMERIC_CHARSET,
-                    ALPHABET_CHARSET,
-                    NUMBERS_CHARSET
-                ];
 
-                for (const charset of charsets) {
+                for (const charset in Charsets) {
                     len += 3;
                     const result = myGame.random.string(len, charset);
 
@@ -199,13 +190,14 @@ describe("Random", function() {
 
                 expect(result.length).to.equal(len);
                 for (let i = 0; i < len; i++) {
-                    expect(EXPANDED_CHARSET.includes(result[i])).to.be.true;
+                    expect(Charsets.EXPANDED_CHARSET.includes(result[i])).to.be
+                        .true;
                 }
             });
 
             it("Can make a string longer than the length of the charset", function() {
                 const len = 20;
-                const charset = NUMBERS_CHARSET;
+                const charset = Charsets.NUMBERS_CHARSET;
 
                 expect(charset.length).to.be.lessThan(len); // Precondition
 

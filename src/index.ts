@@ -28,3 +28,4 @@ export {
 export { GameOptions, GameMetadata, InstanceOptions } from "./config";
 export { GameInstance } from "./state";
 export { OutputLineType, OutputLine, InstanceOutput } from "./output";
+export { InstanceRandom, Charsets } from "./random";
