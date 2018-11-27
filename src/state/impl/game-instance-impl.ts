@@ -23,7 +23,6 @@ import { buildInstanceEvents, InstanceEventsInternal, on } from "../../events";
 import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
 import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
 import { ContextManager } from "../context-manager";
-import { GameInstance } from "../game-instance";
 import { GameInstanceInternal } from "../game-instance-internal";
 
 /**
