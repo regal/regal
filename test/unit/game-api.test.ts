@@ -730,6 +730,40 @@ describe("Game API", function() {
             expect(response.output.error.message).to.equal(NO_INIT_MSG);
             expect(response.instance).to.be.undefined;
         });
+
+        it.skip("Undoing an event with use of random", function() {
+            Game.reset();
+            Game.init(metadataWithOptions({ seed: "lars" }));
+
+            onStartCommand(game => {
+                game.state.randos = [];
+            });
+
+            onPlayerCommand(() => game => {
+                game.state.randos.push(game.random.string(5, "abcedef"));
+            });
+
+            let response = Game.postStartCommand();
+            response = Game.postPlayerCommand(response.instance, "");
+            response = Game.postPlayerCommand(response.instance, "");
+
+            // Precondition: the given seed should generate these random strings
+            expect(response.instance.state.randos).to.deep.equal([
+                "edede",
+                "dfaff"
+            ]);
+
+            // Undoing the last command should remove the second string
+            response = Game.postUndoCommand(response.instance);
+            expect(response.instance.state.randos).to.deep.equal(["edede"]);
+
+            // Reposting the same command should theoretically generate the same string again
+            response = Game.postPlayerCommand(response.instance, "");
+            expect(response.instance.state.randos).to.deep.equal([
+                "edede",
+                "dfaff"
+            ]);
+        });
     });
 
     describe("Game.getMetadataCommand", function() {
