@@ -53,7 +53,7 @@ const INSTANCE_OPTIONS_PROXY_HANDLER = {
  */
 export const buildInstanceOptions = (
     game: GameInstanceInternal,
-    overrides: Partial<GameOptions>,
+    overrides: Partial<GameOptions> = {},
     generatedSeed?: string
 ): InstanceOptionsInternal =>
     new InstanceOptionsImpl(game, overrides, generatedSeed);

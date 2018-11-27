@@ -29,12 +29,19 @@ import { GameInstanceInternal } from "../game-instance-internal";
 /**
  * Constructs a new `GameInstance` with optional `GameOption` overrides.
  *
- * @param options Any option overrides preferred for this specific instance.
+ * @param optOverrides Any option overrides preferred for this specific instance.
  * Must be allowed by the static configuration's `allowOverrides` option.
  */
 export const buildGameInstance = (
-    options: Partial<GameOptions> = {}
-): GameInstanceInternal => new GameInstanceImpl(options);
+    optOverrides?: Partial<GameOptions>
+): GameInstanceInternal => {
+    if (optOverrides !== undefined) {
+        return new GameInstanceImpl({
+            optionsBuilder: game => buildInstanceOptions(game, optOverrides)
+        });
+    }
+    return new GameInstanceImpl();
+};
 
 class GameInstanceImpl implements GameInstanceInternal {
     public agents: InstanceAgentsInternal;
@@ -45,22 +52,26 @@ class GameInstanceImpl implements GameInstanceInternal {
     public state: any;
 
     /**
-     * Constructs a `GameInstanceImpl`.
-     * @param options Option overrides
-     * @param generatedSeed Include if the previous GameInstance had a default-generated seed
+     * Constructs a `GameInstanceImpl` with the given `InstanceX` build functions.
      */
-    constructor(options: Partial<GameOptions>, generatedSeed?: string) {
+    constructor({
+        agentsBuilder = buildInstanceAgents,
+        eventsBuilder = buildInstanceEvents,
+        outputBuilder = buildInstanceOutput,
+        optionsBuilder = buildInstanceOptions,
+        randomBuilder = buildInstanceRandom
+    } = {}) {
         if (ContextManager.isContextStatic()) {
             throw new RegalError(
                 "Cannot construct a GameInstance outside of a game cycle."
             );
         }
 
-        this.agents = buildInstanceAgents(this);
-        this.events = buildInstanceEvents(this);
-        this.output = buildInstanceOutput(this);
-        this.options = buildInstanceOptions(this, options, generatedSeed);
-        this.random = buildInstanceRandom(this);
+        this.options = optionsBuilder(this);
+        this.events = eventsBuilder(this);
+        this.agents = agentsBuilder(this);
+        this.output = outputBuilder(this);
+        this.random = randomBuilder(this);
         this.state = buildActiveAgentProxy(0, this);
     }
 
@@ -74,13 +85,13 @@ class GameInstanceImpl implements GameInstanceInternal {
             genSeed = this.options.seed;
         }
 
-        const newGame = new GameInstanceImpl(opts, genSeed);
-        newGame.events = this.events.recycle(newGame);
-        newGame.agents = this.agents.recycle(newGame);
-        newGame.output = this.output.recycle(newGame);
-        newGame.random = this.random.recycle(newGame);
-
-        return newGame;
+        return new GameInstanceImpl({
+            agentsBuilder: game => this.agents.recycle(game),
+            eventsBuilder: game => this.events.recycle(game),
+            optionsBuilder: game => buildInstanceOptions(game, opts, genSeed),
+            outputBuilder: game => this.output.recycle(game),
+            randomBuilder: game => this.random.recycle(game)
+        });
     }
 
     public using<T>(resource: T): T {
