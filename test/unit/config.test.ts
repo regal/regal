@@ -9,7 +9,13 @@ import {
     ensureOverridesAllowed
 } from "../../src/config";
 import { OutputLineType } from "../../src/output";
-import { getDemoMetadata, metadataWithOptions, log } from "../test-utils";
+import {
+    getDemoMetadata,
+    metadataWithOptions,
+    log,
+    libraryVersion,
+    metadataWithVersion
+} from "../test-utils";
 import { on } from "../../src/events";
 import { Agent, PropertyOperation } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
@@ -923,6 +929,30 @@ describe("Config", function() {
             expect(() => MetadataManager.getMetadata()).to.throw(
                 RegalError,
                 "Metadata is not defined. Did you remember to load the config?"
+            );
+        });
+
+        it("regalVersion is set automatically", function() {
+            MetadataManager.reset();
+            MetadataManager.setMetadata({
+                name: "Foo",
+                options: {}
+            });
+
+            expect(MetadataManager.getMetadata().regalVersion).to.equal(
+                libraryVersion
+            );
+        });
+
+        it("MetadataManager.setMetadata throws an error if passed a value for libraryVersion", function() {
+            MetadataManager.reset();
+            expect(() =>
+                MetadataManager.setMetadata(
+                    metadataWithVersion(getDemoMetadata())
+                )
+            ).to.throw(
+                RegalError,
+                "regalVersion is specified internally and may not be modified."
             );
         });
     });

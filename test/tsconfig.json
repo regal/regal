@@ -1,0 +1,7 @@
+// TypeScript configuration for tests
+{
+    "extends": "../tsconfig.json",
+    "include": [
+        "./**/*.ts"
+    ],
+}

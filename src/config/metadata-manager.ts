@@ -5,6 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { version as regalVersion } from "../../package.json";
 import { RegalError } from "../error";
 import { GameMetadata } from "./game-metadata";
 
@@ -33,7 +34,22 @@ export class MetadataManager {
      * @param metadata The game's metadata.
      */
     public static setMetadata(metadata: GameMetadata): void {
-        MetadataManager._metadata = metadata;
+        if (metadata.regalVersion !== undefined) {
+            throw new RegalError(
+                "regalVersion is specified internally and may not be modified."
+            );
+        }
+
+        MetadataManager._metadata = {
+            author: metadata.author,
+            description: metadata.description,
+            headline: metadata.headline,
+            homepage: metadata.homepage,
+            name: metadata.name,
+            options: metadata.options,
+            regalVersion,
+            repository: metadata.repository
+        };
     }
 
     /**
