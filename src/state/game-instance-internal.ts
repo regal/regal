@@ -40,4 +40,14 @@ export interface GameInstanceInternal extends GameInstance {
      * @returns The new `GameInstanceInternal`, with each manager cycled.
      */
     recycle(newOptions?: Partial<GameOptions>): GameInstanceInternal;
+
+    /**
+     * Builds and executes a `TrackedEvent` that reverts all changes in this
+     * `GameInstanceInternal` since a specified event.
+     *
+     * @param source The instance containing agent history on which the revert function
+     * will be based. Will not be modified.
+     * @param revertTo The id of the `TrackedEvent` to which the state will be reverted.
+     */
+    simulateRevert(source: GameInstanceInternal, revertTo?: number): void;
 }

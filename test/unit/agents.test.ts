@@ -2682,7 +2682,7 @@ describe("Agents", function() {
             expect(myGame.state[5]).to.equal("Yo 5");
             expect(myGame.state[9]).to.equal("Yo 9");
 
-            myGame.agents.simulateRevert(myGame.agents, 1);
+            myGame.simulateRevert(myGame, 1);
 
             expect(myGame.state.foo).to.equal("Hello, world!");
             expect(myGame.state[0]).to.be.undefined;
@@ -2717,28 +2717,28 @@ describe("Agents", function() {
             expect(myGame.state[5]).to.equal("Yo 5");
             expect(myGame.state[9]).to.equal("Yo 9");
 
-            myGame.agents.simulateRevert(myGame.agents, 8);
+            myGame.simulateRevert(myGame, 8);
 
             expect(myGame.state.foo).to.equal("Hello, world!-0-1-2-3-4-5-6");
             expect(myGame.state[0]).to.equal("Yo 0");
             expect(myGame.state[5]).to.equal("Yo 5");
             expect(myGame.state[9]).to.be.undefined;
 
-            myGame.agents.simulateRevert(myGame.agents, 6);
+            myGame.simulateRevert(myGame, 6);
 
             expect(myGame.state.foo).to.equal("Hello, world!-0-1-2-3-4");
             expect(myGame.state[0]).to.equal("Yo 0");
             expect(myGame.state[5]).to.be.undefined;
             expect(myGame.state[9]).to.be.undefined;
 
-            myGame.agents.simulateRevert(myGame.agents, 4);
+            myGame.simulateRevert(myGame, 4);
 
             expect(myGame.state.foo).to.equal("Hello, world!-0-1-2");
             expect(myGame.state[0]).to.equal("Yo 0");
             expect(myGame.state[5]).to.be.undefined;
             expect(myGame.state[9]).to.be.undefined;
 
-            myGame.agents.simulateRevert(myGame.agents, 1);
+            myGame.simulateRevert(myGame, 1);
 
             expect(myGame.state.foo).to.equal("Hello, world!");
             expect(myGame.state[0]).to.be.undefined;
@@ -2756,7 +2756,7 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
             init(myGame);
-            myGame.agents.simulateRevert(myGame.agents, 0);
+            myGame.simulateRevert(myGame, 0);
 
             expect(myGame.state.foo).to.be.undefined;
             expect(myGame.state.dummy).to.be.undefined;
@@ -2782,7 +2782,7 @@ describe("Agents", function() {
                 "boppity"
             );
 
-            myGame.agents.simulateRevert(myGame.agents);
+            myGame.simulateRevert(myGame);
 
             expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Lars");
             expect(myGame.agents.getAgentProperty(1, "health")).to.equal(15);

@@ -280,7 +280,7 @@ export class Game {
             }
 
             newInstance = oldInstance.recycle();
-            newInstance.agents.simulateRevert(oldInstance.agents);
+            newInstance.simulateRevert(oldInstance);
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }

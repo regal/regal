@@ -10,7 +10,8 @@ import {
     buildActiveAgentProxy,
     buildInstanceAgents,
     InstanceAgentsInternal,
-    isAgent
+    isAgent,
+    StaticAgentRegistry
 } from "../../agents";
 import {
     buildInstanceOptions,
@@ -18,7 +19,7 @@ import {
     InstanceOptionsInternal
 } from "../../config";
 import { RegalError } from "../../error";
-import { buildInstanceEvents, InstanceEventsInternal } from "../../events";
+import { buildInstanceEvents, InstanceEventsInternal, on } from "../../events";
 import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
 import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
 import { ContextManager } from "../context-manager";
@@ -108,5 +109,48 @@ class GameInstanceImpl implements GameInstanceInternal {
         }
 
         return returnObj;
+    }
+
+    public simulateRevert(source: GameInstanceInternal, revertTo: number = 0) {
+        // Build function to revert agents
+        on("REVERT", (game: GameInstanceInternal) => {
+            const target = game.agents;
+
+            for (const am of source.agents.agentManagers()) {
+                const id = am.id;
+
+                const props = Object.keys(am).filter(
+                    key => key !== "game" && key !== "id"
+                );
+
+                for (const prop of props) {
+                    const history = am.getPropertyHistory(prop);
+                    const lastChangeIdx = history.findIndex(
+                        change => change.eventId <= revertTo
+                    );
+
+                    if (lastChangeIdx === -1) {
+                        // If all changes to the property happened after the target event, delete/reset it
+                        if (StaticAgentRegistry.hasAgentProperty(id, prop)) {
+                            const newVal = StaticAgentRegistry.getAgentProperty(
+                                id,
+                                prop
+                            );
+                            target.setAgentProperty(id, prop, newVal);
+                        } else {
+                            target.deleteAgentProperty(id, prop);
+                        }
+                    } else {
+                        // Otherwise, set the property to its value right after the target event
+                        const targetVal = history[lastChangeIdx].final;
+                        const currentVal = target.getAgentProperty(id, prop);
+
+                        if (targetVal !== currentVal) {
+                            target.setAgentProperty(id, prop, targetVal);
+                        }
+                    }
+                }
+            }
+        })(this); // Execute the revert function on this instance
     }
 }
