@@ -14,6 +14,7 @@ import { RegalError } from "../../src/error";
 import { log, getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/api";
 import { Agent, isAgent } from "../../src/agents";
+import { on } from "../../src/events";
 
 describe("Random", function() {
     beforeEach(function() {
@@ -318,6 +319,55 @@ describe("Random", function() {
                     expect(result).to.be.true;
                 }
             });
+        });
+
+        it("Generated values are recorded in InstanceEvent's EventRecord history", function() {
+            const rand1 = on("RAND1", game => {
+                game.state.randos = [];
+                const randos = game.state.randos as any[];
+
+                randos.push(game.random.boolean());
+                randos.push(game.random.decimal());
+            });
+
+            const rand2 = on("RAND2", game => {
+                const randos = game.state.randos as any[];
+
+                randos.push(game.random.int(1, 10));
+                randos.push(game.random.string(5));
+                randos.push(game.random.choice(randos));
+            });
+
+            const myGame = buildGameInstance({ seed: "wooof" });
+            rand1.then(rand2)(myGame);
+
+            expect(myGame.state.randos).to.deep.equal([
+                false,
+                0.0217038414025921,
+                10,
+                "IcR*G",
+                false
+            ]);
+
+            expect(myGame.events.history).to.deep.equal([
+                {
+                    id: 2,
+                    name: "RAND2",
+                    randoms: [
+                        { id: 2, value: 10 },
+                        { id: 3, value: "IcR*G" },
+                        { id: 4, value: 0 } // InstanceRandom.choice records the index of the selected element, not the element itself
+                    ]
+                },
+                {
+                    id: 1,
+                    name: "RAND1",
+                    randoms: [
+                        { id: 0, value: false },
+                        { id: 1, value: 0.0217038414025921 }
+                    ]
+                }
+            ]);
         });
     });
 });
