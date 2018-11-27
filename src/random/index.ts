@@ -19,3 +19,4 @@ export {
     ALPHABET_CHARSET,
     NUMBERS_CHARSET
 } from "./charsets";
+export { RandomRecord } from "./random-record";

@@ -7,6 +7,7 @@
 
 import { PropertyChange } from "../agents";
 import { OutputLine } from "../output";
+import { RandomRecord } from "../random";
 import { TrackedEvent } from "./event-types";
 
 /** Event ID for untracked `EventFunction`s. */
@@ -39,6 +40,9 @@ export interface EventRecord {
     /** The records of all changes to registered agents that were caused by this event. */
     changes?: PropertyChange[];
 
+    /** The records of all random values generated during the event. */
+    randoms?: RandomRecord[];
+
     /**
      * Appends a reference to an `OutputLine` to the `EventRecord`'s output log.
      * @param line The line of output emitted by the event.
@@ -57,6 +61,13 @@ export interface EventRecord {
     /**
      * Adds a record of a single change to a registered agent's property to the
      * `EventRecord`'s `changes` property.
+     * @param propChange The `PropertyChange`.
      */
     trackChange(propChange: PropertyChange): void;
+
+    /**
+     * Adds a record of a randomly generated value to the `EventRecord`'s `randoms` property.
+     * @param randRecord The `RandomRecord`.
+     */
+    trackRandom(randRecord: RandomRecord): void;
 }
