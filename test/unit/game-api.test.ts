@@ -15,7 +15,8 @@ import {
     log,
     getDemoMetadata,
     metadataWithOptions,
-    metadataWithVersion
+    metadataWithVersion,
+    Dummy
 } from "../test-utils";
 import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
@@ -32,12 +33,6 @@ import {
 } from "../../src/state";
 import { SEED_LENGTH } from "../../src/random";
 import { RegalError } from "../../src/error";
-
-class Dummy extends Agent {
-    constructor(public name: string, public health: number) {
-        super();
-    }
-}
 
 const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
 const NO_INIT_MSG =
