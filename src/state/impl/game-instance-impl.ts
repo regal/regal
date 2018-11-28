@@ -47,6 +47,14 @@ export const buildGameInstance = (
     return new GameInstanceImpl();
 };
 
+interface GameInstanceCtor {
+    agentsBuilder: (game: GameInstanceInternal) => InstanceAgentsInternal;
+    eventsBuilder: (game: GameInstanceInternal) => InstanceEventsInternal;
+    outputBuilder: (game: GameInstanceInternal) => InstanceOutputInternal;
+    optionsBuilder: (game: GameInstanceInternal) => InstanceOptionsInternal;
+    randomBuilder: (game: GameInstanceInternal) => InstanceRandomInternal;
+}
+
 class GameInstanceImpl implements GameInstanceInternal {
     public agents: InstanceAgentsInternal;
     public events: InstanceEventsInternal;
@@ -64,7 +72,7 @@ class GameInstanceImpl implements GameInstanceInternal {
         outputBuilder = buildInstanceOutput,
         optionsBuilder = buildInstanceOptions,
         randomBuilder = buildInstanceRandom
-    } = {}) {
+    }: Partial<GameInstanceCtor> = {}) {
         if (ContextManager.isContextStatic()) {
             throw new RegalError(
                 "Cannot construct a GameInstance outside of a game cycle."
@@ -80,22 +88,7 @@ class GameInstanceImpl implements GameInstanceInternal {
     }
 
     public recycle(newOptions?: Partial<GameOptions>): GameInstanceImpl {
-        const opts =
-            newOptions === undefined ? this.options.overrides : newOptions;
-
-        // Include this instance's seed if it was generated (not specified by the user)
-        let genSeed: string;
-        if (opts.seed === undefined) {
-            genSeed = this.options.seed;
-        }
-
-        return new GameInstanceImpl({
-            agentsBuilder: game => this.agents.recycle(game),
-            eventsBuilder: game => this.events.recycle(game),
-            optionsBuilder: game => buildInstanceOptions(game, opts, genSeed),
-            outputBuilder: game => this.output.recycle(game),
-            randomBuilder: game => this.random.recycle(game)
-        });
+        return new GameInstanceImpl(this._buildRecycleCtor(newOptions));
     }
 
     public using<T>(resource: T): T {
@@ -127,13 +120,68 @@ class GameInstanceImpl implements GameInstanceInternal {
     }
 
     public revert(revertTo: number = 0): GameInstanceImpl {
-        const newInstance = this.recycle();
-        this._buildRevertFunc(revertTo)(newInstance); // Revert agent changes
+        const ctor = this._buildRecycleCtor();
+        ctor.randomBuilder = this._buildRandomRevertCtor(revertTo); // Revert random value stream
+
+        const newInstance = new GameInstanceImpl(ctor);
+        this._buildAgentRevertFunc(revertTo)(newInstance); // Revert agent changes
+
         return newInstance;
     }
 
+    /** Internal helper that builds the `InstanceX` constructors for recycling. */
+    private _buildRecycleCtor(
+        newOptions?: Partial<GameOptions>
+    ): GameInstanceCtor {
+        const opts =
+            newOptions === undefined ? this.options.overrides : newOptions;
+
+        // Include this instance's seed if it was generated (not specified by the user)
+        let genSeed: string;
+        if (opts.seed === undefined) {
+            genSeed = this.options.seed;
+        }
+
+        return {
+            agentsBuilder: game => this.agents.recycle(game),
+            eventsBuilder: game => this.events.recycle(game),
+            optionsBuilder: game => buildInstanceOptions(game, opts, genSeed),
+            outputBuilder: game => this.output.recycle(game),
+            randomBuilder: game => this.random.recycle(game)
+        };
+    }
+
+    /**
+     * Internal helper that builds an `InstanceRandom` constructor with its `numGenerations`
+     * set to the appropriate revert event.
+     */
+    private _buildRandomRevertCtor(revertTo: number) {
+        return (game: GameInstanceImpl) => {
+            let numGens: number = this.random.numGenerations;
+
+            const eventsWithRandoms = this.events.history.filter(
+                er => er.randoms !== undefined && er.randoms.length > 0
+            );
+
+            if (eventsWithRandoms.length > 0) {
+                const lastEvent = eventsWithRandoms.find(
+                    er => er.id <= revertTo
+                );
+
+                if (lastEvent === undefined) {
+                    // All random values were generated after the target event
+                    numGens = eventsWithRandoms.pop().randoms.shift().id;
+                } else {
+                    // Otherwise, set num generations to its value after the target event
+                    numGens = eventsWithRandoms.shift().randoms.pop().id;
+                }
+            }
+            return buildInstanceRandom(game, numGens);
+        };
+    }
+
     /** Internal helper that builds a `TrackedEvent` to revert agent changes */
-    private _buildRevertFunc(revertTo: number): TrackedEvent {
+    private _buildAgentRevertFunc(revertTo: number): TrackedEvent {
         return on("REVERT", (game: GameInstanceInternal) => {
             const target = game.agents;
 

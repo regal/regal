@@ -731,7 +731,7 @@ describe("Game API", function() {
             expect(response.instance).to.be.undefined;
         });
 
-        it.skip("Undoing an event with use of random", function() {
+        it("Undoing an event with use of random", function() {
             Game.reset();
             Game.init(metadataWithOptions({ seed: "lars" }));
 
@@ -757,7 +757,7 @@ describe("Game API", function() {
             response = Game.postUndoCommand(response.instance);
             expect(response.instance.state.randos).to.deep.equal(["edede"]);
 
-            // Reposting the same command should theoretically generate the same string again
+            // Reposting the same command should generate the same string again
             response = Game.postPlayerCommand(response.instance, "");
             expect(response.instance.state.randos).to.deep.equal([
                 "edede",
