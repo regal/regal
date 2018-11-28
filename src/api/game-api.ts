@@ -279,8 +279,7 @@ export class Game {
                 throw new RegalError("Undo is not allowed here.");
             }
 
-            newInstance = oldInstance.recycle();
-            newInstance.simulateRevert(oldInstance);
+            newInstance = oldInstance.revert();
         } catch (error) {
             err = wrapApiErrorAsRegalError(error);
         }

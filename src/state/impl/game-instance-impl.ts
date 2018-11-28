@@ -19,7 +19,12 @@ import {
     InstanceOptionsInternal
 } from "../../config";
 import { RegalError } from "../../error";
-import { buildInstanceEvents, InstanceEventsInternal, on } from "../../events";
+import {
+    buildInstanceEvents,
+    InstanceEventsInternal,
+    on,
+    TrackedEvent
+} from "../../events";
 import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
 import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
 import { ContextManager } from "../context-manager";
@@ -121,12 +126,18 @@ class GameInstanceImpl implements GameInstanceInternal {
         return returnObj;
     }
 
-    public simulateRevert(source: GameInstanceInternal, revertTo: number = 0) {
-        // Build function to revert agents
-        on("REVERT", (game: GameInstanceInternal) => {
+    public revert(revertTo: number = 0): GameInstanceImpl {
+        const newInstance = this.recycle();
+        this._buildRevertFunc(revertTo)(newInstance); // Revert agent changes
+        return newInstance;
+    }
+
+    /** Internal helper that builds a `TrackedEvent` to revert agent changes */
+    private _buildRevertFunc(revertTo: number): TrackedEvent {
+        return on("REVERT", (game: GameInstanceInternal) => {
             const target = game.agents;
 
-            for (const am of source.agents.agentManagers()) {
+            for (const am of this.agents.agentManagers()) {
                 const id = am.id;
 
                 const props = Object.keys(am).filter(
@@ -161,6 +172,6 @@ class GameInstanceImpl implements GameInstanceInternal {
                     }
                 }
             }
-        })(this); // Execute the revert function on this instance
+        });
     }
 }

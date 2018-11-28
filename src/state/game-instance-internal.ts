@@ -42,12 +42,13 @@ export interface GameInstanceInternal extends GameInstance {
     recycle(newOptions?: Partial<GameOptions>): GameInstanceInternal;
 
     /**
-     * Builds and executes a `TrackedEvent` that reverts all changes in this
-     * `GameInstanceInternal` since a specified event.
+     * Generates a new `GameInstanceInternal` that is a deep copy of the current instance
+     * with its changes rolled back to the given `TrackedEvent`. Does not modify this instance.
      *
-     * @param source The instance containing agent history on which the revert function
-     * will be based. Will not be modified.
+     * Calls `recycle` implicitly. It's unecessary to call both `recycle` and `revert`.
+     *
      * @param revertTo The id of the `TrackedEvent` to which the state will be reverted.
+     * Defaults to zero.
      */
-    simulateRevert(source: GameInstanceInternal, revertTo?: number): void;
+    revert(revertTo?: number): GameInstanceInternal;
 }
