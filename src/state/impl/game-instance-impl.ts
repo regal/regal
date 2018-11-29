@@ -49,6 +49,10 @@ export const buildGameInstance = (
     return new GameInstanceImpl();
 };
 
+/**
+ * Internal interface to aid with constructing a `GameInstanceImpl`.
+ * Each property provides a constructor for each of the `InstanceX` components.
+ */
 interface GameInstanceCtor {
     agentsBuilder: (game: GameInstanceInternal) => InstanceAgentsInternal;
     eventsBuilder: (game: GameInstanceInternal) => InstanceEventsInternal;
@@ -66,7 +70,7 @@ class GameInstanceImpl implements GameInstanceInternal {
     public state: any;
 
     /**
-     * Constructs a `GameInstanceImpl` with the given `InstanceX` build functions.
+     * Constructs a `GameInstanceImpl` with the given `InstanceX` constructor functions.
      */
     constructor({
         agentsBuilder = buildInstanceAgents,

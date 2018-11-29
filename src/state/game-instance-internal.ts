@@ -48,7 +48,7 @@ export interface GameInstanceInternal extends GameInstance {
      * Calls `recycle` implicitly. It's unecessary to call both `recycle` and `revert`.
      *
      * @param revertTo The id of the `TrackedEvent` to which the state will be reverted.
-     * Defaults to zero.
+     * Defaults to zero. If nonzero and the `trackAgentChanges` option is disabled, an error will throw.
      */
     revert(revertTo?: number): GameInstanceInternal;
 }
