@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import "mocha";
 
-import { getDemoMetadata, Dummy, makeAgents } from "../test-utils";
+import { getDemoMetadata, Dummy, makeAgents, log } from "../test-utils";
 import { Game } from "../../src/api";
 import { RegalError } from "../../src/error";
 import { buildGameInstance } from "../../src/state";
-import { on } from "../../src/events";
+import { on, nq } from "../../src/events";
 
 describe("GameInstance", function() {
     beforeEach(function() {
@@ -236,6 +236,107 @@ describe("GameInstance", function() {
             expect(res.state.agents.length).to.equal(6);
             expect(res.state.agents[0].name).to.equal("D0");
             expect(res.state.agents[5].name).to.equal("D5");
+        });
+
+        it("Reverting intermediate changes to an agent array that involve changing its length", function() {
+            const first = on("FIRST", game => {
+                game.state.arr = [1, 2, 3];
+            });
+
+            const second = on("SECOND", game => {
+                (game.state.arr as number[]).push(4, 5, 6);
+            });
+
+            const myGame = buildGameInstance({ trackAgentChanges: true });
+            first.then(second)(myGame);
+
+            expect(myGame.state.arr).to.deep.equal([1, 2, 3, 4, 5, 6]);
+            expect(myGame.state.arr.length).to.equal(6);
+
+            const revGame = myGame.revert(1);
+
+            expect(revGame.state.arr).to.deep.equal([1, 2, 3]);
+            expect(revGame.state.arr.length).to.equal(3);
+        });
+
+        it("Reverting a random stream to the beginning", function() {
+            const init = on("INIT", game => {
+                game.state.randos = [];
+            });
+
+            const add = on("ADD", game => {
+                game.state.randos.push(game.random.int(1, 5));
+            });
+
+            const run = init.then(add, add, add, add, add);
+
+            const myGame = buildGameInstance({ seed: "boop" });
+            run(myGame);
+
+            expect(myGame.state.randos).to.deep.equal([3, 2, 2, 3, 1]); // Precondition
+
+            const revGame = myGame.revert();
+            expect(revGame.state.randos).to.be.undefined;
+
+            run(revGame);
+
+            expect(revGame.state.randos).to.deep.equal([3, 2, 2, 3, 1]);
+        });
+
+        it.skip("Reverting a random stream to part-way through", function() {
+            const init = on("INIT", game => {
+                game.state.randos = [];
+            });
+
+            const add = on("ADD", game => {
+                game.state.randos.push(game.random.int(1, 5));
+            });
+
+            const run = init.then(add, add, add, add, add);
+
+            const myGame = buildGameInstance({
+                seed: "boop",
+                trackAgentChanges: true
+            });
+            run(myGame);
+
+            expect(myGame.state.randos).to.deep.equal([3, 2, 2, 3, 1]); // Precondition
+
+            const revGame = myGame.revert(3);
+            expect(revGame.state.randos).to.deep.equal([3, 2]);
+
+            run(revGame);
+
+            expect(revGame.state.randos).to.deep.equal([3, 2, 2, 3, 1]);
+        });
+
+        it.skip("Reverting a random stream to part way through (not using an array)", function() {
+            const init = on("INIT", game => {
+                game.state.dummy = new Dummy("Dummy", 100);
+            });
+
+            const atk = on("ATTACK", game => {
+                const atkStrength = game.random.int(0, 10);
+                (game.state.dummy as Dummy).health -= atkStrength;
+            });
+
+            const run = init.then(atk, atk, atk, atk, atk, atk, atk);
+            const myGame = buildGameInstance({
+                seed: "lars",
+                trackAgentChanges: true
+            });
+            run(myGame);
+
+            expect(myGame.state.dummy.health).to.equal(62); // Precondition
+
+            const revGame = myGame.revert(4);
+            expect(revGame.state.dummy.health).to.equal(85);
+
+            log(myGame);
+            log(revGame);
+
+            nq(atk, atk, atk, atk)(revGame);
+            expect(revGame.state.dummy.health).to.equal(62);
         });
     });
 });

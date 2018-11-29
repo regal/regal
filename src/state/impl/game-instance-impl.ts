@@ -13,6 +13,8 @@ import {
     isAgent,
     StaticAgentRegistry
 } from "../../agents";
+import { isAgentArrayReference } from "../../agents/agent-array-reference";
+import { isAgentReference } from "../../agents/agent-reference";
 import {
     buildInstanceOptions,
     GameOptions,
@@ -120,6 +122,17 @@ class GameInstanceImpl implements GameInstanceInternal {
     }
 
     public revert(revertTo: number = 0): GameInstanceImpl {
+        if (revertTo !== 0) {
+            if (revertTo < 0) {
+                throw new RegalError("revertTo must be zero or greater.");
+            }
+            if (!this.options.trackAgentChanges) {
+                throw new RegalError(
+                    "In order to revert to an intermediate event ID, GameOptions.trackAgentChanges must be true."
+                );
+            }
+        }
+
         const ctor = this._buildRecycleCtor();
         ctor.randomBuilder = this._buildRandomRevertCtor(revertTo); // Revert random value stream
 
@@ -170,10 +183,13 @@ class GameInstanceImpl implements GameInstanceInternal {
 
                 if (lastEvent === undefined) {
                     // All random values were generated after the target event
-                    numGens = eventsWithRandoms.pop().randoms.shift().id;
+                    numGens =
+                        eventsWithRandoms[eventsWithRandoms.length - 1]
+                            .randoms[0].id;
                 } else {
                     // Otherwise, set num generations to its value after the target event
-                    numGens = eventsWithRandoms.shift().randoms.pop().id;
+                    const lastRandoms = eventsWithRandoms[0].randoms;
+                    numGens = lastRandoms[lastRandoms.length - 1].id;
                 }
             }
             return buildInstanceRandom(game, numGens);
@@ -215,7 +231,19 @@ class GameInstanceImpl implements GameInstanceInternal {
                         const currentVal = target.getAgentProperty(id, prop);
 
                         if (targetVal !== currentVal) {
-                            target.setAgentProperty(id, prop, targetVal);
+                            const areEqAgents =
+                                isAgentReference(targetVal) &&
+                                isAgent(currentVal) &&
+                                targetVal.refId === currentVal.id;
+
+                            const areEqAgentArrs =
+                                isAgentArrayReference(targetVal) &&
+                                isAgent(currentVal) &&
+                                targetVal.arRefId === currentVal.id;
+
+                            if (!areEqAgents && !areEqAgentArrs) {
+                                target.setAgentProperty(id, prop, targetVal);
+                            }
                         }
                     }
                 }
