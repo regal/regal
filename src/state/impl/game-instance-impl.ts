@@ -187,9 +187,9 @@ class GameInstanceImpl implements GameInstanceInternal {
                         eventsWithRandoms[eventsWithRandoms.length - 1]
                             .randoms[0].id;
                 } else {
-                    // Otherwise, set num generations to its value after the target event
-                    const lastRandoms = eventsWithRandoms[0].randoms;
-                    numGens = lastRandoms[lastRandoms.length - 1].id;
+                    // Otherwise, set num generations to its value AFTER (+1) the target event
+                    const lastRandoms = lastEvent.randoms;
+                    numGens = lastRandoms[lastRandoms.length - 1].id + 1;
                 }
             }
             return buildInstanceRandom(game, numGens);

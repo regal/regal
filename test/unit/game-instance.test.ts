@@ -283,7 +283,7 @@ describe("GameInstance", function() {
             expect(revGame.state.randos).to.deep.equal([3, 2, 2, 3, 1]);
         });
 
-        it.skip("Reverting a random stream to part-way through", function() {
+        it("Reverting a random stream to part-way through", function() {
             const init = on("INIT", game => {
                 game.state.randos = [];
             });
@@ -305,12 +305,12 @@ describe("GameInstance", function() {
             const revGame = myGame.revert(3);
             expect(revGame.state.randos).to.deep.equal([3, 2]);
 
-            run(revGame);
+            nq(add, add, add)(revGame);
 
             expect(revGame.state.randos).to.deep.equal([3, 2, 2, 3, 1]);
         });
 
-        it.skip("Reverting a random stream to part way through (not using an array)", function() {
+        it("Reverting a random stream to part way through (not using an array)", function() {
             const init = on("INIT", game => {
                 game.state.dummy = new Dummy("Dummy", 100);
             });
@@ -331,9 +331,6 @@ describe("GameInstance", function() {
 
             const revGame = myGame.revert(4);
             expect(revGame.state.dummy.health).to.equal(85);
-
-            log(myGame);
-            log(revGame);
 
             nq(atk, atk, atk, atk)(revGame);
             expect(revGame.state.dummy.health).to.equal(62);
