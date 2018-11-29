@@ -15,7 +15,8 @@ import {
     log,
     getDemoMetadata,
     metadataWithOptions,
-    metadataWithVersion
+    metadataWithVersion,
+    Dummy
 } from "../test-utils";
 import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
@@ -32,12 +33,6 @@ import {
 } from "../../src/state";
 import { SEED_LENGTH } from "../../src/random";
 import { RegalError } from "../../src/error";
-
-class Dummy extends Agent {
-    constructor(public name: string, public health: number) {
-        super();
-    }
-}
 
 const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
 const NO_INIT_MSG =
@@ -729,6 +724,40 @@ describe("Game API", function() {
             expect(response.output.wasSuccessful).to.be.false;
             expect(response.output.error.message).to.equal(NO_INIT_MSG);
             expect(response.instance).to.be.undefined;
+        });
+
+        it("Undoing an event with use of random", function() {
+            Game.reset();
+            Game.init(metadataWithOptions({ seed: "lars" }));
+
+            onStartCommand(game => {
+                game.state.randos = [];
+            });
+
+            onPlayerCommand(() => game => {
+                game.state.randos.push(game.random.string(5, "abcedef"));
+            });
+
+            let response = Game.postStartCommand();
+            response = Game.postPlayerCommand(response.instance, "");
+            response = Game.postPlayerCommand(response.instance, "");
+
+            // Precondition: the given seed should generate these random strings
+            expect(response.instance.state.randos).to.deep.equal([
+                "edede",
+                "dfaff"
+            ]);
+
+            // Undoing the last command should remove the second string
+            response = Game.postUndoCommand(response.instance);
+            expect(response.instance.state.randos).to.deep.equal(["edede"]);
+
+            // Reposting the same command should generate the same string again
+            response = Game.postPlayerCommand(response.instance, "");
+            expect(response.instance.state.randos).to.deep.equal([
+                "edede",
+                "dfaff"
+            ]);
         });
     });
 

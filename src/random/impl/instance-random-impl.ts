@@ -57,13 +57,18 @@ class InstanceRandomImpl implements InstanceRandomInternal {
             );
         }
 
+        const value = this._generator.nextInt(min, max);
+        this.trackRandom(value);
+
         this._numGenerations++;
-        return this._generator.nextInt(min, max);
+        return value;
     }
 
     public decimal(): number {
+        const value = this._generator.next(0, 1);
+        this.trackRandom(value);
         this._numGenerations++;
-        return this._generator.next(0, 1);
+        return value;
     }
 
     public string(length: number, charset: string = EXPANDED_CHARSET) {
@@ -79,8 +84,11 @@ class InstanceRandomImpl implements InstanceRandomInternal {
             );
         }
 
+        const value = this._generator.nextString(length, charset);
+        this.trackRandom(value);
+
         this._numGenerations++;
-        return this._generator.nextString(length, charset);
+        return value;
     }
 
     public choice<T>(array: T[]): T {
@@ -88,12 +96,25 @@ class InstanceRandomImpl implements InstanceRandomInternal {
             throw new RegalError("Array must be defined.");
         }
 
+        const idx = this._generator.nextInt(0, array.length - 1);
+        this.trackRandom(idx); // Track the index of the selected element, rather than the element itself
+
         this._numGenerations++;
-        return this._generator.nextArrayItem(array);
+        return array[idx];
     }
 
     public boolean(): boolean {
+        const value = this._generator.nextBoolean();
+        this.trackRandom(value);
         this._numGenerations++;
-        return this._generator.nextBoolean();
+        return value;
+    }
+
+    /** Internal helper method to add the `RandomRecord` to the current `EventRecord`. */
+    private trackRandom(value: string | number | boolean): void {
+        this.game.events.current.trackRandom({
+            id: this.numGenerations,
+            value
+        });
     }
 }

@@ -14,19 +14,14 @@ import {
     metadataWithOptions,
     log,
     libraryVersion,
-    metadataWithVersion
+    metadataWithVersion,
+    Dummy
 } from "../test-utils";
 import { on } from "../../src/events";
 import { Agent, PropertyOperation } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 import { buildGameInstance, GameInstanceInternal } from "../../src/state";
 import { SEED_LENGTH, DEFAULT_SEED_CHARSET } from "../../src/random";
-
-class Dummy extends Agent {
-    constructor(public name: string, public health: number) {
-        super();
-    }
-}
 
 describe("Config", function() {
     beforeEach(function() {

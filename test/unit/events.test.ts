@@ -12,7 +12,7 @@ import {
     enqueue,
     buildInstanceEvents
 } from "../../src/events";
-import { log, getDemoMetadata } from "../test-utils";
+import { log, getDemoMetadata, Dummy } from "../test-utils";
 import {
     Agent,
     PropertyOperation,
@@ -934,9 +934,3 @@ describe("Events", function() {
         });
     });
 });
-
-class Dummy extends Agent {
-    constructor(public name: string, public health: number) {
-        super();
-    }
-}

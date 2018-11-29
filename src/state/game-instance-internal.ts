@@ -40,4 +40,15 @@ export interface GameInstanceInternal extends GameInstance {
      * @returns The new `GameInstanceInternal`, with each manager cycled.
      */
     recycle(newOptions?: Partial<GameOptions>): GameInstanceInternal;
+
+    /**
+     * Generates a new `GameInstanceInternal` that is a deep copy of the current instance
+     * with its changes rolled back to the given `TrackedEvent`. Does not modify this instance.
+     *
+     * Calls `recycle` implicitly. It's unecessary to call both `recycle` and `revert`.
+     *
+     * @param revertTo The id of the `TrackedEvent` to which the state will be reverted.
+     * Defaults to zero. If nonzero and the `trackAgentChanges` option is disabled, an error will throw.
+     */
+    revert(revertTo?: number): GameInstanceInternal;
 }

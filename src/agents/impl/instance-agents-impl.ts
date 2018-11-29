@@ -6,8 +6,7 @@
  */
 
 import { RegalError } from "../../error";
-import { on } from "../../events";
-import { GameInstance, GameInstanceInternal } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { isAgent } from "../agent";
 import {
     AgentArrayReference,
@@ -282,51 +281,5 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         for (const id of waste) {
             delete this[id];
         }
-    }
-
-    public simulateRevert(
-        source: InstanceAgentsInternal,
-        revertTo: number = 0
-    ): void {
-        // Build revert function
-        on("REVERT", (game: GameInstanceInternal) => {
-            const target = game.agents;
-
-            for (const am of source.agentManagers()) {
-                const id = am.id;
-
-                const props = Object.keys(am).filter(
-                    key => key !== "game" && key !== "id"
-                );
-
-                for (const prop of props) {
-                    const history = am.getPropertyHistory(prop);
-                    const lastChangeIdx = history.findIndex(
-                        change => change.eventId <= revertTo
-                    );
-
-                    if (lastChangeIdx === -1) {
-                        // If all changes to the property happened after the target event, delete/reset it
-                        if (StaticAgentRegistry.hasAgentProperty(id, prop)) {
-                            const newVal = StaticAgentRegistry.getAgentProperty(
-                                id,
-                                prop
-                            );
-                            target.setAgentProperty(id, prop, newVal);
-                        } else {
-                            target.deleteAgentProperty(id, prop);
-                        }
-                    } else {
-                        // Otherwise, set the property to its value right after the target event
-                        const targetVal = history[lastChangeIdx].final;
-                        const currentVal = target.getAgentProperty(id, prop);
-
-                        if (targetVal !== currentVal) {
-                            target.setAgentProperty(id, prop, targetVal);
-                        }
-                    }
-                }
-            }
-        })(this.game); // Execute the revert function on this instance
     }
 }

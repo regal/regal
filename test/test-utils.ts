@@ -1,6 +1,7 @@
 import { inspect } from "util";
 import { GameMetadata, GameOptions } from "../src/config";
 import { version as regalVersion } from "../package.json";
+import { Agent } from "../src";
 
 export const log = (o: any, title?: string) =>
     console.log(
@@ -35,3 +36,22 @@ export const metadataWithVersion = (metadata: GameMetadata): GameMetadata => ({
 });
 
 export const libraryVersion = regalVersion;
+
+export class Dummy extends Agent {
+    constructor(public name: string, public health: number) {
+        super();
+    }
+}
+
+export const makeAgents = (startFrom: number, amount: number) => {
+    let num = startFrom;
+    let i = amount;
+    const arr = [];
+
+    while (i-- > 0) {
+        arr.push(new Dummy(`D${num}`, num));
+        num++;
+    }
+
+    return arr;
+};
