@@ -250,7 +250,7 @@ describe("GameInstance", function() {
             const myGame = buildGameInstance({ trackAgentChanges: true });
             first.then(second)(myGame);
 
-            expect(myGame.state.arr).to.deep.equal([1, 2, 3, 4, 5, 6]);
+            expect(myGame.state.arr).to.deep.equal([1, 2, 3, 4, 5, 6]); // Precondition
             expect(myGame.state.arr.length).to.equal(6);
 
             const revGame = myGame.revert(1);
@@ -334,6 +334,21 @@ describe("GameInstance", function() {
 
             nq(atk, atk, atk, atk)(revGame);
             expect(revGame.state.dummy.health).to.equal(62);
+        });
+
+        it("Throw an error if given a revertTo arg less than zero", function() {
+            expect(() => buildGameInstance().revert(-1)).to.throw(
+                RegalError,
+                "revertTo must be zero or greater."
+            );
+        });
+
+        it("Throw an error if revertTo is nonzero when trackAgentChanges is disabled", function() {
+            const myGame = buildGameInstance({ trackAgentChanges: false });
+            expect(() => myGame.revert(1)).to.throw(
+                RegalError,
+                "In order to revert to an intermediate event ID, GameOptions.trackAgentChanges must be true."
+            );
         });
     });
 });
