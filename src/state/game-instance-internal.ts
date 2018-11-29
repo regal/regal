@@ -14,8 +14,10 @@ import { GameInstance } from "./game-instance";
 
 /**
  * Internal interface for `GameInstance`.
+ * @template StateType The state property's type. Optional, defaults to `any`.
  */
-export interface GameInstanceInternal extends GameInstance {
+export interface GameInstanceInternal<StateType = any>
+    extends GameInstance<StateType> {
     /** The internal interface to the manager for all agents in the instance. */
     agents: InstanceAgentsInternal;
 

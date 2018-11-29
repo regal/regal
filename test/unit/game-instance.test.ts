@@ -31,6 +31,15 @@ describe("GameInstance", function() {
         );
     });
 
+    it("buildGameInstance can have a parameterized state", function() {
+        interface CustomState {
+            a: boolean;
+        }
+
+        const myGame = buildGameInstance<CustomState>();
+        myGame.state.a = true; // Compiles
+    });
+
     describe("Recycle", function() {
         it("Cycling a new GameInstance is equivalent to instantiating a new one", function() {
             const game = buildGameInstance({ seed: "foo" });

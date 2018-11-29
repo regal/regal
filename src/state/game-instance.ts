@@ -21,8 +21,10 @@ import { InstanceRandom } from "../random";
  *
  * Contains all APIs used by game developers to read and write
  * to the game's instance state.
+ *
+ * @template StateType The state property's type. Optional, defaults to `any`.
  */
-export interface GameInstance {
+export interface GameInstance<StateType = any> {
     /** The manager for all events in the instance. */
     events: InstanceEvents;
 
@@ -41,7 +43,7 @@ export interface GameInstance {
      * Properties set within this object are maintained between game cycles, so
      * it should be used to store long-term state.
      */
-    state: any;
+    state: StateType;
 
     /**
      * Activates one or more agents in the current game context. All agents
