@@ -16,7 +16,7 @@ export {
     enqueue,
     nq,
     on,
-    GameEventHandler
+    GameEventBuilder
 } from "./events";
 export {
     Game,
