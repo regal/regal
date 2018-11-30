@@ -15,7 +15,8 @@ export {
     InstanceEvents,
     enqueue,
     nq,
-    on
+    on,
+    GameEventHandler
 } from "./events";
 export {
     Game,

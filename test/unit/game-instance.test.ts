@@ -31,8 +31,9 @@ describe("GameInstance", function() {
         );
     });
 
-    it("buildGameInstance can have a parameterized state", function() {
+    it("Compile Check: buildGameInstance can have a parameterized state", function() {
         interface CustomState {
+            /** test parm */
             a: boolean;
         }
 
