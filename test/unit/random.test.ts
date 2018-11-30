@@ -322,23 +322,27 @@ describe("Random", function() {
         });
 
         it("Generated values are recorded in InstanceEvent's EventRecord history", function() {
-            const rand1 = on("RAND1", game => {
+            interface S {
+                randos: any[];
+            }
+
+            const rand1 = on<S>("RAND1", game => {
                 game.state.randos = [];
-                const randos = game.state.randos as any[];
+                const randos = game.state.randos;
 
                 randos.push(game.random.boolean());
                 randos.push(game.random.decimal());
             });
 
-            const rand2 = on("RAND2", game => {
-                const randos = game.state.randos as any[];
+            const rand2 = on<S>("RAND2", game => {
+                const randos = game.state.randos;
 
                 randos.push(game.random.int(1, 10));
                 randos.push(game.random.string(5));
                 randos.push(game.random.choice(randos));
             });
 
-            const myGame = buildGameInstance({ seed: "wooof" });
+            const myGame = buildGameInstance<S>({ seed: "wooof" });
             rand1.then(rand2)(myGame);
 
             expect(myGame.state.randos).to.deep.equal([

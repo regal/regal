@@ -232,9 +232,8 @@ describe("GameInstance", function() {
             expect(myGame.state.agents[0].name).to.equal("D0");
             expect(myGame.state.agents[5].name).to.equal("D5");
 
-            on("REVERSE", game => {
-                const agents = myGame.state.agents as Dummy[];
-                agents.reverse();
+            on<{ agents: Dummy[] }>("REVERSE", game => {
+                game.state.agents.reverse();
             })(myGame);
 
             expect(myGame.state.agents.length).to.equal(6);
@@ -249,15 +248,19 @@ describe("GameInstance", function() {
         });
 
         it("Reverting intermediate changes to an agent array that involve changing its length", function() {
-            const first = on("FIRST", game => {
+            interface S {
+                arr: number[];
+            }
+
+            const first = on<S>("FIRST", game => {
                 game.state.arr = [1, 2, 3];
             });
 
-            const second = on("SECOND", game => {
-                (game.state.arr as number[]).push(4, 5, 6);
+            const second = on<S>("SECOND", game => {
+                game.state.arr.push(4, 5, 6);
             });
 
-            const myGame = buildGameInstance({ trackAgentChanges: true });
+            const myGame = buildGameInstance<S>({ trackAgentChanges: true });
             first.then(second)(myGame);
 
             expect(myGame.state.arr).to.deep.equal([1, 2, 3, 4, 5, 6]); // Precondition
@@ -321,17 +324,21 @@ describe("GameInstance", function() {
         });
 
         it("Reverting a random stream to part way through (not using an array)", function() {
-            const init = on("INIT", game => {
+            interface S {
+                dummy: Dummy;
+            }
+
+            const init = on<S>("INIT", game => {
                 game.state.dummy = new Dummy("Dummy", 100);
             });
 
-            const atk = on("ATTACK", game => {
+            const atk = on<S>("ATTACK", game => {
                 const atkStrength = game.random.int(0, 10);
-                (game.state.dummy as Dummy).health -= atkStrength;
+                game.state.dummy.health -= atkStrength;
             });
 
             const run = init.then(atk, atk, atk, atk, atk, atk, atk);
-            const myGame = buildGameInstance({
+            const myGame = buildGameInstance<S>({
                 seed: "lars",
                 trackAgentChanges: true
             });
