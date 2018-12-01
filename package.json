@@ -22,13 +22,13 @@
   "main": "dist/regal.cjs.js",
   "module": "dist/regal.esm.js",
   "browser": "dist/regal.umd.min.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist/"
   ],
   "scripts": {
     "test": "nyc mocha",
-    "build": "rollup -c && tsc -d --emitDeclarationOnly --declarationDir ./dist/types",
+    "build": "rollup -c && tsc -d --emitDeclarationOnly --declarationDir ./dist",
     "publish-coverage": "nyc report --reporter=text-lcov | coveralls",
     "check-coverage": "nyc check-coverage --lines 99 --functions 99 --branches 99",
     "lint": "node node_modules/tslint/bin/tslint -c tslint.json --format stylish 'src/**/*.ts'",
