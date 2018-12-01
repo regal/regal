@@ -2,9 +2,24 @@
 
 ## Pre-Initial Release
 
+### v0.6.0
+
+* Abstract `GameInstance` and `InstanceX` interfaces into public and internal interfaces ([#72](https://github.com/regal/regal/pull/72))
+* Add optional type parameter for `GameInstance.state` to instance interfaces and event types and functions ([#79](https://github.com/regal/regal/pull/79))
+
+**Config**
+* Decouple `load-config` and its dependencies from the game library ([#73](https://github.com/regal/regal/pull/73))
+* Add `libraryVersion` metadata property ([#74](https://github.com/regal/regal/pull/74))
+
+**Random**
+* Fix `InstanceRandom` bug where reverting the instance wouldn't rollback the random value stream ([#78](https://github.com/regal/regal/pull/78))
+
+**Build**
+* Improve distribution file structure ([#67](https://github.com/regal/regal/pull/67))
+
 ### v0.5.0
 
-* Refactors the library structure
+* Refactor the library structure
 
 **Random**
 * Adds the Random component (through `InstanceRandom`)
