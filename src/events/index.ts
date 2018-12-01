@@ -10,6 +10,7 @@ export {
     EventQueue,
     noop,
     TrackedEvent,
+    GameEventBuilder,
     isEventQueue,
     isTrackedEvent
 } from "./event-types";

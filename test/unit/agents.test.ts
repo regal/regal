@@ -458,8 +458,12 @@ describe("Agents", function() {
         });
 
         it("Activating multiple agents as a safety at the beginning of events", function() {
+            interface S {
+                parent: Parent;
+            }
+
             const newChild = (_target: Parent) =>
-                on("NEW CHILD", game => {
+                on<S>("NEW CHILD", game => {
                     const { parent, child } = game.using({
                         parent: _target,
                         child: new Dummy("D1", 10)
@@ -474,7 +478,7 @@ describe("Agents", function() {
             Game.init(MD);
 
             // Using a static agent that hasn't been activated
-            const myGame1 = buildGameInstance();
+            const myGame1 = buildGameInstance<S>();
             newChild(PARENT)(myGame1);
 
             expect(myGame1.state.parent.child.id).to.equal(3);
@@ -482,7 +486,7 @@ describe("Agents", function() {
             expect(myGame1.state.parent.child.health).to.equal(10);
 
             // Using a nonstatic agent that's been activated
-            const myGame2 = buildGameInstance();
+            const myGame2 = buildGameInstance<S>();
             const myParent = myGame2.using(new Parent(new Dummy("D2", 2)));
             newChild(myParent)(myGame2);
 
@@ -491,7 +495,7 @@ describe("Agents", function() {
             expect(myGame2.state.parent.child.health).to.equal(10);
 
             // Using a nonstatic agent that hasn't been activated
-            const myGame3 = buildGameInstance();
+            const myGame3 = buildGameInstance<S>();
             const myParent2 = new Parent(undefined);
             newChild(myParent2)(myGame3);
 
@@ -895,13 +899,17 @@ describe("Agents", function() {
             it("Setting an active agent's property to be an array of inactive agents is implicitly activates them", function() {
                 Game.init(MD);
 
-                const myGame = buildGameInstance();
-                on("MOD", game => {
+                interface S {
+                    arr: Dummy[];
+                }
+
+                const myGame = buildGameInstance<S>();
+                on<S>("MOD", game => {
                     game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
                 })(myGame);
 
-                const d1 = myGame.state.arr[0] as Dummy;
-                const d2 = myGame.state.arr[1] as Dummy;
+                const d1 = myGame.state.arr[0];
+                const d2 = myGame.state.arr[1];
 
                 expect(d1.id).to.equal(2);
                 expect(d1.name).to.equal("D1");
@@ -2678,7 +2686,7 @@ describe("Agents", function() {
 
         it("Scrubbing an InstanceAgents finds agent array references", function() {
             Game.init(MD);
-            const myGame = buildGameInstance();
+            const myGame = buildGameInstance<{ arr: any[] }>();
 
             const p = myGame.using(
                 new MultiParent([new Dummy("D1", 1), new Dummy("D2", 2)])
@@ -2699,7 +2707,7 @@ describe("Agents", function() {
                 myGame.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
 
-            (myGame.state.arr as any[]).splice(2, 1);
+            myGame.state.arr.splice(2, 1);
             myGame.agents.scrubAgents();
 
             expect(

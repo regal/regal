@@ -35,18 +35,19 @@ import { GameInstanceInternal } from "../game-instance-internal";
 /**
  * Constructs a new `GameInstance` with optional `GameOption` overrides.
  *
+ * @template StateType The state property's type. Optional, defaults to `any`.
  * @param optOverrides Any option overrides preferred for this specific instance.
  * Must be allowed by the static configuration's `allowOverrides` option.
  */
-export const buildGameInstance = (
+export const buildGameInstance = <StateType = any>(
     optOverrides?: Partial<GameOptions>
-): GameInstanceInternal => {
+): GameInstanceInternal<StateType> => {
     if (optOverrides !== undefined) {
-        return new GameInstanceImpl({
+        return new GameInstanceImpl<StateType>({
             optionsBuilder: game => buildInstanceOptions(game, optOverrides)
         });
     }
-    return new GameInstanceImpl();
+    return new GameInstanceImpl<StateType>();
 };
 
 /**
@@ -61,13 +62,18 @@ interface GameInstanceCtor {
     randomBuilder: (game: GameInstanceInternal) => InstanceRandomInternal;
 }
 
-class GameInstanceImpl implements GameInstanceInternal {
+/**
+ * Implementation of `GameInstanceInternal`.
+ * @template StateType The state property's type. Optional, defaults to `any`.
+ */
+class GameInstanceImpl<StateType = any>
+    implements GameInstanceInternal<StateType> {
     public agents: InstanceAgentsInternal;
     public events: InstanceEventsInternal;
     public output: InstanceOutputInternal;
     public options: InstanceOptionsInternal;
     public random: InstanceRandomInternal;
-    public state: any;
+    public state: StateType;
 
     /**
      * Constructs a `GameInstanceImpl` with the given `InstanceX` constructor functions.
@@ -90,7 +96,7 @@ class GameInstanceImpl implements GameInstanceInternal {
         this.agents = agentsBuilder(this);
         this.output = outputBuilder(this);
         this.random = randomBuilder(this);
-        this.state = buildActiveAgentProxy(0, this);
+        this.state = (buildActiveAgentProxy(0, this) as unknown) as StateType;
     }
 
     public recycle(newOptions?: Partial<GameOptions>): GameInstanceImpl {

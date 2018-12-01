@@ -14,8 +14,10 @@ import { GameInstance } from "./game-instance";
 
 /**
  * Internal interface for `GameInstance`.
+ * @template StateType The state property's type. Optional, defaults to `any`.
  */
-export interface GameInstanceInternal extends GameInstance {
+export interface GameInstanceInternal<StateType = any>
+    extends GameInstance<StateType> {
     /** The internal interface to the manager for all agents in the instance. */
     agents: InstanceAgentsInternal;
 
@@ -39,7 +41,7 @@ export interface GameInstanceInternal extends GameInstance {
      *
      * @returns The new `GameInstanceInternal`, with each manager cycled.
      */
-    recycle(newOptions?: Partial<GameOptions>): GameInstanceInternal;
+    recycle(newOptions?: Partial<GameOptions>): GameInstanceInternal<StateType>;
 
     /**
      * Generates a new `GameInstanceInternal` that is a deep copy of the current instance
@@ -50,5 +52,5 @@ export interface GameInstanceInternal extends GameInstance {
      * @param revertTo The id of the `TrackedEvent` to which the state will be reverted.
      * Defaults to zero. If nonzero and the `trackAgentChanges` option is disabled, an error will throw.
      */
-    revert(revertTo?: number): GameInstanceInternal;
+    revert(revertTo?: number): GameInstanceInternal<StateType>;
 }

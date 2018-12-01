@@ -9,7 +9,7 @@ import {
     onBeforeUndoCommand,
     HookManager
 } from "../../src/api";
-import { noop } from "../../src/events";
+import { noop, on } from "../../src/events";
 import { OutputLineType, InstanceOutput } from "../../src/output";
 import {
     log,
@@ -240,16 +240,24 @@ describe("Game API", function() {
             const printDummyNames = (dums: Dummy[], output: InstanceOutput) => {
                 output.write(`Dummies: ${dums.map(d => d.name).join(", ")}.`);
             };
-            onStartCommand(game => {
-                game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
-                printDummyNames(game.state.arr as Dummy[], game.output);
-            });
 
-            onPlayerCommand(() => game => {
-                const arr = game.state.arr as Dummy[];
-                arr.pop();
-                printDummyNames(arr, game.output);
-            });
+            interface S {
+                arr: Dummy[];
+            }
+
+            onStartCommand(
+                on<S>("INIT", game => {
+                    game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
+                    printDummyNames(game.state.arr, game.output);
+                })
+            );
+
+            onPlayerCommand(() =>
+                on<S>("COMMAND", game => {
+                    game.state.arr.pop();
+                    printDummyNames(game.state.arr, game.output);
+                })
+            );
 
             const r1 = Game.postStartCommand();
             const r1_instance = r1.instance as GameInstanceInternal;

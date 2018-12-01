@@ -10,7 +10,8 @@ import {
     nq,
     isEventQueue,
     enqueue,
-    buildInstanceEvents
+    buildInstanceEvents,
+    GameEventBuilder
 } from "../../src/events";
 import { log, getDemoMetadata, Dummy } from "../test-utils";
 import {
@@ -147,6 +148,47 @@ describe("Events", function() {
         expect(withNoop(buildGameInstance())).to.deep.equal(
             withoutNoop(buildGameInstance())
         );
+    });
+
+    it("Compile Check: `on` can be paramterized with a custom state", function() {
+        interface Custom {
+            count: number;
+            arr: string[];
+        }
+
+        // Ensure these compile
+        on<Custom>("ADD", game => {
+            game.state.count++;
+            game.state.arr.unshift("foo");
+        });
+    });
+
+    it("Declaring a parameterized `on` with the GameEventHandler type", function() {
+        interface Custom {
+            count: number;
+            arr: string[];
+        }
+
+        const fn: GameEventBuilder<Custom> = on;
+
+        const init = fn("INIT", game => {
+            game.state.count = 0;
+            game.state.arr = [];
+        });
+
+        const add = (arg: string) =>
+            fn("ADD", game => {
+                game.state.count++;
+                game.state.arr.unshift(arg);
+            });
+
+        Game.init(MD);
+
+        const myGame = buildGameInstance();
+        init.then(add("foo"))(myGame);
+
+        expect(myGame.state.count).to.equal(1);
+        expect(myGame.state.arr).to.deep.equal(["foo"]);
     });
 
     describe("Queueing", function() {

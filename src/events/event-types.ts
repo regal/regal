@@ -8,28 +8,38 @@
 import { GameInstance } from "../state";
 
 /**
- * A function that modifies the game instance.
+ * A function that modifies a game instance.
  *
+ * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  * @param game The game instance to be modified.
  * @returns The next `EventFunction` to be executed, or `void` if there are no more events.
  */
-export type EventFunction = (game: GameInstance) => EventFunction | void;
+export type EventFunction<StateType = any> = (
+    game: GameInstance<StateType>
+) => EventFunction<StateType> | void;
 
 /**
- * An `EventFunction` that is tracked by the game instance and can
- * be extended into an `EventQueue`.
+ * An `EventFunction` that is tracked by the game instance.
  *
+ * In order for Regal to behave properly, all modifications made by the game
+ * developer to a `GameInstance` should be done through tracked events.
+ *
+ * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  * @param game The game instance to be modified.
  * @returns The next `EventFunction` to be executed.
  */
-export interface TrackedEvent extends EventFunction {
-    (game: GameInstance): TrackedEvent | EventFunction;
+export interface TrackedEvent<StateType = any>
+    extends EventFunction<StateType> {
+    // Overload function signature
+    (game: GameInstance<StateType>):
+        | TrackedEvent<StateType>
+        | EventFunction<StateType>;
 
     /** The name of the event. */
     eventName: string;
 
     /** The `EventFunction` that is wrapped by the `TrackedEvent`. */
-    target: EventFunction;
+    target: EventFunction<StateType>;
 
     /**
      * Adds events to the front of the event queue.
@@ -37,7 +47,7 @@ export interface TrackedEvent extends EventFunction {
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
      */
-    then(...events: TrackedEvent[]): EventQueue;
+    then(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
 
     /**
      * Adds events to the end of the event queue.
@@ -47,32 +57,33 @@ export interface TrackedEvent extends EventFunction {
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
      */
-    thenq(...events: TrackedEvent[]): EventQueue;
+    thenq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
 }
 
 /**
  * Contains a queue of `TrackedEvents` to be added to the game instance.
+ * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  */
-export interface EventQueue extends TrackedEvent {
+export interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
     /** The events to be added to the beginning of the game's event queue. */
-    immediateEvents: TrackedEvent[];
+    immediateEvents: Array<TrackedEvent<StateType>>;
 
     /** The events to be added to the end of the game's event queue. */
-    delayedEvents: TrackedEvent[];
+    delayedEvents: Array<TrackedEvent<StateType>>;
 
     /**
      * Adds events to the end of the event queue.
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
      */
-    enqueue(...events: TrackedEvent[]): EventQueue;
+    enqueue(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
 
     /**
      * Adds events to the end of the event queue. (Alias of `EventQueue.enqueue`)
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
      */
-    nq(...events: TrackedEvent[]): EventQueue;
+    nq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
 }
 
 /** Ensures the object is a `TrackedEvent`. */
@@ -97,3 +108,18 @@ export const noop: TrackedEvent = (() => {
 
     return event;
 })();
+
+/**
+ * Type alias for the `on` function, which generates a `TrackedEvent`.
+ *
+ * Used for situations where the game developer wants to refer to
+ * a parameterized version of `on` as its on function. For example:
+ *
+ * `const o: GameEventBuilder<CustomStateType> = on;`
+ *
+ * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
+ */
+export type GameEventBuilder<StateType = any> = (
+    eventName: string,
+    eventFunc: EventFunction<StateType>
+) => TrackedEvent<StateType>;
