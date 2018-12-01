@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the constructor for inactive agent proxies.
  *
  * Copyright (c) 2018 Joseph R Cowman

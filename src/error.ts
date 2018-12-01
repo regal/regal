@@ -1,12 +1,9 @@
-/**
+/*
  * Custom errors for the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
-
-// tslint:disable-next-line
-true; // This does nothing; it's only so the jsdocs won't conflict
 
 /**
  * Error thrown during execution of Regal library functions.

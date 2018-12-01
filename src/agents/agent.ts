@@ -1,8 +1,8 @@
-/**
+/*
  * Contains the Agent model and proxies for controlling interaction with agents.
  *
  * Agents are objects that are interacted with by the player in a Regal game.
- * They are managed by the `GameInstance`'s `InstanceAgents` object, which
+ * They are managed by the `GameInstance`'s `InstanceAgentsInternal` object, which
  * tracks all modifications made to the agent data.
  *
  * Copyright (c) 2018 Joseph R Cowman

@@ -10,24 +10,24 @@ import {
     nq,
     isEventQueue,
     enqueue,
-    recycleInstanceEvents,
-    buildInstanceEvents
+    buildInstanceEvents,
+    GameEventBuilder
 } from "../../src/events";
-import { log, getDemoMetadata } from "../test-utils";
+import { log, getDemoMetadata, Dummy } from "../test-utils";
 import {
     Agent,
     PropertyOperation,
     StaticAgentRegistry
 } from "../../src/agents";
 import { OutputLineType } from "../../src/output";
-import { MetadataManager } from "../../src/config";
 import { Game } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
+
+const MD = getDemoMetadata();
 
 describe("Events", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
     });
 
     it("The `on` function does not alter the inner event function", function() {
@@ -35,7 +35,7 @@ describe("Events", function() {
             game.output.write("Hello, world!");
         });
 
-        Game.init();
+        Game.init(MD);
 
         const myGame = buildGameInstance();
         greet(myGame);
@@ -62,7 +62,7 @@ describe("Events", function() {
                 game.output.write(`Hello, ${name}!`);
             });
 
-        Game.init();
+        Game.init(MD);
 
         const myGame = buildGameInstance();
         greet("Regal")(myGame);
@@ -97,7 +97,7 @@ describe("Events", function() {
                 return date.getHours() < 12 ? morning : afternoon;
             });
 
-        Game.init();
+        Game.init(MD);
 
         const myGame = buildGameInstance();
         const myDate = new Date("August 5, 2018 10:15:00");
@@ -127,12 +127,12 @@ describe("Events", function() {
     });
 
     it("noop returns undefined", function() {
-        Game.init();
+        Game.init(MD);
         expect(noop(buildGameInstance())).to.be.undefined;
     });
 
     it("Returning noop from an EventFunction is the same as returning nothing", function() {
-        Game.init();
+        Game.init(MD);
 
         const withNoop = on("FUNC", game => {
             game.output.write("Test");
@@ -148,6 +148,47 @@ describe("Events", function() {
         expect(withNoop(buildGameInstance())).to.deep.equal(
             withoutNoop(buildGameInstance())
         );
+    });
+
+    it("Compile Check: `on` can be paramterized with a custom state", function() {
+        interface Custom {
+            count: number;
+            arr: string[];
+        }
+
+        // Ensure these compile
+        on<Custom>("ADD", game => {
+            game.state.count++;
+            game.state.arr.unshift("foo");
+        });
+    });
+
+    it("Declaring a parameterized `on` with the GameEventHandler type", function() {
+        interface Custom {
+            count: number;
+            arr: string[];
+        }
+
+        const fn: GameEventBuilder<Custom> = on;
+
+        const init = fn("INIT", game => {
+            game.state.count = 0;
+            game.state.arr = [];
+        });
+
+        const add = (arg: string) =>
+            fn("ADD", game => {
+                game.state.count++;
+                game.state.arr.unshift(arg);
+            });
+
+        Game.init(MD);
+
+        const myGame = buildGameInstance();
+        init.then(add("foo"))(myGame);
+
+        expect(myGame.state.count).to.equal(1);
+        expect(myGame.state.arr).to.deep.equal(["foo"]);
     });
 
     describe("Queueing", function() {
@@ -170,7 +211,7 @@ describe("Events", function() {
                     );
                 });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -223,7 +264,7 @@ describe("Events", function() {
                     .then(foo("FOUR"));
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             complex(myGame);
@@ -278,7 +319,7 @@ describe("Events", function() {
                     return queue;
                 });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             const items = ["Hat", "Duck", "Spoon"];
@@ -370,7 +411,7 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -443,7 +484,7 @@ describe("Events", function() {
                     // Test basic queue execution
                     const init = on("INIT", game => q());
 
-                    Game.init();
+                    Game.init(MD);
 
                     let myGame = buildGameInstance();
                     init(myGame);
@@ -696,7 +737,7 @@ describe("Events", function() {
                     );
                 });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance({ trackAgentChanges: true });
             const dummy = myGame.using(new Dummy("Lars", 10));
@@ -765,7 +806,7 @@ describe("Events", function() {
                 return addFriend(game.state.mainAgent, bill).thenq(readStatus);
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance({ trackAgentChanges: true });
             start(myGame);
@@ -880,7 +921,7 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
 
@@ -896,7 +937,7 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
             });
 
-            Game.init();
+            Game.init(MD);
 
             const myGame = buildGameInstance();
             myGame.events = buildInstanceEvents(myGame, 10);
@@ -913,12 +954,12 @@ describe("Events", function() {
                 game.output.write("Get spammed.");
             });
 
-            Game.init();
+            Game.init(MD);
 
             const game1 = buildGameInstance();
 
             const game2 = buildGameInstance();
-            const events2 = recycleInstanceEvents(game1.events, game2);
+            const events2 = game1.events.recycle(game2);
 
             expect(events2.lastEventId).to.equal(0);
             expect(events2.game).to.equal(game2);
@@ -927,7 +968,7 @@ describe("Events", function() {
             events2.invoke(spam.then(spam).thenq(spam));
 
             const game3 = buildGameInstance();
-            const events3 = recycleInstanceEvents(events2, game3);
+            const events3 = events2.recycle(game3);
 
             expect(events3.lastEventId).to.equal(3);
             expect(events3.game).to.equal(game3);
@@ -935,9 +976,3 @@ describe("Events", function() {
         });
     });
 });
-
-class Dummy extends Agent {
-    constructor(public name: string, public health: number) {
-        super();
-    }
-}

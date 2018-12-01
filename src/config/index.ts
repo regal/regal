@@ -1,4 +1,4 @@
-/**
+/*
  * Component for configuring the behavior of the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman
@@ -6,11 +6,12 @@
  */
 
 export { InstanceOptions } from "./instance-options";
-export {
-    ensureOverridesAllowed,
-    validateOptions
-} from "./func/validate-options";
+export { InstanceOptionsInternal } from "./instance-options-internal";
 export { GameOptions, DEFAULT_GAME_OPTIONS, OPTION_KEYS } from "./game-options";
 export { GameMetadata } from "./game-metadata";
 export { MetadataManager } from "./metadata-manager";
-export { buildInstanceOptions } from "./impl";
+export {
+    buildInstanceOptions,
+    ensureOverridesAllowed,
+    validateOptions
+} from "./impl";

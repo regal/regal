@@ -1,4 +1,4 @@
-/**
+/*
  * Contains all agents defined in the static context of the game,
  * known as static agents. These agents have data that is accessible
  * by all `GameInstances` and therefore is not stored in the instance
@@ -10,7 +10,7 @@
 
 import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent";
-import { propertyIsAgentId } from "./instance-agents";
+import { propertyIsAgentId } from "./instance-agents-internal";
 
 /**
  * Static class that manages all static agents used in the game.

@@ -1,12 +1,9 @@
-/**
+/*
  * Options for configuring a game instance's behavior.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
-
-// tslint:disable-next-line
-true; // This does nothing; it's only so the jsdocs won't conflict
 
 /**
  * Represents game options that are configurable by a Regal client.

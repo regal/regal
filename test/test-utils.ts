@@ -1,5 +1,7 @@
 import { inspect } from "util";
 import { GameMetadata, GameOptions } from "../src/config";
+import { version as regalVersion } from "../package.json";
+import { Agent } from "../src";
 
 export const log = (o: any, title?: string) =>
     console.log(
@@ -22,7 +24,34 @@ export const metadataWithOptions = (opts: Partial<GameOptions>) => {
     return metadata;
 };
 
-// Throw this in the promise resolve argument for tests that should have failed promises
-export const expectedPromiseFailure = () => {
-    throw new Error("Promise was supposed to fail.");
+export const metadataWithVersion = (metadata: GameMetadata): GameMetadata => ({
+    author: metadata.author,
+    description: metadata.description,
+    headline: metadata.headline,
+    homepage: metadata.homepage,
+    name: metadata.name,
+    options: metadata.options,
+    regalVersion,
+    repository: metadata.repository
+});
+
+export const libraryVersion = regalVersion;
+
+export class Dummy extends Agent {
+    constructor(public name: string, public health: number) {
+        super();
+    }
+}
+
+export const makeAgents = (startFrom: number, amount: number) => {
+    let num = startFrom;
+    let i = amount;
+    const arr = [];
+
+    while (i-- > 0) {
+        arr.push(new Dummy(`D${num}`, num));
+        num++;
+    }
+
+    return arr;
 };

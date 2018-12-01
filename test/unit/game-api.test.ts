@@ -6,33 +6,87 @@ import {
     GameResponse,
     onPlayerCommand,
     onStartCommand,
-    onBeforeUndoCommand
+    onBeforeUndoCommand,
+    HookManager
 } from "../../src/api";
-import { noop } from "../../src/events";
+import { noop, on } from "../../src/events";
 import { OutputLineType, InstanceOutput } from "../../src/output";
-import { log, getDemoMetadata, metadataWithOptions } from "../test-utils";
-import { Agent } from "../../src/agents";
+import {
+    log,
+    getDemoMetadata,
+    metadataWithOptions,
+    metadataWithVersion,
+    Dummy
+} from "../test-utils";
+import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
     DEFAULT_GAME_OPTIONS,
     OPTION_KEYS,
+    InstanceOptionsInternal,
     MetadataManager
 } from "../../src/config";
-import { buildGameInstance, GameInstance } from "../../src/state";
-import { SEED_LENGTH } from "../../src/random/func/generate-seed";
-
-class Dummy extends Agent {
-    constructor(public name: string, public health: number) {
-        super();
-    }
-}
+import {
+    buildGameInstance,
+    GameInstance,
+    GameInstanceInternal,
+    ContextManager
+} from "../../src/state";
+import { SEED_LENGTH } from "../../src/random";
+import { RegalError } from "../../src/error";
 
 const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
+const NO_INIT_MSG =
+    "RegalError: Game has not been initalized. Did you remember to call Game.init?";
 
 describe("Game API", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
+    });
+
+    describe("Initialization", function() {
+        it("Game.isInitialized defaults to false", function() {
+            Game.reset();
+            expect(Game.isInitialized).to.be.false;
+        });
+
+        it("Game.init sets Game.isInitialized to true", function() {
+            expect(Game.isInitialized).to.be.true;
+        });
+
+        it("Calling Game.init multiple times throws an error", function() {
+            expect(() => Game.init(getDemoMetadata())).to.throw(
+                RegalError,
+                "Game has already been initialized."
+            );
+        });
+
+        it("Game.init sets the game's metadata", function() {
+            expect(MetadataManager.getMetadata()).to.deep.equal(
+                metadataWithVersion(getDemoMetadata())
+            );
+        });
+
+        it("Game.init sets context to non-static", function() {
+            expect(ContextManager.isContextStatic()).to.be.false;
+        });
+    });
+
+    it("Game.reset properly resets the static classes", function() {
+        Game.reset();
+
+        expect(Game.isInitialized).to.be.false;
+        expect(ContextManager.isContextStatic()).to.be.true;
+
+        expect(HookManager.playerCommandHook).to.be.undefined;
+        expect(HookManager.startCommandHook).to.be.undefined;
+        expect(HookManager.beforeUndoCommandHook(undefined)).to.be.true; // Always return true
+
+        expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+        expect(() => MetadataManager.getMetadata()).to.throw(
+            RegalError,
+            "Metadata is not defined. Did you remember to load the config?"
+        );
     });
 
     describe("Game.postPlayerCommand", function() {
@@ -186,21 +240,30 @@ describe("Game API", function() {
             const printDummyNames = (dums: Dummy[], output: InstanceOutput) => {
                 output.write(`Dummies: ${dums.map(d => d.name).join(", ")}.`);
             };
-            onStartCommand(game => {
-                game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
-                printDummyNames(game.state.arr as Dummy[], game.output);
-            });
 
-            onPlayerCommand(() => game => {
-                const arr = game.state.arr as Dummy[];
-                arr.pop();
-                printDummyNames(arr, game.output);
-            });
+            interface S {
+                arr: Dummy[];
+            }
+
+            onStartCommand(
+                on<S>("INIT", game => {
+                    game.state.arr = [new Dummy("D1", 10), new Dummy("D2", 15)];
+                    printDummyNames(game.state.arr, game.output);
+                })
+            );
+
+            onPlayerCommand(() =>
+                on<S>("COMMAND", game => {
+                    game.state.arr.pop();
+                    printDummyNames(game.state.arr, game.output);
+                })
+            );
 
             const r1 = Game.postStartCommand();
+            const r1_instance = r1.instance as GameInstanceInternal;
 
             expect(
-                r1.instance.agents.agentManagers().map(am => am.id)
+                r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
 
             expect(r1.output).to.deep.equal({
@@ -215,12 +278,13 @@ describe("Game API", function() {
             });
 
             const r2 = Game.postPlayerCommand(r1.instance, "");
+            const r2_instance = r2.instance as GameInstanceInternal;
 
             expect(
-                r1.instance.agents.agentManagers().map(am => am.id)
+                r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r2.instance.agents.agentManagers().map(am => am.id)
+                r2_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
 
             expect(r2.output).to.deep.equal({
@@ -235,12 +299,13 @@ describe("Game API", function() {
             });
 
             const r3 = Game.postPlayerCommand(r2.instance, "");
+            const r3_instance = r3.instance as GameInstanceInternal;
 
             expect(
-                r2.instance.agents.agentManagers().map(am => am.id)
+                r2_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r3.instance.agents.agentManagers().map(am => am.id)
+                r3_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2]);
 
             expect(r3.output).to.deep.equal({
@@ -255,13 +320,25 @@ describe("Game API", function() {
             });
 
             const r4 = Game.postPlayerCommand(r3.instance, "");
+            const r4_instance = r4.instance as GameInstanceInternal;
 
             expect(
-                r3.instance.agents.agentManagers().map(am => am.id)
+                r3_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2]);
             expect(
-                r4.instance.agents.agentManagers().map(am => am.id)
+                r4_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1]);
+        });
+
+        it("Calling before initialization throws an error", function() {
+            const i = buildGameInstance();
+            Game.reset();
+
+            const response = Game.postPlayerCommand(i, "foo");
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
         });
     });
 
@@ -328,7 +405,8 @@ describe("Game API", function() {
             onStartCommand(game => noop);
 
             const response = Game.postStartCommand();
-            const options = response.instance.options;
+            const options = response.instance
+                .options as InstanceOptionsInternal;
 
             expect(options.overrides).to.deep.equal({});
             keysBesidesSeed.forEach(key =>
@@ -342,7 +420,8 @@ describe("Game API", function() {
             onStartCommand(game => noop);
 
             const response = Game.postStartCommand({});
-            const options = response.instance.options;
+            const options = response.instance
+                .options as InstanceOptionsInternal;
 
             expect(options.overrides).to.deep.equal({});
             keysBesidesSeed.forEach(key =>
@@ -358,7 +437,8 @@ describe("Game API", function() {
             const response = Game.postStartCommand({
                 debug: true
             });
-            const options = response.instance.options;
+            const options = response.instance
+                .options as InstanceOptionsInternal;
 
             expect(options.overrides).to.deep.equal({
                 debug: true
@@ -405,6 +485,16 @@ describe("Game API", function() {
             );
             expect(response.instance).to.be.undefined;
         });
+
+        it("Calling before initialization throws an error", function() {
+            Game.reset();
+
+            const response = Game.postStartCommand();
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
+        });
     });
 
     describe("Game.postOptionCommand", function() {
@@ -417,7 +507,9 @@ describe("Game API", function() {
 
             expect(response.output.wasSuccessful).to.be.true;
             expect(response.instance.options.debug).to.be.true;
-            expect(response.instance.options.overrides).to.deep.equal({
+            expect(
+                (response.instance.options as InstanceOptionsInternal).overrides
+            ).to.deep.equal({
                 debug: true
             });
         });
@@ -435,16 +527,17 @@ describe("Game API", function() {
             expect(response.output.wasSuccessful).to.be.true;
             expect(response.instance.options.debug).to.be.false;
             expect(response.instance.options.showMinor).to.be.false;
-            expect(response.instance.options.overrides).to.deep.equal({
+            expect(
+                (response.instance.options as InstanceOptionsInternal).overrides
+            ).to.deep.equal({
                 debug: false,
                 showMinor: false
             });
         });
 
         it("Trying to override a forbidden option", function() {
-            MetadataManager.setMetadata(
-                metadataWithOptions({ allowOverrides: false })
-            );
+            Game.reset();
+            Game.init(metadataWithOptions({ allowOverrides: false }));
 
             const response = Game.postOptionCommand(buildGameInstance(), {
                 debug: true
@@ -455,6 +548,17 @@ describe("Game API", function() {
             expect(response.output.error.message).to.equal(
                 "RegalError: No option overrides are allowed."
             );
+        });
+
+        it("Calling before initialization throws an error", function() {
+            const i = buildGameInstance();
+            Game.reset();
+
+            const response = Game.postOptionCommand(i, { debug: false });
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
         });
     });
 
@@ -513,45 +617,49 @@ describe("Game API", function() {
             });
 
             const r1 = Game.postStartCommand();
+            const r1_instance = r1.instance as GameInstanceInternal;
 
             expect(
-                r1.instance.agents.agentManagers().map(am => am.id)
+                r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r1.instance.agents.getAgentProperty(0, "arr").length
+                r1_instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(2);
             expect(r1.instance.state.arr[1].name).to.equal("D2");
 
             const r2 = Game.postPlayerCommand(r1.instance, "");
+            const r2_instance = r2.instance as GameInstanceInternal;
 
             expect(
-                r1.instance.agents.agentManagers().map(am => am.id)
+                r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r2.instance.agents.agentManagers().map(am => am.id)
+                r2_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r2.instance.agents.getAgentProperty(0, "arr").length
+                r2_instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(1);
             expect(r1.instance.state.arr[0].name).to.equal("D1");
 
             const r3 = Game.postUndoCommand(r2.instance);
+            const r3_instance = r3.instance as GameInstanceInternal;
 
             expect(
-                r3.instance.agents.agentManagers().map(am => am.id)
+                r3_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r3.instance.agents.getAgentProperty(0, "arr").length
+                r3_instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(2);
-            expect(r1.instance.state.arr[1].name).to.equal("D2");
+            expect(r1_instance.state.arr[1].name).to.equal("D2");
 
             const r4 = Game.postPlayerCommand(r3.instance, "");
+            const r4_instance = r4.instance as GameInstanceInternal;
 
             expect(
-                r4.instance.agents.agentManagers().map(am => am.id)
+                r4_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r4.instance.agents.getAgentProperty(0, "arr").length
+                r4_instance.agents.getAgentProperty(0, "arr").length
             ).to.equal(1);
             expect(r1.instance.state.arr[0].name).to.equal("D1");
         });
@@ -614,6 +722,51 @@ describe("Game API", function() {
             const r4 = Game.postPlayerCommand(r3.instance, "");
             expect(r4.instance.state.parent).to.be.undefined;
         });
+
+        it("Calling before initialization throws an error", function() {
+            const i = buildGameInstance();
+            Game.reset();
+
+            const response = Game.postUndoCommand(i);
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
+        });
+
+        it("Undoing an event with use of random", function() {
+            Game.reset();
+            Game.init(metadataWithOptions({ seed: "lars" }));
+
+            onStartCommand(game => {
+                game.state.randos = [];
+            });
+
+            onPlayerCommand(() => game => {
+                game.state.randos.push(game.random.string(5, "abcedef"));
+            });
+
+            let response = Game.postStartCommand();
+            response = Game.postPlayerCommand(response.instance, "");
+            response = Game.postPlayerCommand(response.instance, "");
+
+            // Precondition: the given seed should generate these random strings
+            expect(response.instance.state.randos).to.deep.equal([
+                "edede",
+                "dfaff"
+            ]);
+
+            // Undoing the last command should remove the second string
+            response = Game.postUndoCommand(response.instance);
+            expect(response.instance.state.randos).to.deep.equal(["edede"]);
+
+            // Reposting the same command should generate the same string again
+            response = Game.postPlayerCommand(response.instance, "");
+            expect(response.instance.state.randos).to.deep.equal([
+                "edede",
+                "dfaff"
+            ]);
+        });
     });
 
     describe("Game.getMetadataCommand", function() {
@@ -622,7 +775,9 @@ describe("Game API", function() {
 
             expect(response.instance).to.be.undefined;
             expect(response.output.wasSuccessful).to.be.true;
-            expect(response.output.metadata).to.deep.equal(getDemoMetadata());
+            expect(response.output.metadata).to.deep.equal(
+                metadataWithVersion(getDemoMetadata())
+            );
         });
 
         it("Catch the error if metadata has not been set", function() {
@@ -635,6 +790,16 @@ describe("Game API", function() {
             expect(response.output.error.message).to.equal(
                 "RegalError: Metadata is not defined. Did you remember to load the config?"
             );
+        });
+
+        it("Calling before initialization throws an error", function() {
+            Game.reset();
+
+            const response = Game.getMetadataCommand();
+
+            expect(response.output.wasSuccessful).to.be.false;
+            expect(response.output.error.message).to.equal(NO_INIT_MSG);
+            expect(response.instance).to.be.undefined;
         });
     });
 });

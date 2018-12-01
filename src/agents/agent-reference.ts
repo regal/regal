@@ -1,12 +1,9 @@
-/**
+/*
  * Contains mock object that is used in place of active agent circular references.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
-
-// tslint:disable-next-line
-true; // This does nothing; it's only so the jsdocs won't conflict
 
 /** Whether the given object is an `AgentReference`. */
 export const isAgentReference = (o: any): o is AgentReference =>

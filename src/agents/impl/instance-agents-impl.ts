@@ -1,12 +1,12 @@
-/**
- * Contains implementation of `InstanceAgents`.
+/*
+ * Contains implementation of `InstanceAgentsInternal`.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 import { RegalError } from "../../error";
-import { GameInstance } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { isAgent } from "../agent";
 import {
     AgentArrayReference,
@@ -14,7 +14,10 @@ import {
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
 import { AgentReference, isAgentReference } from "../agent-reference";
-import { InstanceAgents, propertyIsAgentId } from "../instance-agents";
+import {
+    InstanceAgentsInternal,
+    propertyIsAgentId
+} from "../instance-agents-internal";
 import { StaticAgentRegistry } from "../static-agent-registry";
 import {
     buildActiveAgentArrayProxy,
@@ -23,20 +26,20 @@ import {
 import { buildAgentManager } from "./agent-manager-impl";
 
 /**
- * Builds an implementation of `InstanceAgents` for the given `GameInstance`
+ * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`
  * @param game The `GameInstance`.
  * @param nextId The next agent ID to start activation at (optional).
  */
 export const buildInstanceAgents = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     nextId?: number
-): InstanceAgents => new InstanceAgentsImpl(game, nextId);
+): InstanceAgentsInternal => new InstanceAgentsImpl(game, nextId);
 
-/** Implementation of `InstanceAgents`. */
-class InstanceAgentsImpl implements InstanceAgents {
+/** Implementation of `InstanceAgentsInternal`. */
+class InstanceAgentsImpl implements InstanceAgentsInternal {
     private _nextId: number;
 
-    constructor(public game: GameInstance, nextId?: number) {
+    constructor(public game: GameInstanceInternal, nextId?: number) {
         this.createAgentManager(0);
         this._nextId =
             nextId !== undefined
@@ -219,5 +222,64 @@ class InstanceAgentsImpl implements InstanceAgents {
         }
 
         return undefined;
+    }
+
+    public recycle(newInstance: GameInstanceInternal): InstanceAgentsInternal {
+        const newAgents = buildInstanceAgents(newInstance, this.nextId);
+
+        for (const formerAgent of this.agentManagers()) {
+            const id = formerAgent.id;
+            const am = newAgents.createAgentManager(id);
+
+            const propsToAdd = Object.keys(formerAgent).filter(
+                key => key !== "game" && key !== "id"
+            );
+
+            // For each updated property on the old agent, add its last value to the new agent.
+            propsToAdd.forEach(prop => {
+                if (formerAgent.propertyWasDeleted(prop)) {
+                    if (StaticAgentRegistry.hasAgentProperty(id, prop)) {
+                        am.deleteProperty(prop); // Record deletions to static agents.
+                    }
+
+                    return; // If the property was deleted, don't add it to the new record.
+                }
+
+                let formerValue = formerAgent.getProperty(prop);
+
+                if (isAgentReference(formerValue)) {
+                    formerValue = new AgentReference(formerValue.refId);
+                }
+
+                am.setProperty(prop, formerValue);
+            });
+        }
+
+        return newAgents;
+    }
+
+    public scrubAgents(): void {
+        const seen = new Set<number>();
+        const q = [0]; // Start at the state, which always has an id of zero
+
+        while (q.length > 0) {
+            const id = q.shift();
+            seen.add(id);
+
+            for (const prop of this.getAgentPropertyKeys(id)) {
+                const val = this.getAgentProperty(id, prop);
+                if (isAgent(val) && !seen.has(val.id)) {
+                    q.push(val.id);
+                }
+            }
+        }
+
+        const waste = Object.keys(this)
+            .filter(propertyIsAgentId)
+            .filter(id => !seen.has(Number(id)));
+
+        for (const id of waste) {
+            delete this[id];
+        }
     }
 }

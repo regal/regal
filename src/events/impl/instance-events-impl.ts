@@ -1,11 +1,11 @@
-/**
+/*
  * Contains the current implementation of `InstanceEvents`.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameInstance } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { DEFAULT_EVENT_ID, EventRecord } from "../event-record";
 import {
     isEventQueue,
@@ -13,23 +13,23 @@ import {
     noop,
     TrackedEvent
 } from "../event-types";
-import { InstanceEvents } from "../instance-events";
+import { InstanceEventsInternal } from "../instance-events-internal";
 import { buildEventRecord } from "./event-record-impl";
 
 /**
- * Builds an `InstanceEvents`.
- * @param game The game instance that owns this `InstanceEvents`.
+ * Builds an `InstanceEventsInternal`.
+ * @param game The game instance that owns this `InstanceEventsInternal`.
  * @param startingEventId Optional starting ID for new `EventRecord`s.
  */
 export const buildInstanceEvents = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     startingEventId?: number
-): InstanceEvents =>
+): InstanceEventsInternal =>
     startingEventId !== undefined
         ? new InstanceEventsImpl(game, startingEventId)
         : new InstanceEventsImpl(game);
 
-class InstanceEventsImpl implements InstanceEvents {
+class InstanceEventsImpl implements InstanceEventsInternal {
     public history: EventRecord[] = [];
 
     /** Internal member for the ID of the most recently generated `EventRecord`. */
@@ -38,7 +38,10 @@ class InstanceEventsImpl implements InstanceEvents {
     /** Internal queue of events that have yet to be executed. */
     private _queue: EventRecord[] = [];
 
-    constructor(public game: GameInstance, startingEventId = DEFAULT_EVENT_ID) {
+    constructor(
+        public game: GameInstanceInternal,
+        startingEventId = DEFAULT_EVENT_ID
+    ) {
         this._lastEventId = startingEventId;
     }
 
@@ -59,6 +62,10 @@ class InstanceEventsImpl implements InstanceEvents {
     public invoke(event: TrackedEvent): void {
         this._addEvent(event);
         this._executeCurrent();
+    }
+
+    public recycle(newInstance: GameInstanceInternal): InstanceEventsInternal {
+        return new InstanceEventsImpl(newInstance, this.lastEventId);
     }
 
     /**

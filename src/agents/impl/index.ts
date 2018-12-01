@@ -1,4 +1,4 @@
-/**
+/*
  * The purpose of this file is to abstract all agent-related implementations
  * by re-exporting their constructors from a single file.
  *
@@ -13,3 +13,4 @@ export {
 export { buildInstanceAgents } from "./instance-agents-impl";
 export { buildAgentManager } from "./agent-manager-impl";
 export { buildInactiveAgentProxy } from "./inactive-agent-proxy";
+export { activateAgent } from "./activate-agent";

@@ -1,4 +1,9 @@
-/**
+import { InstanceOptions } from "../config";
+import { InstanceEvents } from "../events";
+import { InstanceOutput } from "../output";
+import { InstanceRandom } from "../random";
+
+/*
  * A `GameInstance` is the object representation of a game's instance state.
  *
  * Instance state is a snapshot of a Regal game that is unique to a player,
@@ -11,22 +16,15 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { InstanceAgents } from "../agents";
-import { GameOptions, InstanceOptions } from "../config";
-import { InstanceEvents } from "../events";
-import { InstanceOutput } from "../output";
-import { InstanceRandom } from "../random";
-
 /**
  * The current state of the game, unique to each player.
  *
- * Contains all internal APIs used by game developers to
- * read and write to the game's instance state.
+ * Contains all APIs used by game developers to read and write
+ * to the game's instance state.
+ *
+ * @template StateType The state property's type. Optional, defaults to `any`.
  */
-export interface GameInstance {
-    /** The manager for all agents in the instance. */
-    agents: InstanceAgents;
-
+export interface GameInstance<StateType = any> {
     /** The manager for all events in the instance. */
     events: InstanceEvents;
 
@@ -45,18 +43,7 @@ export interface GameInstance {
      * Properties set within this object are maintained between game cycles, so
      * it should be used to store long-term state.
      */
-    state: any;
-
-    /**
-     * Creates a new `GameInstance` for the new game cycle, leaving this object unchanged.
-     * **Don't call this unless you know what you're doing.**
-     *
-     * @param newOptions Any option overrides preferred for this specific instance.
-     * Must be allowed by the static configuration's `allowOverrides` option.
-     *
-     * @returns The new `GameInstance`, with each manager cycled.
-     */
-    recycle(newOptions?: Partial<GameOptions>): GameInstance;
+    state: StateType;
 
     /**
      * Activates one or more agents in the current game context. All agents

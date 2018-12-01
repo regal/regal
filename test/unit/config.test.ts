@@ -9,27 +9,24 @@ import {
     ensureOverridesAllowed
 } from "../../src/config";
 import { OutputLineType } from "../../src/output";
-import { getDemoMetadata, metadataWithOptions, log } from "../test-utils";
+import {
+    getDemoMetadata,
+    metadataWithOptions,
+    log,
+    libraryVersion,
+    metadataWithVersion,
+    Dummy
+} from "../test-utils";
 import { on } from "../../src/events";
 import { Agent, PropertyOperation } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
-import { buildGameInstance } from "../../src/state";
-import {
-    SEED_LENGTH,
-    DEFAULT_SEED_CHARSET
-} from "../../src/random/func/generate-seed";
-
-class Dummy extends Agent {
-    constructor(public name: string, public health: number) {
-        super();
-    }
-}
+import { buildGameInstance, GameInstanceInternal } from "../../src/state";
+import { SEED_LENGTH, DEFAULT_SEED_CHARSET } from "../../src/random";
 
 describe("Config", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
     });
 
     describe("Game Options", function() {
@@ -269,7 +266,9 @@ describe("Config", function() {
                     trackAgentChanges: true
                 });
 
-                expect(response.instance.agents).to.deep.equal({
+                let responseInstance = response.instance as GameInstanceInternal;
+
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 1,
                     game: response.instance,
                     "0": {
@@ -286,7 +285,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 2,
                         name: "INIT",
@@ -309,8 +308,9 @@ describe("Config", function() {
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Lars");
+                responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 2,
                     game: response.instance,
                     "0": {
@@ -379,7 +379,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 5,
                         name: "INTRODUCE",
@@ -446,8 +446,9 @@ describe("Config", function() {
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
+                responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 3,
                     game: response.instance,
                     "0": {
@@ -545,7 +546,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 8,
                         name: "INTRODUCE",
@@ -618,8 +619,9 @@ describe("Config", function() {
                 let response = Game.postStartCommand({
                     trackAgentChanges: false
                 });
+                let responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 1,
                     game: response.instance,
                     "0": {
@@ -636,7 +638,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 2,
                         name: "INIT",
@@ -650,8 +652,9 @@ describe("Config", function() {
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Lars");
+                responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 2,
                     game: response.instance,
                     "0": {
@@ -706,7 +709,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 5,
                         name: "INTRODUCE",
@@ -727,8 +730,9 @@ describe("Config", function() {
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
+                responseInstance = response.instance as GameInstanceInternal;
 
-                expect(response.instance.agents).to.deep.equal({
+                expect(responseInstance.agents).to.deep.equal({
                     _nextId: 3,
                     game: response.instance,
                     "0": {
@@ -812,7 +816,7 @@ describe("Config", function() {
                         ]
                     }
                 });
-                expect(response.instance.events.history).to.deep.equal([
+                expect(responseInstance.events.history).to.deep.equal([
                     {
                         id: 8,
                         name: "INTRODUCE",
@@ -920,6 +924,30 @@ describe("Config", function() {
             expect(() => MetadataManager.getMetadata()).to.throw(
                 RegalError,
                 "Metadata is not defined. Did you remember to load the config?"
+            );
+        });
+
+        it("regalVersion is set automatically", function() {
+            MetadataManager.reset();
+            MetadataManager.setMetadata({
+                name: "Foo",
+                options: {}
+            });
+
+            expect(MetadataManager.getMetadata().regalVersion).to.equal(
+                libraryVersion
+            );
+        });
+
+        it("MetadataManager.setMetadata throws an error if passed a value for libraryVersion", function() {
+            MetadataManager.reset();
+            expect(() =>
+                MetadataManager.setMetadata(
+                    metadataWithVersion(getDemoMetadata())
+                )
+            ).to.throw(
+                RegalError,
+                "regalVersion is specified internally and may not be modified."
             );
         });
     });

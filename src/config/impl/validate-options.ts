@@ -1,4 +1,4 @@
-/**
+/*
  * Contains functions for validating config options.
  *
  * Copyright (c) 2018 Joseph R Cowman

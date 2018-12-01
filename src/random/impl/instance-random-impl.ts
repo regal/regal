@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the current implementation of `InstanceRandom`.
  *
  * Copyright (c) 2018 Joseph R Cowman
@@ -7,9 +7,9 @@
 
 import Prando from "prando";
 import { RegalError } from "../../error";
-import { GameInstance } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { EXPANDED_CHARSET } from "../charsets";
-import { InstanceRandom } from "../instance-random";
+import { InstanceRandomInternal } from "../instance-random-internal";
 
 /**
  * Constructs an `InstanceRandom` using the current implementation.
@@ -18,15 +18,23 @@ import { InstanceRandom } from "../instance-random";
  * Defaults to zero.
  */
 export const buildInstanceRandom = (
-    game: GameInstance,
+    game: GameInstanceInternal,
     numGenerations: number = 0
-): InstanceRandom => new InstanceRandomImpl(game, numGenerations);
+): InstanceRandomInternal => new InstanceRandomImpl(game, numGenerations);
 
-class InstanceRandomImpl implements InstanceRandom {
+class InstanceRandomImpl implements InstanceRandomInternal {
     private _numGenerations: number;
     private _generator: Prando;
 
-    constructor(public game: GameInstance, numGenerations: number) {
+    public get seed() {
+        return this.game.options.seed;
+    }
+
+    public get numGenerations() {
+        return this._numGenerations;
+    }
+
+    constructor(public game: GameInstanceInternal, numGenerations: number) {
         if (this.seed === undefined) {
             throw new RegalError(
                 "Seed must be defined before an InstanceRandom can be constructed."
@@ -38,12 +46,8 @@ class InstanceRandomImpl implements InstanceRandom {
         this._generator.skip(numGenerations);
     }
 
-    public get seed() {
-        return this.game.options.seed;
-    }
-
-    public get numGenerations() {
-        return this._numGenerations;
+    public recycle(newInstance: GameInstanceInternal): InstanceRandomInternal {
+        return new InstanceRandomImpl(newInstance, this.numGenerations);
     }
 
     public int(min: number, max: number): number {
@@ -53,13 +57,18 @@ class InstanceRandomImpl implements InstanceRandom {
             );
         }
 
+        const value = this._generator.nextInt(min, max);
+        this.trackRandom(value);
+
         this._numGenerations++;
-        return this._generator.nextInt(min, max);
+        return value;
     }
 
     public decimal(): number {
+        const value = this._generator.next(0, 1);
+        this.trackRandom(value);
         this._numGenerations++;
-        return this._generator.next(0, 1);
+        return value;
     }
 
     public string(length: number, charset: string = EXPANDED_CHARSET) {
@@ -75,8 +84,11 @@ class InstanceRandomImpl implements InstanceRandom {
             );
         }
 
+        const value = this._generator.nextString(length, charset);
+        this.trackRandom(value);
+
         this._numGenerations++;
-        return this._generator.nextString(length, charset);
+        return value;
     }
 
     public choice<T>(array: T[]): T {
@@ -84,12 +96,25 @@ class InstanceRandomImpl implements InstanceRandom {
             throw new RegalError("Array must be defined.");
         }
 
+        const idx = this._generator.nextInt(0, array.length - 1);
+        this.trackRandom(idx); // Track the index of the selected element, rather than the element itself
+
         this._numGenerations++;
-        return this._generator.nextArrayItem(array);
+        return array[idx];
     }
 
     public boolean(): boolean {
+        const value = this._generator.nextBoolean();
+        this.trackRandom(value);
         this._numGenerations++;
-        return this._generator.nextBoolean();
+        return value;
+    }
+
+    /** Internal helper method to add the `RandomRecord` to the current `EventRecord`. */
+    private trackRandom(value: string | number | boolean): void {
+        this.game.events.current.trackRandom({
+            id: this.numGenerations,
+            value
+        });
     }
 }

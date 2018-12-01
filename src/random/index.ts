@@ -1,17 +1,19 @@
-/**
+/*
  * Component for generating deterministic pseudo-random data in the Regal Game Library.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export { generateSeed } from "./func/generate-seed";
 export { InstanceRandom } from "./instance-random";
-export { buildInstanceRandom } from "./impl";
-export { recycleInstanceRandom } from "./func/recycle-instance-random";
+export { InstanceRandomInternal } from "./instance-random-internal";
 export {
-    EXPANDED_CHARSET,
-    ALHPANUMERIC_CHARSET,
-    ALPHABET_CHARSET,
-    NUMBERS_CHARSET
-} from "./charsets";
+    buildInstanceRandom,
+    generateSeed,
+    SEED_LENGTH,
+    DEFAULT_SEED_CHARSET
+} from "./impl";
+export { RandomRecord } from "./random-record";
+
+import * as Charsets from "./charsets";
+export { Charsets };

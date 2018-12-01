@@ -3,29 +3,23 @@ import "mocha";
 
 import {
     generateSeed,
-    ALHPANUMERIC_CHARSET,
-    EXPANDED_CHARSET,
-    ALPHABET_CHARSET,
-    NUMBERS_CHARSET,
+    Charsets,
     InstanceRandom,
-    buildInstanceRandom
-} from "../../src/random";
-import {
+    buildInstanceRandom,
     SEED_LENGTH,
     DEFAULT_SEED_CHARSET
-} from "../../src/random/func/generate-seed";
+} from "../../src/random";
 import { buildGameInstance } from "../../src/state";
 import { RegalError } from "../../src/error";
 import { log, getDemoMetadata } from "../test-utils";
 import { Game } from "../../src/api";
-import { MetadataManager } from "../../src/config";
 import { Agent, isAgent } from "../../src/agents";
+import { on } from "../../src/events";
 
 describe("Random", function() {
     beforeEach(function() {
         Game.reset();
-        MetadataManager.setMetadata(getDemoMetadata());
-        Game.init();
+        Game.init(getDemoMetadata());
     });
 
     describe("Generate Seed", function() {
@@ -177,14 +171,8 @@ describe("Random", function() {
             it("Generates a random string of the given length with the given charset", function() {
                 const myGame = buildGameInstance();
                 let len = 0;
-                const charsets = [
-                    EXPANDED_CHARSET,
-                    ALHPANUMERIC_CHARSET,
-                    ALPHABET_CHARSET,
-                    NUMBERS_CHARSET
-                ];
 
-                for (const charset of charsets) {
+                for (const charset in Charsets) {
                     len += 3;
                     const result = myGame.random.string(len, charset);
 
@@ -203,13 +191,14 @@ describe("Random", function() {
 
                 expect(result.length).to.equal(len);
                 for (let i = 0; i < len; i++) {
-                    expect(EXPANDED_CHARSET.includes(result[i])).to.be.true;
+                    expect(Charsets.EXPANDED_CHARSET.includes(result[i])).to.be
+                        .true;
                 }
             });
 
             it("Can make a string longer than the length of the charset", function() {
                 const len = 20;
-                const charset = NUMBERS_CHARSET;
+                const charset = Charsets.NUMBERS_CHARSET;
 
                 expect(charset.length).to.be.lessThan(len); // Precondition
 
@@ -330,6 +319,59 @@ describe("Random", function() {
                     expect(result).to.be.true;
                 }
             });
+        });
+
+        it("Generated values are recorded in InstanceEvent's EventRecord history", function() {
+            interface S {
+                randos: any[];
+            }
+
+            const rand1 = on<S>("RAND1", game => {
+                game.state.randos = [];
+                const randos = game.state.randos;
+
+                randos.push(game.random.boolean());
+                randos.push(game.random.decimal());
+            });
+
+            const rand2 = on<S>("RAND2", game => {
+                const randos = game.state.randos;
+
+                randos.push(game.random.int(1, 10));
+                randos.push(game.random.string(5));
+                randos.push(game.random.choice(randos));
+            });
+
+            const myGame = buildGameInstance<S>({ seed: "wooof" });
+            rand1.then(rand2)(myGame);
+
+            expect(myGame.state.randos).to.deep.equal([
+                false,
+                0.0217038414025921,
+                10,
+                "IcR*G",
+                false
+            ]);
+
+            expect(myGame.events.history).to.deep.equal([
+                {
+                    id: 2,
+                    name: "RAND2",
+                    randoms: [
+                        { id: 2, value: 10 },
+                        { id: 3, value: "IcR*G" },
+                        { id: 4, value: 0 } // InstanceRandom.choice records the index of the selected element, not the element itself
+                    ]
+                },
+                {
+                    id: 1,
+                    name: "RAND1",
+                    randoms: [
+                        { id: 0, value: false },
+                        { id: 1, value: 0.0217038414025921 }
+                    ]
+                }
+            ]);
         });
     });
 });

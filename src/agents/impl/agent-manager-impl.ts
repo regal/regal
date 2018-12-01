@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the current implementation of `AgentManager`.
  *
  * Copyright (c) 2018 Joseph R Cowman
@@ -7,7 +7,7 @@
 
 import { RegalError } from "../../error";
 import { DEFAULT_EVENT_ID, EventRecord } from "../../events";
-import { GameInstance } from "../../state";
+import { GameInstance, GameInstanceInternal } from "../../state";
 import { AgentManager } from "../agent-manager";
 import {
     pcForAgentManager,
@@ -21,12 +21,12 @@ import { StaticAgentRegistry } from "../static-agent-registry";
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
     id: number,
-    game: GameInstance
+    game: GameInstanceInternal
 ): AgentManager => new AgentManagerImpl(id, game);
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
-    constructor(public id: number, public game: GameInstance) {}
+    constructor(public id: number, public game: GameInstanceInternal) {}
 
     public hasPropertyRecord(property: PropertyKey): boolean {
         if (property === "constructor") {

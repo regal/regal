@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the current implementation for `EventRecord`.
  *
  * Copyright (c) 2018 Joseph R Cowman
@@ -7,6 +7,7 @@
 
 import { PropertyChange } from "../../agents";
 import { OutputLine } from "../../output";
+import { RandomRecord } from "../../random";
 import {
     DEFAULT_EVENT_ID,
     DEFAULT_EVENT_NAME,
@@ -32,6 +33,7 @@ class EventRecordImpl implements EventRecord {
     public causedBy?: number;
     public caused?: number[];
     public changes?: PropertyChange[];
+    public randoms?: RandomRecord[];
 
     constructor(
         public id: number,
@@ -60,5 +62,12 @@ class EventRecordImpl implements EventRecord {
         }
 
         this.changes.push(propChange);
+    }
+
+    public trackRandom(randRecord: RandomRecord): void {
+        if (this.randoms === undefined) {
+            this.randoms = [];
+        }
+        this.randoms.push(randRecord);
     }
 }

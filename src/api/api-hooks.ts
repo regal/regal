@@ -1,4 +1,4 @@
-/**
+/*
  * Functions for hooking into the Regal Game Library's Game API.
  *
  * A hook is a function that is called internally by the Game API
@@ -9,10 +9,10 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { RegalError } from "../../error";
-import { EventFunction, isTrackedEvent, on } from "../../events";
-import { GameInstance } from "../../state";
-import { HookManager } from "../api-hook-manager";
+import { RegalError } from "../error";
+import { EventFunction, isTrackedEvent, on } from "../events";
+import { GameInstance } from "../state";
+import { HookManager } from "./api-hook-manager";
 
 /** Default implementation of `beforeUndoCommandHook`; always returns true. */
 export const returnTrue = (game: GameInstance) => true;

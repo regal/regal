@@ -1,11 +1,9 @@
-/**
+/*
  * Contains the API for the Regal Game Library random component.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
-
-import { GameInstance } from "../state";
 
 /**
  * API to generate deterministic, pseudo-random data for the game instance.
@@ -14,19 +12,8 @@ import { GameInstance } from "../state";
  * equal `seed` will generate the same sequence of pseudo-random values.
  */
 export interface InstanceRandom {
-    /** The `GameInstance` that manages this `InstanceRandom`. */
-    readonly game: GameInstance;
-
     /** The string used to initialize the pseudo-random data generator. */
     readonly seed: string;
-
-    /**
-     * The number of values that have been generated over the lifetime of the game.
-     *
-     * This value is persisted between multiple game cycles so as to ensure that the
-     * sequence of pseudo-random data stays consistent for a given seed.
-     */
-    readonly numGenerations: number;
 
     /**
      * Generates a pseudo-random integer within the given inclusive range.

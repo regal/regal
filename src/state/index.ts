@@ -1,4 +1,4 @@
-/**
+/*
  * Component for controlling the state of a Regal game.
  *
  * Copyright (c) 2018 Joseph R Cowman
@@ -7,4 +7,5 @@
 
 export { ContextManager } from "./context-manager";
 export { GameInstance } from "./game-instance";
+export { GameInstanceInternal } from "./game-instance-internal";
 export { buildGameInstance } from "./impl";

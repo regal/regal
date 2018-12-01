@@ -1,4 +1,4 @@
-/**
+/*
  * Contains the manager for all data relating to a single active agent.
  *
  * Copyright (c) 2018 Joseph R Cowman

@@ -1,4 +1,4 @@
-/**
+/*
  * Contains metadata about the Regal game. This metadata is defined
  * in the game's static context, meaning that it is the same for all
  * instances of the game.
@@ -33,4 +33,7 @@ export interface GameMetadata {
 
     /** Any options defined in the game's static configuration. */
     readonly options: Partial<GameOptions>;
+
+    /** The version of the Regal Game Library used by the game. */
+    readonly regalVersion?: string;
 }
