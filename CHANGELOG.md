@@ -2,6 +2,10 @@
 
 ## Pre-Initial Release
 
+### v0.6.1
+
+* Fix output location of declaration files ([#81](https://github.com/regal/regal/pull/81))
+
 ### v0.6.0
 
 * Abstract `GameInstance` and `InstanceX` interfaces into public and internal interfaces ([#72](https://github.com/regal/regal/pull/72))
