@@ -8,3 +8,4 @@
 
 export { buildInstanceOptions } from "./instance-options-impl";
 export { validateOptions, ensureOverridesAllowed } from "./validate-options";
+export { copyMetadata, validateMetadata } from "./metadata-funcs";

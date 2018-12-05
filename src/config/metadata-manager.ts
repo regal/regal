@@ -5,9 +5,9 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { version as regalVersion } from "../../package.json";
 import { RegalError } from "../error";
 import { GameMetadata } from "./game-metadata";
+import { copyMetadata, validateMetadata } from "./impl";
 
 /**
  * Static manager for every game instance's metadata.
@@ -26,7 +26,7 @@ export class MetadataManager {
             );
         }
 
-        return MetadataManager._metadata;
+        return copyMetadata(this._metadata);
     }
 
     /**
@@ -40,16 +40,8 @@ export class MetadataManager {
             );
         }
 
-        MetadataManager._metadata = {
-            author: metadata.author,
-            description: metadata.description,
-            headline: metadata.headline,
-            homepage: metadata.homepage,
-            name: metadata.name,
-            options: metadata.options,
-            regalVersion,
-            repository: metadata.repository
-        };
+        validateMetadata(metadata);
+        MetadataManager._metadata = copyMetadata(metadata);
     }
 
     /**
