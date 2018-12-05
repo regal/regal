@@ -9,6 +9,36 @@ import { RegalError } from "../../error";
 import { GameOptions, OPTION_KEYS } from "../game-options";
 
 /**
+ * Throws an error if the property of the object is not the given type.
+ *
+ * @param target The object with the property.
+ * @param key The name of the property.
+ * @param expectedType What the property's type should be.
+ * @param allowUndefined Whether an error should be thrown if the property is undefined.
+ * @param generalKeyName The general key name to use in error messages (i.e. "option", "key", or "prop").
+ */
+export const checkPropertyType = <T>(
+    target: T,
+    key: keyof T,
+    expectedType: string,
+    allowUndefined: boolean,
+    generalKeyName: string
+) => {
+    const value = target[key];
+    const actualType = typeof value;
+
+    if (value !== undefined) {
+        if (actualType !== expectedType) {
+            throw new RegalError(
+                `The ${generalKeyName} <${key}> is of type <${actualType}>, must be of type <${expectedType}>.`
+            );
+        }
+    } else if (!allowUndefined) {
+        throw new RegalError(`The ${generalKeyName} <${key}> must be defined.`);
+    }
+};
+
+/**
  * Throws an error if any of the given options are invalid.
  * @param options Any game options.
  */
@@ -20,24 +50,10 @@ export const validateOptions = (options: Partial<GameOptions>): void => {
         }
     });
 
-    // Helper function that ensures the given property has the correct type if it's defined.
-    const checkTypeIfDefined = (
-        key: keyof GameOptions,
-        expectedType: string
-    ): void => {
-        const value = options[key];
-        const actualType = typeof value;
+    const checkOptionType = (key: keyof GameOptions, expectedType: string) =>
+        checkPropertyType(options, key, expectedType, true, "option");
 
-        if (options[key] !== undefined) {
-            if (actualType !== expectedType) {
-                throw new RegalError(
-                    `The option <${key}> is of type <${actualType}>, must be of type <${expectedType}>.`
-                );
-            }
-        }
-    };
-
-    checkTypeIfDefined("debug", "boolean");
+    checkOptionType("debug", "boolean");
 
     // Validate allowOverrides
     if (options.allowOverrides !== undefined) {
@@ -64,9 +80,9 @@ export const validateOptions = (options: Partial<GameOptions>): void => {
         }
     }
 
-    checkTypeIfDefined("showMinor", "boolean");
-    checkTypeIfDefined("trackAgentChanges", "boolean");
-    checkTypeIfDefined("seed", "string");
+    checkOptionType("showMinor", "boolean");
+    checkOptionType("trackAgentChanges", "boolean");
+    checkOptionType("seed", "string");
 };
 
 /**

@@ -6,7 +6,8 @@ import {
     OPTION_KEYS,
     DEFAULT_GAME_OPTIONS,
     MetadataManager,
-    ensureOverridesAllowed
+    ensureOverridesAllowed,
+    GameMetadata
 } from "../../src/config";
 import { OutputLineType } from "../../src/output";
 import {
@@ -100,32 +101,36 @@ describe("Config", function() {
             });
 
             it("GameOptions.allowOverrides INVALID: mistype", function() {
-                MetadataManager.setMetadata(
-                    metadataWithOptions(<any>{ allowOverrides: 3 })
-                );
-                expect(() => buildGameInstance()).to.throw(
+                expect(() =>
+                    MetadataManager.setMetadata(
+                        metadataWithOptions(<any>{ allowOverrides: 3 })
+                    )
+                ).to.throw(
                     RegalError,
-                    "RegalError: The option <allowOverrides> is of type <number>, must be of type <boolean> or <string[]>."
+                    "The option <allowOverrides> is of type <number>, must be of type <boolean> or <string[]>."
                 );
             });
 
             it("GameOptions.allowOverrides INVALID: illegal array", function() {
-                MetadataManager.setMetadata(
-                    metadataWithOptions({ allowOverrides: ["debug", "blark"] })
-                );
-                expect(() => buildGameInstance()).to.throw(
-                    RegalError,
-                    "RegalError: The option <blark> does not exist."
-                );
+                expect(() =>
+                    MetadataManager.setMetadata(
+                        metadataWithOptions({
+                            allowOverrides: ["debug", "blark"]
+                        })
+                    )
+                ).to.throw(RegalError, "The option <blark> does not exist.");
             });
 
             it("GameOptions.allowOverrides INVALID: allowing allowOverrides", function() {
-                MetadataManager.setMetadata(
-                    metadataWithOptions({ allowOverrides: ["allowOverrides"] })
-                );
-                expect(() => buildGameInstance()).to.throw(
+                expect(() =>
+                    MetadataManager.setMetadata(
+                        metadataWithOptions({
+                            allowOverrides: ["allowOverrides"]
+                        })
+                    )
+                ).to.throw(
                     RegalError,
-                    "RegalError: The option <allowOverrides> is not allowed to be overridden."
+                    "The option <allowOverrides> is not allowed to be overridden."
                 );
             });
 
@@ -931,6 +936,7 @@ describe("Config", function() {
             MetadataManager.reset();
             MetadataManager.setMetadata({
                 name: "Foo",
+                author: "Bob",
                 options: {}
             });
 
@@ -939,16 +945,209 @@ describe("Config", function() {
             );
         });
 
-        it("MetadataManager.setMetadata throws an error if passed a value for libraryVersion", function() {
+        it("Changing metadata values on the original object after it's passed to the manager has no effect", function() {
             MetadataManager.reset();
-            expect(() =>
-                MetadataManager.setMetadata(
-                    metadataWithVersion(getDemoMetadata())
-                )
-            ).to.throw(
-                RegalError,
-                "regalVersion is specified internally and may not be modified."
-            );
+
+            const metadata: GameMetadata = {
+                name: "Cool Game",
+                author: "Joe Cowman",
+                options: {}
+            };
+
+            MetadataManager.setMetadata(metadata);
+
+            (metadata as any).author = "Sneaky guy"; // Avoid readonly modifier
+
+            expect(MetadataManager.getMetadata().author).to.equal("Joe Cowman");
+        });
+
+        it("Changing metadata values on the object returned from the manager has no effect", function() {
+            MetadataManager.reset();
+
+            const metadata: GameMetadata = {
+                name: "Cool Game",
+                author: "Joe Cowman",
+                options: {}
+            };
+
+            MetadataManager.setMetadata(metadata);
+            const retVal = MetadataManager.getMetadata() as any;
+
+            retVal.author = "Sneaky guy"; // Avoid readonly modifier
+
+            expect(MetadataManager.getMetadata().author).to.equal("Joe Cowman");
+        });
+
+        describe("Validate Metadata", function() {
+            beforeEach(function() {
+                MetadataManager.reset();
+            });
+
+            it("Extraneous keys aren't allowed", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        options: {},
+                        lars: "foo"
+                    } as any)
+                ).to.throw(RegalError, "Invalid metadata property <lars>.");
+            });
+
+            it("name must be defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        author: "Joe Cowman",
+                        options: {}
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <name> must be defined."
+                );
+            });
+
+            it("name must be a string", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: 5,
+                        author: "Joe Cowman",
+                        options: {}
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <name> is of type <number>, must be of type <string>."
+                );
+            });
+
+            it("author must be defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        options: {}
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <author> must be defined."
+                );
+            });
+
+            it("author must be a string", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: false,
+                        options: {}
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <author> is of type <boolean>, must be of type <string>."
+                );
+            });
+
+            it("headline must be a string if it's defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        options: {},
+                        headline: []
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <headline> is of type <object>, must be of type <string>."
+                );
+            });
+
+            it("description must be a string if it's defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        options: {},
+                        description: {}
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <description> is of type <object>, must be of type <string>."
+                );
+            });
+
+            it("homepage must be a string if it's defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        options: {},
+                        homepage: false
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <homepage> is of type <boolean>, must be of type <string>."
+                );
+            });
+
+            it("repository must be a string if it's defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        options: {},
+                        repository: 1.5
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <repository> is of type <number>, must be of type <string>."
+                );
+            });
+
+            it("options must be defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman"
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <options> must be defined."
+                );
+            });
+
+            it("options must be an object", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        options: false
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <options> is of type <boolean>, must be of type <object>."
+                );
+            });
+
+            it("options are validated by validateOptions", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        options: {
+                            allowOverrides: ["hey"]
+                        }
+                    })
+                ).to.throw(RegalError, "The option <hey> does not exist.");
+            });
+
+            it("MetadataManager.setMetadata throws an error if passed a value for libraryVersion", function() {
+                MetadataManager.reset();
+                expect(() =>
+                    MetadataManager.setMetadata(
+                        metadataWithVersion(getDemoMetadata())
+                    )
+                ).to.throw(
+                    RegalError,
+                    "regalVersion is specified internally and may not be modified."
+                );
+            });
         });
     });
 });
