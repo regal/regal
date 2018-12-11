@@ -43,7 +43,8 @@ export default [
                 maxEmptyLines: 0
             }),
         ],
-        onwarn: supressCircularImportWarnings
+        onwarn: supressCircularImportWarnings,
+        external: Object.keys(pkg.dependencies) // Exclude package.json dependencies from cjs and esm bundles
     },
     {
         input: "./src/index.ts",
