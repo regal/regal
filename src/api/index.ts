@@ -8,9 +8,5 @@
 
 export { GameResponse, GameResponseOutput } from "./game-response";
 export { Game } from "./game-api";
-export {
-    onPlayerCommand,
-    onStartCommand,
-    onBeforeUndoCommand
-} from "./api-hooks";
+export { onPlayerCommand, onStartCommand, onBeforeUndoCommand } from "./impl";
 export { HookManager } from "./api-hook-manager";
