@@ -40,6 +40,10 @@ export class MetadataManager {
             );
         }
 
+        if (!metadata.hasOwnProperty("options")) {
+            (metadata as any).options = {};
+        }
+
         validateMetadata(metadata);
         MetadataManager._metadata = copyMetadata(metadata);
     }

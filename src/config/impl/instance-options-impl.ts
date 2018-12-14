@@ -7,7 +7,7 @@
 
 import { RegalError } from "../../error";
 import { generateSeed } from "../../random";
-import { GameInstance, GameInstanceInternal } from "../../state";
+import { GameInstanceInternal } from "../../state";
 import { DEFAULT_GAME_OPTIONS, GameOptions } from "../game-options";
 import { InstanceOptionsInternal } from "../instance-options-internal";
 import { MetadataManager } from "../metadata-manager";

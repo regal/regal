@@ -936,8 +936,7 @@ describe("Config", function() {
             MetadataManager.reset();
             MetadataManager.setMetadata({
                 name: "Foo",
-                author: "Bob",
-                options: {}
+                author: "Bob"
             });
 
             expect(MetadataManager.getMetadata().regalVersion).to.equal(
@@ -950,8 +949,7 @@ describe("Config", function() {
 
             const metadata: GameMetadata = {
                 name: "Cool Game",
-                author: "Joe Cowman",
-                options: {}
+                author: "Joe Cowman"
             };
 
             MetadataManager.setMetadata(metadata);
@@ -966,8 +964,7 @@ describe("Config", function() {
 
             const metadata: GameMetadata = {
                 name: "Cool Game",
-                author: "Joe Cowman",
-                options: {}
+                author: "Joe Cowman"
             };
 
             MetadataManager.setMetadata(metadata);
@@ -988,7 +985,6 @@ describe("Config", function() {
                     MetadataManager.setMetadata({
                         name: "Cool Game",
                         author: "Joe Cowman",
-                        options: {},
                         lars: "foo"
                     } as any)
                 ).to.throw(RegalError, "Invalid metadata property <lars>.");
@@ -997,8 +993,7 @@ describe("Config", function() {
             it("name must be defined", function() {
                 expect(() =>
                     MetadataManager.setMetadata({
-                        author: "Joe Cowman",
-                        options: {}
+                        author: "Joe Cowman"
                     } as any)
                 ).to.throw(
                     RegalError,
@@ -1010,8 +1005,7 @@ describe("Config", function() {
                 expect(() =>
                     MetadataManager.setMetadata({
                         name: 5,
-                        author: "Joe Cowman",
-                        options: {}
+                        author: "Joe Cowman"
                     } as any)
                 ).to.throw(
                     RegalError,
@@ -1022,8 +1016,7 @@ describe("Config", function() {
             it("author must be defined", function() {
                 expect(() =>
                     MetadataManager.setMetadata({
-                        name: "Cool Game",
-                        options: {}
+                        name: "Cool Game"
                     } as any)
                 ).to.throw(
                     RegalError,
@@ -1035,8 +1028,7 @@ describe("Config", function() {
                 expect(() =>
                     MetadataManager.setMetadata({
                         name: "Cool Game",
-                        author: false,
-                        options: {}
+                        author: false
                     } as any)
                 ).to.throw(
                     RegalError,
@@ -1049,7 +1041,6 @@ describe("Config", function() {
                     MetadataManager.setMetadata({
                         name: "Cool Game",
                         author: "Joe Cowman",
-                        options: {},
                         headline: []
                     } as any)
                 ).to.throw(
@@ -1063,7 +1054,6 @@ describe("Config", function() {
                     MetadataManager.setMetadata({
                         name: "Cool Game",
                         author: "Joe Cowman",
-                        options: {},
                         description: {}
                     } as any)
                 ).to.throw(
@@ -1077,7 +1067,6 @@ describe("Config", function() {
                     MetadataManager.setMetadata({
                         name: "Cool Game",
                         author: "Joe Cowman",
-                        options: {},
                         homepage: false
                     } as any)
                 ).to.throw(
@@ -1091,7 +1080,6 @@ describe("Config", function() {
                     MetadataManager.setMetadata({
                         name: "Cool Game",
                         author: "Joe Cowman",
-                        options: {},
                         repository: 1.5
                     } as any)
                 ).to.throw(
@@ -1100,11 +1088,12 @@ describe("Config", function() {
                 );
             });
 
-            it("options must be defined", function() {
+            it("options cannot be explicitly undefined", function() {
                 expect(() =>
                     MetadataManager.setMetadata({
                         name: "Cool Game",
-                        author: "Joe Cowman"
+                        author: "Joe Cowman",
+                        options: undefined
                     } as any)
                 ).to.throw(
                     RegalError,
