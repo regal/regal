@@ -11,3 +11,4 @@ export {
     onBeforeUndoCommand,
     returnTrue
 } from "./api-hooks";
+export { Game } from "./game-impl";
