@@ -1,5 +1,5 @@
 /*
- * Contains the extended Game API interface.
+ * Contains the extended Game API.
  *
  * Copyright (c) 2018 Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
