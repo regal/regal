@@ -24,7 +24,9 @@ export {
     GameResponseOutput,
     onPlayerCommand,
     onStartCommand,
-    onBeforeUndoCommand
+    onBeforeUndoCommand,
+    GameApi,
+    GameApiExtended
 } from "./api";
 export { GameOptions, GameMetadata, InstanceOptions } from "./config";
 export { GameInstance } from "./state";
