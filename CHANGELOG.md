@@ -2,6 +2,18 @@
 
 ## Pre-Initial Release
 
+### v0.7.0 (2018-12-15)
+
+**Bug Fixes**
+* **api:** Split Game into `GameApi` and `GameApiExtended` interfaces, which are implemented by an object ([#93](https://github.com/regal/regal/issues/93)), fixes [#92](https://github.com/regal/regal/issues/92)
+
+**Features**
+* **config:** Make `GameMetadata` more robust ([#84](https://github.com/regal/regal/issues/84)), closes [#70](https://github.com/regal/regal/issues/70)
+* **config:** Make `GameMetadata.options` optional, defaults to `{}` in `MetadataManager.setMetadata` ([#91](https://github.com/regal/regal/issues/91)), closes [#90](https://github.com/regal/regal/issues/90)
+
+**Code Refactors**
+* **api:** Move api-hooks.ts from api to api/impl ([#93](https://github.com/regal/regal/issues/93))
+
 ### v0.6.1
 
 * Fix output location of declaration files ([#81](https://github.com/regal/regal/pull/81))
