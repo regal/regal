@@ -8,7 +8,9 @@
 
 import { TrackedEvent } from "../events";
 import { GameInstance } from "../state";
-import { returnTrue } from "./impl";
+
+/** Default implementation of `beforeUndoCommandHook`; always returns true. */
+export const returnTrue = (game: GameInstance) => true;
 
 /**
  * Manager for the Game's API hooks.

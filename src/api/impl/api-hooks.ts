@@ -12,10 +12,7 @@
 import { RegalError } from "../../error";
 import { EventFunction, isTrackedEvent, on } from "../../events";
 import { GameInstance } from "../../state";
-import { HookManager } from "../api-hook-manager";
-
-/** Default implementation of `beforeUndoCommandHook`; always returns true. */
-export const returnTrue = (game: GameInstance) => true;
+import { HookManager, returnTrue } from "../api-hook-manager";
 
 /**
  * Sets the function to be executed whenever a player command is sent to the Game API
