@@ -37,3 +37,11 @@ jobs:
             - run:
                   name: Check Test Coverage
                   command: npm run check-coverage
+
+            - run:
+                name: Build Project
+                command: npm run build
+
+            - run:
+                name: Verify Build
+                command: npm run verify-build
