@@ -17,7 +17,7 @@ export interface GameMetadata {
     readonly name: string;
 
     /** The game's author. */
-    readonly author?: string;
+    readonly author: string;
 
     /** A brief description of the game. */
     readonly headline?: string;
@@ -32,8 +32,20 @@ export interface GameMetadata {
     readonly repository?: string;
 
     /** Any options defined in the game's static configuration. */
-    readonly options: Partial<GameOptions>;
+    readonly options?: Partial<GameOptions>;
 
     /** The version of the Regal Game Library used by the game. */
     readonly regalVersion?: string;
 }
+
+/** The names of every metadata property. */
+export const METADATA_KEYS = [
+    "name",
+    "author",
+    "headline",
+    "description",
+    "homepage",
+    "repository",
+    "options",
+    "regalVersion"
+];

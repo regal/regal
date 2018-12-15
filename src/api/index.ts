@@ -7,10 +7,12 @@
  */
 
 export { GameResponse, GameResponseOutput } from "./game-response";
-export { Game } from "./game-api";
 export {
     onPlayerCommand,
     onStartCommand,
-    onBeforeUndoCommand
-} from "./api-hooks";
+    onBeforeUndoCommand,
+    Game
+} from "./impl";
 export { HookManager } from "./api-hook-manager";
+export { GameApi } from "./game-api";
+export { GameApiExtended } from "./game-api-extended";

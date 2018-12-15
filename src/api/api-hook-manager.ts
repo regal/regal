@@ -8,7 +8,7 @@
 
 import { TrackedEvent } from "../events";
 import { GameInstance } from "../state";
-import { returnTrue } from "./api-hooks";
+import { returnTrue } from "./impl";
 
 /**
  * Manager for the Game's API hooks.
