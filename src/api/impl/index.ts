@@ -8,7 +8,6 @@
 export {
     onPlayerCommand,
     onStartCommand,
-    onBeforeUndoCommand,
-    returnTrue
+    onBeforeUndoCommand
 } from "./api-hooks";
 export { Game } from "./game-impl";

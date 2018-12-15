@@ -2,6 +2,11 @@
 
 ## Pre-Initial Release
 
+### v0.7.1 (2018-12-15)
+
+**Bug Fixes**
+* **api:** Resolve circular import issue with HookManager ([96c9de4](https://github.com/regal/regal/commit/96c9de449cd3aa5c4df0b7f51eda376253fee28e))
+
 ### v0.7.0 (2018-12-15)
 
 **Bug Fixes**
