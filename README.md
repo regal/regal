@@ -10,7 +10,7 @@ The **Regal Game Library** is the official TypeScript library used by games on t
 
 ## Status
 
-The library is currently at version `0.7.0`, and is considered pre-stable release. In other words, big things might change.
+The library is currently at version `0.7.1`, and is considered pre-stable release. In other words, big things might change.
 
 While you're welcome to help test the early versions, it's recommended that you don't use the library for any major projects until `1.0.0` is released.
 
