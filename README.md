@@ -49,7 +49,65 @@ The name _Regal_ is an acronym for **Re**inventing **G**ameplay through **A**udi
 
 ### Installation
 
+`regal` is available on [npm](https://www.npmjs.com/package/regal) and can be installed with the following command:
+
+```
+npm install regal
+```
+
+If you're using TypeScript (highly recommended), import it into your files like so:
+
+```ts
+import { GameInstance } from "regal";
+```
+
+Otherwise, using Node's `require` works as well:
+
+```js
+const regal = require("regal");
+```
+
 ### Guide: Creating Your First Regal Game
+
+The following is a step-by-step guide for creating a basic game with Regal and TypeScript. 
+
+For more detailed information on any topic, see the [API Reference](#api-reference) below.
+
+#### Step 1. Set up project
+
+Start with an empty folder. Create a `package.json` file in your project's root directory with at least the following properties:
+
+```json
+{
+    "name": "my-first-game",
+    "version": "1.0.0"
+}
+```
+
+Then, install the `regal` dependency.
+
+```
+npm install regal
+```
+
+Create a `src` directory and a new file called `index.ts` inside it. This is where you'll write your game logic.
+
+At this point, your project should have the following structure:
+
+```
+.
+├── node_modules
+├── package.json
+├── package-lock.json
+└── src
+    └── index.ts
+```
+
+#### Step 2. Write game logic
+
+#### Step 3. Set up hooks
+
+#### Step 4. Bundle and play
 
 ### API Reference
 
