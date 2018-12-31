@@ -69,7 +69,7 @@ const regal = require("regal");
 
 ### Guide: Creating Your First Regal Game
 
-The following is a step-by-step guide for creating a basic game with Regal and TypeScript. 
+The following is a step-by-step guide for creating a basic game of *Rock, Paper, Scissors* with Regal and TypeScript. 
 
 For more detailed information on any topic, see the [API Reference](#api-reference) below.
 
@@ -90,6 +90,12 @@ Then, install the `regal` dependency.
 npm install regal
 ```
 
+Since your game will be written in TypeScript (as is recommended for all Regal games), you'll need to install `typescript` as well:
+
+```npm
+install --save-dev typescript
+```
+
 Create a `src` directory and a new file called `index.ts` inside it. This is where you'll write your game logic.
 
 At this point, your project should have the following structure:
@@ -105,9 +111,34 @@ At this point, your project should have the following structure:
 
 #### Step 2. Write game logic
 
-#### Step 3. Set up hooks
+In `index.ts`, place the following import statement on the top line:
+```ts
+import { onPlayerCommand, onStartCommand } from "regal";
+```
 
-#### Step 4. Bundle and play
+The Regal Game Library has [**way more**](#api-reference) tools to help you make games, but these imports are all you need for a game this basic.
+
+Beneath the import line, paste the following constants. You'll use these when writing the game's logic. `WIN_TABLE` is a lookup table to see if one move beats another. For example, `WIN_TABLE.paper.scissors` is `false`, since paper loses to scissors.
+```ts
+const POSSIBLE_MOVES = ["rock", "paper", "scissors"];
+const WIN_TABLE = {
+    rock: {
+        paper: false,
+        scissors: true
+    },
+    paper: {
+        rock: true,
+        scissors: false
+    },
+    scissors: {
+        rock: false,
+        paper: true
+    }
+}
+```
+
+
+#### Step 3. Bundle and play
 
 ### API Reference
 
