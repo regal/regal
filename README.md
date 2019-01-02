@@ -10,7 +10,7 @@ The **Regal Game Library** is the official TypeScript library for the [**Regal F
 
 ### What is the Regal Framework?
 
-The **Regal Framework** is a set of tools for developers to create text-driven games, sometimes called [Interactive Fiction (IF)](https://en.wikipedia.org/wiki/Interactive_fiction), as highly portable bundles.
+The **Regal Framework** is a set of tools for developers to create text-driven games, sometimes called [Interactive Fiction (IF)](https://en.wikipedia.org/wiki/Interactive_fiction), as pure functions.
 
 For more information, check out the project's [about](https://github.com/regal/about) page.
 
@@ -32,12 +32,14 @@ The name _Regal_ is an acronym for **Re**inventing **G**ameplay through **A**udi
     * [What is the Regal Framework?](#what-is-the-regal-framework)
     * [How is the Regal Game Library used?](#how-is-the-regal-game-library-used)
     * [What's the point?](#whats-the-point)
+* [Installation](#installation)
+* [Guide: Creating Your First Regal Game](#guide-creating-your-first-regal-game)
 * [Documentation](#documentation)
-    * [Installation](#installation)
-    * [Guide: Creating Your First Regal Game](#guide-creating-your-first-regal-game)
-    * [Agents](#agents)
-    * [Events](#events)
+    * [Core Concepts](#core-concepts)
     * [`GameInstance`](#gameinstance)
+    * [Events](#events)
+    * [Agents](#agents)
+    * [Randomness](#randomness)
     * [`GameApi` and API Hooks](#gameapi-and-api-hooks)
     * [Configuration](#configuration)
     * [Bundling](#bundling)
@@ -45,9 +47,7 @@ The name _Regal_ is an acronym for **Re**inventing **G**ameplay through **A**udi
 * [Contributing](#contributing)
 * [Project Roadmap](#project-roadmap)
 
-## Documentation
-
-### Installation
+## Installation
 
 `regal` is available on [npm](https://www.npmjs.com/package/regal) and can be installed with the following command:
 
@@ -67,13 +67,13 @@ Otherwise, using Node's `require` works as well:
 const regal = require("regal");
 ```
 
-### Guide: Creating Your First Regal Game
+## Guide: Creating Your First Regal Game
 
 The following is a step-by-step guide for creating a basic game of *Rock, Paper, Scissors* with Regal and TypeScript. 
 
 For more detailed information on any topic, see the [API Reference](#api-reference) below. Everything in this guide is available in the Regal [**demos**](https://github.com/regal/demos/tree/master/my-first-game) repository as well.
 
-#### Step 1. Set up project
+### Step 1. Set up project
 
 Start with an empty folder. Create a `package.json` file in your project's root directory with at least the following properties:
 
@@ -109,7 +109,7 @@ At this point, your project should have the following structure:
     └── index.ts
 ```
 
-#### Step 2. Write game logic
+### Step 2. Write game logic
 
 In `index.ts`, place the following import statement on the top line:
 ```ts
@@ -200,7 +200,7 @@ One last thing: the line `if (POSSIBLE_MOVES.includes(playerMove)) {` uses `Arra
 }
 ```
 
-#### Step 3. Bundle game
+### Step 3. Bundle game
 
 Before your game can be played, it must be bundled. *Bundling* is the process of converting a Regal game's **development source** (i.e. the TypeScript or JavaScript source files that the game developer writes) into a **game bundle**, which is a self-contained file that contains all the code necessary to play the game via a single API.
 
@@ -227,7 +227,7 @@ node build.js
 
 This should generate a new file in your project's directory called `my-first-game.regal.js`. *Your first game is bundled and ready to be played!*
 
-#### Step 4. Play game
+### Step 4. Play game
 
 Currently, there isn't a standard way to load a Regal game bundle for playing, although one is coming soon. For now, create a file in your project's root directory called `play.js` with the following contents:
 
@@ -288,11 +288,48 @@ Play rock, paper, or scissors:
 
 Congratulations, you've created your first game with the **Regal Framework**! :tada:
 
-### Agents
+## Documentation
+
+The following sections provide a guide to each aspect of the Regal Game Library. For detailed information on a specific item, consult the [API Reference](#api-reference).
+
+### Core Concepts
+
+The **Regal Game Library** is a JavaScript package that is required by games to be used within the **Regal Framework**. A game that is built using the Game Library is called a *Regal game*.
+
+Regal games have the following qualities:
+* They are **text-based**. Simply put, gameplay consists of the player putting text in and the game sending text back in response.
+* They are **deterministic**. When a Regal game is given some input, it should return the same output every time (see [*randomness*](#randomness)).
+
+These two qualities allow Regal games to be thought of as **pure functions**. A *pure function* is a function that is deterministic and has no side-effects. In other words, a Regal game is totally self-contained and predictable.
+
+Think of playing a Regal game like the following equation:
+```
+g1(x) = g2
+
+where x is the player's command
+g1 is the Regal game before the command
+g2 is the Regal game after the command
+```
+
+Entering the player's command into the first **game instance** creates another **game instance** with the effects of the player's command applied. For example, if `g1` contains a scene where a player is fighting an orc, and `x` is `"stab orc"`, `g2` might show the player killing that orc. Note that `g1` is unmodified by the player's command.
+
+#### Game Data
+
+All data or information in a Regal game is in one of two forms: **static** or **instance-specific**.
+
+*Static information* is defined in the game's source code, and is the same for every instance of the game. Game events, for example, are considered static because they are defined the same way for everyone playing the game (even though they may have different effects).
+
+*Instance-specific* information, more frequently called *game state*, is unique to a single instance of the game. A common example of game state is a player's stats, such as health or experience. Because this data is unique to one player of the game and is not shared by all players, it's considered instance-specific.
+
+### `GameInstance`
+
+The cornerstone of the Regal Game Library is the `GameInstance`. 
 
 ### Events
 
-### `GameInstance`
+### Agents
+
+### Randomness
 
 ### `GameApi` and API Hooks
 
