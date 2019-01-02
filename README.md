@@ -29,19 +29,19 @@ The name _Regal_ is an acronym for **Re**inventing **G**ameplay through **A**udi
 ## Table of Contents
 
 * [Introduction](#introduction)
-    * [What is the Regal Framework?](#what-is-the-regal-framework?)
-    * [How is the Regal Game Library used?](#how-is-the-regal-game-library-used?)
-    * [What's the point?](#whats-the-point?)
+    * [What is the Regal Framework?](#what-is-the-regal-framework)
+    * [How is the Regal Game Library used?](#how-is-the-regal-game-library-used)
+    * [What's the point?](#whats-the-point)
 * [Documentation](#documentation)
     * [Installation](#installation)
     * [Guide: Creating Your First Regal Game](#guide-creating-your-first-regal-game)
-    * [API Reference](#api-reference)
-        * [Agents](#agents)
-        * [Events](#events)
-        * [`GameInstance`](#gameinstance)
-        * [`GameApi`](#gameapi)
-        * [Configuration](#configuration)
+    * [Agents](#agents)
+    * [Events](#events)
+    * [`GameInstance`](#gameinstance)
+    * [`GameApi` and API Hooks](#gameapi-and-api-hooks)
+    * [Configuration](#configuration)
     * [Bundling](#bundling)
+    * [API Reference](#api-reference)
 * [Contributing](#contributing)
 * [Project Roadmap](#project-roadmap)
 
@@ -92,8 +92,8 @@ npm install regal
 
 Since your game will be written in TypeScript (as is recommended for all Regal games), you'll need to install `typescript` as well:
 
-```npm
-install --save-dev typescript
+```
+npm install --save-dev typescript
 ```
 
 Create a `src` directory and a new file called `index.ts` inside it. This is where you'll write your game logic.
@@ -137,22 +137,172 @@ const WIN_TABLE = {
 }
 ```
 
+Next, you'll set the game's start behavior with `onStartCommand`. Paste the following block of code beneath your constants:
+```ts
+onStartCommand(game => {
+    // Initialize state
+    game.state.playerWins = 0;
+    game.state.opponentWins = 0;
 
-#### Step 3. Bundle and play
+    // Prompt the player
+    game.output.write("Play rock, paper, or scissors:");
+});
+```
 
-### API Reference
+When a player starts a new game, both the player's and the opponent's scores will be initialized to zero, and a prompt will be displayed.
 
-#### Agents
+Finally, you need the actual gameplay. The following block should be pasted at the end of your file. It contains the behavior that runs every time the player enters a command.
 
-#### Events
+```ts
+onPlayerCommand(command => game => {
+    // Sanitize the player's command
+    const playerMove = command.toLowerCase().trim();
 
-#### `GameInstance`
+    // Make sure the command is valid
+    if (POSSIBLE_MOVES.includes(playerMove)) {
+        // Choose a move for the opponent
+        const opponentMove = game.random.choice(POSSIBLE_MOVES);
+        game.output.write(`The opponent plays ${opponentMove}.`);
 
-#### `GameApi`
+        if (playerMove === opponentMove) {
+            game.output.write("It's a tie!");
+        } else {
+            // Look up who wins in the win table
+            const isPlayerWin = WIN_TABLE[playerMove][opponentMove];
 
-#### Configuration
+            if (isPlayerWin) {
+                game.output.write(`Your ${playerMove} beats the opponent's ${opponentMove}!`);
+                game.state.playerWins++;
+            } else {
+                game.output.write(`The opponent's ${opponentMove} beats your ${playerMove}...`);
+                game.state.opponentWins++;
+            }
+        }
+        // Print win totals
+        game.output.write(
+            `Your wins: ${game.state.playerWins}. The opponent's wins: ${game.state.opponentWins}`
+        );
+    } else {
+        // Print an error message if the command isn't rock, paper, or scissors
+        game.output.write(`I don't understand that command: ${playerMove}.`);
+    }
+
+    // Prompt the player again
+    game.output.write("Play rock, paper, or scissors:");
+});
+```
+
+One last thing: the line `if (POSSIBLE_MOVES.includes(playerMove)) {` uses `Array.prototype.includes`, which is new in [ECMAScript 2016](https://www.ecma-international.org/ecma-262/7.0/). To make the TypeScript compiler compatible with this, add a `tsconfig.json` file to your project's root directory with the following contents:
+
+```json
+{
+    "compilerOptions": {
+        "lib": ["es2016"]
+    }
+}
+```
+
+#### Step 3. Bundle game
+
+Before your game can be played, it must be bundled. *Bundling* is the process of converting a Regal game's **development source** (i.e. the TypeScript or JavaScript source files that the game developer writes) into a **game bundle**, which is a self-contained file that contains all the code necessary to play the game via a single API.
+
+Game bundles are the form through which Regal games are shared, downloaded, and played.
+
+[**regal-bundler**](https://github.com/regal/regal-bundler) is a tool for creating Regal game bundles. Install it like so:
+```
+npm install --save-dev regal-bundler
+```
+
+Create a file in your root directory called `build.js` and paste the following code:
+```js
+const bundle = require("regal-bundler").bundle;
+
+bundle();
+```
+
+This imports the `bundle` function from **regal-bundler** and executes it. See the bundler's [documentation](https://github.com/regal/regal-bundler#configuration) for a list of the configuration options you can use.
+
+Run your build script:
+```
+node build.js
+```
+
+This should generate a new file in your project's directory called `my-first-game.regal.js`. *Your first game is bundled and ready to be played!*
+
+#### Step 4. Play game
+
+Currently, there isn't a standard way to load a Regal game bundle for playing, although one is coming soon. For now, create a file in your project's root directory called `play.js` with the following contents:
+
+```js
+// Import required modules
+const game = require("./my-first-game.regal");
+const readline = require("readline").createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+});
+
+// Helper function to print output lines
+const printLines = gameResponse => {
+    console.log("");
+    for (const line of gameResponse.output.log) {
+        console.log(line.data);
+    }
+};
+
+// Global to store the current game instance
+let GAME_INSTANCE;
+
+// Start game
+const start = game.postStartCommand();
+printLines(start);
+GAME_INSTANCE = start.instance;
+
+// Send each command to the game
+readline.on("line", command => {
+    const resp = game.postPlayerCommand(GAME_INSTANCE, command);
+    printLines(resp);
+    GAME_INSTANCE = resp.instance;
+});
+```
+
+This script allows you to play your game via the Node terminal. Note that it requires the `readline` module, which should be installed like so:
+```
+npm install --save-dev readline
+```
+
+Finally, start your game with the following command:
+```
+node play.js
+```
+
+This starts the game in the Node terminal. Enter `rock`, `paper`, or `scissors` to play, or press `Ctrl+C` to quit the game. The sequence should look something like this:
+```
+Play rock, paper, or scissors:
+paper
+
+The opponent plays rock.
+Your paper beats the opponent's rock!
+Your wins: 1. The opponent's wins: 0
+Play rock, paper, or scissors:
+
+```
+
+Congratulations, you've created your first game with the **Regal Framework**! :tada:
+
+### Agents
+
+### Events
+
+### `GameInstance`
+
+### `GameApi` and API Hooks
+
+### Configuration
 
 ### Bundling
+
+### API Reference
 
 ## Contributing
 
