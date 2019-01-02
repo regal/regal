@@ -137,7 +137,7 @@ const WIN_TABLE = {
 }
 ```
 
-Next, you'll set the game's start behavior with `onStartCommand`. Paste the following block of code beneath your constants:
+Next, you'll set the game's start behavior with `onStartCommand`. When a player starts a new game, both the player's and the opponent's scores will be initialized to zero, and a prompt will be displayed. Paste the following block of code beneath your constants:
 ```ts
 onStartCommand(game => {
     // Initialize state
@@ -148,8 +148,6 @@ onStartCommand(game => {
     game.output.write("Play rock, paper, or scissors:");
 });
 ```
-
-When a player starts a new game, both the player's and the opponent's scores will be initialized to zero, and a prompt will be displayed.
 
 Finally, you need the actual gameplay. The following block should be pasted at the end of your file. It contains the behavior that runs every time the player enters a command.
 
