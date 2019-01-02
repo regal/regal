@@ -71,7 +71,7 @@ const regal = require("regal");
 
 The following is a step-by-step guide for creating a basic game of *Rock, Paper, Scissors* with Regal and TypeScript. 
 
-For more detailed information on any topic, see the [API Reference](#api-reference) below.
+For more detailed information on any topic, see the [API Reference](#api-reference) below. Everything in this guide is available in the Regal [**demos**](https://github.com/regal/demos/tree/master/my-first-game) repository as well.
 
 #### Step 1. Set up project
 
