@@ -43,7 +43,7 @@ The name _Regal_ is an acronym for **Re**inventing **G**ameplay through **A**udi
     * [`GameApi` and API Hooks](#gameapi-and-api-hooks)
     * [Configuration](#configuration)
     * [Bundling](#bundling)
-    * [API Reference](#api-reference)
+* [API Reference](#api-reference)
 * [Contributing](#contributing)
 * [Project Roadmap](#project-roadmap)
 
@@ -337,9 +337,9 @@ The cornerstone of the Regal Game Library is the `GameInstance`.
 
 ### Bundling
 
-### API Reference
+## API Reference
 
-#### `Agent`
+### `Agent`
 
 **Class**
 
@@ -352,11 +352,11 @@ class Agent {
 }
 ```
 
-##### Description
+#### Description
 
 Every object that is interacted with by the player in a Regal game should inherit from the `Agent` class.
 
-##### Constructor
+#### Constructor
 
 Constructs a new `Agent`. This constructor should almost never be called directly, but rather should be called with `super()` from a subclass.
 
@@ -366,65 +366,65 @@ If called in the game's static context (i.e. outside of a game cycle), a static 
 constructor()
 ```
 
-##### Properties
+#### Properties
 
 Property | Description
 --- | ---
 `id: number` | The agent's unique identifier in the context of the current game.
 
-#### `Charsets`
+### `Charsets`
 
-#### `EventFunction`
+### `EventFunction`
 
-#### `EventQueue`
+### `EventQueue`
 
-#### `Game`
+### `Game`
 
-#### `GameApi`
+### `GameApi`
 
-#### `GameApiExtended`
+### `GameApiExtended`
 
-#### `GameEventBuilder`
+### `GameEventBuilder`
 
-#### `GameInstance`
+### `GameInstance`
 
-#### `GameMetadata`
+### `GameMetadata`
 
-#### `GameOptions`
+### `GameOptions`
 
-#### `GameResponse`
+### `GameResponse`
 
-#### `GameResponseOutput`
+### `GameResponseOutput`
 
-#### `InstanceEvents`
+### `InstanceEvents`
 
-#### `InstanceOptions`
+### `InstanceOptions`
 
-#### `InstanceOutput`
+### `InstanceOutput`
 
-#### `InstanceRandom`
+### `InstanceRandom`
 
-#### `OutputLine`
+### `OutputLine`
 
-#### `OutputLineType`
+### `OutputLineType`
 
-#### `RegalError`
+### `RegalError`
 
-#### `TrackedEvent`
+### `TrackedEvent`
 
-#### `enqueue`
+### `enqueue`
 
-#### `noop`
+### `noop`
 
-#### `nq`
+### `nq`
 
-#### `on`
+### `on`
 
-#### `onBeforeUndoCommand`
+### `onBeforeUndoCommand`
 
-#### `onPlayerCommand`
+### `onPlayerCommand`
 
-#### `onStartCommand`
+### `onStartCommand`
 
 ## Contributing
 
