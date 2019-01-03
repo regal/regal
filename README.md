@@ -339,6 +339,93 @@ The cornerstone of the Regal Game Library is the `GameInstance`.
 
 ### API Reference
 
+#### `Agent`
+
+**Class**
+
+A game object.
+
+```ts
+class Agent {
+    id: number
+    constructor()
+}
+```
+
+##### Description
+
+Every object that is interacted with by the player in a Regal game should inherit from the `Agent` class.
+
+##### Constructor
+
+Constructs a new `Agent`. This constructor should almost never be called directly, but rather should be called with `super()` from a subclass.
+
+If called in the game's static context (i.e. outside of a game cycle), a static agent will be created, and an id will be reserved for this agent for all game instances.
+
+```ts
+constructor()
+```
+
+##### Properties
+
+Property | Description
+--- | ---
+`id: number` | The agent's unique identifier in the context of the current game.
+
+#### `Charsets`
+
+#### `EventFunction`
+
+#### `EventQueue`
+
+#### `Game`
+
+#### `GameApi`
+
+#### `GameApiExtended`
+
+#### `GameEventBuilder`
+
+#### `GameInstance`
+
+#### `GameMetadata`
+
+#### `GameOptions`
+
+#### `GameResponse`
+
+#### `GameResponseOutput`
+
+#### `InstanceEvents`
+
+#### `InstanceOptions`
+
+#### `InstanceOutput`
+
+#### `InstanceRandom`
+
+#### `OutputLine`
+
+#### `OutputLineType`
+
+#### `RegalError`
+
+#### `TrackedEvent`
+
+#### `enqueue`
+
+#### `noop`
+
+#### `nq`
+
+#### `on`
+
+#### `onBeforeUndoCommand`
+
+#### `onPlayerCommand`
+
+#### `onStartCommand`
+
 ## Contributing
 
 Created by Joe Cowman ([jcowman2](https://github.com/jcowman2)).
