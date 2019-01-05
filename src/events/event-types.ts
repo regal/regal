@@ -61,7 +61,7 @@ export interface TrackedEvent<StateType = any>
 }
 
 /**
- * Contains a queue of `TrackedEvents` to be added to the game instance.
+ * Contains a queue of `TrackedEvent`s to be executed sequentially.
  * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  */
 export interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
@@ -74,7 +74,7 @@ export interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
     /**
      * Adds events to the end of the event queue.
      * @param events The events to be added.
-     * @returns An `EventQueue` with the new events.
+     * @returns A new `EventQueue` with the new events added to the queue.
      */
     enqueue(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
 

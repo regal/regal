@@ -341,7 +341,7 @@ The cornerstone of the Regal Game Library is the `GameInstance`.
 
 ### `Agent`
 
-**Class**
+**_Class_**
 
 A game object.
 
@@ -354,17 +354,15 @@ class Agent {
 
 #### Description
 
-Every object that is interacted with by the player in a Regal game should inherit from the `Agent` class.
+A game object, or *agent*, is a JavaScript object that contains Regal game state. Every agent should inherit from the `Agent` class.
+
+Before an agent's properties can be accessed in a game cycle, the agent must be activated with [`GameInstance.using`](#gameinstance-1). If you try to read or modify the property of an agent that hasn't been activated, a `RegalError` will be thrown.
 
 #### Constructor
 
 Constructs a new `Agent`. This constructor should almost never be called directly, but rather should be called with `super()` from a subclass.
 
 If called in the game's static context (i.e. outside of a game cycle), a static agent will be created, and an id will be reserved for this agent for all game instances.
-
-```ts
-constructor()
-```
 
 #### Properties
 
@@ -374,9 +372,121 @@ Property | Description
 
 ### `Charsets`
 
+**_Const Object_**
+
+Common charsets used for pseudo-random string generation.
+
+```ts
+const Charsets = {
+    EXPANDED_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*()-_=+{}[]|;:<>,.?",
+    ALHPANUMERIC_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+    ALPHABET_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    NUMBERS_CHARSET: "0123456789"
+}
+```
+
+#### Description
+
+For use with [`InstanceRandom.string()`](#instancerandom).
+
+#### Readonly Properties
+
+Property | Value | Description
+--- | --- | ---
+`EXPANDED_CHARSET: string` | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*()-_=+{}[]|;:<>,.?` | Contains all letters (upper- and lower-case), numbers, and some special characters.
+`ALHPANUMERIC_CHARSET: string` | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789` | Contains all letters (upper- and lower-case) and numbers.
+`ALPHABET_CHARSET: string` | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz` | Contains all letters (upper- and lower-case).
+`NUMBERS_CHARSET: string` | `0123456789` | Contains all numbers.
+
 ### `EventFunction`
 
+**_Type Alias_**
+
+A function that modifies a [`GameInstance`](#gameinstance-1).
+
+```ts
+type EventFunction<StateType = any> = (
+    game: GameInstance<StateType>
+) => EventFunction<StateType> | void;
+```
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`StateType = any` | The `GameInstance` state type. Optional, defaults to `any`.
+
+#### Parameters
+
+Parameter | Description
+--- | ---
+`game: GameInstance<StateType>` | The game instance to be modified.
+
+#### Returns
+
+`EventFunction<StateType> | void`: The next `EventFunction` to be executed, or `void` if there are no more events.
+
 ### `EventQueue`
+
+**_Interface_**
+
+Contains a queue of `TrackedEvent`s to be executed sequentially.
+
+```ts
+interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
+    immediateEvents: Array<TrackedEvent<StateType>>
+    delayedEvents: Array<TrackedEvent<StateType>>
+    enqueue(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>
+    nq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>
+}
+```
+
+#### Description
+
+#### Extends
+
+[`TrackedEvent`](#trackedevent)
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`StateType = any` | The `GameInstance` state type. Optional, defaults to `any`.
+
+#### Properties
+
+Property | Description
+--- | ---
+`immediateEvents: Array<TrackedEvent<StateType>>` | The events to be added to the beginning of the game's event queue.
+`delayedEvents: Array<TrackedEvent<StateType>>` | The events to be added to the end of the game's event queue.
+
+#### Methods
+
+##### `enqueue()`
+
+Adds events to the end of the event queue.
+
+```ts
+enqueue(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`...events: Array<TrackedEvent<StateType>>` | The events to be added.
+
+**Returns**
+
+`EventQueue<StateType>`: A new `EventQueue` with the new events added to the queue.
+
+##### `nq()`
+
+Alias of [`EventQueue.enqueue()`](#enqueue).
+
+```ts
+nq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
+```
 
 ### `Game`
 
