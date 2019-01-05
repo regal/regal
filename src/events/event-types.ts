@@ -110,10 +110,10 @@ export const noop: TrackedEvent = (() => {
 })();
 
 /**
- * Type alias for the `on` function, which generates a `TrackedEvent`.
+ * Type alias for the `on` function, which creates a `TrackedEvent`.
  *
  * Used for situations where the game developer wants to refer to
- * a parameterized version of `on` as its on function. For example:
+ * a parameterized version of `on` as its own function. For example:
  *
  * `const o: GameEventBuilder<CustomStateType> = on;`
  *

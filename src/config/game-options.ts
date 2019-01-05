@@ -6,7 +6,7 @@
  */
 
 /**
- * Represents game options that are configurable by a Regal client.
+ * Configurable options for the game's behavior.
  */
 export interface GameOptions {
     /**

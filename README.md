@@ -658,6 +658,10 @@ Contains the standard methods from [`GameApi`](#gameapi) as well as additional m
 
 [`GameApi`](#gameapi)
 
+#### Object Implementations
+
+* [`Game`](#game)
+
 #### Properties
 
 Property | Value
@@ -690,15 +694,245 @@ reset()
 
 ### `GameEventBuilder`
 
+**_Type alias_**
+
+Type alias for the [`on`](#on) function, which creates a [`TrackedEvent`](#trackedevent).
+
+```ts
+type GameEventBuilder<StateType = any> = (
+    eventName: string,
+    eventFunc: EventFunction<StateType>
+) => TrackedEvent<StateType>
+```
+
+#### Description
+
+Used for situations where the game developer wants to refer to a parameterized version of [`on`](#on) as its own function.
+
+```ts
+const o: GameEventBuilder<CustomStateType> = on;
+```
+
+For descriptions of the parameters and return value, see [`on`](#on).
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`StateType = any` | The `GameInstance` state type. Optional, defaults to `any`.
+
 ### `GameInstance`
+
+**_Interface_**
+
+Represents a unique instance of a Regal game, containing the game's current state and all interfaces used to interact with the game during a game cycle.
+
+```ts
+interface GameInstance<StateType = any> {
+    events: InstanceEvents
+    output: InstanceOutput
+    options: InstanceOptions
+    random: InstanceRandom
+    state: StateType
+    using<T>(resource: T): T
+}
+```
+
+#### Description
+
+Instance state is a snapshot of a Regal game that is unique to a player, containing the modifications caused by all of the player's commands up to that point.
+
+A game's static context is immutable data that is the same for every player regardless of their commands, whereas a `GameInstance` is the player's unique instance of the game.
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`StateType = any` | The `GameInstance` state type. Optional, defaults to `any`.
+
+#### Properties
+
+Property | Description
+--- | ---
+`events: InstanceEvents` | The manager for all events in the instance.
+`output: InstanceOutput` | The manager for all output in the instance.
+`options: InstanceOptions` | Read-only container for all current options in the instance.
+`random: InstanceRandom` | The manager for generating repeatable random numbers through the game instance.
+`state: StateType` | Free-form agent to contain any instance state desired by the game developer. Properties set within this object are maintained between game cycles, so it should be used to store long-term state.
+
+#### Methods
+
+##### `using()`
+
+Activates one or more agents in the current game context. 
+
+```ts
+using<T>(resource: T): T
+```
+
+**Description**
+
+All agents must be activated before they can be used. Activating an agent multiple times has no effect.
+
+A single agent may be activated:
+
+```ts
+const agent = game.using(new CustomAgent());
+```
+
+Or, an array of agents:
+
+```ts
+const agents = game.using([ new CustomAgent(1), new CustomAgent(2) ]);
+```
+
+Or, an object where every property is an agent to be activated:
+
+```ts
+const { agent1, agent2 } = game.using({
+    agent1: new CustomAgent(1),
+    agent2: new CustomAgent(2)
+});
+```
+
+**Generic Type Parameters**
+
+Parameter | Description
+--- | ---
+`T` | The type of resource that is activated.
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`resource: T` | Either a single agent, an agent array, or an object where every property is an agent to be activated.
+
+**Returns**
+
+`T`: Either an activated agent, an agent array, or an object where every property is an activated agent, depending on the structure of `resource`.
 
 ### `GameMetadata`
 
+**_Interface_**
+
+Metadata about the game, such as its title and author.
+
+```ts
+interface GameMetadata {
+    readonly name: string
+    readonly author: string
+    readonly headline?: string
+    readonly description?: string
+    readonly homepage?: string
+    readonly repository?: string
+    readonly options?: Partial<GameOptions>
+    readonly regalVersion?: string
+}
+```
+
+#### Description
+
+Metadata values can be specified in the optional `regal.json` file or `regal` property of `package.json`, but are not required. If using `regal.json`, the metadata properties should be placed in an object with the key `game`.
+
+```json
+{
+    "game": {
+        "name": "My Regal Game",
+        "author": "Joe Cowman",
+        "options": {
+            "debug": true
+        }
+    }
+}
+```
+
+If any of the metadata properties `name`, `author`, `description`, `homepage`, or `repository` aren't specified, the values of each property with the same name in `package.json` will be used. `regalVersion` should not be specified, as it is set by the library automatically. If a value is passed for `regalVersion`, an error will be thrown.
+
+A configuration loading tool like [**regal-bundler**](https://github.com/regal/regal-bundler) is needed if using `regal.json` or the `regal` property in `package.json`. Alternatively, metadata values can be passed explicitly via [`GameApiExtended.init()`](#init). Either way, a metadata object with at least the `name` and `author` properties specified is required before a game can receive commands.
+
+This metadata is defined in the game's static context, meaning that it is the same for all instances of the game.
+
+#### Properties
+
+Property | Description
+--- | ---
+`readonly name: string` | The game's title.
+`readonly author: string` | The game's author.
+`readonly headline?: string` | The full description of the game.
+`readonly homepage?: string` | The URL of the project's homepage.
+`readonly repository?: string` | The URL of the project's repository.
+`readonly options?: Partial<GameOptions>` | Any options overrides for the game.
+`readonly regalVersion?: string` | The version of the Regal Game Library used by the game.
+
 ### `GameOptions`
+
+**_Interface_**
+
+Configurable options for the game's behavior.
+
+```ts
+interface GameOptions {
+    readonly allowOverrides: string[] | boolean
+    readonly debug: boolean
+    readonly showMinor: boolean
+    readonly trackAgentChanges: boolean
+    readonly seed: string | undefined
+}
+```
+
+#### Properties
+
+Property | Description
+--- | ---
+`readonly allowOverrides: string[] | boolean` | Game options that can be overridden by a Regal client. Can be an array of strings or a boolean. Defaults to true. <br> If an array of strings, these options will be configurable by a Regal client. Note that `allowOverrides` is never configurable, and including it will throw an error. <br> If `true`, all options except `allowOverrides` will be configurable. If `false`, no options will be configurable.
+`readonly debug: boolean` | Whether output of type `DEBUG` should be returned to the client. Defaults to false.
+`readonly showMinor: boolean` | Whether output of type `MINOR` should be returned to the client. Defaults to true.
+`readonly trackAgentChanges: boolean` | Whether all changes to agent properties are tracked and returned to the client. Defaults to false. <br> If `false`, only the values of each property at the beginning and end of each game cycle will be recorded. If `true`, all property changes will be recorded.
+`readonly seed: string | undefined` | Optional string used to initialize pseudorandom number generation in each game instance. <br> When multiple instances have the same seed, they will generate the same sequence of random numbers through the `InstanceRandom` API. If left undefined, a random seed will be generated.
 
 ### `GameResponse`
 
+**_Interface_**
+
+Response object of every [`GameApi`](#gameapi) method, which contains some output and a [`GameInstance`](#gameinstance-1) if applicable.
+
+```ts
+interface GameResponse {
+    instance?: GameInstance
+    output: GameResponseOutput
+}
+```
+
+#### Properties
+
+Property | Description
+--- | ---
+`instance?: GameInstance` | The new instance state of the game. Will not be defined if an error occurred during the request or if [`getMetdataCommand`](#getmetadatacommand) was called.
+`output: GameResponseOutput` | The output generated by the request, which will vary in structure depending on the request and if it was successful.
+
 ### `GameResponseOutput`
+
+**_Interface_**
+
+The output component of a response generated by a request to the `GameApi`.
+
+```ts
+interface GameResponseOutput {
+    wasSuccessful: boolean
+    error?: RegalError
+    log?: OutputLine[]
+    metadata?: GameMetadata
+}
+```
+
+#### Properties
+
+Property | Description
+--- | ---
+`wasSuccessful: boolean` | Whether the request was executed successfully.
+`error?: RegalError` | The error that was thrown if `wasSuccessful` is false.
+`log?: OutputLine[]` | Contains any lines of output emitted because of the request.
+`metadata?: GameMetadata` | Contains the game's metadata if `getMetdataCommand` was called.
 
 ### `InstanceEvents`
 
