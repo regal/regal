@@ -393,7 +393,7 @@ For use with [`InstanceRandom.string()`](#instancerandom).
 
 Property | Value | Description
 --- | --- | ---
-`EXPANDED_CHARSET: string` | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*()-_=+{}[]|;:<>,.?` | Contains all letters (upper- and lower-case), numbers, and some special characters.
+`EXPANDED_CHARSET: string` | <code>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*()-_=+{}[]|;:<>,.?</code> | Contains all letters (upper- and lower-case), numbers, and some special characters.
 `ALHPANUMERIC_CHARSET: string` | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789` | Contains all letters (upper- and lower-case) and numbers.
 `ALPHABET_CHARSET: string` | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz` | Contains all letters (upper- and lower-case).
 `NUMBERS_CHARSET: string` | `0123456789` | Contains all numbers.
