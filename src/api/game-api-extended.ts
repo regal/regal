@@ -15,7 +15,7 @@ import { GameApi } from "./game-api";
  * methods for advanced control.
  */
 export interface GameApiExtended extends GameApi {
-    /** Whether `Game.init` has been called. */
+    /** Whether `Game.init()` has been called. */
     readonly isInitialized: boolean;
 
     /**

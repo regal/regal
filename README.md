@@ -356,7 +356,7 @@ class Agent {
 
 A game object, or *agent*, is a JavaScript object that contains Regal game state. Every agent should inherit from the `Agent` class.
 
-Before an agent's properties can be accessed in a game cycle, the agent must be activated with [`GameInstance.using`](#gameinstance-1). If you try to read or modify the property of an agent that hasn't been activated, a `RegalError` will be thrown.
+Before an agent's properties can be accessed in a game cycle, the agent must be activated with [`GameInstance.using()`](#gameinstance-1). If you try to read or modify the property of an agent that hasn't been activated, a `RegalError` will be thrown.
 
 #### Constructor
 
@@ -378,9 +378,9 @@ Common charsets used for pseudo-random string generation.
 
 ```ts
 const Charsets = {
-    EXPANDED_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*()-_=+{}[]|;:<>,.?",
-    ALHPANUMERIC_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-    ALPHABET_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    EXPANDED_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*()-_=+{}[]|;:<>,.?"
+    ALHPANUMERIC_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    ALPHABET_CHARSET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     NUMBERS_CHARSET: "0123456789"
 }
 ```
@@ -407,8 +407,12 @@ A function that modifies a [`GameInstance`](#gameinstance-1).
 ```ts
 type EventFunction<StateType = any> = (
     game: GameInstance<StateType>
-) => EventFunction<StateType> | void;
+) => EventFunction<StateType> | void
 ```
+
+#### Subtypes
+
+* [`TrackedEvent`](#trackedevent)
 
 #### Generic Type Parameters
 
@@ -443,6 +447,14 @@ interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
 
 #### Description
 
+An `EventQueue` is a special type of [`TrackedEvent`](#trackedevent) that contains a sequence of `TrackedEvent`s. When an `EventQueue` is invoked, it immediately invokes every event in `immediateEvents` sequentially. The events in `delayedEvents` are added to the end of the game instance's internal queue and will be invoked sequentially once all other events are finished.
+
+The `EventQueue`/[`TrackedEvent`](#trackedevent) API is chainable and can be used to invoke a complicated sequence of events.
+
+```ts
+firstEvent.then(secondEvent, thirdEvent).enqueue(lastEvent)
+```
+
 #### Extends
 
 [`TrackedEvent`](#trackedevent)
@@ -467,7 +479,7 @@ Property | Description
 Adds events to the end of the event queue.
 
 ```ts
-enqueue(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
+enqueue(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>
 ```
 
 **Parameters**
@@ -485,14 +497,196 @@ Parameter | Description
 Alias of [`EventQueue.enqueue()`](#enqueue).
 
 ```ts
-nq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
+nq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>
 ```
 
 ### `Game`
 
+**_Const Object_**
+
+Global implementation of [`GameApiExtended`](#gameapiextended).
+
+```ts
+const Game: GameApiExtended = { ... }
+```
+
+#### Description
+
+The `Game` object serves as an exportable API for playing the game. It is used for external interaction with the game, and shouldn't be accessed within the game itself.
+
+#### Implements
+
+[`GameApiExtended`](#gameapiextended)
+
 ### `GameApi`
 
+**_Interface_**
+
+Public API for interacting with the Regal game.
+
+```ts
+interface GameApi {
+    getMetadataCommand(): GameResponse
+    postPlayerCommand(instance: GameInstance, command: string): GameResponse
+    postStartCommand(options?: Partial<GameOptions>): GameResponse
+    postUndoCommand(instance: GameInstance): GameResponse
+    postOptionCommand(instance: GameInstance, options: Partial<GameOptions>): GameResponse
+}
+```
+
+#### Description
+
+A client application will consume this API, using the endpoints to generate game instances and receive output.
+
+#### Subtypes
+
+* [`GameApiExtended`](#gameapiextended)
+
+#### Methods
+
+##### `getMetadataCommand()`
+
+Gets the game's metadata. Note that this is not specific to any [`GameInstance`](#gameinstance-1), but refers to the game's static context.
+
+```ts
+getMetadataCommand(): GameResponse
+```
+
+**Returns**
+
+[`GameResponse`](#gameresponse): A game response containing the game's metadata as output if the request was successful. Otherwise, the response will contain an error.
+
+##### `postPlayerCommand()`
+
+Submits a command that was entered by the player, usually to trigger some effects in the [`GameInstance`](#gameinstance-1).
+
+If the [`onPlayerCommand`](#onplayercommand) hook has not been implemented, an error will be thrown.
+
+```ts
+postPlayerCommand(instance: GameInstance, command: string): GameResponse
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`instance: GameInstance` | The current game instance (will not be modified).
+`command: string` | The player's command.
+
+**Returns**
+
+[`GameResponse`](#gameresponse): A game response containing a new [`GameInstance`](#gameinstance-1) with updated values and any output logged during the game cycle's events if the request was successful. Otherwise, the response will contain an error.
+
+##### `postStartCommand()`
+
+Triggers the start of a new game instance.
+
+If the [`onStartCommand`](#onstartcommand) hook has not been implemented, an error will be thrown.
+
+```ts
+postStartCommand(options?: Partial<GameOptions>): GameResponse
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`options?: Partial<GameOptions>` | Any option overrides preferred for this specific instance, which must be allowed by the static configuration's `allowOverrides` option.
+
+**Returns**
+
+[`GameResponse`](#gameresponse): A game response containing a new [`GameInstance`](#gameinstance-1) and any output logged during the game cycle's events if the request was successful. Otherwise, the response will contain an error.
+
+##### `postUndoCommand()`
+
+Reverts the effects of the last player command on the game instance.
+
+Calls the [`beforeUndoCommand`](#beforeundocommand) hook to determine if the undo is allowed. If the hook has not been implemented, undo is allowed by default.
+
+```ts
+postUndoCommand(instance: GameInstance): GameResponse
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`instance: GameInstance` | The current game instance (will not be modified).
+
+**Returns**
+
+[`GameResponse`](#gameresponse): A game response containing a new [`GameInstance`](#gameinstance-1) with updated values if the request was successful. Otherwise, the response will contain an error.
+
+##### `postOptionCommand()`
+
+Updates the values of the named game options in the game instance.
+
+```ts
+postOptionCommand(instance: GameInstance, options: Partial<GameOptions>): GameResponse;
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`instance: GameInstance` | The current game instance (will not be modified).
+`options: Partial<GameOptions>` | The new option overrides, which must be allowed by the static configuration's `allowOverrides` option.
+
+**Returns**
+
+[`GameResponse`](#gameresponse): A game response containing a new [`GameInstance`](#gameinstance-1) with updated options if the request was successful. Otherwise, the response will contain an error.
+
 ### `GameApiExtended`
+
+**_Interface_**
+
+Extended API for interacting with the Regal game.
+
+```ts
+interface GameApiExtended extends GameApi {
+    readonly isInitialized: boolean
+    init(metadata: GameMetadata): void
+    reset(): void
+}
+```
+
+#### Description
+
+Contains the standard methods from [`GameApi`](#gameapi) as well as additional methods for advanced control.
+
+#### Extends
+
+[`GameApi`](#gameapi)
+
+#### Properties
+
+Property | Value
+--- | ---
+`readonly isInitialized: boolean` | Whether `Game.init()` has been called.
+
+#### Methods
+
+##### `init()`
+
+Initializes the game with the given metadata. This must be called before any game commands may be executed.
+
+```ts
+init(metadata: GameMetadata): void
+```
+
+**Properties**
+
+Property | Value
+--- | ---
+`metadata: GameMetadata` | The game's configuration metadata.
+
+##### `reset()`
+
+Resets the game's static classes.
+
+```ts
+reset()
+```
 
 ### `GameEventBuilder`
 
