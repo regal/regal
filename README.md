@@ -884,11 +884,11 @@ interface GameOptions {
 
 Property | Description
 --- | ---
-`readonly allowOverrides: string[] | boolean` | Game options that can be overridden by a Regal client. Can be an array of strings or a boolean. Defaults to true. <br> If an array of strings, these options will be configurable by a Regal client. Note that `allowOverrides` is never configurable, and including it will throw an error. <br> If `true`, all options except `allowOverrides` will be configurable. If `false`, no options will be configurable.
+`readonly allowOverrides: string[] \| boolean` | Game options that can be overridden by a Regal client. Can be an array of strings or a boolean. Defaults to true. <br> If an array of strings, these options will be configurable by a Regal client. Note that `allowOverrides` is never configurable, and including it will throw an error. <br> If `true`, all options except `allowOverrides` will be configurable. If `false`, no options will be configurable.
 `readonly debug: boolean` | Whether output of type `DEBUG` should be returned to the client. Defaults to false.
 `readonly showMinor: boolean` | Whether output of type `MINOR` should be returned to the client. Defaults to true.
 `readonly trackAgentChanges: boolean` | Whether all changes to agent properties are tracked and returned to the client. Defaults to false. <br> If `false`, only the values of each property at the beginning and end of each game cycle will be recorded. If `true`, all property changes will be recorded.
-`readonly seed: string | undefined` | Optional string used to initialize pseudorandom number generation in each game instance. <br> When multiple instances have the same seed, they will generate the same sequence of random numbers through the `InstanceRandom` API. If left undefined, a random seed will be generated.
+`readonly seed: string \| undefined` | Optional string used to initialize pseudorandom number generation in each game instance. <br> When multiple instances have the same seed, they will generate the same sequence of random numbers through the `InstanceRandom` API. If left undefined, a random seed will be generated.
 
 ### `GameResponse`
 
