@@ -936,6 +936,36 @@ Property | Description
 
 ### `InstanceEvents`
 
+**_Interface_**
+
+Manager for all events in a [`GameInstance`](#gameinstance-1).
+
+```ts
+interface InstanceEvents {
+    invoke(event: TrackedEvent): void
+}
+```
+
+#### Description
+
+Every event that occurs on a `GameInstance` passes through this interface, although most of the time this happens internally.
+
+#### Methods
+
+##### `invoke()`
+
+Executes the given event and all events caused by it.
+
+```ts
+invoke(event: TrackedEvent): void
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`event: TrackedEvent` | The `TrackedEvent` to be invoked.
+
 ### `InstanceOptions`
 
 ### `InstanceOutput`

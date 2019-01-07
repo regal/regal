@@ -10,7 +10,8 @@ import { TrackedEvent } from "./event-types";
 /**
  * Manager for all events in a `GameInstance`.
  *
- * Every event that occurs on a `GameInstance` passes through this interface.
+ * Every event that occurs on a `GameInstance` passes through this interface,
+ * although most of the time this happens internally.
  */
 export interface InstanceEvents {
     /**
