@@ -904,6 +904,10 @@ interface GameOptions {
 }
 ```
 
+#### Child Interfaces
+
+* [`InstanceOptions`](#instanceoptions)
+
 #### Properties
 
 Property | Description
@@ -991,6 +995,24 @@ Parameter | Description
 `event: TrackedEvent` | The `TrackedEvent` to be invoked.
 
 ### `InstanceOptions`
+
+**_Interface_**
+
+Read-only container that provides an interface to view the game instance's current game options.
+
+```ts
+interface InstanceOptions extends GameOptions {}
+```
+
+#### Description
+
+Has an identical signature to [`GameOptions`](#gameoptions).
+
+Setting any properties of [`GameInstance.options`](#properties-3) will throw a [`RegalError`](#regalerror).
+
+#### Extends
+
+[`GameOptions`](#gameoptions)
 
 ### `InstanceOutput`
 
