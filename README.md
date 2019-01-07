@@ -356,7 +356,31 @@ class Agent {
 
 A game object, or *agent*, is a JavaScript object that contains Regal game state. Every agent should inherit from the `Agent` class.
 
-Before an agent's properties can be accessed in a game cycle, the agent must be activated with [`GameInstance.using()`](#gameinstance-1). If you try to read or modify the property of an agent that hasn't been activated, a `RegalError` will be thrown.
+Before an agent's properties can be accessed in a game cycle, the agent must be activated. Activating an agent registers the agent with the game instance,  and can happen either *explicitly* or *implicitly*.
+
+An inactive agent is activated *explicitly* with [`GameInstance.using()`](#gameinstance-1).
+
+```ts
+const activeAgent = game.using(new CustomAgent());
+```
+
+Alternatively, an inactive agent that's contained in another agent's property can be activated *implicitly* when that owner agent is activated. Here is one way this can happen:
+
+```ts
+const owner = new CustomAgent("owner");
+owner.child = new CustomAgent("child");
+
+const activeOwner = game.using(owner); // owner.child is activated as well
+```
+
+In total, there are five ways for an inactive agent (`child`) to be activated implicitly by some agent (`owner`):
+* `child` is a property of `owner` when `owner` is activated.
+* `child` is set as a property of `owner`, which is already activated.
+* `child` is stored in an array that is a property of `owner` when `owner` is activated.
+* `child` is stored in an array that is set as a property of `owner`, which is already activated.
+* `child` is added to an array that is a property of `owner`, which is already activated.
+
+Trying to read or modify a property of an agent that hasn't been activated will throw a [`RegalError`](#regalerror).
 
 #### Constructor
 
