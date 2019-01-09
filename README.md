@@ -976,7 +976,7 @@ interface InstanceEvents {
 
 #### Description
 
-Every event that occurs on a `GameInstance` passes through this interface, although most of the time this happens internally.
+Every event that occurs on a [`GameInstance`](#gameinstance-1) passes through this interface, although most of the time this happens internally.
 
 #### Methods
 
@@ -1015,6 +1015,136 @@ Setting any properties of [`GameInstance.options`](#properties-3) will throw a [
 [`GameOptions`](#gameoptions)
 
 ### `InstanceOutput`
+
+**_Interface_**
+
+Interface for managing and emitting output through a [`GameInstance`](#gameinstance-1).
+
+```ts
+interface InstanceOutput {
+    readonly lineCount: number
+    lines: OutputLine[]
+    writeLine(line: string, lineType?: OutputLineType): void
+    write(...lines: string[]): void
+    writeNormal(...lines: string[]): void
+    writeMajor(...lines: string[]): void
+    writeMinor(...lines: string[]): void
+    writeDebug(...lines: string[]): void
+    writeTitle(line: string): void
+}
+```
+
+#### Description
+
+Output is modeled as lines with properties specifying their semantic meaning. For more information, see [`OutputLine`](#outputline).
+
+#### Properties
+
+Property | Description
+--- | ---
+`readonly lineCount: number` | The number of `OutputLine`s that have been generated over the life of the `GameInstance`.
+`lines: OutputLine[]` | The `OutputLine`s generated during the current game cycle.
+
+#### Methods
+
+##### `writeLine()`
+
+Writes a single line of output to the client.
+
+```ts
+writeLine(line: string, lineType?: OutputLineType): void
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`line: string` | The text string to be emitted.
+`lineType?: OutputLineType` | The line's semantic meaning. (Defaults to `OutputLineType.NORMAL`)
+
+##### `write()`
+
+Writes one or more lines of type [`OutputLineType.NORMAL`](#outputlinetype) to the output.
+
+```ts
+write(...lines: string[]): void
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`...lines: string[]` | The text to be emitted.
+
+##### `writeNormal()`
+
+Writes one or more lines of type [`OutputLineType.NORMAL`](#outputlinetype) to the output.
+
+```ts
+writeNormal(...lines: string[]): void
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`...lines: string[]` | The text to be emitted.
+
+##### `writeMajor()`
+
+Writes one or more lines of type [`OutputLineType.MAJOR`](#outputlinetype) to the output.
+
+```ts
+writeMajor(...lines: string[]): void
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`...lines: string[]` | The text to be emitted.
+
+##### `writeMinor()`
+
+Writes one or more lines of type [`OutputLineType.MINOR`](#outputlinetype) to the output.
+
+```ts
+writeMinor(...lines: string[]): void
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`...lines: string[]` | The text to be emitted.
+
+##### `writeDebug()`
+
+Writes one or more lines of type [`OutputLineType.DEBUG`](#outputlinetype) to the output.
+
+```ts
+writeDebug(...lines: string[]): void
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`...lines: string[]` | The text to be emitted.
+
+##### `writeTitle()`
+
+Writes a line of type [`OutputLineType.SECTION_TITLE`](#outputlinetype) to the output.
+
+```ts
+writeTitle(line: string): void
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`line: string` | The text to be emitted.
 
 ### `InstanceRandom`
 
