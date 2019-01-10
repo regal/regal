@@ -34,7 +34,7 @@ export enum OutputLineType {
     MINOR = "MINOR",
 
     /**
-     * Meant for debugging purposes; only visible when the `DEBUG` option is enabled.
+     * Meant for debugging purposes; only visible when the `debug` option is enabled.
      */
     DEBUG = "DEBUG",
 
@@ -49,7 +49,7 @@ export enum OutputLineType {
  * of something that happened in the game.
  */
 export interface OutputLine {
-    /** The `OutputLine`'s unique identifier */
+    /** The `OutputLine`'s unique identifier. */
     id: number;
 
     /** The text string. */

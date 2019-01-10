@@ -411,7 +411,7 @@ const Charsets = {
 
 #### Description
 
-For use with [`InstanceRandom.string()`](#instancerandom).
+For use with [`InstanceRandom.string()`](#string).
 
 #### Readonly Properties
 
@@ -1148,9 +1148,167 @@ Parameter | Description
 
 ### `InstanceRandom`
 
+**_Interface_**
+
+Interface for generating deterministic, pseudo-random data for the game instance.
+
+```ts
+interface InstanceRandom {
+    readonly seed: string
+    int(min: number, max: number): number
+    decimal(): number
+    string(length: number, charset?: string): string
+    choice<T>(array: T[]): T
+    boolean(): boolean
+}
+```
+
+#### Description
+
+The data are considered deterministic because any `InstanceRandom` with some
+identical `seed` will generate the same sequence of pseudo-random values.
+
+#### Properties
+
+Property | Description
+--- | ---
+`readonly seed: string` | The string used to initialize the pseudo-random data generator.
+
+#### Methods
+
+##### `int()`
+
+Generates a pseudo-random integer within the given inclusive range.
+
+```ts
+int(min: number, max: number): number
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`min: number` | The minimum possible number (inclusive).
+`max: number` | The maximum possible number (exclusive).
+
+**Returns**
+
+`number`: A pseudo-random integer within the given inclusive range.
+
+##### `decimal()`
+
+Generates a pseudo-random number between zero (inclusive) and one (exclusive).
+
+```ts
+decimal(): number
+```
+
+**Returns**
+
+`number`: A pseudo-random number between zero (inclusive) and one (exclusive).
+
+##### `string()`
+
+Generates a string of pseudo-random characters (duplicate characters allowed).
+
+```ts
+string(length: number, charset?: string): string
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`length: number` | The length of the string to generate.
+`charset?: string` | A string containing the characters to choose from when generating the string. Duplicates are okay, but the charset must have at least two unique characters. (Defaults to [`Charsets.EXPANDED_CHARSET`](#charsets))
+
+**Returns**
+
+`string`: A string of pseudo-random characters.
+
+##### `choice()`
+
+Returns a pseudo-random element from the given array without modifying anything.
+
+```ts
+choice<T>(array: T[]): T
+```
+
+**Generic Type Parameters**
+
+Parameter | Description
+--- | ---
+`T` | The type of element in the array.
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`array: T[]` | The array to select from.
+
+**Returns**
+
+`T`: A pseudo-random element from the given array.
+
+##### `boolean()`
+
+Generates either `true` or `false` pseudo-randomly.
+
+```ts
+boolean(): boolean
+```
+
+**Returns**
+
+`boolean`: Either `true` or `false`.
+
 ### `OutputLine`
 
+**_Interface_**
+
+A line of text that is sent to the client and is meant to notify the player of something that happened in the game.
+
+```ts
+interface OutputLine {
+    id: number
+    data: string
+    type: OutputLineType
+}
+```
+
+#### Properties
+
+Property | Description
+--- | ---
+`id: number` | The `OutputLine`'s unique identifier.
+`data: string` | The text string.
+`type: OutputLineType` | The line's semantic type. (see [`OutputLineType`](#outputlinetype))
+
 ### `OutputLineType`
+
+**_Enum_**
+
+Conveys semantic meaning of an [`OutputLine`](#outputline) to the client.
+
+```ts
+enum OutputLineType {
+    NORMAL = "NORMAL"
+    MAJOR = "MAJOR"
+    MINOR = "MINOR"
+    DEBUG = "DEBUG"
+    SECTION_TITLE = "SECTION_TITLE"
+}
+```
+
+#### Members
+
+Member | Description
+--- | ---
+`NORMAL = "NORMAL"` | Standard output line; presented to the player normally. (Default) <br> Use for most game content.
+`MAJOR = "MAJOR"` | Important line; emphasized to the player. <br> Use when something important happens.
+`MINOR = "MINOR"` | Non-important line; emphasized less than `OutputLineType.NORMAL` lines, and won't always be shown to the player. <br> Use for repetitive/flavor text that might add a bit to the game experience, but won't be missed if it isn't seen.
+`DEBUG = "DEBUG"` | Meant for debugging purposes; only visible when the `debug` option is enabled.
+`SECTION_TITLE = "SECTION_TITLE"` | Signifies the start of a new section or scene in the game. (i.e. **West of House**)
 
 ### `RegalError`
 
