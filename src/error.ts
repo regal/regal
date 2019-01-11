@@ -6,7 +6,7 @@
  */
 
 /**
- * Error thrown during execution of Regal library functions.
+ * Error that is thrown if a Regal function fails.
  */
 export class RegalError extends Error {
     /**

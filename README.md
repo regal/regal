@@ -1312,6 +1312,34 @@ Member | Description
 
 ### `RegalError`
 
+**_Class_**
+
+Error that is thrown if a Regal function fails.
+
+```ts
+class RegalError extends Error {
+    constructor(message: string)
+}
+```
+
+#### Extends
+
+`Error`
+
+#### Constructor
+
+Constructs a `RegalError` with the given message.
+
+```ts
+constructor(message: string)
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`message: string` | The error message, which will be prepended with "RegalError: ".
+
 ### `TrackedEvent`
 
 ### `enqueue`
