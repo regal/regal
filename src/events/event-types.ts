@@ -21,8 +21,8 @@ export type EventFunction<StateType = any> = (
 /**
  * An `EventFunction` that is tracked by the game instance.
  *
- * In order for Regal to behave properly, all modifications made by the game
- * developer to a `GameInstance` should be done through tracked events.
+ * In order for Regal to behave properly, all modifications of game state
+ * should take place inside tracked events.
  *
  * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  * @param game The game instance to be modified.

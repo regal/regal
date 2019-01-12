@@ -1342,6 +1342,26 @@ Parameter | Description
 
 ### `TrackedEvent`
 
+**_Interface_**
+
+An [`EventFunction`](#eventfunction) that is tracked by the game instance.
+
+```ts
+interface TrackedEvent<StateType = any> extends EventFunction<StateType> {
+    (game: GameInstance<StateType>): TrackedEvent<StateType> | EventFunction<StateType>
+    eventName: string
+    target: EventFunction<StateType>
+    then(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>
+    thenq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>
+}
+```
+
+#### Description
+
+In order for Regal to behave properly, all modifications of game state should take place inside tracked events.
+
+#### Description
+
 ### `enqueue`
 
 ### `noop`
