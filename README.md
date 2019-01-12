@@ -625,7 +625,7 @@ Parameter | Description
 
 Reverts the effects of the last player command on the game instance.
 
-Calls the [`beforeUndoCommand`](#beforeundocommand) hook to determine if the undo is allowed. If the hook has not been implemented, undo is allowed by default.
+Calls the [`onBeforeUndoCommand`](#onbeforeundocommand) hook to determine if the undo is allowed. If the hook has not been implemented, undo is allowed by default.
 
 ```ts
 postUndoCommand(instance: GameInstance): GameResponse
@@ -1360,21 +1360,279 @@ interface TrackedEvent<StateType = any> extends EventFunction<StateType> {
 
 In order for Regal to behave properly, all modifications of game state should take place inside tracked events.
 
-#### Description
+Just like an [`EventFunction`](#eventfunction), a [`TrackedEvent`](#trackedevent) can be invoked as a function by passing in a [`GameInstance`](#gameinstance-1) for its only argument.
+
+#### Extends
+
+[`EventFunction`](#eventfunction)
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`StateType = any` | The `GameInstance` state type. Optional, defaults to `any`.
+
+#### Function Invocation
+
+```ts
+(game: GameInstance<StateType>): TrackedEvent<StateType> | EventFunction<StateType>
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`game: GameInstance<StateType>` | The `GameInstance` to be modified.
+
+**Returns**
+
+`TrackedEvent<StateType> | EventFunction<StateType>`: The next [`TrackedEvent`](#trackedevent) or [`EventFunction`](#eventfunction) to be invoked on the [`GameInstance`](#gameinstance-1).
+
+#### Properties
+
+Property | Description
+--- | ---
+`eventName: string` | The name of the event.
+`target: EventFunction<StateType>` | The `EventFunction` that is wrapped by the `TrackedEvent`.
+
+#### Methods
+
+##### `then()`
+
+Adds events to the front of the event queue.
+
+```ts
+then(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`...events: Array<TrackedEvent<StateType>>` | The events to be added.
+
+**Returns**
+
+An [`EventQueue`](#eventqueue) with the new events.
+
+##### `thenq()`
+
+Adds events to the end of the event queue.
+
+```ts
+thenq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>
+```
+
+**Description**
+
+Equivalent to calling `trackedEvent.then(nq(...events))`.
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`...events: Array<TrackedEvent<StateType>>` | The events to be added.
+
+**Returns**
+
+An [`EventQueue`](#eventqueue) with the new events.
 
 ### `enqueue`
 
+**_Function_**
+
+Creates an [`EventQueue`](#eventqueue) that adds the events to the end of the game's internal queue, meaning they will be executed after all of the currently queued events are finished.
+
+```ts
+const enqueue: <StateType = any>(
+    ...events: Array<TrackedEvent<StateType>>
+) => EventQueue<StateType>
+```
+
+#### Description
+
+If the events are [`EventQueue`](#eventqueue)s, any events in the queues' `immediateEvents` collections will be concatenated, followed by any events in the queues' `delayedEvents`.
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`StateType = any` | The `GameInstance` state type. Optional, defaults to `any`.
+
+#### Parameters
+
+Parameter | Description
+--- | ---
+`...events: Array<TrackedEvent<StateType>>` | The events to be added.
+
+#### Returns
+
+`EventQueue<StateType`: An [`EventQueue`](#eventqueue) that place all events in the `delayedEvent` array when invoked.
+
 ### `noop`
+
+**_Const Object_**
+
+Reserved [`TrackedEvent`](#trackedevent) that signals no more events.
+
+```ts
+const noop: TrackedEvent
+```
+
+#### Description
+
+`noop` is short for *no operation*.
+
+Meant to be used in rare cases where an event cannot return `void` (i.e. forced by the TypeScript compiler).
+
+```ts
+on("EVENT", game => 
+    // Return another event to be executed if some condition holds, otherwise stop.
+    game.state.someCondition ? otherEvent | noop; 
+);
+```
+
+#### Implements
+
+[`TrackedEvent`](#trackedevent)
 
 ### `nq`
 
+**_Function_**
+
+Alias of [`enqueue`](#enqueue-1).
+
+```ts
+const nq: <StateType = any>(
+    ...events: Array<TrackedEvent<StateType>>
+) => EventQueue<StateType>
+```
+
 ### `on`
+
+**_Function_**
+
+Constructs a [`TrackedEvent`](#trackedevent), which is a function that modifies a [`GameInstance`](#gameinstance-1) and tracks all state changes as they occur.
+
+```ts
+const on: <StateType = any>(
+    eventName: string,
+    eventFunc: EventFunction<StateType>
+) => TrackedEvent<StateType>
+```
+
+#### Description
+
+All modifications to game state within a Regal game should take place through a [`TrackedEvent`](#trackedevent).
+
+This function is the standard way to declare a [`TrackedEvent`](#trackedevent).
+
+```ts
+const EVENT = on("EVENT", game => {
+    game.state.foo = "bar"
+});
+```
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`StateType = any` | The `GameInstance` state type. Optional, defaults to `any`.
+
+#### Parameters
+
+Parameter | Description
+--- | ---
+`eventName: string` | The name of the `TrackedEvent`.
+`eventFunc: EventFunction<StateType>` | The function that will be executed on a `GameInstance`.
+
+#### Returns
+
+`TrackedEvent<StateType>`: The generated [`TrackedEvent`](#trackedevent).
 
 ### `onBeforeUndoCommand`
 
+**_Function_**
+
+[`GameApi`](#gameapi) hook that sets the function to be executed whenever [`GameApi.postUndoCommand`](#postUndoCommand) is called, before the undo operation is executed.
+
+```ts
+const onBeforeUndoCommand: (
+    handler: (game: GameInstance) => boolean
+) => void
+```
+
+#### Description
+
+If the handler function returns `true`, the undo will be allowed. If it returns `false`, the undo will not be allowed. If the hook is never set, all valid undo operations will be allowed.
+
+May only be set once.
+
+```ts
+onBeforeUndoCommand(game => game.state.someCondition); // Allows undo if someCondition is true.
+```
+
+#### Parameters
+
+Parameter | Description
+--- | ---
+`handler: (game: GameInstance) => boolean` | Returns whether the undo operation is allowed, given the current `GameInstance`.
+
 ### `onPlayerCommand`
 
+**_Function_**
+
+[`GameApi`](#gameapi) hook that sets the function to be executed whenever a player command is sent to the Game API via [`GameApi.postPlayerCommand`](#postPlayerCommand).
+
+```ts
+const onPlayerCommand: (
+    handler: (command: string) => EventFunction
+) => void
+```
+
+#### Description
+
+May only be set once.
+
+*Example Usage:*
+
+```ts
+onPlayerCommand(command => on("GREET", game => {
+    game.output.write(`Hello, ${command}!`);
+}));
+```
+
+#### Parameters
+
+Parameter | Description
+--- | ---
+`handler: (command: string) => EventFunction` | A function that takes a string containing the player's command and returns an `EventFunction`. May be an `EventFunction`, `TrackedEvent`, or `EventQueue`.
+
 ### `onStartCommand`
+
+**_Function_**
+
+[`GameApi`](#gameapi) hook that sets the function to be executed whenever a start command is sent to the Game API via [`GameApi.postStartCommand`](#postStartCommand).
+
+```ts
+const onStartCommand: (handler: EventFunction) => void
+```
+
+#### Description
+
+May only be set once.
+
+*Example Usage:*
+
+```ts
+onStartCommand(game => game.output.write("Startup successful!"));
+```
+
+#### Parameters
+
+Parameter | Description
+--- | ---
+`handler: EventFunction` | The `EventFunction` to be executed. May be an `EventFunction`, `TrackedEvent`, or `EventQueue`.
 
 ## Contributing
 

@@ -24,9 +24,12 @@ export type EventFunction<StateType = any> = (
  * In order for Regal to behave properly, all modifications of game state
  * should take place inside tracked events.
  *
+ * Just like an `EventFunction`, a `TrackedEvent` can be invoked as a
+ * function by passing in a `GameInstance` for its only argument.
+ *
  * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  * @param game The game instance to be modified.
- * @returns The next `EventFunction` to be executed.
+ * @returns The next `TrackedEvent` or `EventFunction` to be invoked on the `GameInstance`.
  */
 export interface TrackedEvent<StateType = any>
     extends EventFunction<StateType> {
@@ -52,7 +55,7 @@ export interface TrackedEvent<StateType = any>
     /**
      * Adds events to the end of the event queue.
      *
-     * Equivalent to calling `<TrackedEvent>.then(nq(...events))`
+     * Equivalent to calling `trackedEvent.then(nq(...events))`.
      *
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
@@ -95,8 +98,12 @@ export const isEventQueue = (o: any): o is EventQueue =>
     o !== undefined && (o as EventQueue).immediateEvents !== undefined;
 
 /**
- * "No operation" - reserved `TrackedEvent` that signals no more events.
- * Use only in rare cases where an event cannot return `void`.
+ * Reserved `TrackedEvent` that signals no more events.
+ *
+ * `noop` is short for *no operation*.
+ *
+ * Meant to be used in rare cases where an event cannot return `void`
+ * (i.e. forced by the TypeScript compiler).
  */
 export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;

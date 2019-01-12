@@ -15,10 +15,13 @@ import { GameInstance } from "../../state";
 import { HookManager, returnTrue } from "../api-hook-manager";
 
 /**
- * Sets the function to be executed whenever a player command is sent to the Game API
- * via `Game.postPlayerCommand`.
+ * `GameApi` hook that sets the function to be executed whenever a player command
+ * is sent to the Game API via `GameApi.postPlayerCommand`.
+ *
+ * May only be set once.
+ *
  * @param handler A function that takes a string containing the player's command and
- * generates an `EventFunction`. May be an `EventFunction`, `TrackedEvent`, or `EventQueue`.
+ * returns an `EventFunction`. May be an `EventFunction`, `TrackedEvent`, or `EventQueue`.
  */
 export const onPlayerCommand = (
     handler: (command: string) => EventFunction
@@ -47,9 +50,13 @@ export const onPlayerCommand = (
 };
 
 /**
- * Sets the function to be executed whenever a start command is sent to the Game API
- * via `Game.postStartCommand`.
- * @param handler The `EventFunction` to be executed. May be an `EventFunction`, `TrackedEvent`, or `EventQueue`.
+ * `GameApi` hook that sets the function to be executed whenever a start command
+ * is sent to the Game API via `GameApi.postStartCommand`.
+ *
+ * May only be set once.
+ *
+ * @param handler The `EventFunction` to be executed. May be an `EventFunction`,
+ * `TrackedEvent`, or `EventQueue`.
  */
 export const onStartCommand = (handler: EventFunction): void => {
     if (HookManager.startCommandHook !== undefined) {
@@ -73,10 +80,14 @@ export const onStartCommand = (handler: EventFunction): void => {
 };
 
 /**
- * Sets the function to be executed whenever `Game.postUndoCommand` is called,
- * before the undo operation is executed.
+ * `GameApi` hook that sets the function to be executed whenever
+ * `GameApi.postUndoCommand` is called, before the undo operation is executed.
  *
- * If this function is never called, all valid undo operations will be allowed.
+ * If the handler function returns `true`, the undo will be allowed. If it returns `false`,
+ * the undo will not be allowed. If the hook is never set, all valid undo operations
+ * will be allowed.
+ *
+ * May only be set once.
  *
  * @param handler Returns whether the undo operation is allowed, given the current `GameInstance`.
  */
