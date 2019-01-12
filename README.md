@@ -313,17 +313,46 @@ g2 is the Regal game after the command
 
 Entering the player's command into the first **game instance** creates another **game instance** with the effects of the player's command applied. For example, if `g1` contains a scene where a player is fighting an orc, and `x` is `"stab orc"`, `g2` might show the player killing that orc. Note that `g1` is unmodified by the player's command.
 
+The process of one game instance creating another, usually because it was given a player's command, is called a **game cycle**.
+
 #### Game Data
 
-All data or information in a Regal game is in one of two forms: **static** or **instance-specific**.
+All data in a Regal game are in one of two forms: **static** or **instance-specific**.
 
-*Static information* is defined in the game's source code, and is the same for every instance of the game. Game events, for example, are considered static because they are defined the same way for everyone playing the game (even though they may have different effects).
+*Static data* are defined in the game's source code, and are the same for every instance of the game. Game events, for example, are considered static because they are defined the same way for everyone playing the game (even though they may have different effects).
 
-*Instance-specific* information, more frequently called *game state*, is unique to a single instance of the game. A common example of game state is a player's stats, such as health or experience. Because this data is unique to one player of the game and is not shared by all players, it's considered instance-specific.
+*Instance-specific* data, more frequently called *game state*, are unique to a single instance of the game. A common example of game state is a player's stats, such as health or experience. Because this data is unique to one player of the game and is not shared by all players, it's considered instance-specific.
+
+Understanding the difference between static data and game state is important. Everything that's declared in a Regal game will be in one of these two contexts.
 
 ### `GameInstance`
 
-The cornerstone of the Regal Game Library is the `GameInstance`. 
+The cornerstone of the Regal Game Library is the [`GameInstance`](#gameinstance-1).
+
+A [`GameInstance`](#gameinstance-1) represents a unique instance of a Regal game. It contains **(1)** the game's current state and **(2)** all the interfaces used to interact with the game during a game cycle.
+
+#### GameInstance vs Game
+
+To understand how a *game instance* differs from the game itself, it can be helpful to think of a Regal game like a class. The game's static context is like a class definition, which contains all the immutable events and constants that are the same for every player.
+
+When a player starts a new Regal game, they receive an object of that class. This **game instance** is a snapshot of the Regal game that is unique to that player. It contains the effects of every command made by the player, and has no bearing on any other players' game instances.
+
+> Two people playing different games of solitare are playing the same *game*, but have different *game instances*.
+
+#### Instance State
+
+All game state is stored in a [`GameInstance`](#gameinstance-1) object. Some of this state is hidden from view, but properties can be referenced directly in `GameInstance.state`.
+
+```ts
+// Assumes there's a GameInstance called game
+game.state.foo = "bar";
+game.state.arr = [1, 2, 3];
+```
+
+Properties set within the `state` object are maintained between game cycles, so it can be used to store long-term state.
+
+#### InstanceX Interfaces
+
 
 ### Events
 
