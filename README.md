@@ -329,7 +329,7 @@ Understanding the difference between static data and game state is important. Ev
 
 The cornerstone of the Regal Game Library is the [`GameInstance`](#gameinstance-1).
 
-A [`GameInstance`](#gameinstance-1) represents a unique instance of a Regal game. It contains **(1)** the game's current state and **(2)** all the interfaces used to interact with the game during a game cycle.
+A [`GameInstance`](#gameinstance-1) represents a unique instance of a Regal game. It contains [**(1)**](#instance-state) the game's current state and [**(2)**](#instancex-interfaces) all the interfaces used to interact with the game during a game cycle.
 
 #### GameInstance vs Game
 
@@ -337,11 +337,11 @@ To understand how a *game instance* differs from the game itself, it can be help
 
 When a player starts a new Regal game, they receive an object of that class. This **game instance** is a snapshot of the Regal game that is unique to that player. It contains the effects of every command made by the player, and has no bearing on any other players' game instances.
 
-> Two people playing different games of solitare are playing the same *game*, but have different *game instances*.
+> Two people playing different games of solitare are playing the same *game*, but different *game instances*.
 
 #### Instance State
 
-All game state is stored in a [`GameInstance`](#gameinstance-1) object. Some of this state is hidden from view, but properties can be referenced directly in `GameInstance.state`.
+All game state is stored in a [`GameInstance`](#gameinstance-1) object. Some of this state is hidden from view, but custom properties can be referenced directly in `GameInstance.state`.
 
 ```ts
 // Assumes there's a GameInstance called game
@@ -349,16 +349,29 @@ game.state.foo = "bar";
 game.state.arr = [1, 2, 3];
 ```
 
-Properties set within the `state` object are maintained between game cycles, so it can be used to store long-term state.
+Properties set within the `state` object are maintained between game cycles, so it can be used to store game data long-term.
 
 #### InstanceX Interfaces
 
+In addition to storing game state, the [`GameInstance`](#gameinstance-1) contains several interfaces for controlling the game instance's behavior.
+
+Property | Type | Controls
+--- | --- | ---
+`events` | [`InstanceEvents`](#instanceevents) | [Events](#events)
+`output` | [`InstanceOutput`](#instanceoutput) | [Output](#output)
+`options` | [`InstanceOptions`](#instanceoptions) | [Options](#configuration)
+`random` | [`InstanceRandom`](#instancerandom) | [Randomness](#randomness)
+`state` | `any` or `StateType` | [Miscellaneous state](#instance-state)
+
+Each of these interfaces is described in more detail below.
 
 ### Events
 
 ### Agents
 
 ### Randomness
+
+### Output
 
 ### `GameApi` and API Hooks
 
