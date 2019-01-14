@@ -313,15 +313,15 @@ g2 is the Regal game after the command
 
 Entering the player's command into the first **game instance** creates another **game instance** with the effects of the player's command applied. For example, if `g1` contains a scene where a player is fighting an orc, and `x` is `"stab orc"`, `g2` might show the player killing that orc. Note that `g1` is unmodified by the player's command.
 
-The process of one game instance creating another, usually because it was given a player's command, is called a **game cycle**.
+The process of one game instance interpreting a command and outputting another game instance is called a **game cycle**.
 
 #### Game Data
 
-All data in a Regal game are in one of two forms: **static** or **instance-specific**.
+All data in a Regal game is in one of two forms: **static** or **instance-specific**.
 
-*Static data* are defined in the game's source code, and are the same for every instance of the game. Game events, for example, are considered static because they are defined the same way for everyone playing the game (even though they may have different effects).
+*Static data* is defined in the game's source code, and is the same for every instance of the game. Game events, for example, are considered static because they are defined the same way for everyone playing the game (even though they may have different effects). Metadata values for the game, such as its title and author, are also static.
 
-*Instance-specific* data, more frequently called *game state*, are unique to a single instance of the game. A common example of game state is a player's stats, such as health or experience. Because this data is unique to one player of the game and is not shared by all players, it's considered instance-specific.
+*Instance-specific* data, more frequently called *game state*, is unique to a single [instance](#gameinstance) of the game. A common example of game state is a player's stats, such as health or experience. Because this data is unique to one player of the game and is not shared by all players, it's considered instance-specific.
 
 Understanding the difference between static data and game state is important. Everything that's declared in a Regal game will be in one of these two contexts.
 
@@ -337,23 +337,25 @@ To understand how a *game instance* differs from the game itself, it can be help
 
 When a player starts a new Regal game, they receive an object of that class. This **game instance** is a snapshot of the Regal game that is unique to that player. It contains the effects of every command made by the player, and has no bearing on any other players' game instances.
 
-> Two people playing different games of solitare are playing the same *game*, but different *game instances*.
+> Two people playing different games of Solitare are playing the same *game*, but different *game instances*.
 
 #### Instance State
 
-All game state is stored in a [`GameInstance`](#gameinstance-1) object. Some of this state is hidden from view, but custom properties can be referenced directly in `GameInstance.state`.
+All game state is stored in a [`GameInstance`](#gameinstance-1) object. Some of this state is hidden from view, but custom properties can be set directly in `GameInstance.state`.
 
 ```ts
-// Assumes there's a GameInstance called game
-game.state.foo = "bar";
-game.state.arr = [1, 2, 3];
+// Assumes there's a GameInstance called myGame
+myGame.state.foo = "bar";
+myGame.state.arr = [1, 2, 3];
 ```
 
 Properties set within the `state` object are maintained between game cycles, so it can be used to store game data long-term.
 
+`GameInstance.state` is of of type `any`, meaning that its properties are totally customizable. Optionally, the state type may be set using a type parameter (*see [Using StateType](#using-statetype) for more information*).
+
 #### InstanceX Interfaces
 
-In addition to storing game state, the [`GameInstance`](#gameinstance-1) contains several interfaces for controlling the game instance's behavior.
+In addition to storing game state, [`GameInstance`](#gameinstance-1) contains several interfaces for controlling the game instance's behavior.
 
 Property | Type | Controls
 --- | --- | ---
@@ -361,11 +363,165 @@ Property | Type | Controls
 `output` | [`InstanceOutput`](#instanceoutput) | [Output](#output)
 `options` | [`InstanceOptions`](#instanceoptions) | [Options](#configuration)
 `random` | [`InstanceRandom`](#instancerandom) | [Randomness](#randomness)
-`state` | `any` or `StateType` | [Miscellaneous state](#instance-state)
+`state` | `any` or [`StateType`](#using-statetype) | [Miscellaneous state](#instance-state)
 
 Each of these interfaces is described in more detail below.
 
 ### Events
+
+A game where everything stays the same isn't much of a game. Therefore, Regal games are powered by **events**.
+
+An *event* can be thought of as any change that occurs within a Regal game. Any time the game's state changes, it happens inside of an event.
+
+#### Event Functions
+
+Events in the Regal Game Library share a common type: [`EventFunction`](#eventfunction).
+
+An [`EventFunction`](#eventfunction) takes a [`GameInstance`](#gameinstance-1) as its only argument, modifies it, and may return the next [`EventFunction`](#eventfunction) to be executed.
+
+Here is a simplified declaration of the [`EventFunction`](#eventfunction) type:
+
+```ts
+type EventFunction = (game: GameInstance) => EventFunction | void;
+```
+
+An [`EventFunction`](#eventfunction) can be invoked by passing it a [`GameInstance`](#gameinstance-1):
+
+```ts
+// Assumes there's a GameInstance called myGame 
+// and an EventFunction called event1, which returns void.
+
+event1(myGame); // Invoke the event.
+
+// Now, myGame contains the changes made by event1.
+```
+
+[`EventFunction`](#eventfunction) has two subtypes: [`TrackedEvent`](#trackedevent) and [`EventQueue`](#eventqueue). Both are described below.
+
+#### Declaring Events
+
+The more common type of event used in Regal games is [`TrackedEvent`](#trackedevent). A [`TrackedEvent`](#trackedevent) is simply an event that is tracked by the [`GameInstance`](#gameinstance-1).
+
+In order for Regal to work properly, all modifications to game state should take place inside tracked events.
+
+To declare a [`TrackedEvent`](#trackedevent), use the [`on`](#on) function:
+
+```ts
+import { on } from "regal";
+
+const greet = on("GREET", game => {
+    game.output.write("Hello, world!");
+});
+```
+
+The [`on`](#on) function takes an *eventName* and an *eventFunc* and constucts a [`TrackedEvent`](#trackedevent). The event declared above could be invoked like this:
+
+```ts
+// Assumes there's a GameInstance called myGame.
+
+greet(myGame); // Invoke the greet event.
+```
+
+`myGame`'s output would look like this:
+```
+GREET: Hello, world!
+```
+
+#### Causing Additional Events
+
+As stated earlier, an [`EventFunction`](#eventfunction) may return another [`EventFunction`](#eventfunction). This tells the event executor that another event should be executed on the game instance.
+
+Here's an example:
+
+```ts
+const morning = on("MORNING", game => {
+    game.output.write("Have a great morning!");
+});
+
+const afternoon = on("AFTERNOON", game => {
+    game.output.write("Have a great afternoon!");
+});
+
+const motivate = on("MOTIVATE", game => {
+    const date = game.state.date;
+    game.output.write(`It is ${date}.`);
+    return (date.getHours() < 12) ? morning : afternoon;
+});
+```
+
+When the `motivate` event is executed, it checks the value of `date` and returns the appropriate event to be executed next.
+
+```ts
+// Assume that myGame.state.date is "August 5, 2018 10:15:00".
+
+motivate(myGame);
+```
+
+`myGame`'s output would look like this:
+
+```
+MOTIVATE: It is Sun Aug 05 2018 10:15:00 GMT+0000 (UTC).
+MORNING: Have a great morning!
+```
+
+#### Causing Multiple Events
+
+It's possible to have one [`EventFunction`](#eventfunction) cause multiple events with the use of an [`EventQueue`](#eventqueue).
+
+An [`EventQueue`](#eventqueue) is a special type of  [`TrackedEvent`](#trackedevent) that contains a collection of events. These events are executed sequentially when the event queue is invoked.
+
+Queued events may be [**immediate**](#immediate-execution) or [**delayed**](#delayed-execution), depending on when they should be executed.
+
+#### Immediate Exeuction
+
+To have one event be executed immediately after another, use the [`TrackedEvent.then()`](#then) method. This is useful in situations where multiple events should be executed in direct sequence.
+
+To demonstrate, here's an example of a player crafting a sword. When the `makeSword` event is executed, the sword is immediately added to the player's inventory (`addItemToInventory`) and the player learns the blacksmithing skill (`learnSkill`).
+
+```ts
+const learnSkill = (name: string, skill: string) =>
+    on(`LEARN SKILL <${skill}>`, game => {
+        game.state[name].skills.push(skill);
+        game.output.write(`${name} learned ${skill}!`);
+    });
+
+const addItemToInventory = (name: string, item: string) =>
+    on(`ADD ITEM <${item}>`, game => {
+        game.state[name].inventory.push(item);
+        game.output.write(`Added ${item} to ${name}'s inventory.`);
+    });
+
+const makeSword = (name: string) =>
+    on(`MAKE SWORD`, game => {
+        game.output.write(`${name} made a sword!`);
+        return learnSkill(name, "Blacksmithing")
+            .then(addItemToInventory(name, "Sword"));
+    });
+```
+
+Execute the `makeSword` event on a [`GameInstance`](#gameinstance-1) called `myGame` like so:
+
+```ts
+makeSword("King Arthur")(myGame);
+```
+
+This would produce the following output for `myGame`:
+
+```
+MAKE SWORD: King Arthur made a sword!
+ADD ITEM <Sword>: Added Sword to King Arthur's inventory.
+LEARN SKILL <Blacksmithing>: King Arthur learned Blacksmithing!
+```
+
+And assuming that there existed an [agent](#agents) named `King Arthur` in the game's state, it would now have the following properties:
+```
+{
+    inventory: [ "Sword" ],
+    skills: [ "Blacksmithing" ]
+}
+```
+
+#### Delayed Execution
 
 ### Agents
 
@@ -1407,6 +1563,10 @@ Just like an [`EventFunction`](#eventfunction), a [`TrackedEvent`](#trackedevent
 #### Extends
 
 [`EventFunction`](#eventfunction)
+
+#### Subtypes
+
+* [`EventQueue`](#eventqueue)
 
 #### Generic Type Parameters
 
