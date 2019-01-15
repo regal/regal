@@ -470,13 +470,15 @@ It's possible to have one [`EventFunction`](#eventfunction) cause multiple event
 
 An [`EventQueue`](#eventqueue) is a special type of [`TrackedEvent`](#trackedevent) that contains a collection of events. These events are executed sequentially when the [`EventQueue`](#eventqueue) is invoked.
 
-Queued events may be [**immediate**](#immediate-execution) or [**delayed**](#delayed-execution), depending on when they should be executed.
+Queued events may be [**immediate**](#immediate-execution) or [**delayed**](#delayed-execution), depending on when you want them to be executed.
 
 #### Immediate Execution
 
 To have one event be executed immediately after another, use the [`TrackedEvent.then()`](#then) method. This is useful in situations where multiple events should be executed in direct sequence.
 
 To demonstrate, here's an example of a player crafting a sword. When the `makeSword` event is executed, the sword is immediately added to the player's inventory (`addItemToInventory`) and the player learns the blacksmithing skill (`learnSkill`).
+
+*Note: This example is available [here](https://github.com/regal/demos/tree/master/snippets).*
 
 ```ts
 const learnSkill = (name: string, skill: string) =>
@@ -520,8 +522,6 @@ And assuming that there existed an [agent](#agents) named `King Arthur` in the g
     skills: [ "Blacksmithing" ]
 }
 ```
-
-*Note: This example is available [here](https://github.com/regal/demos/tree/master/snippets).*
 
 #### Delayed Execution
 
@@ -583,7 +583,7 @@ const q = enqueue(game.state.items.map(item => fall(item)));
 Finally, we return the event queue.
 
 ```ts
-        return queue;
+        return q;
     });
 ```
 
@@ -637,18 +637,19 @@ Remember, [`enqueue()`](#enqueue-1) is useful for situations where you have mult
 The event API is chainable, meaning that the queueing methods can be called multiple times to create more complex event chains.
 
 ```ts
-// Immediately exeuctes events 1-4
+// Immediately executes events 1-4
 event1.then(event2, event3, event4);
 event1.then(event2).then(event3).then(event4);
 event1.then(event2.then(event3, event4));
 event1.then(event2, event3.then(event4));
 
-// Immediately exeuctes event1, delays 2-4.
+// Immediately executes event1, delays 2-4.
 event1.then(enqueue(event2, event3, event4));
 event1.thenq(event2, event3, event4); // TrackedEvent.thenq is shorthand for TrackedEvent.then(enqueue(...))
 
-// Immediately exeuctes events 1-2, delays 3-4.
+// Immediately executes events 1-2, delays 3-4.
 event1.then(event2).enqueue(event3, event4);
+event1.then(event2, enqueue(event3, event4));
 event1.then(event2).enqueue(event3).enqueue(event4);
 
 // Delays events 1-4.
@@ -661,11 +662,11 @@ If you prefer, you can use the shorthand [`nq`](#nq-1) instead of writing [`enqu
 ```ts
 import { nq } from "regal";
 
-const queue = nq([event1, event2]);
-queue.nq(event3);
+let q = nq(event1, event2);
+q = q.nq(event3);
 ```
 
-When creating event chains, keep in mind that all immediate events must be added to the queue before delayed events.
+When creating event chains, keep in mind that all immediate events must be added to the queue **before** delayed events.
 
 ```ts
 event1.then(nq(event2, event3), event4); // ERROR
