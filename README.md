@@ -371,13 +371,13 @@ Each of these interfaces is described in more detail below.
 
 A game where everything stays the same isn't much of a game. Therefore, Regal games are powered by **events**.
 
-An *event* can be thought of as any change that occurs within a Regal game. Any time the game's state changes, it happens inside of an event.
+An *event* can be thought of as anything that happens when someone plays a Regal game. Any time the game's state changes, it happens inside of an event.
 
 #### Event Functions
 
 Events in the Regal Game Library share a common type: [`EventFunction`](#eventfunction).
 
-An [`EventFunction`](#eventfunction) takes a [`GameInstance`](#gameinstance-1) as its only argument, modifies it, and may return the next [`EventFunction`](#eventfunction) to be executed.
+An [`EventFunction`](#eventfunction) takes a [`GameInstance`](#gameinstance-1) as its only argument, modifies it, and may return the next [`EventFunction`](#eventfunction) to be executed, if one exists.
 
 Here is a simplified declaration of the [`EventFunction`](#eventfunction) type:
 
@@ -400,9 +400,9 @@ event1(myGame); // Invoke the event.
 
 #### Declaring Events
 
-The more common type of event used in Regal games is [`TrackedEvent`](#trackedevent). A [`TrackedEvent`](#trackedevent) is simply an event that is tracked by the [`GameInstance`](#gameinstance-1).
+The most common type of event used in Regal games is the [`TrackedEvent`](#trackedevent). A [`TrackedEvent`](#trackedevent) is simply an [`EventFunction`](#eventfunction) that is tracked by the [`GameInstance`](#gameinstance-1).
 
-In order for Regal to work properly, all modifications to game state should take place inside tracked events.
+> In order for Regal to work properly, all modifications to game state should take place inside tracked events.
 
 To declare a [`TrackedEvent`](#trackedevent), use the [`on`](#on) function:
 
@@ -414,7 +414,7 @@ const greet = on("GREET", game => {
 });
 ```
 
-The [`on`](#on) function takes an *eventName* and an *eventFunc* and constucts a [`TrackedEvent`](#trackedevent). The event declared above could be invoked like this:
+The [`on`](#on) function takes an *event name* and an *event function* to construct a [`TrackedEvent`](#trackedevent). The event declared above could be invoked like this:
 
 ```ts
 // Assumes there's a GameInstance called myGame.
@@ -422,7 +422,8 @@ The [`on`](#on) function takes an *eventName* and an *eventFunc* and constucts a
 greet(myGame); // Invoke the greet event.
 ```
 
-`myGame`'s output would look like this:
+This would cause `myGame` to have the following output:
+
 ```
 GREET: Hello, world!
 ```
@@ -434,45 +435,44 @@ As stated earlier, an [`EventFunction`](#eventfunction) may return another [`Eve
 Here's an example:
 
 ```ts
-const morning = on("MORNING", game => {
-    game.output.write("Have a great morning!");
+const day = on("DAY", game => {
+    game.output.write("The sun shines brightly overhead.");
 });
 
-const afternoon = on("AFTERNOON", game => {
-    game.output.write("Have a great afternoon!");
+const night = on("NIGHT", game => {
+    game.output.write("The moon glows softly overhead.");
 });
 
-const motivate = on("MOTIVATE", game => {
-    const date = game.state.date;
-    game.output.write(`It is ${date}.`);
-    return (date.getHours() < 12) ? morning : afternoon;
+const outside = on("OUTSIDE", game => {
+    game.output.write("You go outside.");
+    return game.state.isDay ? day : night;
 });
 ```
 
-When the `motivate` event is executed, it checks the value of `date` and returns the appropriate event to be executed next.
+When the `outside` event is executed, it checks the value of `game.state.isDay` and returns the appropriate event to be executed next.
 
 ```ts
-// Assume that myGame.state.date is "August 5, 2018 10:15:00".
+// Assume that myGame.state.isDay is false.
 
-motivate(myGame);
+outside(myGame);
 ```
 
 `myGame`'s output would look like this:
 
 ```
-MOTIVATE: It is Sun Aug 05 2018 10:15:00 GMT+0000 (UTC).
-MORNING: Have a great morning!
+OUTSIDE: You go outside.
+NIGHT: The moon glows softly overhead.
 ```
 
 #### Causing Multiple Events
 
 It's possible to have one [`EventFunction`](#eventfunction) cause multiple events with the use of an [`EventQueue`](#eventqueue).
 
-An [`EventQueue`](#eventqueue) is a special type of  [`TrackedEvent`](#trackedevent) that contains a collection of events. These events are executed sequentially when the event queue is invoked.
+An [`EventQueue`](#eventqueue) is a special type of [`TrackedEvent`](#trackedevent) that contains a collection of events. These events are executed sequentially when the [`EventQueue`](#eventqueue) is invoked.
 
 Queued events may be [**immediate**](#immediate-execution) or [**delayed**](#delayed-execution), depending on when they should be executed.
 
-#### Immediate Exeuction
+#### Immediate Execution
 
 To have one event be executed immediately after another, use the [`TrackedEvent.then()`](#then) method. This is useful in situations where multiple events should be executed in direct sequence.
 
@@ -521,7 +521,158 @@ And assuming that there existed an [agent](#agents) named `King Arthur` in the g
 }
 ```
 
+*Note: This example is available [here](https://github.com/regal/demos/tree/master/snippets).*
+
 #### Delayed Execution
+
+Alternatively, an event may be scheduled to execute only after all of the immediate events are finished by using [`enqueue()`](#enqueue-1). This is useful in situations where you have multiple series of events, and you want each series to execute their events in the same "round."
+
+This is best illustrated with an example. Here's a situation where a player executes a command that drops a list of items from their inventory.
+
+*Note: This example is available [here](https://github.com/regal/demos/tree/master/snippets).*
+
+```ts
+import { on, enqueue } from "regal";
+
+const hitGround = (item: string) =>
+    on(`HIT GROUND <${item}>`, game => {
+        game.output.write(`${item} hits the ground. Thud!`);
+    });
+
+const fall = (item: string) =>
+    on(`FALL <${item}>`, game => {
+        game.output.write(`${item} falls.`);
+        return enqueue(hitGround(item));
+    });
+
+const drop = on("DROP ITEMS", game => {
+        let q = enqueue();
+        for (let item of game.state.items) {
+            q = q.enqueue(fall(item));
+        }
+        return q;
+    });
+```
+
+We'll walk through each line, starting from the `drop` function.
+
+```ts
+const drop = on("DROP ITEMS", game => {
+```
+
+The [`enqueue()`](#enqueue-1) function takes zero or more [`TrackedEvent`](#trackedevent)s as arguments, which it uses to build an [`EventQueue`](#eventqueue). Creating an empty queue has no effect; it simply provides us a reference to which we can add additional events.
+
+```ts
+let q = enqueue();
+```
+
+In addition to being a standalone function, [`enqueue()`](#enqueue) is also a method of [`EventQueue`](#eventqueue). Calling [`EventQueue.enqueue()`](#enqueue) creates a new queue with all previous events plus the new event(s).
+
+```ts
+for (let item of game.state.items) {
+    q = q.enqueue(fall(item));
+}
+```
+
+The previous two code blocks could be simplified by using JavaScript's `map` like so:
+
+```ts
+const q = enqueue(game.state.items.map(item => fall(item)));
+```
+
+Finally, we return the event queue.
+
+```ts
+        return queue;
+    });
+```
+
+The `fall` event is simpler. It outputs a message and adds a `hitGround` event to the end of the queue for a single item.
+
+```ts
+const fall = (item: string) =>
+    on(`FALL <${item}>`, game => {
+        game.output.write(`${item} falls.`);
+        return enqueue(hitGround(item));
+    });
+```
+
+The `hitGround` event outputs a final message.
+
+```ts
+const hitGround = (item: string) =>
+    on(`HIT GROUND <${item}>`, game => {
+        game.output.write(`${item} hits the ground. Thud!`);
+    });
+```
+
+Deciding that `game.state.items` contains `["Hat", "Duck", "Spoon"]`, executing the `drop` event would produce an output like this:
+
+```
+FALL <Hat>: Hat falls.
+FALL <Duck>: Duck falls.
+FALL <Spoon>: Spoon falls.
+HIT GROUND <Hat>: Hat hits the ground. Thud!
+HIT GROUND <Duck>: Duck hits the ground. Thud!
+HIT GROUND <Spoon>: Spoon hits the ground. Thud!
+```
+
+If you're still confused about the difference between [`TrackedEvent.then()`](#then) and [`EventQueue.enqueue()`](#enqueue), here's what the output would have been if [`TrackedEvent.then()`](#then) was used instead:
+
+```
+FALL <Hat>: Hat falls.
+HIT GROUND <Hat>: Hat hits the ground. Thud!
+FALL <Duck>: Duck falls.
+HIT GROUND <Duck>: Duck hits the ground. Thud!
+FALL <Spoon>: Spoon falls.
+HIT GROUND <Spoon>: Spoon hits the ground. Thud!
+```
+
+Remember, [`enqueue()`](#enqueue-1) is useful for situations where you have multiple series of events, like our [`fall` -> `hitGround`] series, and you want each series to execute their alike events in the same "round." We didn't want `hat` to finish hitting the ground before `duck` fell, we wanted all of the items to fall *together* and hit the ground *together*.
+
+> [`TrackedEvent.then()`](#then) is for immediate exeuction and [`enqueue()`](#enqueue-1) is for delayed exeuction.
+
+#### Event Chains
+
+The event API is chainable, meaning that the queueing methods can be called multiple times to create more complex event chains.
+
+```ts
+// Immediately exeuctes events 1-4
+event1.then(event2, event3, event4);
+event1.then(event2).then(event3).then(event4);
+event1.then(event2.then(event3, event4));
+event1.then(event2, event3.then(event4));
+
+// Immediately exeuctes event1, delays 2-4.
+event1.then(enqueue(event2, event3, event4));
+event1.thenq(event2, event3, event4); // TrackedEvent.thenq is shorthand for TrackedEvent.then(enqueue(...))
+
+// Immediately exeuctes events 1-2, delays 3-4.
+event1.then(event2).enqueue(event3, event4);
+event1.then(event2).enqueue(event3).enqueue(event4);
+
+// Delays events 1-4.
+enqueue(event1, event2, event3, event4);
+enqueue(event1.then(event2, event3, event4));
+```
+
+If you prefer, you can use the shorthand [`nq`](#nq-1) instead of writing [`enqueue()`](#enqueue-1). We're all about efficiency. :+1:
+
+```ts
+import { nq } from "regal";
+
+const queue = nq([event1, event2]);
+queue.nq(event3);
+```
+
+When creating event chains, keep in mind that all immediate events must be added to the queue before delayed events.
+
+```ts
+event1.then(nq(event2, event3), event4); // ERROR
+event1.then(event4, nq(event2, event3)); // Okay
+```
+
+For more information, consult the [API Reference](#api-reference).
 
 ### Agents
 
