@@ -677,6 +677,35 @@ For more information, consult the [API Reference](#api-reference).
 
 ### Agents
 
+Where [events](#events) describe any change that occurs within a Regal game, **agents** are the objects on which these changes take place.
+
+Every object that contains game state (like players, items, and score) is considered an agent.
+
+#### Defining Agents
+
+The Regal Game Library offers the [`Agent`](#agent) class, which you can extend to create custom agents for your game.
+
+Here is an example:
+
+```ts
+class Bucket extends Agent {
+    constructor(
+        public size: number,
+        public contents: string,
+        public isFull: boolean
+    ) {
+        super();
+    }
+}
+```
+
+Now, a `Bucket` can be instantiated and used just like any other class.
+
+```ts
+const bucket = new Bucket(5, "water", true);
+bucket.size === 5; // True
+```
+
 ### Randomness
 
 ### Output
