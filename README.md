@@ -367,6 +367,31 @@ Property | Type | Controls
 
 Each of these interfaces is described in more detail below.
 
+#### Using `StateType`
+
+`GameInstance.state` is of of type `any`, meaning that its properties are totally customizable. Optionally, the state type may be set using a type parameter called `StateType`.
+
+The `StateType` parameter allows you to type-check the structure of `GameInstance.state` against a custom interface anywhere [`GameInstance`](#gameinstance-1) is used.
+
+```ts
+interface MyState {
+    foo: boolean;
+}
+
+(myGame: GameInstance<MyState>) => {
+    const a = myGame.state.foo; // Compiles
+    const b = myGame.state.bar; // Won't compile!
+};
+```
+
+Keep in mind that `StateType` is strictly a compile-time check, and no steps are taken to ensure that the `state` object actually matches the structure of `StateType` at runtime.
+
+```ts
+(myGame: GameInstance<string>) => myGame.state.substring(2); // Compiles fine, but will throw an error at runtime because state is an object.
+```
+
+`StateType` is especially useful for [parameterizing events](#parameterizing-events).
+
 ### Events
 
 A game where everything stays the same isn't much of a game. Therefore, Regal games are powered by **events**.
@@ -675,6 +700,113 @@ event1.then(event4, nq(event2, event3)); // Okay
 
 For more information, consult the [API Reference](#api-reference).
 
+#### When to Use `noop`
+
+[`noop`](#noop) is a special [`TrackedEvent`](#trackedevent) that stands for *no operation*. When the event executor runs into [`noop`](#noop), it ignores it.
+
+```ts
+import { on, noop } from "regal";
+
+const end = on("END", game => {
+    game.output.write("The end!");
+    return noop; // Nothing will happen
+});
+```
+
+[`EventFunction`](#eventfunction) doesn't have a required return, so most of the time you can just return nothing instead of returning [`noop`](#noop).
+
+```ts
+const end = on("END", game => {
+    game.output.write("The end!");
+});
+```
+
+However, [`noop`](#noop) might be necessary in cases where you want to use a ternary to make things simpler:
+
+```ts
+on("EVENT", game => 
+    // Return another event to be executed if some condition holds, otherwise stop.
+    game.state.someCondition ? otherEvent | noop; 
+);
+```
+
+If you have a TypeScript project with [`noImplicitReturns`](https://www.typescriptlang.org/docs/handbook/compiler-options.html) enabled, [`noop`](#noop) is useful for making sure all code paths return a value.
+
+```ts
+// Error: [ts] Not all code paths return a value.
+on("EVENT", game => {
+    if (game.state.someCondition) {
+        return otherEvent;
+    }
+});
+
+// Will work as intended
+on("EVENT", game => {
+    if (game.state.someCondition) {
+        return otherEvent;
+    }
+    return noop;
+});
+```
+
+#### Parameterizing Events
+
+The [`StateType`](#using-statetype) type parameter of [`GameInstance`](#gameinstance-1) can be used to declare the type of `GameInstance.state` inside the scope of individual events.
+
+[`EventFunction`](#eventfunction), [`TrackedEvent`](#trackedevent), and [`EventQueue`](#eventqueue) all allow an optional type parameter that, if used, will type-check `GameInstance.state` inside the body of the event.
+
+```ts
+import { on } from "regal";
+
+interface MyState {
+    num: number;
+    names: string[];
+}
+
+const init = on<MyState>("INIT", game => {
+    game.state.num = 0; // Type checked!
+    game.state.names = ["spot", "buddy", "lucky"]; // Type checked!
+});
+
+const pick = on<MyState>("PICK", game => {
+    const choice = game.state.names[game.state.num]; // Type checked!
+    game.output.write(`You picked ${choice}!`);
+    game.state.num++; // Type checked!
+});
+```
+
+Including the type parameter for every event gets unwieldy for games with many events, so the type [`GameEventBuilder`](#gameeventbuilder) can be used to alias a customized [`on`](#on).
+
+```ts
+import { on as _on, GameEventBuilder } from "regal";
+
+interface MyState {
+    num: number;
+    names: string[];
+}
+
+const on: GameEventBuilder<MyState> = _on;
+
+const init = on("INIT", game => {
+    game.state.num = 0; // Type checked!
+    game.state.names = ["spot", "buddy", "lucky"]; // Type checked!
+});
+
+const pick = on("PICK", game => {
+    const choice = game.state.names[game.state.num]; // Type checked!
+    game.output.write(`You picked ${choice}!`);
+    game.state.num++; // Type checked!
+});
+```
+
+Using the redefined [`on`](#on) from this example, the following event would not compile:
+
+```ts
+on("BAD", game => {
+    game.state.nams = []; // Error: [ts] Property 'nams' does not exist on type 'MyState'. Did you mean 'names'?
+});
+```
+
 ### Agents
 
 Where [events](#events) describe any change that occurs within a Regal game, **agents** are the objects on which these changes take place.
@@ -704,6 +836,32 @@ Now, a `Bucket` can be instantiated and used just like any other class.
 ```ts
 const bucket = new Bucket(5, "water", true);
 bucket.size === 5; // True
+```
+
+Furthermore, you can use them in events.
+
+```ts
+const init = on("INIT", game => {
+    game.state.bucket = new Bucket(5, "famous chili", true);
+});
+
+const pour = on("POUR", game => {
+    const bucket: Bucket = game.state.bucket;
+
+    if (bucket.isFull) {
+        bucket.isFull = false;
+        game.output.write(`You pour out the ${bucket.contents}.`);
+    } else {
+        game.output.write("The bucket is already empty!");
+    }
+});
+```
+
+Executing `init.then(pour, pour)` on a game instance would give the following output:
+
+```
+POUR: You pour out the famous chili.
+POUR: The bucket is already empty!
 ```
 
 ### Randomness
