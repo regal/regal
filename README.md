@@ -807,6 +807,8 @@ on("BAD", game => {
 });
 ```
 
+*Note: This example is available [here](https://github.com/regal/demos/tree/master/snippets).*
+
 ### Agents
 
 Where [events](#events) describe any change that occurs within a Regal game, **agents** are the objects on which these changes take place.
