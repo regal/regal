@@ -503,8 +503,6 @@ To have one event be executed immediately after another, use the [`TrackedEvent.
 
 To demonstrate, here's an example of a player crafting a sword. When the `makeSword` event is executed, the sword is immediately added to the player's inventory (`addItemToInventory`) and the player learns the blacksmithing skill (`learnSkill`).
 
-*Note: This example is available [here](https://github.com/regal/demos/tree/master/snippets).*
-
 ```ts
 const learnSkill = (name: string, skill: string) =>
     on(`LEARN SKILL <${skill}>`, game => {
@@ -525,6 +523,8 @@ const makeSword = (name: string) =>
             .then(addItemToInventory(name, "Sword"));
     });
 ```
+
+*Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/src/immediate-execution.ts).*
 
 Execute the `makeSword` event on a [`GameInstance`](#gameinstance-1) called `myGame` like so:
 
@@ -554,8 +554,6 @@ Alternatively, an event may be scheduled to execute only after all of the immedi
 
 This is best illustrated with an example. Here's a situation where a player executes a command that drops a list of items from their inventory.
 
-*Note: This example is available [here](https://github.com/regal/demos/tree/master/snippets).*
-
 ```ts
 import { on, enqueue } from "regal";
 
@@ -578,6 +576,8 @@ const drop = on("DROP ITEMS", game => {
         return q;
     });
 ```
+
+*Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/src/delayed-exeuction.ts).*
 
 We'll walk through each line, starting from the `drop` function.
 
@@ -799,6 +799,8 @@ const pick = on("PICK", game => {
 });
 ```
 
+*Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/src/statetype-and-arrays.ts).*
+
 Using the redefined [`on`](#on) from this example, the following event would not compile:
 
 ```ts
@@ -806,8 +808,6 @@ on("BAD", game => {
     game.state.nams = []; // Error: [ts] Property 'nams' does not exist on type 'MyState'. Did you mean 'names'?
 });
 ```
-
-*Note: This example is available [here](https://github.com/regal/demos/tree/master/snippets).*
 
 ### Agents
 
@@ -865,6 +865,37 @@ Executing `init.then(pour, pour)` on a game instance would give the following ou
 POUR: You pour out the famous chili.
 POUR: The bucket is already empty!
 ```
+
+#### Active and Inactive Agents
+
+Agents have a single caveat that may seem strange at first, but is important to understand:
+
+> Before an agent's properties can be accessed in a game cycle, the **agent must first be activated**. 
+
+To *activate* an agent simply means to register it with the [`GameInstance`](#gameinstance-1). Much like how all changes to game state need to take place inside tracked *events*, the *agents* that contain this state need to be tracked as well.
+
+Activating an agent allows it to be tracked by the [`GameInstance`](#gameinstance-1), and can happen either [_**implicitly**_](#activating-agents-implicitly) or [_**explicitly**_](#activating-agents-explicitly). 
+
+If you try to modify an inactive agent within a game cycle, a [`RegalError`](#regalerror) will be thrown. For example:
+
+```ts
+const illegalEvent = on("EVENT", game => {
+    const waterBucket = new Bucket(1, "water", true);
+    waterBucket.isFull = false; // Uh-oh!
+});
+```
+
+Executing `illegalEvent` will throw the following error:
+
+```
+RegalError: The properties of an inactive agent cannot be set within a game cycle.
+```
+
+*Note: this example is available [here](https://github.com/regal/demos/blob/master/snippets/src/illegal-agent-use.ts).*
+
+#### Activating Agents Implicitly
+
+#### Activating Agents Explicitly
 
 ### Randomness
 
