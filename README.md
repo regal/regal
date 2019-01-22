@@ -3,6 +3,7 @@
 [![npm version](https://badge.fury.io/js/regal.svg)](https://badge.fury.io/js/regal)
 [![CircleCI](https://circleci.com/gh/regal/regal.svg?style=svg)](https://circleci.com/gh/regal/regal)
 [![Coverage Status](https://coveralls.io/repos/github/regal/regal/badge.svg?branch=master)](https://coveralls.io/github/regal/regal?branch=master)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
 ## Introduction
 
@@ -822,6 +823,8 @@ The Regal Game Library offers the [`Agent`](#agent) class, which you can extend 
 Here is an example:
 
 ```ts
+import { Agent } from "regal";
+
 class Bucket extends Agent {
     constructor(
         public size: number,
