@@ -5,7 +5,7 @@
  * and can be implemented by the game developer. This allows the
  * developer to modify the behavior of the API.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 

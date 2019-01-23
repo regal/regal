@@ -1,7 +1,7 @@
 /*
  * Contains the constructor for inactive agent proxies.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 

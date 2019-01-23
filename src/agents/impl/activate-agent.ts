@@ -2,7 +2,7 @@
  * Contains the function implementation for activating a single agent
  * within the current game context.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 

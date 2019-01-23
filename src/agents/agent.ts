@@ -5,7 +5,7 @@
  * They are managed by the `GameInstance`'s `InstanceAgentsInternal` object, which
  * tracks all modifications made to the agent data.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 

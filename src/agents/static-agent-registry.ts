@@ -4,7 +4,7 @@
  * by all `GameInstances` and therefore is not stored in the instance
  * itself, but rather the `StaticAgentRegistry`.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 

@@ -9,7 +9,7 @@ import pkg from "./package.json";
 const banner = `/**
  * Source code for Regal (a.k.a. the Regal Game Library), part of the Regal Framework.
  * 
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */`
 

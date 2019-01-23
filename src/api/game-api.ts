@@ -1,7 +1,7 @@
 /*
  * Contains the public-facing API for interaction with a Regal game.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 

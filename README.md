@@ -2219,4 +2219,4 @@ If you would like to get involved, please see the project's [about](https://gith
 
 ## Project Roadmap
 
-*Copyright 2018, Joe Cowman*
+*Copyright (c) Joe Cowman*

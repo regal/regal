@@ -1,7 +1,7 @@
 /*
  * Contains functions for constructing and modifying game events.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
