@@ -782,7 +782,7 @@ interface MyState {
     names: string[];
 }
 
-const on: GameEventBuilder<MyState> = _on;
+const on: GameEventBuilder<MyState> = _on; // Declare `on` as our parameterized version
 
 const init = on("INIT", game => {
     game.state.num = 0; // Type checked!
@@ -881,7 +881,7 @@ If you try to modify an inactive agent within a game cycle, a [`RegalError`](#re
 
 ```ts
 const illegalEvent = on("EVENT", game => {
-    const waterBucket = new Bucket(1, "water", true);
+    const waterBucket = new Bucket(1, "water", true); // Create an inactive agent
     waterBucket.isFull = false; // Uh-oh!
 });
 ```
@@ -896,7 +896,215 @@ RegalError: The properties of an inactive agent cannot be set within a game cycl
 
 #### Activating Agents Implicitly
 
+Most of the time, agents will activate themselves without you having to do any extra work. In fact, you've already seen an example of this with the `Bucket` agent [above](#defining-agents).
+
+One of the ways that agents may be activated *implicitly* is by setting them as a property of an already-active agent.
+
+```ts
+const init = on("INIT", game => {
+    game.state.bucket = new Bucket(5, "famous chili", true);
+});
+```
+
+When our new `Bucket` agent was assigned to the game instance's `state.bucket` property, it was activated implicitly. This is because **`GameInstance.state` is actually an active agent**.
+
+> Whenever agents are set as properties of `GameInstance.state`, they are activated implicitly.
+
+There are five ways to activate agents implicitly. The first way, which was demonstrated above, is to set the agent as a property of an active agent.
+
+```ts
+class Parent extends Agent {
+    constructor(
+        public num: number, 
+        public child?: Agent // Optional child property
+    ) {
+        super();
+    }
+}
+
+game.state.myAgent = new Parent(1); // #1 is activated by GameInstance.state
+game.state.myAgent.child = new Parent(2); // #2 is activated by #1
+```
+
+Second, all agents that are properties of an inactive agent are activated when the parent agent is activated.
+
+```ts
+const p = new Parent(1, new Parent(2)); // #1 and #2 are both inactive
+game.state.myAgent = p; // #1 and #2 are activated by GameInstance.state
+```
+
+Third, all agents in arrays that are properties of an inactive agent are activated when the parent agent is activated.
+
+```ts
+class MultiParent extends Agent {
+    constructor(
+        public num: number,
+        public children: Agent[] = [] // Default to an empty array
+    ) {
+        super();
+    }
+}
+
+const mp = new MultiParent(1, [ new Parent(2), new Parent(3) ]); // #1, #2, and #3 are inactive
+game.state.myAgent = mp; // #1, #2, and #3 are activated by GameInstance.state
+```
+
+Fourth, all agents in an array are activated when it is set as the property of an already-active agent.
+
+```ts
+game.state.myAgent = new MultiParent(1); // #1 is activated by GameInstance.state
+game.state.myAgent.children = [ new Parent(2), new Parent(3) ]; // #2 and #3 are activated by #1
+```
+
+Finally, an agent is activated when it is added to an array that's a property of an already-active agent.
+
+```ts
+game.state.myAgent = new MultiParent(1, [ new Parent(2) ]); // #1 and #2 are activated by GameInstance.state
+game.state.myAgent.children.push(new Parent(3)); // #3 is activated by #1
+```
+
+*Note: this example is available [here](https://github.com/regal/demos/blob/master/snippets/src/implicit-activation.ts).*
+
 #### Activating Agents Explicitly
+
+Agents can be activated *explicitly* with [`GameInstance.using()`](#using).
+
+[`GameInstance.using()`](#using) activates one or more agents and returns references to them. The method takes a single argument, which can be one of a few types.
+
+First, a single agent may be activated.
+
+```ts
+class CustomAgent extends Agent {
+    constructor(public num: number) {
+        super();
+    }
+}
+
+const agent = game.using(new CustomAgent(1)); // #1 is activated
+```
+
+Second, an array of agents may be activated:
+
+```ts
+const agents = game.using([ new CustomAgent(1), new CustomAgent(2) ]); // #1 and #2 are activated
+```
+
+Finally, the argument can be an object where every property is an agent to be activated:
+
+```ts
+const { agent1, agent2 } = game.using({
+    agent1: new CustomAgent(1),
+    agent2: new CustomAgent(2)
+}); // #1 and #2 are activated
+```
+
+*Note: this example is available [here](https://github.com/regal/demos/blob/master/snippets/src/explicit-activation.ts).*
+
+Explicit activation is useful for situations where agents aren't being activated implicitly. If you can't figure out whether an agent is getting activated implicitly or not, you may want to explicitly use [`GameInstance.using()`](#using) just to be safe. Activating an agent multiple times has no effect.
+
+#### Modifying Inactive Agents
+
+Inactive agents aren't truly immutable. In fact, any property of an inactive agent may be *set once* before the agent is activated. Otherwise, setting properties within constructors wouldn't be possible.
+
+Technically, this means doing something like this is valid (although not recommended):
+
+```ts
+const a = new CustomAgent(1);
+(a as any).someOtherProperty = "foo";
+game.state.myAgent = a;
+```
+
+It's important to note that the properties of inactive agents are only inaccessible within the context of a game cycle (i.e. inside a [`TrackedEvent`](#trackedevent)). When agents are declared outside of events, they are called [**static agents**](#static-agents) and have special characteristics. These are explained in the next section.
+
+#### Static Agents
+
+All Regal [**game data**](#game-data) is considered either *static* or *instance-specific*. The agents we've created up to this point have all been instance-specific, meaning that they were defined inside events and their data was stored in the instance state.
+
+Sometimes, you may have an agent with a lot of data that is rarely, or never, modified.
+
+Here is a standard `Room` agent that you might use in an adventure game:
+
+```ts
+class Room extends Agent {
+    public north: Room;
+    public east: Room;
+    public south: Room;
+    public west: Room;
+
+    constructor(
+        public name: string, 
+        public description: string, 
+        public contents: Item[]
+    ) {
+        super();
+    }
+}
+
+class Item extends Agent {
+    constructor(public name: string) {
+        super();
+    }
+}
+```
+
+Instantiating a room might look like this:
+
+```ts
+const attic = new Room(
+    "Attic",
+    "A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.",
+    [ new Item("dead rat"), new Item("book") ]
+);
+```
+
+Because the connection between rooms is two-way, our agents have circular references to each other. Building these connections requires us to modify the agents after they are instantiated:
+
+```ts
+const northAttic = new Room("North Attic", /* other args */);
+attic.north = northAttic;
+northAttic.south = attic;
+
+const stairsDown = new Room("Stairs Down", /* other args */);
+attic.east = stairsDown;
+stairsDown.west = attic;
+
+const southRoof = new Room("South Roof", /* other args */);
+attic.south = southRoof;
+southRoof.north = attic;
+
+const westRoof = new Room("West Roof", /* other args */);
+attic.west = westRoof;
+westRoof.east = attic;
+```
+
+Once we have our network of rooms created, we want to be able to travel between them from an event.
+
+```ts
+const enter = (_room: Room) => 
+    on(`ENTER <${room.name}>`, game => {
+        const room = game.using(_room);
+
+        game.output.write(
+            room.name,
+            room.description,
+            `${room.north.name} is north, ${room.east.name} is east, ${room.south.name} is south, and ${room.west.name} is west.`
+        );
+
+        for (let o of room.contents) {
+            game.output.write(`A ${o.name} is here.`);
+        }
+    });
+```
+
+Executing the event `enter(attic)` would produce the following output:
+
+```
+ENTER <Attic>: Attic
+ENTER <Attic>: A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.
+ENTER <Attic>: North Attic is north, Stairs Down is east, South Roof is south, and West Roof is west.
+ENTER <Attic>: A dead rat is here.
+ENTER <Attic>: A book is here.
+```
 
 ### Randomness
 
