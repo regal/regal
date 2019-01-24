@@ -244,8 +244,12 @@ const readline = require("readline").createInterface({
 // Helper function to print output lines
 const printLines = gameResponse => {
     console.log("");
-    for (const line of gameResponse.output.log) {
-        console.log(line.data);
+    if (gameResponse.output.wasSuccessful) {
+        for (const line of gameResponse.output.log) {
+            console.log(line.data);
+        }
+    } else {
+        console.log(gameResponse);
     }
 };
 
@@ -261,7 +265,9 @@ GAME_INSTANCE = start.instance;
 readline.on("line", command => {
     const resp = game.postPlayerCommand(GAME_INSTANCE, command);
     printLines(resp);
-    GAME_INSTANCE = resp.instance;
+    if (resp.output.wasSuccessful) {
+        GAME_INSTANCE = resp.instance;
+    }
 });
 ```
 
@@ -507,13 +513,11 @@ To demonstrate, here's an example of a player crafting a sword. When the `makeSw
 ```ts
 const learnSkill = (name: string, skill: string) =>
     on(`LEARN SKILL <${skill}>`, game => {
-        game.state[name].skills.push(skill);
         game.output.write(`${name} learned ${skill}!`);
     });
 
 const addItemToInventory = (name: string, item: string) =>
     on(`ADD ITEM <${item}>`, game => {
-        game.state[name].inventory.push(item);
         game.output.write(`Added ${item} to ${name}'s inventory.`);
     });
 
@@ -539,14 +543,6 @@ This would produce the following output for `myGame`:
 MAKE SWORD: King Arthur made a sword!
 ADD ITEM <Sword>: Added Sword to King Arthur's inventory.
 LEARN SKILL <Blacksmithing>: King Arthur learned Blacksmithing!
-```
-
-And assuming that there existed an [agent](#agents) named `King Arthur` in the game's state, it would now have the following properties:
-```
-{
-    inventory: [ "Sword" ],
-    skills: [ "Blacksmithing" ]
-}
 ```
 
 #### Delayed Execution
@@ -868,6 +864,8 @@ Executing `init.then(pour, pour)` on a game instance would give the following ou
 POUR: You pour out the famous chili.
 POUR: The bucket is already empty!
 ```
+
+*Note: this example is available [here](https://github.com/regal/demos/blob/master/snippets/src/defining-agents.ts).*
 
 #### Active and Inactive Agents
 
