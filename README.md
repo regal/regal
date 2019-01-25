@@ -1018,9 +1018,88 @@ It's important to note that the properties of inactive agents are only inaccessi
 
 #### Static Agents
 
-All Regal [**game data**](#game-data) is considered either *static* or *instance-specific*. The agents we've created up to this point have all been instance-specific, meaning that they were defined inside events and their data was stored in the instance state.
+All Regal [**game data**](#game-data) is considered either *static* or *instance-specific*. The agents we've created up to this point have all been instance-specific, meaning that they are defined inside events and their data is stored in the instance state.
 
-Sometimes, you may have an agent with a lot of data that is rarely, or never, modified.
+Although it's perfectly valid to store every agent in the instance state, this usually isn't necessary. Most games have a lot of data that is rarely, or never, modified. Rather than storing this data in every [`GameInstance`](#game-instance-1), it's more efficient to store these agents in the game's *static* context. Remember, static data is defined *outside* the game cycle and is separate from the instance state. 
+
+> **Static agents** are agents defined outside of the game cycle. 
+
+Once activated, static agents can be used inside events just like non-static agents.
+
+```ts
+// Declare a new agent class called Book
+class Book extends Agent {
+    constructor(
+        public title: string,
+        public author: string,
+        public content: string
+    ) {
+        super();
+    }
+}
+
+// Declare a static Book agent
+const NOVEL = new Book(
+    "Frankenstein",
+    "Mary Shelley",
+    /* really long string */ 
+);
+
+const read = on("READ", game => {
+    const novel = game.using(NOVEL); // Activate the static agent
+    game.output.write(`You open ${novel.title}, by ${novel.author}.`);
+
+    const excerpt = novel.content.split(" ").slice(0, 4).join(" "); // Grab the first 4 words
+    game.output.write(`It begins, "${excerpt}..."`);
+});
+```
+
+Executing `read` on a [`GameInstance`](#game-instance-1) would produce the following output:
+
+```
+READ: You open Frankenstein, by Mary Shelley.
+READ: It begins, "To Mrs. Saville, England..."
+```
+
+Unlike non-static agents, static agents may have their properties read or modified, but only outside of the game cycle. For example, this would be okay:
+
+```ts
+const NOVEL = new Book(
+    "Frankenstein",
+    "Mary Shelley",
+    /* really long string */ 
+);
+
+NOVEL.title += ", or The Modern Prometheus"; // No error!
+```
+
+In order to use a static agent's properties *within* a game cycle, however, it must be activated. 
+
+This event modifies several properties of the `NOVEL` static agent:
+
+```ts
+const revise = (playerName: string, forward: string) =>
+    on("REVISE", game => {
+        const novel = game.using(NOVEL);
+        novel.content = forward + " " + novel.content;
+        novel.author += ` (with a forward by ${playerName})`
+    });
+```
+
+Executing the queue `revise("Lars", "Pancakes!").then(read)` on a [`GameInstance`](#game-instance-1) would produce the following output:
+
+```
+READ: You open Frankenstein, by Mary Shelley (with a forward by Lars).
+READ: It begins, "Pancakes! To Mrs. Saville,..."
+```
+
+Both events, `read` and `revise`, activated `NOVEL` independently of each other, yet the changes made in `revise` were still there in `read`. This is because the *changes* made to static agents are stored in the instance state. The static agent's properties that weren't changed (in this case, just the author) don't need to be stored in the state.
+
+> Static agents save space by storing **only the changes** made to their properties by a specific game instance in that instance's state. 
+
+If two different game instances reference the same static agent, their changes will not affect each other. This is because changes made to a static agent don't actually modify the static agent at all; they are simply stored in the instance state.
+
+#### Putting It All Together: Agents in Practice
 
 Here is a standard `Room` agent that you might use in an adventure game:
 
