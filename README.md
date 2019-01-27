@@ -305,7 +305,7 @@ The **Regal Game Library** is a JavaScript package that is required by games to 
 
 Regal games have the following qualities:
 * They are **text-based**. Simply put, gameplay consists of the player putting text in and the game sending text back in response.
-* They are **deterministic**. When a Regal game is given some input, it should return the same output every time (see [*randomness*](#randomness)).
+* They are **deterministic**. When a Regal game is given some input, it should return the same output every time. (*To see how this applies to random values, read [here](#deterministic-randomness).*)
 
 These two qualities allow Regal games to be thought of as **pure functions**. A *pure function* is a function that is deterministic and has no side-effects. In other words, a Regal game is totally self-contained and predictable.
 
@@ -1056,7 +1056,7 @@ const read = on("READ", game => {
 
 *Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/src/static-agents.ts).*
 
-Executing `read` on a [`GameInstance`](#game-instance-1) would produce the following output:
+Executing `read` on a [`GameInstance`](#gameinstance-1) would produce the following output:
 
 ```
 READ: You open Frankenstein, by Mary Shelley.
@@ -1102,6 +1102,124 @@ Both events, `read` and `revise`, activated `NOVEL` independently of each other,
 If two different game instances reference the same static agent, their changes will not affect each other. This is because changes made to a static agent don't actually modify the static agent at all; they are simply stored in the instance state.
 
 ### Randomness
+
+Randomness is an essential part of many games, so the Regal Game Library provides a convenient way to generate random values through the [`GameInstance`](#gameinstance-1).
+
+#### Generating Random Values
+
+`GameInstance.random` contains an object of type [`InstanceRandom`](#instancerandom), which is an interface for generating random values.
+
+[`InstanceRandom`](#instancerandom) has methods for generating random integers, decimals, strings, and booleans.
+
+```ts
+const randos = on("RANDOS", game => {
+    const bool = game.random.boolean(); // Either true or false
+    game.output.write(`Boolean -> ${bool}`);
+
+    const int = game.random.int(1, 10); // Integer between 1 and 10, inclusive
+    game.output.write(`Int -> ${int}`);
+
+    const dec = game.random.decimal(); // Random decimal betweeen 0 and 1
+    game.output.write(`Decimal -> ${dec}`); 
+
+    const str = game.random.string(10); // Random string of length 10
+    game.output.write(`String -> ${str}`);
+});
+```
+
+*Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/src/random.ts).*
+
+Executing `randos` on a [`GameInstance`](#gameinstance-1) would produce values like the following:
+
+```
+RANDOS: Boolean -> true
+RANDOS: Int -> 5
+RANDOS: Decimal -> 0.38769409744713784
+RANDOS: String -> qj$4d-28DX
+```
+
+[`InstanceRandom.string()`](#string) has an optional `charset` property that can be used to specify the characters that are chosen from when the string is generated.
+
+For example, if `charset` is `"aeiou"`, then the random string will only contain vowels.
+
+[`Charsets`](#charsets) is a static object that contains several common charset strings for this purpose.
+
+```ts
+import { Charsets } from "regal";
+
+const rstrings = on("RSTRINGS", game => {
+    const alphanumeric = game.random.string(10, Charsets.ALHPANUMERIC_CHARSET);
+    game.output.write(`Alphanumeric -> ${alphanumeric}`);
+
+    const alphabet = game.random.string(10, Charsets.ALPHABET_CHARSET);
+    game.output.write(`Alphabet -> ${alphabet}`);
+
+    const numbers = game.random.string(10, Charsets.NUMBERS_CHARSET);
+    game.output.write(`Numbers -> ${numbers}`);
+
+    const hex = game.random.string(10, Charsets.NUMBERS_CHARSET + "ABCDEF");
+    game.output.write(`Hex -> ${hex}`);
+
+    const binary = game.random.string(10, "10");
+    game.output.write(`Binary -> ${binary}`);
+
+    game.output.write(`Old MacDonald had a farm, ${game.random.string(5, "eio")}.`);
+});
+```
+
+Executing `rstrings` on a [`GameInstance`](#gameinstance-1) would produce values like the following:
+
+```
+RSTRINGS: Alphanumeric -> AEeLn85uLT
+RSTRINGS: Alphabet -> RoGfYDtwcL
+RSTRINGS: Numbers -> 2132069253
+RSTRINGS: Hex -> 69072CF9B5
+RSTRINGS: Binary -> 1111011001
+RSTRINGS: Old MacDonald had a farm, oeioe.
+```
+
+[`InstanceRandom.choice()`](#choice) chooses a random element from an array without modifying anything. This works with arrays of primitives or agents.
+
+```ts
+class Item extends Agent {
+    constructor(public name: string) {
+        super();
+    }
+}
+
+const init = on("INIT", game => {
+    game.state.items = [
+        new Item("Yo-Yo"),
+        new Item("Pigeon"),
+        new Item("Corn cob")
+    ];
+});
+
+const rpick = on("RPICK", game => {
+    const i: Item = game.random.choice(game.state.items);
+    game.output.write(`You picked the ${i.name}!`);
+});
+```
+
+Executing `init.then(rpick, rpick, rpick)` on a [`GameInstance`](#gameinstance-1) would produce values like the following:
+
+```
+RPICK: You picked the Pigeon!
+RPICK: You picked the Yo-Yo!
+RPICK: You picked the Pigeon!
+```
+
+#### Deterministic Randomness
+
+Regal games are by definition *deterministic*, meaning that they always return the same output when given the same input. The methods for generating random values described above might seem to disobey this principle, but they do not.
+
+When a [`GameInstance`](#gameinstance-1) is created, it is given a special value called a *seed*. This seed value initializes the game instance's internal random number generator and has a direct influence on all random values that come out of it.
+
+The seed value may be set manually as a [configuration option](#gameoptions). If no seed is set, one will be generated randomly at runtime.
+
+A game instance's seed is considered part of its input. Therefore, it plays a factor in determining the game's output. If two game instances have the same seed value, they will generate the exact same sequence of random values. If a [`GameInstance`](#gameinstance-1) is reset with an [undo command](#postUndoCommand), then its random value stream will be reset as well.
+
+In order for Regal to work properly, all random values should be generated by [InstanceRandom](#instancerandom). JavaScript `Math.Random()` or other libraries for generating random values are **not recommended**.
 
 ### Output
 
