@@ -41,6 +41,7 @@ The name _Regal_ is an acronym for **Re**inventing **G**ameplay through **A**udi
     * [Events](#events)
     * [Agents](#agents)
     * [Randomness](#randomness)
+    * [Output](#output)
     * [`GameApi` and API Hooks](#gameapi-and-api-hooks)
     * [Configuration](#configuration)
     * [Bundling](#bundling)
