@@ -1113,6 +1113,35 @@ If two different game instances reference the same static agent, their changes w
 
 ## API Reference
 
+* [`Agent`](#agent)
+* [`Charsets`](#charsets)
+* [`EventFunction`](#eventfunction)
+* [`EventQueue`](#eventqueue)
+* [`Game`](#game)
+* [`GameApi`](#gameapi)
+* [`GameApiExtended`](#gameapiextended)
+* [`GameEventBuilder`](#gameeventbuilder)
+* [`GameInstance`](#gameinstance-1)
+* [`GameMetadata`](#gamemetadata)
+* [`GameOptions`](#gameoptions)
+* [`GameResponse`](#gameresponse)
+* [`GameResponseOutput`](#gameresponseoutput)
+* [`InstanceEvents`](#instanceevents)
+* [`InstanceOptions`](#instanceoptions)
+* [`InstanceOutput`](#instanceoutput)
+* [`InstanceRandom`](#instancerandom)
+* [`OutputLine`](#outputline)
+* [`OutputLineType`](#outputlinetype)
+* [`RegalError`](#regalerror)
+* [`TrackedEvent`](#trackedevent)
+* [`enqueue`](#enqueue-1)
+* [`noop`](#noop)
+* [`nq`](#nq-1)
+* [`on`](#on)
+* [`onBeforeUndoCommand`](#onbeforeundocommand)
+* [`onPlayerCommand`](#onplayercommand)
+* [`onStartCommand`](#onstartcommand)
+
 ### `Agent`
 
 **_Class_**
