@@ -1054,6 +1054,8 @@ const read = on("READ", game => {
 });
 ```
 
+*Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/src/static-agents.ts).*
+
 Executing `read` on a [`GameInstance`](#game-instance-1) would produce the following output:
 
 ```
@@ -1098,92 +1100,6 @@ Both events, `read` and `revise`, activated `NOVEL` independently of each other,
 > Static agents save space by storing **only the changes** made to their properties by a specific game instance in that instance's state. 
 
 If two different game instances reference the same static agent, their changes will not affect each other. This is because changes made to a static agent don't actually modify the static agent at all; they are simply stored in the instance state.
-
-#### Putting It All Together: Agents in Practice
-
-Here is a standard `Room` agent that you might use in an adventure game:
-
-```ts
-class Room extends Agent {
-    public north: Room;
-    public east: Room;
-    public south: Room;
-    public west: Room;
-
-    constructor(
-        public name: string, 
-        public description: string, 
-        public contents: Item[]
-    ) {
-        super();
-    }
-}
-
-class Item extends Agent {
-    constructor(public name: string) {
-        super();
-    }
-}
-```
-
-Instantiating a room might look like this:
-
-```ts
-const attic = new Room(
-    "Attic",
-    "A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.",
-    [ new Item("dead rat"), new Item("book") ]
-);
-```
-
-Because the connection between rooms is two-way, our agents have circular references to each other. Building these connections requires us to modify the agents after they are instantiated:
-
-```ts
-const northAttic = new Room("North Attic", /* other args */);
-attic.north = northAttic;
-northAttic.south = attic;
-
-const stairsDown = new Room("Stairs Down", /* other args */);
-attic.east = stairsDown;
-stairsDown.west = attic;
-
-const southRoof = new Room("South Roof", /* other args */);
-attic.south = southRoof;
-southRoof.north = attic;
-
-const westRoof = new Room("West Roof", /* other args */);
-attic.west = westRoof;
-westRoof.east = attic;
-```
-
-Once we have our network of rooms created, we want to be able to travel between them from an event.
-
-```ts
-const enter = (_room: Room) => 
-    on(`ENTER <${room.name}>`, game => {
-        const room = game.using(_room);
-
-        game.output.write(
-            room.name,
-            room.description,
-            `${room.north.name} is north, ${room.east.name} is east, ${room.south.name} is south, and ${room.west.name} is west.`
-        );
-
-        for (let o of room.contents) {
-            game.output.write(`A ${o.name} is here.`);
-        }
-    });
-```
-
-Executing the event `enter(attic)` would produce the following output:
-
-```
-ENTER <Attic>: Attic
-ENTER <Attic>: A dusty old attic. The cobwebs are as thick as cotton, and there's a slight scent of decay.
-ENTER <Attic>: North Attic is north, Stairs Down is east, South Roof is south, and West Roof is west.
-ENTER <Attic>: A dead rat is here.
-ENTER <Attic>: A book is here.
-```
 
 ### Randomness
 
