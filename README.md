@@ -1297,7 +1297,7 @@ Some of these commands will be described in more detail below. Consult the [API 
 
 #### Handling Commands with API Hooks
 
-Out of the five game commands listed above, two of them must be handled explicitly by the game developer. These commands, [`postStart`](#poststartcommand) and [`postPlayer`](#postplayercommand), are handled by the hook functions [`onPlayerCommand`](#onplayercommand) and [`onStartCommand`](#onstartcommand) respectively.
+Out of the five game commands listed above, two of them must be handled explicitly by the game developer. These commands, [`postStart`](#poststartcommand) and [`postPlayer`](#postplayercommand), are handled by the hook functions [`onStartCommand`](#onstartcommand) and [`onPlayerCommand`](#onplayercommand) respectively.
 
 A hook function is used to control what happens when a command is received by the [`GameApi`](#gameapi).
 
