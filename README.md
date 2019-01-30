@@ -1327,7 +1327,7 @@ onPlayerCommand(command => game => {
 });
 ```
 
-With this hook place, a player's input (like `dance`) will return the following output:
+With this hook in place, a player's input (like `dance`) will return the following output:
 
 ```
 INPUT: You wrote 'dance'!
@@ -1339,7 +1339,7 @@ Both [`onStartCommand`](#onstartcommand) and [`onPlayerCommand`](#onplayercomman
 
 The Regal Game Library's global implementation of the extended game API is called [`Game`](#game). The [`Game`](#game) object is used for external interaction with the game and shouldn't be accessed within the game itself.
 
-Usually, you won't using [`Game`](#game) directly. Regal games should be bundled before they are used by clients, and these bundles have a different way of exposing a [`GameApi`](#gameapi). See [**bundling**](#bundling) for more information.
+Usually, you won't use [`Game`](#game) directly. Regal games should be bundled before they are used by clients, and these bundles have a different way of exposing a [`GameApi`](#gameapi). See [**bundling**](#bundling) for more information.
 
 However, there are certain cases where you might prefer to access [`Game`](#game) directly, such as for unit tests. In these situations, both [`Game`](#game) and your game's source need to be imported.
 
@@ -1404,6 +1404,100 @@ When a client plays a Regal game, all it has to do behind the scenes is send a s
 *Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/external-snippets/using-game.ts).*
 
 #### Undoing Player Commands
+
+Because Regal games are deterministic, the effects of any command on the [`GameInstance`](#gameinstance-1) can be undone. Essentially, this "rolls back" the instance state to the state it was at before the reverted command was executed.
+
+For example, here is a game that stores each command as an array in the state:
+
+```ts
+// undo-game-src.ts
+import { onPlayerCommand, onStartCommand, on } from "regal";
+
+// Print out the list of items in the state
+const printItems = on("ITEMS", game => {
+    const itemsString = game.state.items.join(", ");
+    game.output.write(`Items (${game.state.items.length}) -> [${itemsString}]`);
+});
+
+onStartCommand(game => {
+    game.state.items = []; // Initialize state.items with an empty array
+    return printItems;
+});
+
+onPlayerCommand(command => game => {
+    game.output.write(`Adding ${command}.`);
+    game.state.items.push(command); // Add the new item to the state
+    return printItems;
+});
+```
+
+*Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/external-snippets/undo.ts).*
+
+Executing a start command would produce the following output:
+
+```
+ITEMS: Items (0) -> []
+```
+
+Executing three player commands, `cat`, `dog`, and `mouse`, would result in this output:
+
+```
+INPUT: Adding cat.
+ITEMS: Items (1) -> [cat]
+
+INPUT: Adding dog.
+ITEMS: Items (2) -> [cat, dog]
+
+INPUT: Adding mouse.
+ITEMS: Items (3) -> [cat, dog, mouse]
+```
+
+A client can undo the last player or undo command executed on the [`GameInstance`](#gameinstance-1) with [`Game.postUndoCommand()`](#postundocommand). This method takes only one argument, which is the current [`GameInstance`](#gameinstance-1).
+
+If the following line was executed:
+
+```ts
+const newInstance = Game.postUndoCommand(oldInstance);
+```
+
+Then `newInstance` would contain the state of the instance from before the player's `mouse` command was executed. `oldInstance` would remain unchanged.
+
+If another player command, `goose`, was executed, then this would be the output:
+
+```
+Adding goose.
+Items (3) -> [cat, dog, goose]
+```
+
+While being able to undo commands can be quite useful, it doesn't make sense for all games. Therefore, the game developer can control whether the [`GameApi`](#gameapi) should allow clients to execute undo commands. This is accomplished with an API hook function, [`onBeforeUndoCommand`](#onbeforeundocommand). 
+
+Like the other [hook functions](#handling-commands-with-api-hooks), [`onBeforeUndoCommand`](#onbeforeundocommand) controls the behavior of the Game API. Its only argument is a function that receives a [`GameInstance`](#gameinstance-1) and returns a boolean.
+
+Whenever a [`postUndo`](#postundocommand) command is sent to the [`GameApi`](#gameapi), the `beforeUndo` hook is executed on the current [`GameInstance`](#gameinstance-1). If the function returns true, the undo will proceed. If it returns false, an error will throw instead.
+
+To prevent all undo commands, simply make the `beforeUndo` hook always return false:
+
+```ts
+import { onBeforeUndoCommand } from "regal";
+
+onBeforeUndoCommand(game => false);
+```
+
+With this configuration, executing a `postUndo` command would return an unsuccessful response with the following error:
+
+```
+RegalError: Undo is not allowed here.
+```
+
+[`onBeforeUndoCommand`](#onbeforeundocommand) can be used to allow or deny undo commands based on some condition of the game state. For instance, the following hook prevents our example from being undone when a previous player command was `goose`:
+
+```ts
+onBeforeUndoCommand(game =>
+    !game.state.items.includes("goose") // Block undo if there's a goose in the array
+);
+```
+
+A call to [`onBeforeUndoCommand`](#onbeforeundocommand) is not required, and will default to always allowing undo commands if not otherwise set.
 
 ### Configuration
 
