@@ -1550,19 +1550,69 @@ When a game is initialized, either through [`GameApiExtended.init()`](#init) or 
 Here is an example:
 
 ```ts
+// options-demo.ts
 import { Game } from "regal";
+import "./options-game-src";
 
 Game.init({
     name: "My Game",
     author: "Me",
     options: {
-        debug: true // Set debug to true
+        debug: true,   // Set debug to true
+        seed: "Hello!" // Set seed to "Hello!"
     }
 });
 ```
 
-With this configuration, every instance of `My Game` would start with its `debug` option set to true, instead of false.
+With this configuration, every instance of `My Game` would start with its `debug` option set to true instead of false, and its `seed` set to "Hello!".
 
+A convenient way to check the values of an instance's [`GameOptions`](#gameoptions) is by using [`GameInstance.options`](#gameinstance-1), which is a read-only container for all current options in the instance. The property is of type [`InstanceOptions`](#instanceoptions).
+
+This can be combined with [`InstanceOutput.writeDebug()`](#writedebug) to produce some helpful information for development:
+
+```ts
+// options-game-src.ts
+onStartCommand(game => {
+    game.output.write("Startup successful.");
+    game.output.writeDebug(`Current seed -> ${game.options.seed}`);
+});
+```
+
+Starting a new game instance using the configuration from earlier would yield the following output:
+
+```
+START: Startup successful.
+START: Current seed -> Hello!
+```
+
+If you wanted to generate a [`GameInstance`](#gameinstance-1) with `debug` disabled, you could pass in any option overrides to the optional argument of [`Game.postStartCommand()`](#poststartcommand).
+
+```ts
+// options-demo.ts
+let res = Game.postStartCommand({ debug: false });
+```
+
+With `debug` set to false, `res` would contain only the one line of output:
+
+```
+START: Startup successful.
+```
+
+To modify the options of a pre-existing [`GameInstance`](#gameinstance-1), use [`Game.postOptionCommand()`](#postoptioncommand).
+
+```ts
+res = Game.postOptionCommand(res.instance, { showMinor: false });
+```
+
+This would disable `showMinor` for all future game cycles of the [`GameInstance`](#gameinstance-1) (unless it got changed again).
+
+*Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/external-snippets/options-demo.ts).*
+
+The priority of [`GameOptions`](#gameoptions) from highest to lowest is:
+
+1. Instance-specific overrides (i.e. values passed in [`Game.postStartCommand()`](#poststartcommand) or [`Game.postOptionCommand()`](#postoptioncommand)).
+2. Static overrides (i.e. values loaded from `regal.json` or set with [`Game.init()`](#init)).
+3. The options' default values.
 
 ### Bundling
 
