@@ -1407,7 +1407,7 @@ When a client plays a Regal game, all it has to do behind the scenes is send a s
 
 Because Regal games are deterministic, the effects of any command on the [`GameInstance`](#gameinstance-1) can be undone. Essentially, this "rolls back" the instance state to the state it was at before the reverted command was executed.
 
-For example, here is a game that stores each command as an array in the state:
+For example, here is a game that stores each command in an array in the state:
 
 ```ts
 // undo-game-src.ts
@@ -1500,6 +1500,69 @@ onBeforeUndoCommand(game =>
 A call to [`onBeforeUndoCommand`](#onbeforeundocommand) is not required, and will default to always allowing undo commands if not otherwise set.
 
 ### Configuration
+
+A Regal game's configuration consists of two types: [`GameMetadata`](#gamemetadata) and [`GameOptions`](#gameoptions).
+
+[`GameMetadata`](#gamemetadata) contains metadata about the game, such as its title and author. [`GameOptions`](#gameoptions) contains configurable options to control the game's behavior.
+
+#### Using Configuration Files
+
+Configuration for a Regal game is usually kept in the project's root directory, in a file called `regal.json`. This file contains both [metadata](#gamemetadata) and [options](#gameoptions)
+
+A game's `regal.json` file might look something like this:
+
+```json
+{
+    "game": {
+        "name": "My Awesome Game",
+        "author": "Joe Cowman",
+        "headline": "This is the best game ever.",
+        "description": "Let me tell you why this is the best game ever...",
+        "options": {
+            "debug": true,
+            "seed": "1234"
+        }
+    }
+}
+```
+
+Note that a `regal.json` file is optional. The essential properties of [`GameMetadata`](#gamemetadata), which are `name` and `author`, as well as others properties will be taken from those of the same keys in `package.json` if they aren't specified in a `regal.json` file.
+
+A configuration loading tool like [**regal-bundler**](https://github.com/regal/regal-bundler) is needed if using `regal.json` or the `regal` property in `package.json`. See [**bundling**](#bundling) for more information.
+
+Alternatively, metadata values can be passed explicitly via [`GameApiExtended.init()`](#init). Either way, a metadata object with at least the `name` and `author` properties specified is required before a game can receive commands.
+
+```ts
+import { Game } from "regal";
+
+Game.init({
+    name: "My Game",
+    author: "Me"
+});
+```
+
+#### Configuring Game Options
+
+The Regal Game Library provides several options for configuring the behavior of game instances. These options are stored as an interface called [`GameOptions`](#gameoptions).
+
+When a game is initialized, either through [`GameApiExtended.init()`](#init) or loading a `regal.json` file, any values provided in [`GameMetadata.options`](#gamemetadata) will become the default values for every instance of that game.
+
+Here is an example:
+
+```ts
+import { Game } from "regal";
+
+Game.init({
+    name: "My Game",
+    author: "Me",
+    options: {
+        debug: true // Set debug to true
+    }
+});
+```
+
+With this configuration, every instance of `My Game` would start with its `debug` option set to true, instead of false.
+
 
 ### Bundling
 
