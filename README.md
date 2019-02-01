@@ -1216,7 +1216,7 @@ Regal games are by definition *deterministic*, meaning that they always return t
 
 When a [`GameInstance`](#gameinstance-1) is created, it is given a special value called a *seed*. This seed value initializes the game instance's internal random number generator and has a direct influence on all random values that come out of it.
 
-The seed value may be set manually as a [configuration option](#gameoptions). If no seed is set, one will be generated randomly at runtime.
+The seed value may be set manually as a [configuration option](#configuring-game-options). If no seed is set, one will be generated randomly at runtime.
 
 A game instance's seed is considered part of its input. Therefore, it plays a factor in determining the game's output. If two game instances have the same seed, they will generate the exact same sequence of random values. If a [`GameInstance`](#gameinstance-1) is reset with an [undo command](#postUndoCommand), then its random value stream will be reset as well.
 
@@ -1507,7 +1507,7 @@ A Regal game's configuration consists of two types: [`GameMetadata`](#gamemetada
 
 #### Using Configuration Files
 
-Configuration for a Regal game is usually kept in the project's root directory, in a file called `regal.json`. This file contains both [metadata](#gamemetadata) and [options](#gameoptions)
+Configuration for a Regal game is usually kept in the project's root directory, in a file called `regal.json`. This file contains both [metadata](#gamemetadata) and [options](#gameoptions).
 
 A game's `regal.json` file might look something like this:
 
@@ -1615,6 +1615,47 @@ The priority of [`GameOptions`](#gameoptions) from highest to lowest is:
 3. The options' default values.
 
 ### Bundling
+
+In order for a Regal game to be played by clients, it must be bundled first. *Bundling* is the process of converting a Regal game's **development source** (i.e. the TypeScript source files that the game developer writes) into a **game bundle**, which is a self-contained file that contains all the code necessary to play the game via a single API.
+
+> Game bundles are the form through which Regal games are shared, downloaded, and played.
+
+The official tool for creating Regal game bundles is [**regal-bundler**](https://github.com/regal/regal-bundler).
+
+To bundle a game, first install `regal-bundler`:
+
+```
+npm install --save-dev regal-bundler
+```
+
+Generate a game bundle with the `bundle()` function. This creates a JavaScript file, which contains all of the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for playing the game.
+
+```ts
+import { bundle } from "regal-bundler";
+
+bundle(); // Creates a bundle file
+```
+
+By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
+
+A standard game bundle can be consumed like so:
+
+```ts
+const myGame: GameApi = await import("./my-game.regal.js");
+
+let resp = myGame.postStartCommand();
+resp = Game.postPlayerCommand(resp.instance, "command");
+```
+
+Once your game is bundled, only the bundle file is needed to play it.
+
+#### Configuring the Bundler
+
+`bundle()` accepts an optional configuration object that can be used to control certain behaviors of the bundler, such as the location of `input` or `output` files, the module `format` of the bundle, or whether minification should be done on the bundle after it's generated.
+
+This configuration object can either be passed into the `bundle()` function itself or included under the `"bundler"` property in `regal.json`.
+
+See the [`regal-bundler` documentation](https://github.com/regal/regal-bundler/blob/master/README.md) for more details.
 
 ## API Reference
 
