@@ -1,7 +1,7 @@
 /*
  * Contains functions for constructing and modifying game events.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
@@ -15,14 +15,15 @@ import {
 import { buildEventQueue, buildThenMethod } from "./event-queue-impl";
 
 /**
- * Adds the events to the end of the game's event queue.
+ * Creates an `EventQueue` that adds the events to the end of the game's internal queue,
+ * meaning they will be executed after all of the currently queued events are finished.
  *
  * If the events are `EventQueue`s, any events in the queues' `immediateEvents`
  * collections will be concatenated, followed by any events in the queues' `delayedEvents`.
  *
  * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  * @param events The events to be added.
- * @returns The `EventQueue` with all events in the queue's `delayedEvent` collection.
+ * @returns An `EventQueue` that place all events in the `delayedEvent` array when invoked.
  */
 export const enqueue = <StateType = any>(
     ...events: Array<TrackedEvent<StateType>>
@@ -56,7 +57,7 @@ export const nq = enqueue;
 
 /**
  * Constructs a `TrackedEvent`, which is a function that modifies a `GameInstance`
- * and tracks all changes as they occur.
+ * and tracks all state changes as they occur.
  *
  * All modifications to game state within a Regal game should take place through a `TrackedEvent`.
  * This function is the standard way to declare a `TrackedEvent`.

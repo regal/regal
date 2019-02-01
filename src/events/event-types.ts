@@ -1,7 +1,7 @@
 /*
  * Interfaces for the different types of Regal game events.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
@@ -21,12 +21,15 @@ export type EventFunction<StateType = any> = (
 /**
  * An `EventFunction` that is tracked by the game instance.
  *
- * In order for Regal to behave properly, all modifications made by the game
- * developer to a `GameInstance` should be done through tracked events.
+ * In order for Regal to behave properly, all modifications of game state
+ * should take place inside tracked events.
+ *
+ * Just like an `EventFunction`, a `TrackedEvent` can be invoked as a
+ * function by passing in a `GameInstance` for its only argument.
  *
  * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  * @param game The game instance to be modified.
- * @returns The next `EventFunction` to be executed.
+ * @returns The next `TrackedEvent` or `EventFunction` to be invoked on the `GameInstance`.
  */
 export interface TrackedEvent<StateType = any>
     extends EventFunction<StateType> {
@@ -52,7 +55,7 @@ export interface TrackedEvent<StateType = any>
     /**
      * Adds events to the end of the event queue.
      *
-     * Equivalent to calling `<TrackedEvent>.then(nq(...events))`
+     * Equivalent to calling `trackedEvent.then(nq(...events))`.
      *
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
@@ -61,7 +64,7 @@ export interface TrackedEvent<StateType = any>
 }
 
 /**
- * Contains a queue of `TrackedEvents` to be added to the game instance.
+ * Contains a queue of `TrackedEvent`s to be executed sequentially.
  * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  */
 export interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
@@ -74,7 +77,7 @@ export interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
     /**
      * Adds events to the end of the event queue.
      * @param events The events to be added.
-     * @returns An `EventQueue` with the new events.
+     * @returns A new `EventQueue` with the new events added to the queue.
      */
     enqueue(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
 
@@ -95,8 +98,12 @@ export const isEventQueue = (o: any): o is EventQueue =>
     o !== undefined && (o as EventQueue).immediateEvents !== undefined;
 
 /**
- * "No operation" - reserved `TrackedEvent` that signals no more events.
- * Use only in rare cases where an event cannot return `void`.
+ * Reserved `TrackedEvent` that signals no more events.
+ *
+ * `noop` is short for *no operation*.
+ *
+ * Meant to be used in rare cases where an event cannot return `void`
+ * (i.e. forced by the TypeScript compiler).
  */
 export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;
@@ -110,10 +117,10 @@ export const noop: TrackedEvent = (() => {
 })();
 
 /**
- * Type alias for the `on` function, which generates a `TrackedEvent`.
+ * Type alias for the `on` function, which creates a `TrackedEvent`.
  *
  * Used for situations where the game developer wants to refer to
- * a parameterized version of `on` as its on function. For example:
+ * a parameterized version of `on` as its own function. For example:
  *
  * `const o: GameEventBuilder<CustomStateType> = on;`
  *

@@ -1,7 +1,7 @@
 /*
  * Contains mock object that is used in place of references to active agent arrays.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 

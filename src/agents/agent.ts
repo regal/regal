@@ -5,7 +5,7 @@
  * They are managed by the `GameInstance`'s `InstanceAgentsInternal` object, which
  * tracks all modifications made to the agent data.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
@@ -18,9 +18,13 @@ export const isAgent = (o: any): o is Agent =>
     o !== undefined && (o as Agent).id !== undefined;
 
 /**
- * An object that is interacted with by the player in a Regal game.
+ * A game object, or *agent*, is a JavaScript object that contains Regal game state.
+ * Every agent should inherit from the `Agent` class.
  *
- * Every game object should inherit from `Agent`.
+ * Before an agent's properties can be accessed in a game cycle,
+ * the agent must be activated with `GameInstance.using`.
+ * If you try to read or modify the property of an agent that hasn't been activated,
+ * a `RegalError` will be thrown.
  */
 export class Agent {
     /** The agent's unique identifier in the context of the current game. */
