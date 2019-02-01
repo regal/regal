@@ -42,13 +42,13 @@ If you would like to create a pull request to solve a bug or implement an approv
 
 Pull requests should contain a thorough description of all changes as well as links to any related issues.
 
-This project uses `commitizen` to keep commit messages consistent. Once you've built the project, use `git cz` to use the tool for creating a commit message. If your messages aren't styled correctly, your commits will likely be squashed when they're merged into master.
+This project uses [`commitizen`](https://github.com/commitizen/cz-cli) to keep commit messages consistent. Once you've built the project, use `git cz` to use the tool for creating a commit message. If your messages aren't styled correctly, your commits will likely be squashed when they're merged into master.
 
 ## Building the Project
 
 1. Clone the repository.
 2. `npm install`
 
-The Regal Game Library uses `prettier` for linting, so you can either use the Visual Studio Code extension (recommended) or do `npm run lint` before you commit, or else the CI build may fail.
+The Regal Game Library uses [`prettier`](https://github.com/prettier/prettier) for linting, so you can either use the [Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) (recommended) or do `npm run lint` before you commit, or else the CI build may fail.
 
 To run the unit tests, do `npm test`.
