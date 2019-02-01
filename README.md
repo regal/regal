@@ -3008,4 +3008,6 @@ Parameter | Description
 --- | ---
 `handler: EventFunction` | The `EventFunction` to be executed. May be an `EventFunction`, `TrackedEvent`, or `EventQueue`.
 
+--- 
+
 *Copyright (c) Joe Cowman*
