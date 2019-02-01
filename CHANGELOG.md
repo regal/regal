@@ -1,5 +1,15 @@
 # Regal Changelog
 
+## v1.0.0 - "Beacon" (2019-02-01)
+
+*First Stable Release* :tada:
+
+**Documentation**
+* Add comprehensive project documentation ([#98](https://github.com/regal/regal/pull/98)), resolves [#19](https://github.com/regal/regal/issues/19)
+* Add `CONTRIBUTING.md` ([ee051ee](https://github.com/regal/regal/pull/98/commits/ee051ee5e092b1a5487ed1556f874a5db5427e61))
+* Remove year from copyright notices ([4d5c301](https://github.com/regal/regal/pull/98/commits/4d5c301c056fbe783d68be20fa6f8be7c2ac3e1e))
+
+
 ## Pre-Initial Release
 
 ### v0.7.1 (2018-12-15)
