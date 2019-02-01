@@ -1,15 +1,15 @@
 /*
  * Contains the API for the Regal Game Library random component.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 /**
- * API to generate deterministic, pseudo-random data for the game instance.
+ * Interface for generating deterministic, pseudo-random data for the game instance.
  *
- * The data is considered deterministic because any `InstanceRandom` with an
- * equal `seed` will generate the same sequence of pseudo-random values.
+ * The data are considered deterministic because any `InstanceRandom` with some
+ * identical `seed` will generate the same sequence of pseudo-random values.
  */
 export interface InstanceRandom {
     /** The string used to initialize the pseudo-random data generator. */
@@ -28,13 +28,13 @@ export interface InstanceRandom {
     decimal(): number;
 
     /**
-     * Generates a string of psudeo- random characters (duplicate characters allowed).
+     * Generates a string of pseudo-random characters (duplicate characters allowed).
      * @param length The length of the string to generate.
      * @param charset A string containing the characters to choose from when
      * generating the string. Duplicates are okay, but the charset must have at
-     * least two unique characters.
+     * least two unique characters. (Defaults to `Charsets.EXPANDED_CHARSET`)
      */
-    string(length: number, charset?: string);
+    string(length: number, charset?: string): string;
 
     /**
      * Returns a pseudo-random element from the given array without modifying anything.

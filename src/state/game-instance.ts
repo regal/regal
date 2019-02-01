@@ -1,26 +1,25 @@
+/*
+ * Contains the `GameInstance` interface.
+ *
+ * Copyright (c) Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { InstanceOptions } from "../config";
 import { InstanceEvents } from "../events";
 import { InstanceOutput } from "../output";
 import { InstanceRandom } from "../random";
 
-/*
- * A `GameInstance` is the object representation of a game's instance state.
+/**
+ * Represents a unique instance of a Regal game, containing the game's current
+ * state and all interfaces used to interact with the game during a game cycle.
  *
  * Instance state is a snapshot of a Regal game that is unique to a player,
- * containing the modifications made by all of the player's commands up to that point.
+ * containing the modifications caused by all of the player's commands up to that point.
  *
- * Whereas the game's static context is immutable data that is the same for
- * every player regardless of their commands, a `GameInstance` is the player's game.
- *
- * Copyright (c) 2018 Joseph R Cowman
- * Licensed under MIT License (see https://github.com/regal/regal)
- */
-
-/**
- * The current state of the game, unique to each player.
- *
- * Contains all APIs used by game developers to read and write
- * to the game's instance state.
+ * A game's static context is immutable data that is the same for every player
+ * regardless of their commands, whereas a `GameInstance` is the player's unique
+ * instance of the game.
  *
  * @template StateType The state property's type. Optional, defaults to `any`.
  */
@@ -31,7 +30,7 @@ export interface GameInstance<StateType = any> {
     /** The manager for all output in the instance. */
     output: InstanceOutput;
 
-    /** Contains all options in the instance (read-only). */
+    /** Read-only container for all current options in the instance. */
     options: InstanceOptions;
 
     /** The manager for generating repeatable random numbers through the game instance. */
@@ -47,9 +46,11 @@ export interface GameInstance<StateType = any> {
 
     /**
      * Activates one or more agents in the current game context. All agents
-     * must be activated before they can be used. Activating an agent multiple
-     * times has no effect.
+     * must be activated before they can be used.
      *
+     * Activating an agent multiple times has no effect.
+     *
+     * @template T The type of resource that is activated.
      * @param resource Either a single agent, an agent array, or an object
      * where every property is an agent to be activated.
      * @returns Either an activated agent, an agent array, or an object where

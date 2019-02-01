@@ -1,7 +1,7 @@
 /*
  * Contains the extended Game API.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
@@ -9,14 +9,14 @@ import { GameMetadata } from "../config";
 import { GameApi } from "./game-api";
 
 /**
- * API for interacting with the Regal game.
+ * Extended API for interacting with the Regal game.
  *
- * Contains the standard methods from `GameApi`, as well as additional
+ * Contains the standard methods from `GameApi` as well as additional
  * methods for advanced control.
  */
 export interface GameApiExtended extends GameApi {
-    /** Whether `Game.init` has been called. */
-    isInitialized(): boolean;
+    /** Whether `Game.init()` has been called. */
+    readonly isInitialized: boolean;
 
     /**
      * Initializes the game with the given metadata.

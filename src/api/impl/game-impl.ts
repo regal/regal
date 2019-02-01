@@ -1,7 +1,7 @@
 /*
  * Contains the `Game` object that is used to implement `GameApiExtended`.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
@@ -99,10 +99,11 @@ const NOT_INITALIZED_ERROR_MSG =
     "Game has not been initalized. Did you remember to call Game.init?";
 
 /**
- * Game API
+ * Global implementation of `GameApiExtended`.
  *
- * Used for external interaction with the game, and shouldn't be accessed
- * within the game itself.
+ * The `Game` object serves as an exportable API for playing the game.
+ * It is used for external interaction with the game, and shouldn't
+ * be accessed within the game itself.
  */
 // tslint:disable-next-line:variable-name
 export const Game = {

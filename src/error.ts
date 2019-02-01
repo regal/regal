@@ -1,12 +1,12 @@
 /*
  * Custom errors for the Regal Game Library.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
 /**
- * Error thrown during execution of Regal library functions.
+ * Error that is thrown if a Regal function fails.
  */
 export class RegalError extends Error {
     /**

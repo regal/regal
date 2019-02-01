@@ -1,7 +1,7 @@
 /*
  * Component for generating deterministic pseudo-random data in the Regal Game Library.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 

@@ -1,7 +1,7 @@
 /*
  * Component for configuring the behavior of the Regal Game Library.
  *
- * Copyright (c) 2018 Joseph R Cowman
+ * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
