@@ -1644,8 +1644,10 @@ A standard game bundle can be consumed like so:
 const myGame: GameApi = await import("./my-game.regal.js");
 
 let resp = myGame.postStartCommand();
-resp = Game.postPlayerCommand(resp.instance, "command");
+resp = myGame.postPlayerCommand(resp.instance, "command");
 ```
+
+*Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/external-snippets/bundler-demo.ts).*
 
 Once your game is bundled, only the bundle file is needed to play it.
 
