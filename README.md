@@ -34,6 +34,8 @@ The name _Regal_ is an acronym for **Re**inventing **G**ameplay through **A**udi
     * [How is the Regal Game Library used?](#how-is-the-regal-game-library-used)
     * [What's the point?](#whats-the-point)
 * [Installation](#installation)
+* [Project Roadmap](#project-roadmap)
+* [Contributing](#contributing)
 * [Guide: Creating Your First Regal Game](#guide-creating-your-first-regal-game)
 * [Documentation](#documentation)
     * [Core Concepts](#core-concepts)
@@ -46,8 +48,6 @@ The name _Regal_ is an acronym for **Re**inventing **G**ameplay through **A**udi
     * [Configuration](#configuration)
     * [Bundling](#bundling)
 * [API Reference](#api-reference)
-* [Contributing](#contributing)
-* [Project Roadmap](#project-roadmap)
 
 ## Installation
 
@@ -68,6 +68,25 @@ Otherwise, using Node's `require` works as well:
 ```js
 const regal = require("regal");
 ```
+
+## Project Roadmap
+
+The Regal Game Library has been in development since June 2018.
+
+Version `1.0.0` of the package, alias **Beacon**, was released on February 1st, 2019. This was the first stable release. :tada:
+
+Moving forward, the most pressing features that should be added to the Game Library are the [player command](https://github.com/regal/regal/issues/86) and [plugin](https://github.com/regal/regal/issues/96) interfaces.
+
+Outside of the library, other priorities include:
+* Improving the development tooling surrounding the framework, such as expanding [**regal-bundler**](https://github.com/regal/regal-bundler) and creating a CLI.
+* Building clients to play Regal games on various platforms.
+* Creating fun Regal games.
+
+## Contributing
+
+Currently, the Regal Framework is developed solely by Joe Cowman ([jcowman2](https://github.com/jcowman2)), but pull requests, bug reports, suggestions, and questions are all more than welcome! 
+
+If you would like to get involved, please see [the contributing page](https://github.com/regal/regal/blob/master/CONTRIBUTING.md) or the project's [about page](https://github.com/regal/about).
 
 ## Guide: Creating Your First Regal Game
 
@@ -2988,13 +3007,5 @@ onStartCommand(game => game.output.write("Startup successful!"));
 Parameter | Description
 --- | ---
 `handler: EventFunction` | The `EventFunction` to be executed. May be an `EventFunction`, `TrackedEvent`, or `EventQueue`.
-
-## Contributing
-
-Created by Joe Cowman ([jcowman2](https://github.com/jcowman2)).
-
-If you would like to get involved, please see the project's [about](https://github.com/regal/about) page.
-
-## Project Roadmap
 
 *Copyright (c) Joe Cowman*
