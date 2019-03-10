@@ -225,28 +225,21 @@ One last thing: the line `if (POSSIBLE_MOVES.includes(playerMove)) {` uses `Arra
 
 Before your game can be played, it must be bundled. *Bundling* is the process of converting a Regal game's **development source** (i.e. the TypeScript or JavaScript source files that the game developer writes) into a **game bundle**, which is a self-contained file that contains all the code necessary to play the game via a single API.
 
-Game bundles are the form through which Regal games are shared, downloaded, and played.
+You can use the [**Regal CLI**](https://github.com/regal/regal-cli) to create Regal game bundles from the command line. Install it from the command line like so:
 
-[**regal-bundler**](https://github.com/regal/regal-bundler) is a tool for creating Regal game bundles. Install it like so:
 ```
-npm install --save-dev regal-bundler
-```
-
-Create a file in your root directory called `build.js` and paste the following code:
-```js
-const bundle = require("regal-bundler").bundle;
-
-bundle();
+npm install -g regal-cli regal
 ```
 
-This imports the `bundle` function from **regal-bundler** and executes it. See the bundler's [documentation](https://github.com/regal/regal-bundler#configuration) for a list of the configuration options you can use.
+To bundle your game, execute this command in your project's root directory:
 
-Run your build script:
 ```
-node build.js
+regal bundle
 ```
 
-This should generate a new file in your project's directory called `my-first-game.regal.js`. *Your first game is bundled and ready to be played!*
+This should generate a new file in your project's directory, called `my-first-game.regal.js`. *Your first game is bundled and ready to be played!*
+
+For a list of configuration options you can use, consult the CLI's [documentation](https://github.com/regal/regal-cli/#bundle).
 
 ### Step 4. Play game
 
