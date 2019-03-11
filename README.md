@@ -101,7 +101,7 @@ Start with an empty folder. Create a `package.json` file in your project's root 
 ```json
 {
     "name": "my-first-game",
-    "version": "1.0.0"
+    "author": "Your Name Here"
 }
 ```
 
@@ -225,7 +225,7 @@ One last thing: the line `if (POSSIBLE_MOVES.includes(playerMove)) {` uses `Arra
 
 Before your game can be played, it must be bundled. *Bundling* is the process of converting a Regal game's **development source** (i.e. the TypeScript or JavaScript source files that the game developer writes) into a **game bundle**, which is a self-contained file that contains all the code necessary to play the game via a single API.
 
-You can use the [**Regal CLI**](https://github.com/regal/regal-cli) to create Regal game bundles from the command line. Install it from the command line like so:
+You can use the [**Regal CLI**](https://github.com/regal/regal-cli) to create Regal game bundles from the command line. Install it like so:
 
 ```
 npm install -g regal-cli regal
@@ -243,59 +243,18 @@ For a list of configuration options you can use, consult the CLI's [documentatio
 
 ### Step 4. Play game
 
-Currently, there isn't a standard way to load a Regal game bundle for playing, although one is coming soon. For now, create a file in your project's root directory called `play.js` with the following contents:
+To load a Regal game bundle for playing, use the [**Regal CLI**](https://github.com/regal/regal-cli) `play` command.
 
-```js
-// Import required modules
-const game = require("./my-first-game.regal");
-const readline = require("readline").createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: false
-});
-
-// Helper function to print output lines
-const printLines = gameResponse => {
-    console.log("");
-    if (gameResponse.output.wasSuccessful) {
-        for (const line of gameResponse.output.log) {
-            console.log(line.data);
-        }
-    } else {
-        console.log(gameResponse);
-    }
-};
-
-// Global to store the current game instance
-let GAME_INSTANCE;
-
-// Start game
-const start = game.postStartCommand();
-printLines(start);
-GAME_INSTANCE = start.instance;
-
-// Send each command to the game
-readline.on("line", command => {
-    const resp = game.postPlayerCommand(GAME_INSTANCE, command);
-    printLines(resp);
-    if (resp.output.wasSuccessful) {
-        GAME_INSTANCE = resp.instance;
-    }
-});
+```
+regal play my-first-game.regal.js
 ```
 
-This script allows you to play your game via the Node terminal. Note that it requires the `readline` module, which should be installed like so:
-```
-npm install --save-dev readline
-```
+The game should open in your terminal. Enter `rock`, `paper`, or `scissors` to play, or `:quit` to exit the game. The sequence should look something like this:
 
-Finally, start your game with the following command:
 ```
-node play.js
-```
+Now Playing: my-first-game by Your Name Here
+Type :quit to exit the game.
 
-This starts the game in the Node terminal. Enter `rock`, `paper`, or `scissors` to play, or press `Ctrl+C` to quit the game. The sequence should look something like this:
-```
 Play rock, paper, or scissors:
 paper
 
