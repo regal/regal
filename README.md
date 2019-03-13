@@ -1602,7 +1602,7 @@ $ regal bundle
 Created a game bundle for 'my-first-game' at /Users/user/myDir/my-first-game.regal.js
 ```
 
-This creates a JavaScript file, which contains all of the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for [playing](#playing-a-game-bundle) the game. By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
+This creates a JavaScript file, which contains all of the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for [playing](#playing-a-bundled-game) the game. By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
 
 For a list of configuration options you can use, consult the CLI's [documentation](https://github.com/regal/regal-cli/#bundle).
 
@@ -1628,15 +1628,27 @@ bundle(); // Creates a bundle file
 
 This configuration object can either be passed into the [`bundle()`](https://github.com/regal/regal-bundler/blob/master/README.md#configuration) function itself or included under the `"bundler"` property in [`regal.json`](#using-configuration-files).
 
-#### Playing a Game Bundle
+#### Playing a Bundled Game
 
-A standard game bundle can be consumed like so:
+A standard game bundle exports an implementation of [`GameApi`](#gameapi), which is used to play the game.
+
+The [**Regal CLI**](https://github.com/regal/regal-cli) can be used to play a game bundle from the terminal via the [`play`](https://github.com/regal/regal-cli#play) command:
+
+```
+$ regal play my-first-game.regal.js
+Now Playing: my-first-game by Your Name Here
+Type :quit to exit the game.
+
+Hello, World!
+```
+
+Alternatively, the bundle's [`GameApi`](#gameapi) can be imported as a JavaScript module and accessed programmatically:
 
 ```ts
 const myGame: GameApi = await import("./my-game.regal.js");
 
 let resp = myGame.postStartCommand();
-resp = myGame.postPlayerCommand(resp.instance, "command");
+resp = myGame.postPlayerCommand(resp.instance, "Hello, World!");
 ```
 
 *Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/external-snippets/bundler-demo.ts).*
