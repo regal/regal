@@ -1591,15 +1591,32 @@ In order for a Regal game to be played by clients, it must be bundled first. *Bu
 
 > Game bundles are the form through which Regal games are shared, downloaded, and played.
 
-The official tool for creating Regal game bundles is [**regal-bundler**](https://github.com/regal/regal-bundler).
+#### Using the CLI
 
-To bundle a game, first install `regal-bundler`:
+The easiest way to bundle a game is with the [**Regal CLI**](https://github.com/regal/regal-cli).
+
+Once you have the CLI installed, use the `bundle` command to generate a game bundle.
+
+```
+$ regal bundle
+Created a game bundle for 'my-first-game' at /Users/user/myDir/my-first-game.regal.js
+```
+
+This creates a JavaScript file, which contains all of the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for [playing](#playing-a-game-bundle) the game. By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
+
+For a list of configuration options you can use, consult the CLI's [documentation](https://github.com/regal/regal-cli/#bundle).
+
+#### Using `regal-bundler`
+
+You can access the bundling API directly with [**regal-bundler**](https://github.com/regal/regal-bundler).
+
+First, install `regal-bundler`:
 
 ```
 npm install --save-dev regal-bundler
 ```
 
-Generate a game bundle with the `bundle()` function. This creates a JavaScript file, which contains all of the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for playing the game.
+Generate a game bundle with the asynchronous `bundle()` function. 
 
 ```ts
 import { bundle } from "regal-bundler";
@@ -1607,7 +1624,11 @@ import { bundle } from "regal-bundler";
 bundle(); // Creates a bundle file
 ```
 
-By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
+[`bundle()`](https://github.com/regal/regal-bundler/blob/master/README.md#configuration) accepts an optional configuration object that can be used to control certain behaviors of the bundler, such as the location of [`input`](https://github.com/regal/regal-bundler#bundlerinputfile-string) or [`output`](https://github.com/regal/regal-bundler#bundleroutputfile-string) files, the module [`format`](https://github.com/regal/regal-bundler#bundleroutputformat-string) of the bundle, or whether [minification](https://github.com/regal/regal-bundler#bundleroutputminify-boolean) should be done on the bundle after it's generated.
+
+This configuration object can either be passed into the [`bundle()`](https://github.com/regal/regal-bundler/blob/master/README.md#configuration) function itself or included under the `"bundler"` property in [`regal.json`](#using-configuration-files).
+
+#### Playing a Game Bundle
 
 A standard game bundle can be consumed like so:
 
@@ -1621,14 +1642,6 @@ resp = myGame.postPlayerCommand(resp.instance, "command");
 *Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/external-snippets/bundler-demo.ts).*
 
 Once your game is bundled, only the bundle file is needed to play it.
-
-#### Configuring the Bundler
-
-`bundle()` accepts an optional configuration object that can be used to control certain behaviors of the bundler, such as the location of `input` or `output` files, the module `format` of the bundle, or whether minification should be done on the bundle after it's generated.
-
-This configuration object can either be passed into the `bundle()` function itself or included under the `"bundler"` property in `regal.json`.
-
-See the [`regal-bundler` documentation](https://github.com/regal/regal-bundler/blob/master/README.md) for more details.
 
 ## API Reference
 
