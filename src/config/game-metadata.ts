@@ -18,9 +18,9 @@ import { GameOptions } from "./game-options";
  * If any of the metadata properties `name`, `author`, `description`,
  * `homepage`, or `repository` aren't specified, the values of each
  * property with the same name in `package.json` will be used.
- * `regalVersion` should not be specified, as it is set by the library
- * automatically. If a value is passed for `regalVersion`,
- * an error will be thrown.
+ * `regalVersion` and `gameVersion` should not be specified, as they are
+ * set by the library automatically. If a value is passed for `regalVersion`
+ * or `gameVersion`, an error will be thrown.
  *
  * A configuration loading tool like [**regal-bundler**](https://github.com/regal/regal-bundler)
  * is needed if using `regal.json` or the `regal` property in `package.json`.
@@ -55,6 +55,9 @@ export interface GameMetadata {
 
     /** The version of the Regal Game Library used by the game. */
     readonly regalVersion?: string;
+
+    /** The game's version. */
+    readonly gameVersion?: string;
 }
 
 /** The names of every metadata property. */
