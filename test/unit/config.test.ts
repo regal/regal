@@ -975,6 +975,30 @@ describe("Config", function() {
             expect(MetadataManager.getMetadata().author).to.equal("Joe Cowman");
         });
 
+        it("Set all metadata properties successfully", function() {
+            MetadataManager.reset();
+
+            const metadata = {
+                name: "Cool Game",
+                author: "Joe Cowman",
+                headline: "The headline of my cool game.",
+                description: "The description of my cool game.",
+                homepage: "https://github.com/regal/about",
+                repository: "https://github.com/regal/regal",
+                options: {
+                    debug: true
+                },
+                gameVersion: "1.0.1"
+            };
+
+            MetadataManager.setMetadata(metadata);
+
+            expect(MetadataManager.getMetadata()).to.deep.equal({
+                ...metadata,
+                regalVersion: libraryVersion
+            });
+        });
+
         describe("Validate Metadata", function() {
             beforeEach(function() {
                 MetadataManager.reset();
@@ -1085,6 +1109,19 @@ describe("Config", function() {
                 ).to.throw(
                     RegalError,
                     "The metadata property <repository> is of type <number>, must be of type <string>."
+                );
+            });
+
+            it("gameVersion must be a string if it's defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        gameVersion: 1
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <gameVersion> is of type <number>, must be of type <string>."
                 );
             });
 
