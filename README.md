@@ -1602,7 +1602,7 @@ $ regal bundle
 Created a game bundle for 'my-first-game' at /Users/user/myDir/my-first-game.regal.js
 ```
 
-This creates a JavaScript file, which contains all of the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for [playing](#playing-a-bundled-game) the game. By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
+This creates a JavaScript file, which contains all the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for [playing](#playing-a-bundled-game) the game. By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
 
 For a list of configuration options you can use, consult the CLI's [documentation](https://github.com/regal/regal-cli/#bundle).
 
@@ -2190,14 +2190,15 @@ Metadata about the game, such as its title and author.
 
 ```ts
 interface GameMetadata {
-    readonly name: string
-    readonly author: string
-    readonly headline?: string
-    readonly description?: string
-    readonly homepage?: string
-    readonly repository?: string
-    readonly options?: Partial<GameOptions>
-    readonly regalVersion?: string
+    name: string
+    author: string
+    headline?: string
+    description?: string
+    homepage?: string
+    repository?: string
+    options?: Partial<GameOptions>
+    regalVersion?: string
+    gameVersion?: string
 }
 ```
 
@@ -2217,7 +2218,10 @@ Metadata values can be specified in the optional `regal.json` file or `regal` pr
 }
 ```
 
-If any of the metadata properties `name`, `author`, `description`, `homepage`, or `repository` aren't specified, the values of each property with the same name in `package.json` will be used. `regalVersion` should not be specified, as it is set by the library automatically. If a value is passed for `regalVersion`, an error will be thrown.
+Property Rules:
+* If any of the metadata properties `name`, `author`, `description`,  `homepage`, or `repository` aren't specified, the values of each property with the same name in `package.json` will be used.
+* `gameVersion` will be loaded from `package.json` only.
+* `regalVersion` should not be specified, as it is set by the library automatically. If a value is passed for `regalVersion`, an error will be thrown.
 
 A configuration loading tool like [**regal-bundler**](https://github.com/regal/regal-bundler) is needed if using `regal.json` or the `regal` property in `package.json`. Alternatively, metadata values can be passed explicitly via [`GameApiExtended.init()`](#init). Either way, a metadata object with at least the `name` and `author` properties specified is required before a game can receive commands.
 
@@ -2227,13 +2231,14 @@ This metadata is defined in the game's static context, meaning that it is the sa
 
 Property | Description
 --- | ---
-`readonly name: string` | The game's title.
-`readonly author: string` | The game's author.
-`readonly headline?: string` | The full description of the game.
-`readonly homepage?: string` | The URL of the project's homepage.
-`readonly repository?: string` | The URL of the project's repository.
-`readonly options?: Partial<GameOptions>` | Any options overrides for the game.
-`readonly regalVersion?: string` | The version of the Regal Game Library used by the game.
+`name: string` | The game's title.
+`author: string` | The game's author.
+`headline?: string` | The full description of the game.
+`homepage?: string` | The URL of the project's homepage.
+`repository?: string` | The URL of the project's repository.
+`options?: Partial<GameOptions>` | Any options overrides for the game.
+`regalVersion?: string` | The version of the Regal Game Library used by the game.
+`gameVersion?: string` | The game's version.
 
 ### `GameOptions`
 
