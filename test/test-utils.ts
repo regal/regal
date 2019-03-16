@@ -15,7 +15,8 @@ export const getDemoMetadata = (): GameMetadata => ({
     description: "Game Description",
     homepage: "demogame.example",
     repository: "github.com/demogame",
-    options: {}
+    options: {},
+    gameVersion: "1.2.1"
 });
 
 export const metadataWithOptions = (opts: Partial<GameOptions>) => {
@@ -27,6 +28,7 @@ export const metadataWithOptions = (opts: Partial<GameOptions>) => {
 export const metadataWithVersion = (metadata: GameMetadata): GameMetadata => ({
     author: metadata.author,
     description: metadata.description,
+    gameVersion: metadata.gameVersion,
     headline: metadata.headline,
     homepage: metadata.homepage,
     name: metadata.name,

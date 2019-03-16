@@ -15,12 +15,13 @@ import { GameOptions } from "./game-options";
  * If using `regal.json`, the metadata properties should be placed in an
  * object with the key `game`.
  *
- * If any of the metadata properties `name`, `author`, `description`,
+ * Property Rules:
+ * * If any of the metadata properties `name`, `author`, `description`,
  * `homepage`, or `repository` aren't specified, the values of each
  * property with the same name in `package.json` will be used.
- * `regalVersion` should not be specified, as it is set by the library
- * automatically. If a value is passed for `regalVersion`,
- * an error will be thrown.
+ * * `gameVersion` will be loaded from `package.json` only.
+ * * `regalVersion` should not be specified, as it is set by the library automatically.
+ * If a value is passed for `regalVersion`, an error will be thrown.
  *
  * A configuration loading tool like [**regal-bundler**](https://github.com/regal/regal-bundler)
  * is needed if using `regal.json` or the `regal` property in `package.json`.
@@ -33,28 +34,31 @@ import { GameOptions } from "./game-options";
  */
 export interface GameMetadata {
     /** The game's title. */
-    readonly name: string;
+    name: string;
 
     /** The game's author. */
-    readonly author: string;
+    author: string;
 
     /** A brief description of the game. */
-    readonly headline?: string;
+    headline?: string;
 
     /** The full description of the game. */
-    readonly description?: string;
+    description?: string;
 
     /** The URL of the project's homepage. */
-    readonly homepage?: string;
+    homepage?: string;
 
     /** The URL of the project's repository. */
-    readonly repository?: string;
+    repository?: string;
 
     /** Any options overrides for the game. */
-    readonly options?: Partial<GameOptions>;
+    options?: Partial<GameOptions>;
 
     /** The version of the Regal Game Library used by the game. */
-    readonly regalVersion?: string;
+    regalVersion?: string;
+
+    /** The game's version. */
+    gameVersion?: string;
 }
 
 /** The names of every metadata property. */
@@ -66,5 +70,6 @@ export const METADATA_KEYS = [
     "homepage",
     "repository",
     "options",
-    "regalVersion"
+    "regalVersion",
+    "gameVersion"
 ];
