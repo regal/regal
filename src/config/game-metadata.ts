@@ -15,12 +15,13 @@ import { GameOptions } from "./game-options";
  * If using `regal.json`, the metadata properties should be placed in an
  * object with the key `game`.
  *
- * If any of the metadata properties `name`, `author`, `description`,
+ * Property Rules:
+ * * If any of the metadata properties `name`, `author`, `description`,
  * `homepage`, or `repository` aren't specified, the values of each
  * property with the same name in `package.json` will be used.
- * `regalVersion` and `gameVersion` should not be specified, as they are
- * set by the library automatically. If a value is passed for `regalVersion`
- * or `gameVersion`, an error will be thrown.
+ * * `gameVersion` will be loaded from `package.json` only.
+ * * `regalVersion` should not be specified, as it is set by the library automatically.
+ * If a value is passed for `regalVersion`, an error will be thrown.
  *
  * A configuration loading tool like [**regal-bundler**](https://github.com/regal/regal-bundler)
  * is needed if using `regal.json` or the `regal` property in `package.json`.
@@ -69,5 +70,6 @@ export const METADATA_KEYS = [
     "homepage",
     "repository",
     "options",
-    "regalVersion"
+    "regalVersion",
+    "gameVersion"
 ];
