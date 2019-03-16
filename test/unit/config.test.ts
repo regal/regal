@@ -954,7 +954,7 @@ describe("Config", function() {
 
             MetadataManager.setMetadata(metadata);
 
-            (metadata as any).author = "Sneaky guy"; // Avoid readonly modifier
+            metadata.author = "Sneaky guy";
 
             expect(MetadataManager.getMetadata().author).to.equal("Joe Cowman");
         });
@@ -968,9 +968,9 @@ describe("Config", function() {
             };
 
             MetadataManager.setMetadata(metadata);
-            const retVal = MetadataManager.getMetadata() as any;
+            const retVal = MetadataManager.getMetadata();
 
-            retVal.author = "Sneaky guy"; // Avoid readonly modifier
+            retVal.author = "Sneaky guy";
 
             expect(MetadataManager.getMetadata().author).to.equal("Joe Cowman");
         });

@@ -34,31 +34,31 @@ import { GameOptions } from "./game-options";
  */
 export interface GameMetadata {
     /** The game's title. */
-    readonly name: string;
+    name: string;
 
     /** The game's author. */
-    readonly author: string;
+    author: string;
 
     /** A brief description of the game. */
-    readonly headline?: string;
+    headline?: string;
 
     /** The full description of the game. */
-    readonly description?: string;
+    description?: string;
 
     /** The URL of the project's homepage. */
-    readonly homepage?: string;
+    homepage?: string;
 
     /** The URL of the project's repository. */
-    readonly repository?: string;
+    repository?: string;
 
     /** Any options overrides for the game. */
-    readonly options?: Partial<GameOptions>;
+    options?: Partial<GameOptions>;
 
     /** The version of the Regal Game Library used by the game. */
-    readonly regalVersion?: string;
+    regalVersion?: string;
 
     /** The game's version. */
-    readonly gameVersion?: string;
+    gameVersion?: string;
 }
 
 /** The names of every metadata property. */
