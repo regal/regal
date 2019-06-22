@@ -1,25 +1,25 @@
 import { FK, PK } from "../keys";
 
-export class PKImpl<T> implements PK<T> {
+export class NumericPKImpl<T> implements PK<T> {
     constructor(private internalValue: number) {}
 
     public plus(n: number): PK<T> {
-        throw new Error("Method not implemented.");
+        return new NumericPKImpl(this.internalValue + n);
     }
 
     public minus(n: number): PK<T> {
-        throw new Error("Method not implemented.");
+        return new NumericPKImpl(this.internalValue - n);
     }
 
     public equals(key: PK<T> | FK<T>): boolean {
-        throw new Error("Method not implemented.");
+        return this === key || this.value() === key.value();
     }
 
-    public ref(key: PK<T> | FK<T>): boolean {
-        throw new Error("Method not implemented.");
+    public ref(): FK<T> {
+        return this;
     }
 
     public value(): string {
-        throw new Error("Method not implemented.");
+        return String(this.internalValue);
     }
 }

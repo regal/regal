@@ -9,7 +9,7 @@ export interface PK<T> {
     plus(n: number): PK<T>;
     minus(n: number): PK<T>;
     equals(key: PK<T> | FK<T>): boolean;
-    ref(key: PK<T> | FK<T>): boolean;
+    ref(): FK<T>;
     value(): string;
 }
 
