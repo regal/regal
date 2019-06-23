@@ -6,14 +6,26 @@
             "type": "node",
             "request": "launch",
             "name": "Mocha All",
-            "program": "${workspaceFolder}\\node_modules\\mocha\\bin\\_mocha",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
                 "-r",
                 "ts-node/register",
                 "--timeout",
                 "999999",
                 "--colors",
-                "${workspaceFolder}\\**\\test\\**\\*.test.ts"
+                "${workspaceFolder}/**/test/**/*.test.ts"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "protocol": "inspector"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "TS Node Playground",
+            "program": "${workspaceFolder}/node_modules/.bin/ts-node",
+            "args": [
+                "${workspaceFolder}/_playground/pg.ts"
             ],
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",

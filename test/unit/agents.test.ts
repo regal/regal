@@ -1563,6 +1563,31 @@ describe("Agents", function() {
                 );
             });
         });
+
+        describe("Methods and Inheritance", function() {
+            class ArrayGetterAgent extends Agent {
+                public dummy1 = new Dummy("D1", 10);
+                public dummy2 = new Dummy("D2", 20);
+
+                public getList() {
+                    return [this.dummy1, this.dummy2];
+                }
+            }
+
+            it.skip("An agent subclass may have a method which returns an array of its properties, which are also agents", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const ag = myGame.using(new ArrayGetterAgent());
+
+                const props = [];
+                for (const d of ag.getList()) {
+                    props.push(d.name);
+                }
+
+                expect(props).to.deep.equal(["D1", "D2"]);
+            });
+        });
     });
 
     describe("Agent Managers", function() {
