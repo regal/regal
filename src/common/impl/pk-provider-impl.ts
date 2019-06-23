@@ -1,9 +1,21 @@
+/*
+ * Contains the current implementation of `PKProvider`.
+ *
+ * Copyright (c) Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { RegalError } from "../../error";
 import { PK, PKProvider, ReservedPKSet } from "../keys";
 
 export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
     public static readonly START_VALUE = 0;
 
+    /**
+     * Builds a `PKProvider`.
+     * @param buildPK The abstracted `PK` build function. Assumes that `PK` accepts a number for its internal value.
+     * @param reservedKeys Any reserved keys.
+     */
     public static build<T>(
         buildPK: (internalValue: number) => PK<T>,
         reservedKeys: ReservedPKSet<T> = {}

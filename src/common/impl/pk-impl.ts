@@ -1,5 +1,15 @@
+/*
+ * Contains the current implementation of `PK`.
+ *
+ * Copyright (c) Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { FK, PK } from "../keys";
 
+/**
+ * Current implementation of `PK`. Uses a numeric key.
+ */
 export class NumericPKImpl<T> implements PK<T> {
     constructor(private internalValue: number) {}
 
