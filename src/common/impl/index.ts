@@ -6,4 +6,4 @@ export const buildPK = <T>(value: number): PK<T> => new NumericPKImpl(value);
 
 export const buildPKProvider = <T>(
     reserved?: ReservedPKSet<T>
-): PKProvider<T> => new PKProviderImpl(buildPK, reserved);
+): PKProvider<T> => PKProviderImpl.build(buildPK, reserved);

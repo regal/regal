@@ -132,4 +132,39 @@ describe("Keys", function() {
         expect(pk.equals(fk));
         expect(pk.plus(1).equals(fk.plus(1))).to.be.true;
     });
+
+    it("A forked PK provider generates keys just like the original would", function() {
+        const original = buildPKProvider(RESERVED_KEYS);
+        const pkFirst = original.next();
+        const fork = original.fork();
+        const pkOriginal = original.next();
+        const pkFork = fork.next();
+
+        expect(pkOriginal.equals(pkFork)).to.be.true;
+        expect(pkFirst.plus(1).equals(pkFork)).to.be.true;
+    });
+
+    it("A forked PK's reserved keys are equivalent to the original", function() {
+        const original = buildPKProvider(RESERVED_KEYS);
+        const fork = original.fork();
+
+        expect(
+            original
+                .reserved(RESERVED_KEYS.FOO)
+                .equals(fork.reserved(RESERVED_KEYS.FOO))
+        ).to.be.true;
+    });
+
+    it("Forking a PK provider has no effect on it", function() {
+        const original = buildPKProvider();
+        const firstPK = original.next();
+
+        const fork = original.fork();
+        fork.next();
+        fork.next();
+        fork.next();
+        fork.fork().next(); // What do you eat soup with?
+
+        expect(original.next().equals(firstPK.plus(1)));
+    });
 });
