@@ -9,9 +9,8 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { ContextManager } from "../state";
+import { PK } from "../common";
 import { buildInactiveAgentProxy } from "./impl";
-import { StaticAgentRegistry } from "./static-agent-registry";
 
 /** Determines whether an object is an `Agent`. */
 export const isAgent = (o: any): o is Agent =>
@@ -28,7 +27,7 @@ export const isAgent = (o: any): o is Agent =>
  */
 export class Agent {
     /** The agent's unique identifier in the context of the current game. */
-    public id: number;
+    public readonly id: PK<Agent>;
 
     /**
      * Constructs a new `Agent`. This constructor should almost never be called
@@ -39,13 +38,6 @@ export class Agent {
      * for all game instances.
      */
     constructor() {
-        if (ContextManager.isContextStatic()) {
-            this.id = StaticAgentRegistry.getNextAvailableId();
-            StaticAgentRegistry.addAgent(this);
-        } else {
-            this.id = -1;
-        }
-
         return buildInactiveAgentProxy(this);
     }
 }

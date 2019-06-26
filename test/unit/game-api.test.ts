@@ -33,6 +33,12 @@ import {
 } from "../../src/state";
 import { SEED_LENGTH } from "../../src/random";
 import { RegalError } from "../../src/error";
+import {
+    STATIC_AGENT_PK_PROVIDER,
+    AGENT_RESERVED_KEYS,
+    gameInstancePK
+} from "../../src/agents/impl";
+import { buildPKProvider } from "../../src/common";
 
 const keysBesidesSeed = OPTION_KEYS.filter(key => key !== "seed");
 const NO_INIT_MSG =
@@ -82,7 +88,11 @@ describe("Game API", function() {
         expect(HookManager.startCommandHook).to.be.undefined;
         expect(HookManager.beforeUndoCommandHook(undefined)).to.be.true; // Always return true
 
-        expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+        expect(
+            STATIC_AGENT_PK_PROVIDER.next().equals(
+                buildPKProvider(AGENT_RESERVED_KEYS).next()
+            )
+        ).to.be.true;
         expect(() => MetadataManager.getMetadata()).to.throw(
             RegalError,
             "Metadata is not defined. Did you remember to load the config?"
@@ -623,7 +633,8 @@ describe("Game API", function() {
                 r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r1_instance.agents.getAgentProperty(0, "arr").length
+                r1_instance.agents.getAgentProperty(gameInstancePK(), "arr")
+                    .length
             ).to.equal(2);
             expect(r1.instance.state.arr[1].name).to.equal("D2");
 
@@ -637,7 +648,8 @@ describe("Game API", function() {
                 r2_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r2_instance.agents.getAgentProperty(0, "arr").length
+                r2_instance.agents.getAgentProperty(gameInstancePK(), "arr")
+                    .length
             ).to.equal(1);
             expect(r1.instance.state.arr[0].name).to.equal("D1");
 
@@ -648,7 +660,8 @@ describe("Game API", function() {
                 r3_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r3_instance.agents.getAgentProperty(0, "arr").length
+                r3_instance.agents.getAgentProperty(gameInstancePK(), "arr")
+                    .length
             ).to.equal(2);
             expect(r1_instance.state.arr[1].name).to.equal("D2");
 
@@ -659,7 +672,8 @@ describe("Game API", function() {
                 r4_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r4_instance.agents.getAgentProperty(0, "arr").length
+                r4_instance.agents.getAgentProperty(gameInstancePK(), "arr")
+                    .length
             ).to.equal(1);
             expect(r1.instance.state.arr[0].name).to.equal("D1");
         });

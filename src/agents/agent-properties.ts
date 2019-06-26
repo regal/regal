@@ -1,3 +1,6 @@
+import { PK } from "../common";
+import { Agent } from "./agent";
+
 /*
  * Contains models for tracking modifications made to active agents.
  *
@@ -27,8 +30,8 @@ export interface PropertyChange {
     /** The name of the `TrackedEvent` during which the change took place (optional). */
     eventName?: string;
 
-    /** The numeric id of the registered `Agent` (optional). */
-    agentId?: number;
+    /** The id of the registered `Agent` (optional). */
+    agentId?: PK<Agent>;
 
     /** The operation performed on the agent's property. */
     op: PropertyOperation;

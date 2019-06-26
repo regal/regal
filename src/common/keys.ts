@@ -38,6 +38,8 @@ export interface PK<T> {
      * for testing the equality of two keys.
      */
     value(): string;
+
+    index(): number;
 }
 
 /**
@@ -79,6 +81,8 @@ export interface PKProvider<T> {
      * original set, as this method performs validation.
      */
     reserved(key: number): PK<T>;
+
+    reset(): void;
 }
 
 /**

@@ -6,6 +6,7 @@ import { Game } from "../../src/api";
 import { RegalError } from "../../src/error";
 import { buildGameInstance } from "../../src/state";
 import { on, nq } from "../../src/events";
+import { gameInstancePK } from "../../src/agents";
 
 describe("GameInstance", function() {
     beforeEach(function() {
@@ -192,10 +193,13 @@ describe("GameInstance", function() {
             init(myGame);
             myGame = myGame.revert(0);
 
+            const id = gameInstancePK().plus(1);
+
             expect(myGame.state.foo).to.be.undefined;
             expect(myGame.state.dummy).to.be.undefined;
-            expect(myGame.agents.getAgentProperty(1, "name")).to.be.undefined;
-            expect(myGame.agents.getAgentProperty(1, "health")).to.be.undefined;
+            expect(myGame.agents.getAgentProperty(id, "name")).to.be.undefined;
+            expect(myGame.agents.getAgentProperty(id, "health")).to.be
+                .undefined;
         });
 
         it("Reverting changes to static agents", function() {
@@ -210,17 +214,21 @@ describe("GameInstance", function() {
                 dummy["bippity"] = "boppity";
             })(myGame);
 
-            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Jimbo");
-            expect(myGame.agents.getAgentProperty(1, "health")).to.equal(15);
-            expect(myGame.agents.getAgentProperty(1, "bippity")).to.equal(
+            const id = gameInstancePK().plus(1);
+
+            expect(myGame.agents.getAgentProperty(id, "name")).to.equal(
+                "Jimbo"
+            );
+            expect(myGame.agents.getAgentProperty(id, "health")).to.equal(15);
+            expect(myGame.agents.getAgentProperty(id, "bippity")).to.equal(
                 "boppity"
             );
 
             myGame = myGame.revert();
 
-            expect(myGame.agents.getAgentProperty(1, "name")).to.equal("Lars");
-            expect(myGame.agents.getAgentProperty(1, "health")).to.equal(15);
-            expect(myGame.agents.getAgentProperty(1, "bippity")).to.be
+            expect(myGame.agents.getAgentProperty(id, "name")).to.equal("Lars");
+            expect(myGame.agents.getAgentProperty(id, "health")).to.equal(15);
+            expect(myGame.agents.getAgentProperty(id, "bippity")).to.be
                 .undefined;
         });
 

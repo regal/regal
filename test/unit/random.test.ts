@@ -287,16 +287,22 @@ describe("Random", function() {
             });
 
             it("Can choose a random agent from an agent array", function() {
+                class TestAgent extends Agent {
+                    constructor(public n: number) {
+                        super();
+                    }
+                }
+
                 const myGame = buildGameInstance();
                 const arr = myGame.using([
-                    new Agent(),
-                    new Agent(),
-                    new Agent()
+                    new TestAgent(2),
+                    new TestAgent(3),
+                    new TestAgent(4)
                 ]);
 
                 const result = myGame.random.choice(arr);
                 expect(isAgent(result)).to.be.true;
-                expect(result.id > 1 && result.id <= 4).to.be.true;
+                expect(result.n > 1 && result.n <= 4).to.be.true;
             });
         });
 

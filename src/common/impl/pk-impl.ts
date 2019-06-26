@@ -32,4 +32,8 @@ export class NumericPKImpl<T> implements PK<T> {
     public value(): string {
         return String(this.internalValue);
     }
+
+    public index(): number {
+        return this.internalValue;
+    }
 }

@@ -5,9 +5,11 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { PK } from "../../common";
 import { RegalError } from "../../error";
 import { DEFAULT_EVENT_ID, EventRecord } from "../../events";
-import { GameInstance, GameInstanceInternal } from "../../state";
+import { GameInstanceInternal } from "../../state";
+import { Agent } from "../agent";
 import { AgentManager } from "../agent-manager";
 import {
     pcForAgentManager,
@@ -20,13 +22,13 @@ import { StaticAgentRegistry } from "../static-agent-registry";
 
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
-    id: number,
+    id: PK<Agent>,
     game: GameInstanceInternal
 ): AgentManager => new AgentManagerImpl(id, game);
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
-    constructor(public id: number, public game: GameInstanceInternal) {}
+    constructor(public id: PK<Agent>, public game: GameInstanceInternal) {}
 
     public hasPropertyRecord(property: PropertyKey): boolean {
         if (property === "constructor") {

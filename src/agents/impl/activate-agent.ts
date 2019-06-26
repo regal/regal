@@ -6,6 +6,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { Mutable } from "../../common";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
 import { propertyIsAgentId } from "../instance-agents-internal";
@@ -13,6 +14,7 @@ import {
     buildActiveAgentArrayProxy,
     buildActiveAgentProxy
 } from "./active-agent-proxy";
+import { isAgentActive } from "./agent-utils";
 
 /**
  * Returns an activated agent or agent array within the current game context.
@@ -29,9 +31,9 @@ export const activateAgent = <T extends Agent>(
 ): T => {
     let id = agent.id;
 
-    if (id === undefined || id < 0) {
+    if (id === undefined || !isAgentActive(id)) {
         id = game.agents.reserveNewId();
-        agent.id = id;
+        (agent as Mutable<Agent>).id = id;
     }
 
     let activeAgent: T;

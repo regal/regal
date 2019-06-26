@@ -24,10 +24,10 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
 
         const sortedValues = Object.keys(reservedKeys)
             .map(key => reservedKeys[key])
-            .sort();
+            .sort((a, b) => a - b);
 
         if (sortedValues.length === 0) {
-            return new PKProviderImpl(lastPK);
+            return new PKProviderImpl(buildPK, lastPK);
         }
 
         const reservedPKs = {};
@@ -49,10 +49,11 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
             reservedPKs[sortedValues[i]] = lastPK;
         }
 
-        return new PKProviderImpl(lastPK, reservedPKs);
+        return new PKProviderImpl(buildPK, lastPK, reservedPKs);
     }
 
     constructor(
+        private buildPK: (internalValue: number) => PK<PKClass>,
         private lastPK: PK<PKClass>,
         private reservedPKs: { [key: string]: PK<PKClass> } = {}
     ) {}
@@ -63,7 +64,7 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
     }
 
     public fork(): PKProvider<PKClass> {
-        return new PKProviderImpl(this.lastPK, this.reservedPKs);
+        return new PKProviderImpl(this.buildPK, this.lastPK, this.reservedPKs);
     }
 
     public reserved(key: number): PK<PKClass> {
@@ -74,5 +75,23 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
             );
         }
         return pk;
+    }
+
+    public reset(): void {
+        const defaultPK = this.buildPK(PKProviderImpl.START_VALUE);
+        if (this.lastPK.equals(defaultPK)) {
+            return;
+        }
+
+        const sortedPKs = Object.keys(this.reservedPKs)
+            .map(key => this.reservedPKs[key])
+            .sort((a, b) => a.index() - b.index());
+
+        if (sortedPKs.length === 0) {
+            this.lastPK = defaultPK;
+            return;
+        }
+
+        this.lastPK = sortedPKs[sortedPKs.length - 1];
     }
 }
