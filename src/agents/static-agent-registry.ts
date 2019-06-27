@@ -42,7 +42,7 @@ export class StaticAgentRegistry {
     public static getAgentProperty(id: PK<Agent>, property: PropertyKey): any {
         if (!this.hasAgent(id)) {
             throw new RegalError(
-                `No agent with the id <${id}> exists in the static registry.`
+                `No agent with the id <${id.value()}> exists in the static registry.`
             );
         }
 

@@ -214,7 +214,9 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         if (!isAgentManager(am)) {
             if (!StaticAgentRegistry.hasAgent(id)) {
-                throw new RegalError(`No agent with the id <${id}> exists.`);
+                throw new RegalError(
+                    `No agent with the id <${id.value()}> exists.`
+                );
             }
 
             am = this.createAgentManager(id);

@@ -2360,9 +2360,12 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
 
-            expect(() =>
-                myGame.agents.getAgentProperty(gameInstancePK().plus(1), "foo")
-            ).to.throw(RegalError, "No agent with the id <1> exists.");
+            const pk1 = gameInstancePK().plus(1);
+
+            expect(() => myGame.agents.getAgentProperty(pk1, "foo")).to.throw(
+                RegalError,
+                `No agent with the id <${pk1.value()}> exists.`
+            );
         });
 
         it("InstanceAgents.getAgentProperty returns undefined for an non-existent agent property", function() {
@@ -2390,7 +2393,7 @@ describe("Agents", function() {
                 "child"
             );
             expect(child).to.deep.equal({
-                id: 1,
+                id: gameInstancePK().plus(1),
                 name: "D1",
                 health: 10
             });
@@ -2463,14 +2466,12 @@ describe("Agents", function() {
         it("Error check InstanceAgents.setAgentProperty with an invalid id", function() {
             Game.init(MD);
 
+            const pk1 = gameInstancePK().plus(1);
+
             const myGame = buildGameInstance();
             expect(() =>
-                myGame.agents.setAgentProperty(
-                    gameInstancePK().plus(1),
-                    "foo",
-                    true
-                )
-            ).to.throw("No agent with the id <1> exists.");
+                myGame.agents.setAgentProperty(pk1, "foo", true)
+            ).to.throw(`No agent with the id <${pk1.value()}> exists.`);
         });
 
         it("InstanceAgents.hasAgentProperty works properly with static agents", function() {
@@ -2517,10 +2518,12 @@ describe("Agents", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const pk1 = gameInstancePK().plus(1);
 
-            expect(() =>
-                myGame.agents.hasAgentProperty(gameInstancePK().plus(1), "foo")
-            ).to.throw(RegalError, "No agent with the id <1> exists.");
+            expect(() => myGame.agents.hasAgentProperty(pk1, "foo")).to.throw(
+                RegalError,
+                `No agent with the id <${pk1.value()}> exists.`
+            );
         });
 
         it("InstanceAgents.deleteAgentProperty works properly for static agents", function() {
@@ -2589,13 +2592,14 @@ describe("Agents", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const pk1 = gameInstancePK().plus(1);
 
             expect(() =>
-                myGame.agents.deleteAgentProperty(
-                    gameInstancePK().plus(1),
-                    "foo"
-                )
-            ).to.throw(RegalError, "No agent with the id <1> exists.");
+                myGame.agents.deleteAgentProperty(pk1, "foo")
+            ).to.throw(
+                RegalError,
+                `No agent with the id <${pk1.value()}> exists.`
+            );
         });
 
         it("InstanceAgents.getAgentManager returns the correct agent manager", function() {
@@ -2685,7 +2689,7 @@ describe("Agents", function() {
                 StaticAgentRegistry.getAgentProperty(gameInstancePK(), "foo")
             ).to.throw(
                 RegalError,
-                "No agent with the id <0> exists in the static registry."
+                `No agent with the id <${gameInstancePK().value()}> exists in the static registry.`
             );
         });
 
@@ -2706,12 +2710,12 @@ describe("Agents", function() {
         });
 
         it("StaticAgentRegistry.addAgent is called implicitly", function() {
-            expect(StaticAgentRegistry.hasAgent(gameInstancePK().plus(1))).to.be
-                .false;
+            const pk1 = gameInstancePK().plus(1);
+            expect(StaticAgentRegistry.hasAgent(pk1)).to.be.false;
 
             const D = new Dummy("D1", 10);
 
-            expect(StaticAgentRegistry[1]).to.deep.equal(D);
+            expect(StaticAgentRegistry[pk1.value()]).to.deep.equal(D);
         });
 
         it("StaticAgentRegistry.addAgent blocks an illegal id", function() {
