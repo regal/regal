@@ -165,6 +165,56 @@ describe("Keys", function() {
         fork.next();
         fork.fork().next(); // What do you eat soup with?
 
-        expect(original.next().equals(firstPK.plus(1)));
+        expect(original.next().equals(firstPK.plus(1))).to.be.true;
+    });
+
+    it("Resetting a PK Provider with reserved and generated keys", function() {
+        const prov = buildPKProvider(RESERVED_KEYS);
+        const originalNext = prov.peek();
+
+        prov.next();
+        prov.next();
+        prov.reset();
+
+        expect(prov.peek().equals(originalNext)).to.be.true;
+    });
+
+    it("Resetting a PK Provider with no reserved keys", function() {
+        const prov = buildPKProvider();
+        const originalNext = prov.peek();
+
+        prov.next();
+        prov.next();
+        prov.reset();
+
+        expect(prov.peek().equals(originalNext)).to.be.true;
+    });
+
+    it("Resetting a PK Provider with no keys whatsoever", function() {
+        const prov = buildPKProvider();
+        const originalNext = prov.peek();
+        prov.reset();
+        expect(prov.peek().equals(originalNext)).to.be.true;
+    });
+
+    it("PKProvider.peek doesn't generate a key", function() {
+        const prov = buildPKProvider();
+        const peek = prov.peek();
+        const next = prov.next();
+        expect(peek.equals(next)).to.be.true;
+    });
+
+    it("A key generated after another will have a higher index", function() {
+        const prov = buildPKProvider(RESERVED_KEYS);
+
+        expect(prov.next().index()).to.be.lessThan(prov.next().index());
+        expect(prov.next().index()).to.be.greaterThan(
+            prov.reserved(RESERVED_KEYS.LARS).index()
+        );
+    });
+
+    it("If a set of reserved keys is used to generate a PKProvider, the one with the lowest value will have an index of zero.", function() {
+        const prov = buildPKProvider(RESERVED_KEYS);
+        expect(prov.reserved(RESERVED_KEYS.FOO).index()).equals(0);
     });
 });

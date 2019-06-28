@@ -16,7 +16,8 @@ import {
     getDemoMetadata,
     metadataWithOptions,
     metadataWithVersion,
-    Dummy
+    Dummy,
+    pks
 } from "../test-utils";
 import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
@@ -271,10 +272,11 @@ describe("Game API", function() {
 
             const r1 = Game.postStartCommand();
             const r1_instance = r1.instance as GameInstanceInternal;
+            const pks0_3 = pks(3);
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
 
             expect(r1.output).to.deep.equal({
                 wasSuccessful: true,
@@ -292,10 +294,10 @@ describe("Game API", function() {
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
             expect(
                 r2_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
 
             expect(r2.output).to.deep.equal({
                 wasSuccessful: true,
@@ -313,10 +315,10 @@ describe("Game API", function() {
 
             expect(
                 r2_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
             expect(
                 r3_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2]);
+            ).to.deep.equal(pks(2));
 
             expect(r3.output).to.deep.equal({
                 wasSuccessful: true,
@@ -334,10 +336,10 @@ describe("Game API", function() {
 
             expect(
                 r3_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2]);
+            ).to.deep.equal(pks(2));
             expect(
                 r4_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1]);
+            ).to.deep.equal(pks(1));
         });
 
         it("Calling before initialization throws an error", function() {
@@ -628,10 +630,11 @@ describe("Game API", function() {
 
             const r1 = Game.postStartCommand();
             const r1_instance = r1.instance as GameInstanceInternal;
+            const pks0_3 = pks(3);
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
             expect(
                 r1_instance.agents.getAgentProperty(getGameInstancePK(), "arr")
                     .length
@@ -643,10 +646,10 @@ describe("Game API", function() {
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
             expect(
                 r2_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
             expect(
                 r2_instance.agents.getAgentProperty(getGameInstancePK(), "arr")
                     .length
@@ -658,7 +661,7 @@ describe("Game API", function() {
 
             expect(
                 r3_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
             expect(
                 r3_instance.agents.getAgentProperty(getGameInstancePK(), "arr")
                     .length
@@ -670,7 +673,7 @@ describe("Game API", function() {
 
             expect(
                 r4_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
             expect(
                 r4_instance.agents.getAgentProperty(getGameInstancePK(), "arr")
                     .length
@@ -716,9 +719,11 @@ describe("Game API", function() {
                 delete game.state.parent;
             });
 
+            const pk2 = getGameInstancePK().plus(2);
+
             const r1 = Game.postStartCommand();
             expect(r1.instance.state.parent.child).to.deep.equal({
-                id: 2,
+                id: pk2,
                 name: "D2",
                 health: 15
             });
@@ -728,7 +733,7 @@ describe("Game API", function() {
 
             const r3 = Game.postUndoCommand(r2.instance);
             expect(r3.instance.state.parent.child).to.deep.equal({
-                id: 2,
+                id: pk2,
                 name: "D2",
                 health: 15
             });

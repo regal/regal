@@ -40,6 +40,7 @@ export const buildInstanceAgents = (
 
 /** Implementation of `InstanceAgentsInternal`. */
 class InstanceAgentsImpl implements InstanceAgentsInternal {
+    /** The internal `Agent` `PKProvider`. */
     private _pkProvider: PKProvider<Agent>;
 
     constructor(

@@ -94,4 +94,8 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
 
         this.lastPK = sortedPKs[sortedPKs.length - 1];
     }
+
+    public peek(): PK<PKClass> {
+        return this.lastPK.plus(1);
+    }
 }

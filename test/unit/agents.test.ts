@@ -2636,18 +2636,20 @@ describe("Agents", function() {
     });
 
     describe("StaticAgentRegistry", function() {
-        // it("StaticAgentRegistry.getNextAvailableId increments by 1 for each static agent", function() {
-        //     expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+        it("STATIC_AGENT_PK_PROVIDER increments by 1 for each static agent added to the static registry", function() {
+            const [_pk0, pk1, pk2, pk3, _pk4, pk5] = pks(5);
 
-        //     const D = new Dummy("D1", 10);
-        //     expect(StaticAgentRegistry.getNextAvailableId()).to.equal(2);
+            expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk1)).to.be.true;
 
-        //     const P = new Parent(D);
-        //     expect(StaticAgentRegistry.getNextAvailableId()).to.equal(3);
+            const D = new Dummy("D1", 10);
+            expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk2)).to.be.true;
 
-        //     const P2 = new Parent(new Dummy("D2", 5));
-        //     expect(StaticAgentRegistry.getNextAvailableId()).to.equal(5);
-        // });
+            const P = new Parent(D);
+            expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk3)).to.be.true;
+
+            const P2 = new Parent(new Dummy("D2", 5));
+            expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk5)).to.be.true;
+        });
 
         it("StaticAgentRegistry.hasAgentProperty works properly", function() {
             const D = new Dummy("D1", 10);
