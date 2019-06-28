@@ -492,7 +492,7 @@ describe("Agents", function() {
 
             expect(
                 myGame1.state.parent.child.id.equals(gameInstancePK().plus(3))
-            );
+            ).to.be.true;
             expect(myGame1.state.parent.child.name).to.equal("D1");
             expect(myGame1.state.parent.child.health).to.equal(10);
 
@@ -502,8 +502,8 @@ describe("Agents", function() {
             newChild(myParent)(myGame2);
 
             expect(
-                myGame1.state.parent.child.id.equals(gameInstancePK().plus(5))
-            );
+                myGame2.state.parent.child.id.equals(gameInstancePK().plus(5))
+            ).to.be.true;
             expect(myGame2.state.parent.child.name).to.equal("D1");
             expect(myGame2.state.parent.child.health).to.equal(10);
 
@@ -513,8 +513,8 @@ describe("Agents", function() {
             newChild(myParent2)(myGame3);
 
             expect(
-                myGame1.state.parent.child.id.equals(gameInstancePK().plus(4))
-            );
+                myGame3.state.parent.child.id.equals(gameInstancePK().plus(4))
+            ).to.be.true;
             expect(myGame3.state.parent.child.name).to.equal("D1");
             expect(myGame3.state.parent.child.health).to.equal(10);
         });
@@ -934,10 +934,10 @@ describe("Agents", function() {
 
                 const [_pk0, _pk1, pk2, pk3] = pks(3);
 
-                expect(d1.id.equals(pk2));
+                expect(d1.id.equals(pk2)).to.be.true;
                 expect(d1.name).to.equal("D1");
                 expect(d1.health).to.equal(10);
-                expect(d2.id.equals(pk3));
+                expect(d2.id.equals(pk3)).to.be.true;
                 expect(d2.name).to.equal("D2");
                 expect(d2.health).to.equal(15);
             });
@@ -1122,7 +1122,7 @@ describe("Agents", function() {
                 ]);
                 expect(arr.length).to.equal(1);
                 expect(arr[0].length).to.equal(5);
-                expect((arr as any).id.equals(pk1));
+                expect((arr as any).id.equals(pk1)).to.be.true;
 
                 arr.push(makeAgents(16, 10));
 
@@ -2315,8 +2315,10 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
 
-            expect(myGame.agents.reserveNewId().equals(DUMMY.id.plus(1)));
-            expect(myGame.agents.reserveNewId().equals(DUMMY.id.plus(2)));
+            expect(myGame.agents.reserveNewId().equals(DUMMY.id.plus(1))).to.be
+                .true;
+            expect(myGame.agents.reserveNewId().equals(DUMMY.id.plus(2))).to.be
+                .true;
         });
 
         it("InstanceAgents.getAgentProperty gets the correct property from either the instance or static registry", function() {
