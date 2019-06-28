@@ -11,8 +11,11 @@
 import { Mutable, PK } from "../common";
 import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent";
-import { getInactiveAgentPK, STATIC_AGENT_PK_PROVIDER } from "./impl";
-import { propertyIsAgentId } from "./instance-agents-internal";
+import {
+    getInactiveAgentPK,
+    STATIC_AGENT_PK_PROVIDER,
+    propertyIsAgentId
+} from "./impl";
 
 /**
  * Static class that manages all static agents used in the game.

@@ -15,18 +15,19 @@ import {
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
 import { AgentReference, isAgentReference } from "../agent-reference";
-import {
-    InstanceAgentsInternal,
-    propertyIsAgentId
-} from "../instance-agents-internal";
+import { InstanceAgentsInternal } from "../instance-agents-internal";
 import { StaticAgentRegistry } from "../static-agent-registry";
 import {
     buildActiveAgentArrayProxy,
     buildActiveAgentProxy
 } from "./active-agent-proxy";
-import { AGENT_RESERVED_KEYS, STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
+import { STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 import { buildAgentManager } from "./agent-manager-impl";
-import { isAgentActive } from "./agent-utils";
+import {
+    getGameInstancePK,
+    isAgentActive,
+    propertyIsAgentId
+} from "./agent-utils";
 
 /**
  * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`
@@ -53,9 +54,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
                 : STATIC_AGENT_PK_PROVIDER.fork();
 
         // Create agent manager for the game instance
-        this.createAgentManager(
-            this._pkProvider.reserved(AGENT_RESERVED_KEYS.GAME_INSTANCE)
-        );
+        this.createAgentManager(getGameInstancePK());
     }
 
     public agentManagers(): AgentManager[] {
@@ -274,9 +273,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
     public scrubAgents(): void {
         const seen = new Set<string>();
-        const q = [
-            this._pkProvider.reserved(AGENT_RESERVED_KEYS.GAME_INSTANCE)
-        ]; // Start at the game instance
+        const q = [getGameInstancePK()]; // Start at the game instance
 
         while (q.length > 0) {
             const id = q.shift();

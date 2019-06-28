@@ -10,8 +10,7 @@ import { RegalError } from "../../error";
 import { ContextManager } from "../../state";
 import { Agent } from "../agent";
 import { StaticAgentRegistry } from "../static-agent-registry";
-import { AGENT_RESERVED_KEYS, STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
-import { isAgentActive } from "./agent-utils";
+import { getInactiveAgentPK, isAgentActive } from "./agent-utils";
 
 /**
  * Builds a proxy for an inactive agent. Before an agent is activated
@@ -34,9 +33,7 @@ export const buildInactiveAgentProxy = (agent: Mutable<Agent>): Agent => {
     if (ContextManager.isContextStatic()) {
         StaticAgentRegistry.addAgent(agent);
     } else {
-        agent.id = STATIC_AGENT_PK_PROVIDER.reserved(
-            AGENT_RESERVED_KEYS.INACTIVE
-        );
+        agent.id = getInactiveAgentPK();
     }
 
     return new Proxy(agent, {

@@ -15,4 +15,8 @@ export { buildAgentManager } from "./agent-manager-impl";
 export { buildInactiveAgentProxy } from "./inactive-agent-proxy";
 export { activateAgent } from "./activate-agent";
 export { AGENT_RESERVED_KEYS, STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
-export { getGameInstancePK, getInactiveAgentPK } from "./agent-utils";
+export {
+    getGameInstancePK,
+    getInactiveAgentPK,
+    propertyIsAgentId
+} from "./agent-utils";

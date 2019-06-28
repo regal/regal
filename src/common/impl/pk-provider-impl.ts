@@ -98,4 +98,13 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
     public peek(): PK<PKClass> {
         return this.lastPK.plus(1);
     }
+
+    public isPossibleKeyValue(str: string): boolean {
+        const tryNum = Math.floor(Number(str));
+        return (
+            tryNum !== Infinity &&
+            String(tryNum) === str &&
+            tryNum >= PKProviderImpl.START_VALUE
+        );
+    }
 }

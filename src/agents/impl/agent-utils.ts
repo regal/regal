@@ -20,3 +20,8 @@ export const getGameInstancePK = () =>
 /** Determines whether an `Agent` has been activated, given its primary key. */
 export const isAgentActive = (id: PK<Agent>) =>
     !getInactiveAgentPK().equals(id);
+
+/** Whether the property is a possible value of a `PK<Agent`. */
+export const propertyIsAgentId = (property: PropertyKey) => {
+    return STATIC_AGENT_PK_PROVIDER.isPossibleKeyValue(String(property));
+};

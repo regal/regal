@@ -9,12 +9,11 @@
 import { Mutable } from "../../common";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
-import { propertyIsAgentId } from "../instance-agents-internal";
 import {
     buildActiveAgentArrayProxy,
     buildActiveAgentProxy
 } from "./active-agent-proxy";
-import { isAgentActive } from "./agent-utils";
+import { isAgentActive, propertyIsAgentId } from "./agent-utils";
 
 /**
  * Returns an activated agent or agent array within the current game context.

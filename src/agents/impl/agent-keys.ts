@@ -9,8 +9,13 @@ import { buildPKProvider } from "../../common";
 
 /** The set of reserved `Agent` primary keys. */
 export const AGENT_RESERVED_KEYS = {
-    /** Every `GameInstance` has this key. */
+    /**
+     * Every `GameInstance` has this key.
+     *
+     * **No reserved agent keys should have a greater value than this!**
+     */
     GAME_INSTANCE: 100,
+
     /** Before an `Agent` is activated, it has this key. */
     INACTIVE: 99
 };

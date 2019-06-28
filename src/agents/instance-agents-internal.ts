@@ -114,10 +114,3 @@ export interface InstanceAgentsInternal {
      */
     scrubAgents(): void;
 }
-
-/** Whether the property is a positive integer, meaning its a valid agent id. */
-export const propertyIsAgentId = (property: PropertyKey) => {
-    // TODO - is this a hack?
-    const tryNum = Math.floor(Number(property));
-    return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
-};

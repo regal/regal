@@ -101,6 +101,13 @@ export interface PKProvider<T> {
      * incrementing the internal key generator.
      */
     peek(): PK<T>;
+
+    /**
+     * Determines whether the given string could be the value of a `PK` generated
+     * by this `PKProvider`. Note that this makes no guarantee that this `PK` was
+     * actually generated.
+     */
+    isPossibleKeyValue(str: string): boolean;
 }
 
 /**
