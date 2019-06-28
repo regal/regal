@@ -3,7 +3,7 @@ import "mocha";
 
 import { on, noop } from "../../src/events";
 import { metadataWithOptions, getDemoMetadata } from "../test-utils";
-import { PropertyOperation } from "../../src/agents";
+import { PropertyOperation, getGameInstancePK } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import {
     Game,
@@ -59,7 +59,7 @@ describe("API Hooks", function() {
                     name: "INPUT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "input",
                             init: undefined,
@@ -101,7 +101,7 @@ describe("API Hooks", function() {
                     name: "SET INPUT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "input",
                             init: undefined,
@@ -157,7 +157,7 @@ describe("API Hooks", function() {
                     name: "DOUBLE INPUT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.MODIFIED,
                             property: "input",
                             init: "Test Command",
@@ -171,7 +171,7 @@ describe("API Hooks", function() {
                     name: "SET INPUT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "input",
                             init: undefined,
@@ -230,7 +230,7 @@ describe("API Hooks", function() {
                     name: "START",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "init",
                             init: undefined,
@@ -270,7 +270,7 @@ describe("API Hooks", function() {
                     name: "SET INIT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "init",
                             init: undefined,
@@ -339,7 +339,7 @@ describe("API Hooks", function() {
                     name: "APPEND FOO",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.MODIFIED,
                             property: "foo",
                             init: "One",
@@ -353,7 +353,7 @@ describe("API Hooks", function() {
                     name: "SET FOO",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "foo",
                             init: undefined,
@@ -367,7 +367,7 @@ describe("API Hooks", function() {
                     name: "SET INIT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "init",
                             init: undefined,

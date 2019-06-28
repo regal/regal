@@ -13,11 +13,12 @@ import {
     buildInstanceEvents,
     GameEventBuilder
 } from "../../src/events";
-import { log, getDemoMetadata, Dummy } from "../test-utils";
+import { log, getDemoMetadata, Dummy, pks } from "../test-utils";
 import {
     Agent,
     PropertyOperation,
-    StaticAgentRegistry
+    StaticAgentRegistry,
+    getGameInstancePK
 } from "../../src/agents";
 import { OutputLineType } from "../../src/output";
 import { Game } from "../../src/api";
@@ -751,7 +752,7 @@ describe("Events", function() {
                     output: [1],
                     changes: [
                         {
-                            agentId: 1,
+                            agentId: getGameInstancePK().plus(1),
                             op: PropertyOperation.MODIFIED,
                             init: 10,
                             final: 25,
@@ -811,6 +812,8 @@ describe("Events", function() {
             const myGame = buildGameInstance({ trackAgentChanges: true });
             start(myGame);
 
+            const [pk0, pk1, pk2] = pks(2);
+
             expect(myGame.events.history).to.deep.equal([
                 {
                     id: 3,
@@ -824,7 +827,7 @@ describe("Events", function() {
                     causedBy: 2,
                     changes: [
                         {
-                            agentId: 2,
+                            agentId: pk2,
                             op: PropertyOperation.MODIFIED,
                             property: "health",
                             init: 25,
@@ -840,26 +843,26 @@ describe("Events", function() {
                     caused: [4],
                     changes: [
                         {
-                            agentId: 2,
+                            agentId: pk2,
                             op: PropertyOperation.ADDED,
                             property: "name",
                             init: undefined,
                             final: "Bill"
                         },
                         {
-                            agentId: 2,
+                            agentId: pk2,
                             op: PropertyOperation.ADDED,
                             property: "health",
                             init: undefined,
                             final: 25
                         },
                         {
-                            agentId: 1,
+                            agentId: pk1,
                             op: PropertyOperation.ADDED,
                             property: "friend",
                             init: undefined,
                             final: {
-                                refId: 2
+                                refId: pk2
                             }
                         }
                     ]
@@ -870,26 +873,26 @@ describe("Events", function() {
                     caused: [2, 3],
                     changes: [
                         {
-                            agentId: 1,
+                            agentId: pk1,
                             op: PropertyOperation.ADDED,
                             property: "name",
                             init: undefined,
                             final: "Lars"
                         },
                         {
-                            agentId: 1,
+                            agentId: pk1,
                             op: PropertyOperation.ADDED,
                             property: "health",
                             init: undefined,
                             final: 10
                         },
                         {
-                            agentId: 0,
+                            agentId: pk0,
                             op: PropertyOperation.ADDED,
                             property: "mainAgent",
                             init: undefined,
                             final: {
-                                refId: 1
+                                refId: pk1
                             }
                         }
                     ]

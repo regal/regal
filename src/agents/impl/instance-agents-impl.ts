@@ -5,50 +5,56 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { Mutable, PK, PKProvider } from "../../common";
 import { RegalError } from "../../error";
 import { GameInstanceInternal } from "../../state";
-import { isAgent } from "../agent";
+import { Agent, isAgent } from "../agent";
 import {
     AgentArrayReference,
     isAgentArrayReference
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
 import { AgentReference, isAgentReference } from "../agent-reference";
-import {
-    InstanceAgentsInternal,
-    propertyIsAgentId
-} from "../instance-agents-internal";
+import { InstanceAgentsInternal } from "../instance-agents-internal";
 import { StaticAgentRegistry } from "../static-agent-registry";
 import {
     buildActiveAgentArrayProxy,
     buildActiveAgentProxy
 } from "./active-agent-proxy";
+import { STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 import { buildAgentManager } from "./agent-manager-impl";
+import {
+    getGameInstancePK,
+    isAgentActive,
+    propertyIsAgentId
+} from "./agent-utils";
 
 /**
  * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`
  * @param game The `GameInstance`.
- * @param nextId The next agent ID to start activation at (optional).
+ * @param pkProvider The existing agent PK provider (optional).
  */
 export const buildInstanceAgents = (
     game: GameInstanceInternal,
-    nextId?: number
-): InstanceAgentsInternal => new InstanceAgentsImpl(game, nextId);
+    pkProvider?: PKProvider<Agent>
+): InstanceAgentsInternal => new InstanceAgentsImpl(game, pkProvider);
 
 /** Implementation of `InstanceAgentsInternal`. */
 class InstanceAgentsImpl implements InstanceAgentsInternal {
-    private _nextId: number;
+    /** The internal `Agent` `PKProvider`. */
+    private _pkProvider: PKProvider<Agent>;
 
-    constructor(public game: GameInstanceInternal, nextId?: number) {
-        this.createAgentManager(0);
-        this._nextId =
-            nextId !== undefined
-                ? nextId
-                : StaticAgentRegistry.getNextAvailableId();
-    }
+    constructor(
+        public game: GameInstanceInternal,
+        pkProvider: PKProvider<Agent>
+    ) {
+        this._pkProvider =
+            pkProvider !== undefined
+                ? pkProvider
+                : STATIC_AGENT_PK_PROVIDER.fork();
 
-    get nextId(): number {
-        return this._nextId;
+        // Create agent manager for the game instance
+        this.createAgentManager(getGameInstancePK());
     }
 
     public agentManagers(): AgentManager[] {
@@ -57,28 +63,29 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             .map(key => this[key] as AgentManager);
     }
 
-    public reserveNewId(): number {
-        const id = this._nextId;
-        this._nextId++;
+    public reserveNewId(): PK<Agent> {
+        const id = this._pkProvider.next();
 
         this.createAgentManager(id);
 
         return id;
     }
 
-    public createAgentManager(id: number): AgentManager {
+    public createAgentManager(id: PK<Agent>): AgentManager {
         const am = buildAgentManager(id, this.game);
-        this[id] = am;
+        this[id.value()] = am;
         return am;
     }
 
-    public getAgentProperty(id: number, property: PropertyKey) {
+    public getAgentProperty(id: PK<Agent>, property: PropertyKey) {
         const am = this.getAgentManager(id);
         let value: any;
 
         if (!isAgentManager(am)) {
             if (!StaticAgentRegistry.hasAgent(id)) {
-                throw new RegalError(`No agent with the id <${id}> exists.`);
+                throw new RegalError(
+                    `No agent with the id <${id.value()}> exists.`
+                );
             }
 
             value = StaticAgentRegistry.getAgentProperty(id, property);
@@ -107,13 +114,13 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return value;
     }
 
-    public getAgentPropertyKeys(id: number) {
+    public getAgentPropertyKeys(id: PK<Agent>) {
         const am = this.getAgentManager(id);
 
         let keys: string[] = [];
 
         if (StaticAgentRegistry.hasAgent(id)) {
-            const staticKeys = Object.keys(StaticAgentRegistry[id]);
+            const staticKeys = Object.keys(StaticAgentRegistry[id.value()]);
             const instanceKeys = am === undefined ? [] : Object.keys(am);
 
             const keySet = new Set(staticKeys.concat(instanceKeys));
@@ -126,7 +133,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public setAgentProperty(
-        id: number,
+        id: PK<Agent>,
         property: PropertyKey,
         value: any
     ): boolean {
@@ -140,16 +147,18 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         if (!isAgentManager(am)) {
             if (!StaticAgentRegistry.hasAgent(id)) {
-                throw new RegalError(`No agent with the id <${id}> exists.`);
+                throw new RegalError(
+                    `No agent with the id <${id.value()}> exists.`
+                );
             }
 
             am = this.createAgentManager(id);
         }
 
         if (isAgent(value)) {
-            if (value.id < 0) {
+            if (!isAgentActive(value.id)) {
                 const newId = this.reserveNewId();
-                value.id = newId;
+                (value as Mutable<Agent>).id = newId;
                 value = this.game.using(value);
             }
             value =
@@ -167,7 +176,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return true;
     }
 
-    public hasAgentProperty(id: number, property: PropertyKey): boolean {
+    public hasAgentProperty(id: PK<Agent>, property: PropertyKey): boolean {
         const am = this.getAgentManager(id);
 
         const staticPropExists = StaticAgentRegistry.hasAgentProperty(
@@ -177,7 +186,9 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         if (!isAgentManager(am)) {
             if (!StaticAgentRegistry.hasAgent(id)) {
-                throw new RegalError(`No agent with the id <${id}> exists.`);
+                throw new RegalError(
+                    `No agent with the id <${id.value()}> exists.`
+                );
             }
 
             return staticPropExists;
@@ -192,7 +203,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return propExists && !am.propertyWasDeleted(property);
     }
 
-    public deleteAgentProperty(id: number, property: PropertyKey): boolean {
+    public deleteAgentProperty(id: PK<Agent>, property: PropertyKey): boolean {
         if (property === "id" || property === "game") {
             throw new RegalError(
                 `The agent's <${property}> property cannot be deleted.`
@@ -203,7 +214,9 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         if (!isAgentManager(am)) {
             if (!StaticAgentRegistry.hasAgent(id)) {
-                throw new RegalError(`No agent with the id <${id}> exists.`);
+                throw new RegalError(
+                    `No agent with the id <${id.value()}> exists.`
+                );
             }
 
             am = this.createAgentManager(id);
@@ -214,8 +227,8 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return true;
     }
 
-    public getAgentManager(id: number): AgentManager {
-        const result = this[id];
+    public getAgentManager(id: PK<Agent>): AgentManager {
+        const result = this[id.value()];
 
         if (isAgentManager(result)) {
             return result;
@@ -225,7 +238,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public recycle(newInstance: GameInstanceInternal): InstanceAgentsInternal {
-        const newAgents = buildInstanceAgents(newInstance, this.nextId);
+        const newAgents = buildInstanceAgents(newInstance, this._pkProvider);
 
         for (const formerAgent of this.agentManagers()) {
             const id = formerAgent.id;
@@ -259,16 +272,16 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public scrubAgents(): void {
-        const seen = new Set<number>();
-        const q = [0]; // Start at the state, which always has an id of zero
+        const seen = new Set<string>();
+        const q = [getGameInstancePK()]; // Start at the game instance
 
         while (q.length > 0) {
             const id = q.shift();
-            seen.add(id);
+            seen.add(id.value());
 
             for (const prop of this.getAgentPropertyKeys(id)) {
                 const val = this.getAgentProperty(id, prop);
-                if (isAgent(val) && !seen.has(val.id)) {
+                if (isAgent(val) && !seen.has(val.id.value())) {
                     q.push(val.id);
                 }
             }
@@ -276,7 +289,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         const waste = Object.keys(this)
             .filter(propertyIsAgentId)
-            .filter(id => !seen.has(Number(id)));
+            .filter(id => !seen.has(id));
 
         for (const id of waste) {
             delete this[id];

@@ -2,6 +2,8 @@ import { inspect } from "util";
 import { GameMetadata, GameOptions } from "../src/config";
 import { version as regalVersion } from "../package.json";
 import { Agent } from "../src";
+import { expect } from "chai";
+import { getGameInstancePK } from "../src/agents";
 
 export const log = (o: any, title?: string) =>
     console.log(
@@ -56,4 +58,30 @@ export const makeAgents = (startFrom: number, amount: number) => {
     }
 
     return arr;
+};
+
+export enum TestProperty {
+    REQUIRE_BUT_SKIP
+}
+
+export const smartObjectEquals = (actual: object, expected: object) => {
+    // Test property key match
+    const expectedKeys = Object.keys(expected).sort();
+    const actualKeys = Object.keys(actual).sort();
+    expect(actualKeys).to.deep.equal(expectedKeys);
+
+    for (const prop in expected) {
+        const expectedVal = expected[prop];
+        if (expectedVal !== TestProperty.REQUIRE_BUT_SKIP) {
+            expect(actual[prop]).to.deep.equal(expectedVal);
+        }
+    }
+};
+
+export const pks = (additional: number) => {
+    const result = [getGameInstancePK()];
+    for (let i = 0; i < additional; i++) {
+        result.push(result[result.length - 1].plus(1));
+    }
+    return result;
 };

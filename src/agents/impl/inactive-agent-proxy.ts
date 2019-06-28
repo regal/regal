@@ -5,10 +5,12 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { Mutable } from "../../common";
 import { RegalError } from "../../error";
 import { ContextManager } from "../../state";
 import { Agent } from "../agent";
 import { StaticAgentRegistry } from "../static-agent-registry";
+import { getInactiveAgentPK, isAgentActive } from "./agent-utils";
 
 /**
  * Builds a proxy for an inactive agent. Before an agent is activated
@@ -27,8 +29,14 @@ import { StaticAgentRegistry } from "../static-agent-registry";
  * @param agent The agent to be proxied.
  * @returns The inactive agent proxy.
  */
-export const buildInactiveAgentProxy = (agent: Agent): Agent =>
-    new Proxy(agent, {
+export const buildInactiveAgentProxy = (agent: Mutable<Agent>): Agent => {
+    if (ContextManager.isContextStatic()) {
+        StaticAgentRegistry.addAgent(agent);
+    } else {
+        agent.id = getInactiveAgentPK();
+    }
+
+    return new Proxy(agent, {
         /** Hidden property that contains any initialized values. */
         tempValues: {},
 
@@ -51,7 +59,7 @@ export const buildInactiveAgentProxy = (agent: Agent): Agent =>
         },
 
         set(target: Agent, property: PropertyKey, value: any) {
-            if (property === "id" && target.id < 0) {
+            if (property === "id" && !isAgentActive(target.id)) {
                 return Reflect.set(target, property, value);
             }
 
@@ -59,7 +67,6 @@ export const buildInactiveAgentProxy = (agent: Agent): Agent =>
                 // When adding an array as a property of a static agent, we need to
                 // treat that array like an agent and register a static id for it
                 if (value instanceof Array && (value as any).id === undefined) {
-                    (value as any).id = StaticAgentRegistry.getNextAvailableId();
                     StaticAgentRegistry.addAgent(value as any);
                 }
                 return Reflect.set(target, property, value);
@@ -91,3 +98,4 @@ export const buildInactiveAgentProxy = (agent: Agent): Agent =>
             return Reflect.deleteProperty(target, property);
         }
     } as ProxyHandler<Agent>);
+};

@@ -5,11 +5,15 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { PK } from "../../common";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
 
 /** Builds the proxy handler for an active agent proxy. */
-const activeAgentProxyHandler = (id: number, game: GameInstanceInternal) => ({
+const activeAgentProxyHandler = (
+    id: PK<Agent>,
+    game: GameInstanceInternal
+) => ({
     get(target: Agent, property: PropertyKey) {
         return game.agents.hasAgentProperty(id, property)
             ? game.agents.getAgentProperty(id, property)
@@ -61,7 +65,7 @@ const activeAgentProxyHandler = (id: number, game: GameInstanceInternal) => ({
  * @param game  The `GameInstance` of the current context.
  */
 export const buildActiveAgentProxy = (
-    id: number,
+    id: PK<Agent>,
     game: GameInstanceInternal
 ): Agent => new Proxy({} as any, activeAgentProxyHandler(id, game));
 
@@ -76,6 +80,6 @@ export const buildActiveAgentProxy = (
  * @param game  The `GameInstance` of the current context.
  */
 export const buildActiveAgentArrayProxy = (
-    id: number,
+    id: PK<Agent>,
     game: GameInstanceInternal
 ): Agent => new Proxy([] as any, activeAgentProxyHandler(id, game));

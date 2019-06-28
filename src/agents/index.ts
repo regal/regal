@@ -12,5 +12,6 @@ export { PropertyChange, PropertyOperation } from "./agent-properties";
 export {
     buildActiveAgentProxy,
     buildInstanceAgents,
-    activateAgent
+    activateAgent,
+    getGameInstancePK
 } from "./impl";

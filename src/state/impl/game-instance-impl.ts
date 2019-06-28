@@ -9,6 +9,7 @@ import {
     activateAgent,
     buildActiveAgentProxy,
     buildInstanceAgents,
+    getGameInstancePK,
     InstanceAgentsInternal,
     isAgent,
     StaticAgentRegistry
@@ -96,7 +97,10 @@ class GameInstanceImpl<StateType = any>
         this.agents = agentsBuilder(this);
         this.output = outputBuilder(this);
         this.random = randomBuilder(this);
-        this.state = (buildActiveAgentProxy(0, this) as unknown) as StateType;
+        this.state = (buildActiveAgentProxy(
+            getGameInstancePK(),
+            this
+        ) as unknown) as StateType;
     }
 
     public recycle(newOptions?: Partial<GameOptions>): GameInstanceImpl {

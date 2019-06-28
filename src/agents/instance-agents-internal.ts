@@ -5,7 +5,9 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { PK } from "../common";
 import { GameInstanceInternal } from "../state";
+import { Agent } from "./agent";
 import { AgentManager } from "./agent-manager";
 
 /**
@@ -17,9 +19,6 @@ import { AgentManager } from "./agent-manager";
 export interface InstanceAgentsInternal {
     /** The `GameInstance` that owns this `InstanceAgentsInternal`. */
     readonly game: GameInstanceInternal;
-
-    /** The ID that will be assigned to the next activated agent. */
-    readonly nextId: number;
 
     /**
      * Gets the `AgentManager` assigned to every agent that is active
@@ -33,7 +32,7 @@ export interface InstanceAgentsInternal {
      * Gets the `AgentManager` for the active agent with the given id.
      * @param id The agent's manager, or undefined if it doesn't exist.
      */
-    getAgentManager(id: number): AgentManager;
+    getAgentManager(id: PK<Agent>): AgentManager;
 
     /**
      * Creates an `AgentManager` for the given id and assigns it as a
@@ -42,13 +41,13 @@ export interface InstanceAgentsInternal {
      * @param id The agent's id.
      * @returns The created `AgentManager`.
      */
-    createAgentManager(id: number): AgentManager;
+    createAgentManager(id: PK<Agent>): AgentManager;
 
     /**
      * Reserves an id with the `InstanceAgentsInternal` for a newly activated agent.
      * @returns The reserved agent id.
      */
-    reserveNewId(): number;
+    reserveNewId(): PK<Agent>;
 
     /**
      * Get the value of an active agent's property.
@@ -57,7 +56,7 @@ export interface InstanceAgentsInternal {
      * @param property The name of the property.
      * @returns The value of the property, if it exists.
      */
-    getAgentProperty(id: number, property: PropertyKey): any;
+    getAgentProperty(id: PK<Agent>, property: PropertyKey): any;
 
     /**
      * Lists the names of each of the agent's properties.
@@ -65,7 +64,7 @@ export interface InstanceAgentsInternal {
      * @param id The agent's id.
      * @returns A list of property keys.
      */
-    getAgentPropertyKeys(id: number): string[];
+    getAgentPropertyKeys(id: PK<Agent>): string[];
 
     /**
      * Sets the value of an active agent's property, or adds the
@@ -76,7 +75,7 @@ export interface InstanceAgentsInternal {
      * @param value The new value of the property.
      * @returns Whether the update was successful.
      */
-    setAgentProperty(id: number, property: PropertyKey, value: any): boolean;
+    setAgentProperty(id: PK<Agent>, property: PropertyKey, value: any): boolean;
 
     /**
      * Whether this `InstanceAgentsInternal` has the agent property or if there's
@@ -86,7 +85,7 @@ export interface InstanceAgentsInternal {
      * @param agentId The agent id.
      * @param property The name of the property.
      */
-    hasAgentProperty(id: number, property: PropertyKey): boolean;
+    hasAgentProperty(id: PK<Agent>, property: PropertyKey): boolean;
 
     /**
      * Deletes the active agent's property.
@@ -95,7 +94,7 @@ export interface InstanceAgentsInternal {
      * @param property The name of the property.
      * @returns Whether the property was deleted.
      */
-    deleteAgentProperty(id: number, property: PropertyKey): boolean;
+    deleteAgentProperty(id: PK<Agent>, property: PropertyKey): boolean;
 
     /**
      * Creates an `InstanceAgentsInternal` for the new game cycle, keeping only
@@ -115,9 +114,3 @@ export interface InstanceAgentsInternal {
      */
     scrubAgents(): void;
 }
-
-/** Whether the property is a positive integer, meaning its a valid agent id. */
-export const propertyIsAgentId = (property: PropertyKey) => {
-    const tryNum = Math.floor(Number(property));
-    return tryNum !== Infinity && String(tryNum) === property && tryNum >= 0;
-};

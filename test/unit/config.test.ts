@@ -16,10 +16,13 @@ import {
     log,
     libraryVersion,
     metadataWithVersion,
-    Dummy
+    Dummy,
+    smartObjectEquals,
+    TestProperty,
+    pks
 } from "../test-utils";
 import { on } from "../../src/events";
-import { Agent, PropertyOperation } from "../../src/agents";
+import { Agent, PropertyOperation, getGameInstancePK } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 import { buildGameInstance, GameInstanceInternal } from "../../src/state";
 import { SEED_LENGTH, DEFAULT_SEED_CHARSET } from "../../src/random";
@@ -266,6 +269,7 @@ describe("Config", function() {
 
             it("Full agent property history is shown when GameOptions.trackAgentChanges is set to true", function() {
                 prepAgentTest();
+                const [pk0, pk1, pk2] = pks(2);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: true
@@ -273,11 +277,11 @@ describe("Config", function() {
 
                 let responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 1,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [pk0.value()]: {
+                        id: pk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -297,7 +301,7 @@ describe("Config", function() {
                         causedBy: 1,
                         changes: [
                             {
-                                agentId: 0,
+                                agentId: pk0,
                                 final: 0,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
@@ -315,11 +319,11 @@ describe("Config", function() {
                 response = Game.postPlayerCommand(response.instance, "Lars");
                 responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 2,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [pk0.value()]: {
+                        id: pk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -341,14 +345,14 @@ describe("Config", function() {
                             {
                                 eventId: 4,
                                 eventName: "ADD",
-                                final: { refId: 1 },
+                                final: { refId: pk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
                     },
-                    "1": {
-                        id: 1,
+                    [pk1.value()]: {
+                        id: pk1,
                         game: response.instance,
                         name: [
                             {
@@ -392,7 +396,7 @@ describe("Config", function() {
                         output: [1],
                         changes: [
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED,
@@ -407,35 +411,35 @@ describe("Config", function() {
                         caused: [5],
                         changes: [
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 final: "Lars",
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "name"
                             },
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 final: 10,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "health"
                             },
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 final: "Lars the Great",
                                 init: "Lars",
                                 op: PropertyOperation.MODIFIED,
                                 property: "name"
                             },
                             {
-                                agentId: 0,
-                                final: { refId: 1 },
+                                agentId: pk0,
+                                final: { refId: pk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "currentDummy"
                             },
                             {
-                                agentId: 0,
+                                agentId: pk0,
                                 final: 1,
                                 init: 0,
                                 op: PropertyOperation.MODIFIED,
@@ -453,11 +457,11 @@ describe("Config", function() {
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
                 responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 3,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [pk0.value()]: {
+                        id: pk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -479,21 +483,21 @@ describe("Config", function() {
                             {
                                 eventId: 7,
                                 eventName: "ADD",
-                                final: { refId: 2 },
-                                init: { refId: 1 },
+                                final: { refId: pk2 },
+                                init: { refId: pk1 },
                                 op: PropertyOperation.MODIFIED
                             },
                             {
                                 eventId: 0,
                                 eventName: "DEFAULT",
-                                final: { refId: 1 },
+                                final: { refId: pk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
                     },
-                    "1": {
-                        id: 1,
+                    [pk1.value()]: {
+                        id: pk1,
                         game: response.instance,
                         name: [
                             {
@@ -514,8 +518,8 @@ describe("Config", function() {
                             }
                         ]
                     },
-                    "2": {
-                        id: 2,
+                    [pk2.value()]: {
+                        id: pk2,
                         game: response.instance,
                         name: [
                             {
@@ -559,7 +563,7 @@ describe("Config", function() {
                         output: [2],
                         changes: [
                             {
-                                agentId: 2,
+                                agentId: pk2,
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED,
@@ -574,35 +578,35 @@ describe("Config", function() {
                         caused: [8],
                         changes: [
                             {
-                                agentId: 2,
+                                agentId: pk2,
                                 final: "Jeffrey",
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "name"
                             },
                             {
-                                agentId: 2,
+                                agentId: pk2,
                                 final: 10,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "health"
                             },
                             {
-                                agentId: 2,
+                                agentId: pk2,
                                 final: "Jeffrey the Great",
                                 init: "Jeffrey",
                                 op: PropertyOperation.MODIFIED,
                                 property: "name"
                             },
                             {
-                                agentId: 0,
-                                final: { refId: 2 },
-                                init: { refId: 1 },
+                                agentId: pk0,
+                                final: { refId: pk2 },
+                                init: { refId: pk1 },
                                 op: PropertyOperation.MODIFIED,
                                 property: "currentDummy"
                             },
                             {
-                                agentId: 0,
+                                agentId: pk0,
                                 final: 2,
                                 init: 1,
                                 op: PropertyOperation.MODIFIED,
@@ -620,17 +624,18 @@ describe("Config", function() {
 
             it("Reduced agent property history is shown when GameOptions.trackAgentChanges is set to false", function() {
                 prepAgentTest();
+                const [pk0, pk1, pk2] = pks(2);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: false
                 });
                 let responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 1,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [pk0.value()]: {
+                        id: pk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -659,11 +664,11 @@ describe("Config", function() {
                 response = Game.postPlayerCommand(response.instance, "Lars");
                 responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 2,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [pk0.value()]: {
+                        id: pk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -685,14 +690,14 @@ describe("Config", function() {
                             {
                                 eventId: 4,
                                 eventName: "ADD",
-                                final: { refId: 1 },
+                                final: { refId: pk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
                     },
-                    "1": {
-                        id: 1,
+                    [pk1.value()]: {
+                        id: pk1,
                         game: response.instance,
                         name: [
                             {
@@ -737,11 +742,11 @@ describe("Config", function() {
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
                 responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 3,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [pk0.value()]: {
+                        id: pk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -763,21 +768,21 @@ describe("Config", function() {
                             {
                                 eventId: 7,
                                 eventName: "ADD",
-                                final: { refId: 2 },
-                                init: { refId: 1 },
+                                final: { refId: pk2 },
+                                init: { refId: pk1 },
                                 op: PropertyOperation.MODIFIED
                             },
                             {
                                 eventId: 0,
                                 eventName: "DEFAULT",
-                                final: { refId: 1 },
+                                final: { refId: pk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
                     },
-                    "1": {
-                        id: 1,
+                    [pk1.value()]: {
+                        id: pk1,
                         game: response.instance,
                         name: [
                             {
@@ -798,8 +803,8 @@ describe("Config", function() {
                             }
                         ]
                     },
-                    "2": {
-                        id: 2,
+                    [pk2.value()]: {
+                        id: pk2,
                         game: response.instance,
                         name: [
                             {
@@ -851,7 +856,7 @@ describe("Config", function() {
                 })(myGame);
 
                 myGame.agents
-                    .getAgentManager(1)
+                    .getAgentManager(getGameInstancePK().plus(1))
                     .getPropertyHistory("name")
                     .unshift({} as any);
 

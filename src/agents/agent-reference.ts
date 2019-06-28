@@ -1,3 +1,6 @@
+import { FK } from "../common";
+import { Agent } from "./agent";
+
 /*
  * Contains mock object that is used in place of active agent circular references.
  *
@@ -17,5 +20,5 @@ export class AgentReference {
      * Constructs a new `AgentReference` in place of an active agent.
      * @param refId The mocked agent's numeric id.
      */
-    constructor(public refId: number) {}
+    constructor(public refId: FK<Agent>) {}
 }
