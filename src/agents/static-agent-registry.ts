@@ -13,8 +13,8 @@ import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent";
 import {
     getInactiveAgentPK,
-    STATIC_AGENT_PK_PROVIDER,
-    propertyIsAgentId
+    propertyIsAgentId,
+    STATIC_AGENT_PK_PROVIDER
 } from "./impl";
 
 /**

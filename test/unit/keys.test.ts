@@ -217,4 +217,15 @@ describe("Keys", function() {
         const prov = buildPKProvider(RESERVED_KEYS);
         expect(prov.reserved(RESERVED_KEYS.FOO).index()).equals(0);
     });
+
+    it("PKProvider.isPossibleKeyValue valid", function() {
+        expect(buildPKProvider().isPossibleKeyValue("0")).to.be.true;
+        expect(buildPKProvider().isPossibleKeyValue("123")).to.be.true;
+    });
+
+    it("PKProvider.isPossibleKeyValue invalid", function() {
+        expect(buildPKProvider().isPossibleKeyValue("-1")).to.be.false;
+        expect(buildPKProvider().isPossibleKeyValue("lars")).to.be.false;
+        expect(buildPKProvider().isPossibleKeyValue(undefined)).to.be.false;
+    });
 });
