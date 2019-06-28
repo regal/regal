@@ -6,7 +6,7 @@ import { Game } from "../../src/api";
 import { RegalError } from "../../src/error";
 import { buildGameInstance } from "../../src/state";
 import { on, nq } from "../../src/events";
-import { gameInstancePK } from "../../src/agents";
+import { getGameInstancePK } from "../../src/agents";
 
 describe("GameInstance", function() {
     beforeEach(function() {
@@ -193,7 +193,7 @@ describe("GameInstance", function() {
             init(myGame);
             myGame = myGame.revert(0);
 
-            const id = gameInstancePK().plus(1);
+            const id = getGameInstancePK().plus(1);
 
             expect(myGame.state.foo).to.be.undefined;
             expect(myGame.state.dummy).to.be.undefined;
@@ -214,7 +214,7 @@ describe("GameInstance", function() {
                 dummy["bippity"] = "boppity";
             })(myGame);
 
-            const id = gameInstancePK().plus(1);
+            const id = getGameInstancePK().plus(1);
 
             expect(myGame.agents.getAgentProperty(id, "name")).to.equal(
                 "Jimbo"

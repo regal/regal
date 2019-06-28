@@ -13,5 +13,5 @@ export {
     buildActiveAgentProxy,
     buildInstanceAgents,
     activateAgent,
-    gameInstancePK
+    getGameInstancePK
 } from "./impl";

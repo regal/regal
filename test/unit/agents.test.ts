@@ -15,7 +15,7 @@ import {
     Agent,
     PropertyOperation,
     StaticAgentRegistry,
-    gameInstancePK
+    getGameInstancePK
 } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import {
@@ -24,6 +24,7 @@ import {
 } from "../../src/events/event-record";
 import { on } from "../../src/events";
 import { buildGameInstance } from "../../src/state";
+import { STATIC_AGENT_PK_PROVIDER } from "../../src/agents/impl";
 
 class Parent extends Agent {
     constructor(public child: Dummy) {
@@ -491,7 +492,9 @@ describe("Agents", function() {
             newChild(PARENT)(myGame1);
 
             expect(
-                myGame1.state.parent.child.id.equals(gameInstancePK().plus(3))
+                myGame1.state.parent.child.id.equals(
+                    getGameInstancePK().plus(3)
+                )
             ).to.be.true;
             expect(myGame1.state.parent.child.name).to.equal("D1");
             expect(myGame1.state.parent.child.health).to.equal(10);
@@ -502,7 +505,9 @@ describe("Agents", function() {
             newChild(myParent)(myGame2);
 
             expect(
-                myGame2.state.parent.child.id.equals(gameInstancePK().plus(5))
+                myGame2.state.parent.child.id.equals(
+                    getGameInstancePK().plus(5)
+                )
             ).to.be.true;
             expect(myGame2.state.parent.child.name).to.equal("D1");
             expect(myGame2.state.parent.child.health).to.equal(10);
@@ -513,7 +518,9 @@ describe("Agents", function() {
             newChild(myParent2)(myGame3);
 
             expect(
-                myGame3.state.parent.child.id.equals(gameInstancePK().plus(4))
+                myGame3.state.parent.child.id.equals(
+                    getGameInstancePK().plus(4)
+                )
             ).to.be.true;
             expect(myGame3.state.parent.child.name).to.equal("D1");
             expect(myGame3.state.parent.child.health).to.equal(10);
@@ -959,7 +966,7 @@ describe("Agents", function() {
                 );
                 expect(myGame.state.dummy.dummies[1].name).to.equal("D2");
                 expect(myGame.state.dummy.dummies[1].dummies[0]).to.deep.equal({
-                    id: gameInstancePK().plus(1),
+                    id: getGameInstancePK().plus(1),
                     name: "D1",
                     health: 10
                 });
@@ -1023,7 +1030,7 @@ describe("Agents", function() {
                     myGame.state.vals2
                 );
 
-                const pk2 = gameInstancePK().plus(2);
+                const pk2 = getGameInstancePK().plus(2);
                 const pk4 = pk2.plus(2);
 
                 expect(myGame.state.allVals).to.deep.equal([
@@ -1076,7 +1083,7 @@ describe("Agents", function() {
 
                 expect(myGame.state.arr).to.deep.equal([
                     {
-                        id: gameInstancePK().plus(2),
+                        id: getGameInstancePK().plus(2),
                         health: 30,
                         foo: true
                     }
@@ -1591,14 +1598,14 @@ describe("Agents", function() {
 
                 expect(myGame.state.list).to.deep.equal([
                     {
-                        id: gameInstancePK().plus(2),
+                        id: getGameInstancePK().plus(2),
                         name: "D1",
                         health: 10
                     }
                 ]);
                 expect(
                     myGame.agents.getAgentProperty(
-                        gameInstancePK().plus(2),
+                        getGameInstancePK().plus(2),
                         "name"
                     )
                 ).to.equal("D1");
@@ -1689,7 +1696,7 @@ describe("Agents", function() {
             Game.init(MD);
             expect(
                 buildGameInstance()
-                    .agents.getAgentManager(gameInstancePK())
+                    .agents.getAgentManager(getGameInstancePK())
                     .hasPropertyRecord("constructor")
             ).to.be.false;
         });
@@ -2362,7 +2369,7 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
 
-            const pk1 = gameInstancePK().plus(1);
+            const pk1 = getGameInstancePK().plus(1);
 
             expect(() => myGame.agents.getAgentProperty(pk1, "foo")).to.throw(
                 RegalError,
@@ -2377,7 +2384,10 @@ describe("Agents", function() {
             const d = myGame.using(new Dummy("D1", 10));
 
             expect(
-                myGame.agents.getAgentProperty(gameInstancePK().plus(1), "foo")
+                myGame.agents.getAgentProperty(
+                    getGameInstancePK().plus(1),
+                    "foo"
+                )
             ).to.be.undefined;
         });
 
@@ -2391,11 +2401,11 @@ describe("Agents", function() {
             const p = myGame.using(PARENT);
 
             const child = myGame.agents.getAgentProperty(
-                gameInstancePK().plus(2),
+                getGameInstancePK().plus(2),
                 "child"
             );
             expect(child).to.deep.equal({
-                id: gameInstancePK().plus(1),
+                id: getGameInstancePK().plus(1),
                 name: "D1",
                 health: 10
             });
@@ -2422,7 +2432,7 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
 
             myGame.agents.setAgentProperty(
-                gameInstancePK().plus(1),
+                getGameInstancePK().plus(1),
                 "sibling",
                 new Sibling("Bob", SIB)
             );
@@ -2440,7 +2450,7 @@ describe("Agents", function() {
 
             expect(() =>
                 myGame.agents.setAgentProperty(
-                    gameInstancePK().plus(1),
+                    getGameInstancePK().plus(1),
                     "id",
                     2
                 )
@@ -2455,7 +2465,7 @@ describe("Agents", function() {
 
             expect(() =>
                 myGame.agents.setAgentProperty(
-                    gameInstancePK().plus(1),
+                    getGameInstancePK().plus(1),
                     "game",
                     buildGameInstance()
                 )
@@ -2468,7 +2478,7 @@ describe("Agents", function() {
         it("Error check InstanceAgents.setAgentProperty with an invalid id", function() {
             Game.init(MD);
 
-            const pk1 = gameInstancePK().plus(1);
+            const pk1 = getGameInstancePK().plus(1);
 
             const myGame = buildGameInstance();
             expect(() =>
@@ -2520,7 +2530,7 @@ describe("Agents", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
-            const pk1 = gameInstancePK().plus(1);
+            const pk1 = getGameInstancePK().plus(1);
 
             expect(() => myGame.agents.hasAgentProperty(pk1, "foo")).to.throw(
                 RegalError,
@@ -2594,7 +2604,7 @@ describe("Agents", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
-            const pk1 = gameInstancePK().plus(1);
+            const pk1 = getGameInstancePK().plus(1);
 
             expect(() =>
                 myGame.agents.deleteAgentProperty(pk1, "foo")
@@ -2620,8 +2630,8 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
 
-            expect(myGame.agents.getAgentManager(gameInstancePK().minus(1))).to
-                .be.undefined;
+            expect(myGame.agents.getAgentManager(getGameInstancePK().minus(1)))
+                .to.be.undefined;
         });
     });
 
@@ -2688,21 +2698,21 @@ describe("Agents", function() {
 
         it("Error check for StaticAgentRegistry.getAgentProperty with an invalid id", function() {
             expect(() =>
-                StaticAgentRegistry.getAgentProperty(gameInstancePK(), "foo")
+                StaticAgentRegistry.getAgentProperty(getGameInstancePK(), "foo")
             ).to.throw(
                 RegalError,
-                `No agent with the id <${gameInstancePK().value()}> exists in the static registry.`
+                `No agent with the id <${getGameInstancePK().value()}> exists in the static registry.`
             );
         });
 
         it("StaticAgentRegistry.hasAgent works properly", function() {
-            expect(StaticAgentRegistry.hasAgent(gameInstancePK().plus(1))).to.be
-                .false;
+            expect(StaticAgentRegistry.hasAgent(getGameInstancePK().plus(1))).to
+                .be.false;
 
             const D = new Dummy("D1", 10);
 
-            expect(StaticAgentRegistry.hasAgent(gameInstancePK().plus(1))).to.be
-                .true;
+            expect(StaticAgentRegistry.hasAgent(getGameInstancePK().plus(1))).to
+                .be.true;
 
             Game.init(MD);
 
@@ -2712,7 +2722,7 @@ describe("Agents", function() {
         });
 
         it("StaticAgentRegistry.addAgent is called implicitly", function() {
-            const pk1 = gameInstancePK().plus(1);
+            const pk1 = getGameInstancePK().plus(1);
             expect(StaticAgentRegistry.hasAgent(pk1)).to.be.false;
 
             const D = new Dummy("D1", 10);
@@ -2721,27 +2731,36 @@ describe("Agents", function() {
         });
 
         it("StaticAgentRegistry.addAgent blocks an illegal id", function() {
+            const pk = getGameInstancePK().plus(22);
             expect(() =>
-                StaticAgentRegistry.addAgent({ id: gameInstancePK().plus(22) })
-            ).to.throw(RegalError, "Expected an agent with id <1>.");
+                StaticAgentRegistry.addAgent({
+                    id: pk
+                })
+            ).to.throw(
+                RegalError,
+                `Only inactive agents can be added to the static registry. This one already has an id of <${pk.value()}>.`
+            );
         });
 
-        // it("StaticAgentRegistry.reset removes all agents and resets the agent count", function() {
-        //     const D = new Dummy("D1", 10);
-        //     const P = new Parent(new Dummy("D2", 25));
+        it("StaticAgentRegistry.reset removes all agents and resets the static agent PK provider", function() {
+            const D = new Dummy("D1", 10);
+            const P = new Parent(new Dummy("D2", 25));
 
-        //     expect(StaticAgentRegistry.hasAgent(1)).to.be.true;
-        //     expect(StaticAgentRegistry.hasAgent(2)).to.be.true;
-        //     expect(StaticAgentRegistry.hasAgent(3)).to.be.true;
-        //     expect(StaticAgentRegistry.getNextAvailableId()).to.equal(4);
+            const [_pk0, pk1, pk2, pk3] = pks(3);
 
-        //     StaticAgentRegistry.reset();
+            expect(StaticAgentRegistry.hasAgent(pk1)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(pk2)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(pk3)).to.be.true;
+            expect(STATIC_AGENT_PK_PROVIDER.next().equals(pk3.plus(1))).to.be
+                .true;
 
-        //     expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
-        //     expect(StaticAgentRegistry.hasAgent(2)).to.be.false;
-        //     expect(StaticAgentRegistry.hasAgent(3)).to.be.false;
-        //     expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
-        // });
+            StaticAgentRegistry.reset();
+
+            expect(StaticAgentRegistry.hasAgent(pk1)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(pk2)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(pk3)).to.be.false;
+            expect(STATIC_AGENT_PK_PROVIDER.next().equals(pk1)).to.be.true;
+        });
     });
 
     describe("Scrubbing", function() {
@@ -2752,38 +2771,43 @@ describe("Agents", function() {
             myGame.state.dummy = new Parent(new Dummy("D1", 10));
             const float = myGame.using(new Dummy("D2", 15));
 
+            const pks0_3 = pks(3);
+
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
+            ).to.deep.equal(pks0_3);
             expect(myGame.state.dummy).to.deep.equal({
-                id: 1,
+                id: pks0_3[1],
                 child: {
-                    id: 2,
+                    id: pks0_3[2],
                     name: "D1",
                     health: 10
                 }
             });
-            expect(
-                myGame.agents.getAgentProperty(gameInstancePK().plus(3), "name")
-            ).to.equal("D2");
+            expect(myGame.agents.getAgentProperty(pks0_3[3], "name")).to.equal(
+                "D2"
+            );
 
             myGame.agents.scrubAgents();
 
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2]);
+            ).to.deep.equal(pks(2));
             expect(myGame.state.dummy).to.deep.equal({
-                id: 1,
+                id: pks0_3[1],
                 child: {
-                    id: 2,
+                    id: pks0_3[2],
                     name: "D1",
                     health: 10
                 }
             });
 
             expect(() =>
-                myGame.agents.getAgentProperty(gameInstancePK().plus(3), "name")
-            ).to.throw(RegalError, "No agent with the id <3> exists.");
+                myGame.agents.getAgentProperty(pks0_3[3], "name")
+            ).to.throw(
+                RegalError,
+                `No agent with the id <${pks0_3[3].value()}> exists.`
+            );
         });
 
         it("Scrubbing an InstanceAgents finds agent array references", function() {
@@ -2795,11 +2819,13 @@ describe("Agents", function() {
             );
             myGame.state.arr = [true, new Dummy("D3", 3), p, p.children[0]];
 
+            const pks0_6 = pks(6);
+
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
+            ).to.deep.equal(pks0_6);
             expect(myGame.state.arr[3]).to.deep.equal({
-                id: 3,
+                id: pks0_6[3],
                 name: "D1",
                 health: 1
             });
@@ -2807,16 +2833,16 @@ describe("Agents", function() {
             myGame.agents.scrubAgents();
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
+            ).to.deep.equal(pks0_6);
 
             myGame.state.arr.splice(2, 1);
             myGame.agents.scrubAgents();
 
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 3, 5, 6]);
+            ).to.deep.equal([pks0_6[0], pks0_6[3], pks0_6[5], pks0_6[6]]);
             expect(myGame.state.arr[2]).to.deep.equal({
-                id: 3,
+                id: pks0_6[3],
                 name: "D1",
                 health: 1
             });

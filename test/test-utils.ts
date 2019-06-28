@@ -3,7 +3,7 @@ import { GameMetadata, GameOptions } from "../src/config";
 import { version as regalVersion } from "../package.json";
 import { Agent } from "../src";
 import { expect } from "chai";
-import { gameInstancePK } from "../src/agents";
+import { getGameInstancePK } from "../src/agents";
 
 export const log = (o: any, title?: string) =>
     console.log(
@@ -79,7 +79,7 @@ export const smartObjectEquals = (actual: object, expected: object) => {
 };
 
 export const pks = (additional: number) => {
-    const result = [gameInstancePK()];
+    const result = [getGameInstancePK()];
     for (let i = 0; i < additional; i++) {
         result.push(result[result.length - 1].plus(1));
     }

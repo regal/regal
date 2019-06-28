@@ -36,7 +36,7 @@ import { RegalError } from "../../src/error";
 import {
     STATIC_AGENT_PK_PROVIDER,
     AGENT_RESERVED_KEYS,
-    gameInstancePK
+    getGameInstancePK
 } from "../../src/agents/impl";
 import { buildPKProvider } from "../../src/common";
 
@@ -633,7 +633,7 @@ describe("Game API", function() {
                 r1_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r1_instance.agents.getAgentProperty(gameInstancePK(), "arr")
+                r1_instance.agents.getAgentProperty(getGameInstancePK(), "arr")
                     .length
             ).to.equal(2);
             expect(r1.instance.state.arr[1].name).to.equal("D2");
@@ -648,7 +648,7 @@ describe("Game API", function() {
                 r2_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r2_instance.agents.getAgentProperty(gameInstancePK(), "arr")
+                r2_instance.agents.getAgentProperty(getGameInstancePK(), "arr")
                     .length
             ).to.equal(1);
             expect(r1.instance.state.arr[0].name).to.equal("D1");
@@ -660,7 +660,7 @@ describe("Game API", function() {
                 r3_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r3_instance.agents.getAgentProperty(gameInstancePK(), "arr")
+                r3_instance.agents.getAgentProperty(getGameInstancePK(), "arr")
                     .length
             ).to.equal(2);
             expect(r1_instance.state.arr[1].name).to.equal("D2");
@@ -672,7 +672,7 @@ describe("Game API", function() {
                 r4_instance.agents.agentManagers().map(am => am.id)
             ).to.deep.equal([0, 1, 2, 3]);
             expect(
-                r4_instance.agents.getAgentProperty(gameInstancePK(), "arr")
+                r4_instance.agents.getAgentProperty(getGameInstancePK(), "arr")
                     .length
             ).to.equal(1);
             expect(r1.instance.state.arr[0].name).to.equal("D1");

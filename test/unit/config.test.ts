@@ -19,7 +19,7 @@ import {
     Dummy
 } from "../test-utils";
 import { on } from "../../src/events";
-import { Agent, PropertyOperation, gameInstancePK } from "../../src/agents";
+import { Agent, PropertyOperation, getGameInstancePK } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 import { buildGameInstance, GameInstanceInternal } from "../../src/state";
 import { SEED_LENGTH, DEFAULT_SEED_CHARSET } from "../../src/random";
@@ -851,7 +851,7 @@ describe("Config", function() {
                 })(myGame);
 
                 myGame.agents
-                    .getAgentManager(gameInstancePK().plus(1))
+                    .getAgentManager(getGameInstancePK().plus(1))
                     .getPropertyHistory("name")
                     .unshift({} as any);
 

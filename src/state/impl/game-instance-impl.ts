@@ -9,7 +9,7 @@ import {
     activateAgent,
     buildActiveAgentProxy,
     buildInstanceAgents,
-    gameInstancePK,
+    getGameInstancePK,
     InstanceAgentsInternal,
     isAgent,
     StaticAgentRegistry
@@ -98,7 +98,7 @@ class GameInstanceImpl<StateType = any>
         this.output = outputBuilder(this);
         this.random = randomBuilder(this);
         this.state = (buildActiveAgentProxy(
-            gameInstancePK(),
+            getGameInstancePK(),
             this
         ) as unknown) as StateType;
     }

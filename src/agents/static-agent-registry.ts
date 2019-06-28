@@ -11,7 +11,7 @@
 import { Mutable, PK } from "../common";
 import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent";
-import { STATIC_AGENT_PK_PROVIDER } from "./impl";
+import { getInactiveAgentPK, STATIC_AGENT_PK_PROVIDER } from "./impl";
 import { propertyIsAgentId } from "./instance-agents-internal";
 
 /**
@@ -59,6 +59,11 @@ export class StaticAgentRegistry {
      * @param agent The agent to be added.
      */
     public static addAgent(agent: Mutable<Agent>): void {
+        if (agent.id !== undefined && !agent.id.equals(getInactiveAgentPK())) {
+            throw new RegalError(
+                `Only inactive agents can be added to the static registry. This one already has an id of <${agent.id.value()}>.`
+            );
+        }
         agent.id = STATIC_AGENT_PK_PROVIDER.next();
 
         this[agent.id.value()] = agent;
