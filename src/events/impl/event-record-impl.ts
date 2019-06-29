@@ -6,6 +6,7 @@
  */
 
 import { PropertyChange } from "../../agents";
+import { FK } from "../../common";
 import { OutputLine } from "../../output";
 import { RandomRecord } from "../../random";
 import {
@@ -29,7 +30,7 @@ export const buildEventRecord = (
 ): EventRecord => new EventRecordImpl(id, name, func);
 
 class EventRecordImpl implements EventRecord {
-    public output?: number[];
+    public output?: Array<FK<OutputLine>>;
     public causedBy?: number;
     public caused?: number[];
     public changes?: PropertyChange[];
@@ -45,7 +46,7 @@ class EventRecordImpl implements EventRecord {
         if (this.output === undefined) {
             this.output = [];
         }
-        this.output.push(line.id);
+        this.output.push(line.id.ref());
     }
 
     public trackCausedEvent(...events: EventRecord[]): void {

@@ -6,6 +6,7 @@
  */
 
 import { PropertyChange } from "../agents";
+import { FK } from "../common";
 import { OutputLine } from "../output";
 import { RandomRecord } from "../random";
 import { TrackedEvent } from "./event-types";
@@ -29,7 +30,7 @@ export interface EventRecord {
     func: TrackedEvent;
 
     /** The IDs of the `OutputLine`s emitted by the event. */
-    output?: number[];
+    output?: Array<FK<OutputLine>>;
 
     /** The ID of the event that caused this event. */
     causedBy?: number;

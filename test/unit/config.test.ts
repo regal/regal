@@ -231,7 +231,7 @@ describe("Config", function() {
 
                 expect(myGame.output.lines).to.deep.equal([
                     {
-                        id: 1,
+                        id: getInitialOutputPK(),
                         type: OutputLineType.MINOR,
                         data: "Hello, world!"
                     }
@@ -270,7 +270,7 @@ describe("Config", function() {
 
             it("Full agent property history is shown when GameOptions.trackAgentChanges is set to true", function() {
                 prepAgentTest();
-                const [pk0, pk1, pk2] = aPKs(2);
+                const [apk0, apk1, apk2] = aPKs(2);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: true
@@ -281,8 +281,8 @@ describe("Config", function() {
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [apk0.value()]: {
+                        id: apk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -302,7 +302,7 @@ describe("Config", function() {
                         causedBy: 1,
                         changes: [
                             {
-                                agentId: pk0,
+                                agentId: apk0,
                                 final: 0,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
@@ -323,8 +323,8 @@ describe("Config", function() {
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [apk0.value()]: {
+                        id: apk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -346,14 +346,14 @@ describe("Config", function() {
                             {
                                 eventId: 4,
                                 eventName: "ADD",
-                                final: { refId: pk1 },
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
                     },
-                    [pk1.value()]: {
-                        id: pk1,
+                    [apk1.value()]: {
+                        id: apk1,
                         game: response.instance,
                         name: [
                             {
@@ -394,10 +394,10 @@ describe("Config", function() {
                         id: 5,
                         name: "INTRODUCE",
                         causedBy: 4,
-                        output: [1],
+                        output: [getInitialOutputPK()],
                         changes: [
                             {
-                                agentId: pk1,
+                                agentId: apk1,
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED,
@@ -412,35 +412,35 @@ describe("Config", function() {
                         caused: [5],
                         changes: [
                             {
-                                agentId: pk1,
+                                agentId: apk1,
                                 final: "Lars",
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "name"
                             },
                             {
-                                agentId: pk1,
+                                agentId: apk1,
                                 final: 10,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "health"
                             },
                             {
-                                agentId: pk1,
+                                agentId: apk1,
                                 final: "Lars the Great",
                                 init: "Lars",
                                 op: PropertyOperation.MODIFIED,
                                 property: "name"
                             },
                             {
-                                agentId: pk0,
-                                final: { refId: pk1 },
+                                agentId: apk0,
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "currentDummy"
                             },
                             {
-                                agentId: pk0,
+                                agentId: apk0,
                                 final: 1,
                                 init: 0,
                                 op: PropertyOperation.MODIFIED,
@@ -461,8 +461,8 @@ describe("Config", function() {
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [apk0.value()]: {
+                        id: apk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -484,21 +484,21 @@ describe("Config", function() {
                             {
                                 eventId: 7,
                                 eventName: "ADD",
-                                final: { refId: pk2 },
-                                init: { refId: pk1 },
+                                final: { refId: apk2 },
+                                init: { refId: apk1 },
                                 op: PropertyOperation.MODIFIED
                             },
                             {
                                 eventId: 0,
                                 eventName: "DEFAULT",
-                                final: { refId: pk1 },
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
                     },
-                    [pk1.value()]: {
-                        id: pk1,
+                    [apk1.value()]: {
+                        id: apk1,
                         game: response.instance,
                         name: [
                             {
@@ -519,8 +519,8 @@ describe("Config", function() {
                             }
                         ]
                     },
-                    [pk2.value()]: {
-                        id: pk2,
+                    [apk2.value()]: {
+                        id: apk2,
                         game: response.instance,
                         name: [
                             {
@@ -561,10 +561,10 @@ describe("Config", function() {
                         id: 8,
                         name: "INTRODUCE",
                         causedBy: 7,
-                        output: [2],
+                        output: [getInitialOutputPK().plus(1)],
                         changes: [
                             {
-                                agentId: pk2,
+                                agentId: apk2,
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED,
@@ -579,35 +579,35 @@ describe("Config", function() {
                         caused: [8],
                         changes: [
                             {
-                                agentId: pk2,
+                                agentId: apk2,
                                 final: "Jeffrey",
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "name"
                             },
                             {
-                                agentId: pk2,
+                                agentId: apk2,
                                 final: 10,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "health"
                             },
                             {
-                                agentId: pk2,
+                                agentId: apk2,
                                 final: "Jeffrey the Great",
                                 init: "Jeffrey",
                                 op: PropertyOperation.MODIFIED,
                                 property: "name"
                             },
                             {
-                                agentId: pk0,
-                                final: { refId: pk2 },
-                                init: { refId: pk1 },
+                                agentId: apk0,
+                                final: { refId: apk2 },
+                                init: { refId: apk1 },
                                 op: PropertyOperation.MODIFIED,
                                 property: "currentDummy"
                             },
                             {
-                                agentId: pk0,
+                                agentId: apk0,
                                 final: 2,
                                 init: 1,
                                 op: PropertyOperation.MODIFIED,
@@ -625,7 +625,7 @@ describe("Config", function() {
 
             it("Reduced agent property history is shown when GameOptions.trackAgentChanges is set to false", function() {
                 prepAgentTest();
-                const [pk0, pk1, pk2] = aPKs(2);
+                const [apk0, apk1, apk2] = aPKs(2);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: false
@@ -635,8 +635,8 @@ describe("Config", function() {
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [apk0.value()]: {
+                        id: apk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -668,8 +668,8 @@ describe("Config", function() {
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [apk0.value()]: {
+                        id: apk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -691,14 +691,14 @@ describe("Config", function() {
                             {
                                 eventId: 4,
                                 eventName: "ADD",
-                                final: { refId: pk1 },
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
                     },
-                    [pk1.value()]: {
-                        id: pk1,
+                    [apk1.value()]: {
+                        id: apk1,
                         game: response.instance,
                         name: [
                             {
@@ -725,7 +725,7 @@ describe("Config", function() {
                         id: 5,
                         name: "INTRODUCE",
                         causedBy: 4,
-                        output: [1]
+                        output: [getInitialOutputPK()]
                     },
                     {
                         id: 4,
@@ -746,8 +746,8 @@ describe("Config", function() {
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [apk0.value()]: {
+                        id: apk0,
                         game: response.instance,
                         dummyCount: [
                             {
@@ -769,21 +769,21 @@ describe("Config", function() {
                             {
                                 eventId: 7,
                                 eventName: "ADD",
-                                final: { refId: pk2 },
-                                init: { refId: pk1 },
+                                final: { refId: apk2 },
+                                init: { refId: apk1 },
                                 op: PropertyOperation.MODIFIED
                             },
                             {
                                 eventId: 0,
                                 eventName: "DEFAULT",
-                                final: { refId: pk1 },
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
                     },
-                    [pk1.value()]: {
-                        id: pk1,
+                    [apk1.value()]: {
+                        id: apk1,
                         game: response.instance,
                         name: [
                             {
@@ -804,8 +804,8 @@ describe("Config", function() {
                             }
                         ]
                     },
-                    [pk2.value()]: {
-                        id: pk2,
+                    [apk2.value()]: {
+                        id: apk2,
                         game: response.instance,
                         name: [
                             {
@@ -832,7 +832,7 @@ describe("Config", function() {
                         id: 8,
                         name: "INTRODUCE",
                         causedBy: 7,
-                        output: [2]
+                        output: [getInitialOutputPK().plus(1)]
                     },
                     {
                         id: 7,

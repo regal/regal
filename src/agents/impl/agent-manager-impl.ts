@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { PK } from "../../common";
+import { FK, PK } from "../../common";
 import { RegalError } from "../../error";
 import { DEFAULT_EVENT_ID, EventRecord } from "../../events";
 import { GameInstanceInternal } from "../../state";
@@ -24,11 +24,11 @@ import { StaticAgentRegistry } from "../static-agent-registry";
 export const buildAgentManager = (
     id: PK<Agent>,
     game: GameInstanceInternal
-): AgentManager => new AgentManagerImpl(id, game);
+): AgentManager => new AgentManagerImpl(id.ref(), game);
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
-    constructor(public id: PK<Agent>, public game: GameInstanceInternal) {}
+    constructor(public id: FK<Agent>, public game: GameInstanceInternal) {}
 
     public hasPropertyRecord(property: PropertyKey): boolean {
         if (property === "constructor") {
@@ -103,7 +103,7 @@ class AgentManagerImpl implements AgentManager {
         const event = this.game.events.current;
 
         const propChange: PropertyChange = {
-            agentId: this.id,
+            agentId: this.id.ref(),
             eventId: event.id,
             eventName: event.name,
             final: value,
@@ -141,7 +141,7 @@ class AgentManagerImpl implements AgentManager {
         const event = this.game.events.current;
 
         const propChange: PropertyChange = {
-            agentId: this.id,
+            agentId: this.id.ref(),
             eventId: event.id,
             eventName: event.name,
             final: undefined,

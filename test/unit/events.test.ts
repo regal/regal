@@ -13,7 +13,14 @@ import {
     buildInstanceEvents,
     GameEventBuilder
 } from "../../src/events";
-import { log, getDemoMetadata, Dummy, aPKs } from "../test-utils";
+import {
+    log,
+    getDemoMetadata,
+    Dummy,
+    aPKs,
+    oPKs,
+    getInitialOutputPK
+} from "../test-utils";
 import {
     Agent,
     PropertyOperation,
@@ -45,12 +52,12 @@ describe("Events", function() {
             {
                 id: 1,
                 name: "GREET",
-                output: [1]
+                output: [getInitialOutputPK()]
             }
         ]);
         expect(myGame.output.lines).to.deep.equal([
             {
-                id: 1,
+                id: getInitialOutputPK(),
                 type: OutputLineType.NORMAL,
                 data: "Hello, world!"
             }
@@ -72,12 +79,12 @@ describe("Events", function() {
             {
                 id: 1,
                 name: "GREET <Regal>",
-                output: [1]
+                output: [getInitialOutputPK()]
             }
         ]);
         expect(myGame.output.lines).to.deep.equal([
             {
-                id: 1,
+                id: getInitialOutputPK(),
                 type: OutputLineType.NORMAL,
                 data: "Hello, Regal!"
             }
@@ -110,7 +117,7 @@ describe("Events", function() {
                 id: 2,
                 causedBy: 1,
                 name: "MORNING",
-                output: [1]
+                output: [getInitialOutputPK()]
             },
             {
                 id: 1,
@@ -120,7 +127,7 @@ describe("Events", function() {
         ]);
         expect(myGame.output.lines).to.deep.equal([
             {
-                id: 1,
+                id: getInitialOutputPK(),
                 type: OutputLineType.NORMAL,
                 data: "Have a great day!"
             }
@@ -215,6 +222,7 @@ describe("Events", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const [opk0, opk1, opk2] = oPKs(2);
 
             makeSword("King Arthur")(myGame);
 
@@ -223,34 +231,34 @@ describe("Events", function() {
                     id: 3,
                     causedBy: 1,
                     name: "ADD ITEM <Sword>",
-                    output: [3]
+                    output: [opk2]
                 },
                 {
                     id: 2,
                     causedBy: 1,
                     name: "LEARN SKILL <Blacksmithing>",
-                    output: [2]
+                    output: [opk1]
                 },
                 {
                     id: 1,
                     name: "MAKE SWORD",
-                    output: [1],
+                    output: [opk0],
                     caused: [2, 3]
                 }
             ]);
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.NORMAL,
                     data: "King Arthur made a sword!"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.NORMAL,
                     data: "King Arthur learned Blacksmithing!"
                 },
                 {
-                    id: 3,
+                    id: opk2,
                     type: OutputLineType.NORMAL,
                     data: "Added Sword to King Arthur's inventory."
                 }
@@ -323,6 +331,7 @@ describe("Events", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const [opk0, opk1, opk2, opk3, opk4, opk5] = oPKs(5);
             const items = ["Hat", "Duck", "Spoon"];
 
             drop(items)(myGame);
@@ -332,39 +341,39 @@ describe("Events", function() {
                     id: 7,
                     causedBy: 4,
                     name: "HIT GROUND <Spoon>",
-                    output: [6]
+                    output: [opk5]
                 },
                 {
                     id: 6,
                     causedBy: 3,
                     name: "HIT GROUND <Duck>",
-                    output: [5]
+                    output: [opk4]
                 },
                 {
                     id: 5,
                     causedBy: 2,
                     name: "HIT GROUND <Hat>",
-                    output: [4]
+                    output: [opk3]
                 },
                 {
                     id: 4,
                     causedBy: 1,
                     name: "FALL <Spoon>",
-                    output: [3],
+                    output: [opk2],
                     caused: [7]
                 },
                 {
                     id: 3,
                     causedBy: 1,
                     name: "FALL <Duck>",
-                    output: [2],
+                    output: [opk1],
                     caused: [6]
                 },
                 {
                     id: 2,
                     causedBy: 1,
                     name: "FALL <Hat>",
-                    output: [1],
+                    output: [opk0],
                     caused: [5]
                 },
                 {
@@ -375,32 +384,32 @@ describe("Events", function() {
             ]);
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.NORMAL,
                     data: "Hat falls."
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.NORMAL,
                     data: "Duck falls."
                 },
                 {
-                    id: 3,
+                    id: opk2,
                     type: OutputLineType.NORMAL,
                     data: "Spoon falls."
                 },
                 {
-                    id: 4,
+                    id: opk3,
                     type: OutputLineType.NORMAL,
                     data: "Hat hits the ground. Thud!"
                 },
                 {
-                    id: 5,
+                    id: opk4,
                     type: OutputLineType.NORMAL,
                     data: "Duck hits the ground. Thud!"
                 },
                 {
-                    id: 6,
+                    id: opk5,
                     type: OutputLineType.NORMAL,
                     data: "Spoon hits the ground. Thud!"
                 }
@@ -415,12 +424,13 @@ describe("Events", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const [opk0, opk1] = oPKs(1);
 
             spam.then(spam)(myGame);
 
             expect(myGame.output.lines).to.deep.equal([
-                { data: "Get spammed.", id: 1, type: OutputLineType.NORMAL },
-                { data: "Get spammed.", id: 2, type: OutputLineType.NORMAL }
+                { data: "Get spammed.", id: opk0, type: OutputLineType.NORMAL },
+                { data: "Get spammed.", id: opk1, type: OutputLineType.NORMAL }
             ]);
         });
 
@@ -749,7 +759,7 @@ describe("Events", function() {
                 {
                     id: 1,
                     name: "HEAL",
-                    output: [1],
+                    output: [getInitialOutputPK()],
                     changes: [
                         {
                             agentId: getGameInstancePK().plus(1),
@@ -763,7 +773,7 @@ describe("Events", function() {
             ]);
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: getInitialOutputPK(),
                     type: OutputLineType.NORMAL,
                     data: "Healed Lars by 15. Health is now 25."
                 }
@@ -812,14 +822,15 @@ describe("Events", function() {
             const myGame = buildGameInstance({ trackAgentChanges: true });
             start(myGame);
 
-            const [pk0, pk1, pk2] = aPKs(2);
+            const [apk0, apk1, apk2] = aPKs(2);
+            const [opk0, opk1, opk2] = oPKs(2);
 
             expect(myGame.events.history).to.deep.equal([
                 {
                     id: 3,
                     name: "READ STATUS",
                     causedBy: 1,
-                    output: [2, 3]
+                    output: [opk1, opk2]
                 },
                 {
                     id: 4,
@@ -827,7 +838,7 @@ describe("Events", function() {
                     causedBy: 2,
                     changes: [
                         {
-                            agentId: pk2,
+                            agentId: apk2,
                             op: PropertyOperation.MODIFIED,
                             property: "health",
                             init: 25,
@@ -838,31 +849,31 @@ describe("Events", function() {
                 {
                     id: 2,
                     name: "ADD FRIEND",
-                    output: [1],
+                    output: [opk0],
                     causedBy: 1,
                     caused: [4],
                     changes: [
                         {
-                            agentId: pk2,
+                            agentId: apk2,
                             op: PropertyOperation.ADDED,
                             property: "name",
                             init: undefined,
                             final: "Bill"
                         },
                         {
-                            agentId: pk2,
+                            agentId: apk2,
                             op: PropertyOperation.ADDED,
                             property: "health",
                             init: undefined,
                             final: 25
                         },
                         {
-                            agentId: pk1,
+                            agentId: apk1,
                             op: PropertyOperation.ADDED,
                             property: "friend",
                             init: undefined,
                             final: {
-                                refId: pk2
+                                refId: apk2
                             }
                         }
                     ]
@@ -873,26 +884,26 @@ describe("Events", function() {
                     caused: [2, 3],
                     changes: [
                         {
-                            agentId: pk1,
+                            agentId: apk1,
                             op: PropertyOperation.ADDED,
                             property: "name",
                             init: undefined,
                             final: "Lars"
                         },
                         {
-                            agentId: pk1,
+                            agentId: apk1,
                             op: PropertyOperation.ADDED,
                             property: "health",
                             init: undefined,
                             final: 10
                         },
                         {
-                            agentId: pk0,
+                            agentId: apk0,
                             op: PropertyOperation.ADDED,
                             property: "mainAgent",
                             init: undefined,
                             final: {
-                                refId: pk1
+                                refId: apk1
                             }
                         }
                     ]
@@ -900,17 +911,17 @@ describe("Events", function() {
             ]);
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.NORMAL,
                     data: "Lars has a new friend! (Bill)"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.NORMAL,
                     data: "Lars's health is 10."
                 },
                 {
-                    id: 3,
+                    id: opk2,
                     type: OutputLineType.NORMAL,
                     data: "Bill's health is 36."
                 }

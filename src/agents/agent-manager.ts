@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { PK } from "../common";
+import { FK } from "../common";
 import { GameInstance } from "../state";
 import { Agent } from "./agent";
 import { PropertyChange } from "./agent-properties";
@@ -19,7 +19,7 @@ import { PropertyChange } from "./agent-properties";
  */
 export interface AgentManager {
     /** The managed agent's id. */
-    id: PK<Agent>;
+    id: FK<Agent>;
 
     /** The `GameInstance` in which the agent is active. */
     game: GameInstance;

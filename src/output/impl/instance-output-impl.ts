@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { PKProvider, buildPKProvider } from "../../common";
+import { buildPKProvider, PKProvider } from "../../common";
 import { GameInstanceInternal } from "../../state";
 import { InstanceOutputInternal } from "../instance-output-internal";
 import { OutputLine, OutputLineType } from "../output-line";
