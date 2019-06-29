@@ -108,6 +108,8 @@ export interface PKProvider<T> {
      * actually generated.
      */
     isPossibleKeyValue(str: string): boolean;
+
+    countGenerated(): number;
 }
 
 /**

@@ -1,3 +1,5 @@
+import { PK } from "../common";
+
 /*
  * Contains interfaces that represent lines of output generated
  * within a Regal game.
@@ -50,7 +52,7 @@ export enum OutputLineType {
  */
 export interface OutputLine {
     /** The `OutputLine`'s unique identifier. */
-    id: number;
+    id: PK<OutputLine>;
 
     /** The text string. */
     data: string;

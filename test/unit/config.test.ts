@@ -19,7 +19,8 @@ import {
     Dummy,
     smartObjectEquals,
     TestProperty,
-    pks
+    aPKs,
+    getInitialOutputPK
 } from "../test-utils";
 import { on } from "../../src/events";
 import { Agent, PropertyOperation, getGameInstancePK } from "../../src/agents";
@@ -208,7 +209,7 @@ describe("Config", function() {
 
                 expect(myGame.output.lines).to.deep.equal([
                     {
-                        id: 1,
+                        id: getInitialOutputPK(),
                         type: OutputLineType.DEBUG,
                         data: "Hello, world!"
                     }
@@ -269,7 +270,7 @@ describe("Config", function() {
 
             it("Full agent property history is shown when GameOptions.trackAgentChanges is set to true", function() {
                 prepAgentTest();
-                const [pk0, pk1, pk2] = pks(2);
+                const [pk0, pk1, pk2] = aPKs(2);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: true
@@ -624,7 +625,7 @@ describe("Config", function() {
 
             it("Reduced agent property history is shown when GameOptions.trackAgentChanges is set to false", function() {
                 prepAgentTest();
-                const [pk0, pk1, pk2] = pks(2);
+                const [pk0, pk1, pk2] = aPKs(2);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: false

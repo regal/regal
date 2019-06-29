@@ -8,7 +8,7 @@ import {
     makeAgents,
     smartObjectEquals,
     TestProperty,
-    pks
+    aPKs
 } from "../test-utils";
 import { Game } from "../../src/api";
 import {
@@ -546,7 +546,7 @@ describe("Agents", function() {
                     game.state.arr = [];
                 })(myGame);
 
-                const [pk0, pk1] = pks(1);
+                const [pk0, pk1] = aPKs(1);
 
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -621,7 +621,7 @@ describe("Agents", function() {
                     game.state.arr = [1, false, "foo"];
                 })(myGame);
 
-                const [pk0, pk1] = pks(1);
+                const [pk0, pk1] = aPKs(1);
 
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -754,7 +754,7 @@ describe("Agents", function() {
                     game.state.arr = [d1, d2, d3];
                 })(myGame);
 
-                const [pk0, pk1, pk2, pk3, pk4] = pks(4);
+                const [pk0, pk1, pk2, pk3, pk4] = aPKs(4);
 
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -939,7 +939,7 @@ describe("Agents", function() {
                 const d1 = myGame.state.arr[0];
                 const d2 = myGame.state.arr[1];
 
-                const [_pk0, _pk1, pk2, pk3] = pks(3);
+                const [_pk0, _pk1, pk2, pk3] = aPKs(3);
 
                 expect(d1.id.equals(pk2)).to.be.true;
                 expect(d1.name).to.equal("D1");
@@ -983,7 +983,7 @@ describe("Agents", function() {
                     game.state.dummies = [d1, d2];
                 })(myGame);
 
-                const [_pk0, pk1, pk2] = pks(2);
+                const [_pk0, pk1, pk2] = aPKs(2);
 
                 expect(myGame.state.dummies).to.deep.equal([
                     { id: pk1, name: "D1", health: 10 },
@@ -1001,7 +1001,7 @@ describe("Agents", function() {
                 ];
                 myGame.state.dummies.unshift(new Dummy("D3", 15));
 
-                const [_pk0, _pk1, pk2, pk3, pk4] = pks(4);
+                const [_pk0, _pk1, pk2, pk3, pk4] = aPKs(4);
 
                 expect(
                     myGame.state.dummies.map(dummy => ({
@@ -1096,7 +1096,7 @@ describe("Agents", function() {
 
                 const arr = myGame.using([makeAgents(10, 5)]);
 
-                const [_pk0, pk1, pk2, pk3, pk4, pk5, pk6, pk7, pk8] = pks(8);
+                const [_pk0, pk1, pk2, pk3, pk4, pk5, pk6, pk7, pk8] = aPKs(8);
 
                 expect(arr).to.deep.equal([
                     [
@@ -1186,7 +1186,7 @@ describe("Agents", function() {
                 arr.unshift(makeAgents(3, 4));
                 myGame.state.arr = arr;
 
-                const [pk0, pk1, pk2, pk3, pk4, pk5, pk6, pk7, pk8, pk9] = pks(
+                const [pk0, pk1, pk2, pk3, pk4, pk5, pk6, pk7, pk8, pk9] = aPKs(
                     9
                 );
 
@@ -1481,7 +1481,7 @@ describe("Agents", function() {
                 const p = new MultiParent([new Dummy("D1", 10), d2]);
                 const q = new MultiParent(p.children);
 
-                const [pk0, pk1, pk2] = pks(2);
+                const [pk0, pk1, pk2] = aPKs(2);
 
                 expect(p.children).to.deep.equal([
                     {
@@ -1910,7 +1910,7 @@ describe("Agents", function() {
                 });
             })(myGame);
 
-            const [pk0, pk1] = pks(1);
+            const [pk0, pk1] = aPKs(1);
 
             // Verify initial condition
             smartObjectEquals(myGame.agents, {
@@ -2039,7 +2039,7 @@ describe("Agents", function() {
                 });
             })(myGame);
 
-            const [pk0, pk1] = pks(1);
+            const [pk0, pk1] = aPKs(1);
 
             // Verify initial condition
             smartObjectEquals(myGame.agents, {
@@ -2163,7 +2163,7 @@ describe("Agents", function() {
                 });
             })(myGame);
 
-            const [pk0, pk1] = pks(1);
+            const [pk0, pk1] = aPKs(1);
 
             const game2 = myGame.recycle();
 
@@ -2226,7 +2226,7 @@ describe("Agents", function() {
 
             const game2 = myGame.recycle();
 
-            const [pk0, pk1] = pks(1);
+            const [pk0, pk1] = aPKs(1);
 
             smartObjectEquals(game2.agents, {
                 _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -2279,7 +2279,7 @@ describe("Agents", function() {
 
             const game2 = myGame.recycle();
 
-            const [pk0, pk1] = pks(1);
+            const [pk0, pk1] = aPKs(1);
 
             smartObjectEquals(game2.agents, {
                 _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -2637,7 +2637,7 @@ describe("Agents", function() {
 
     describe("StaticAgentRegistry", function() {
         it("STATIC_AGENT_PK_PROVIDER increments by 1 for each static agent added to the static registry", function() {
-            const [_pk0, pk1, pk2, pk3, _pk4, pk5] = pks(5);
+            const [_pk0, pk1, pk2, pk3, _pk4, pk5] = aPKs(5);
 
             expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk1)).to.be.true;
 
@@ -2748,7 +2748,7 @@ describe("Agents", function() {
             const D = new Dummy("D1", 10);
             const P = new Parent(new Dummy("D2", 25));
 
-            const [_pk0, pk1, pk2, pk3] = pks(3);
+            const [_pk0, pk1, pk2, pk3] = aPKs(3);
 
             expect(StaticAgentRegistry.hasAgent(pk1)).to.be.true;
             expect(StaticAgentRegistry.hasAgent(pk2)).to.be.true;
@@ -2773,7 +2773,7 @@ describe("Agents", function() {
             myGame.state.dummy = new Parent(new Dummy("D1", 10));
             const float = myGame.using(new Dummy("D2", 15));
 
-            const pks0_3 = pks(3);
+            const pks0_3 = aPKs(3);
 
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
@@ -2794,7 +2794,7 @@ describe("Agents", function() {
 
             expect(
                 myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks(2));
+            ).to.deep.equal(aPKs(2));
             expect(myGame.state.dummy).to.deep.equal({
                 id: pks0_3[1],
                 child: {
@@ -2821,7 +2821,7 @@ describe("Agents", function() {
             );
             myGame.state.arr = [true, new Dummy("D3", 3), p, p.children[0]];
 
-            const pks0_6 = pks(6);
+            const pks0_6 = aPKs(6);
 
             expect(
                 myGame.agents.agentManagers().map(am => am.id)

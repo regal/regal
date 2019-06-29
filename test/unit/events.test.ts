@@ -13,7 +13,7 @@ import {
     buildInstanceEvents,
     GameEventBuilder
 } from "../../src/events";
-import { log, getDemoMetadata, Dummy, pks } from "../test-utils";
+import { log, getDemoMetadata, Dummy, aPKs } from "../test-utils";
 import {
     Agent,
     PropertyOperation,
@@ -812,7 +812,7 @@ describe("Events", function() {
             const myGame = buildGameInstance({ trackAgentChanges: true });
             start(myGame);
 
-            const [pk0, pk1, pk2] = pks(2);
+            const [pk0, pk1, pk2] = aPKs(2);
 
             expect(myGame.events.history).to.deep.equal([
                 {

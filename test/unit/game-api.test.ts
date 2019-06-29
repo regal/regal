@@ -17,7 +17,7 @@ import {
     metadataWithOptions,
     metadataWithVersion,
     Dummy,
-    pks
+    aPKs
 } from "../test-utils";
 import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
@@ -272,7 +272,7 @@ describe("Game API", function() {
 
             const r1 = Game.postStartCommand();
             const r1_instance = r1.instance as GameInstanceInternal;
-            const pks0_3 = pks(3);
+            const pks0_3 = aPKs(3);
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)
@@ -318,7 +318,7 @@ describe("Game API", function() {
             ).to.deep.equal(pks0_3);
             expect(
                 r3_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks(2));
+            ).to.deep.equal(aPKs(2));
 
             expect(r3.output).to.deep.equal({
                 wasSuccessful: true,
@@ -336,10 +336,10 @@ describe("Game API", function() {
 
             expect(
                 r3_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks(2));
+            ).to.deep.equal(aPKs(2));
             expect(
                 r4_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks(1));
+            ).to.deep.equal(aPKs(1));
         });
 
         it("Calling before initialization throws an error", function() {
@@ -630,7 +630,7 @@ describe("Game API", function() {
 
             const r1 = Game.postStartCommand();
             const r1_instance = r1.instance as GameInstanceInternal;
-            const pks0_3 = pks(3);
+            const pks0_3 = aPKs(3);
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)

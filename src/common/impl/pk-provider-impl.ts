@@ -107,4 +107,8 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
             tryNum >= PKProviderImpl.START_VALUE
         );
     }
+
+    public countGenerated(): number {
+        return this.lastPK.index();
+    }
 }

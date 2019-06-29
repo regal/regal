@@ -2,7 +2,7 @@ import { expect } from "chai";
 import "mocha";
 
 import { OutputLineType, buildInstanceOutput } from "../../src/output";
-import { getDemoMetadata } from "../test-utils";
+import { getDemoMetadata, oPKs } from "../test-utils";
 import { Game } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
 
@@ -160,31 +160,33 @@ describe("Output", function() {
                 "There are things here."
             );
 
+            const [pk0, pk1, pk2, pk3] = oPKs(3);
+
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: pk0,
                     type: OutputLineType.DEBUG,
                     data: "Room loaded."
                 },
                 {
-                    id: 2,
+                    id: pk1,
                     type: OutputLineType.SECTION_TITLE,
                     data: "West of House"
                 },
                 {
-                    id: 3,
+                    id: pk2,
                     type: OutputLineType.NORMAL,
                     data: "You are west of a house."
                 },
                 {
-                    id: 4,
+                    id: pk3,
                     type: OutputLineType.NORMAL,
                     data: "There are things here."
                 }
             ]);
         });
 
-        it("The lineCount getter works properly when startingLineCount = 0", function() {
+        it("InstanceOutput.lineCount is equal to the number of lines generated", function() {
             const myGame = buildGameInstance();
 
             expect(myGame.output.lineCount).to.equal(0);
@@ -192,17 +194,6 @@ describe("Output", function() {
             myGame.output.write("Foo");
 
             expect(myGame.output.lineCount).to.equal(1);
-        });
-
-        it("The lineCount getter works properly when startingLineCount is not 0", function() {
-            const myGame = buildGameInstance();
-            myGame.output = buildInstanceOutput(myGame, 10);
-
-            expect(myGame.output.lineCount).to.equal(10);
-
-            myGame.output.write("Foo");
-
-            expect(myGame.output.lineCount).to.equal(11);
         });
 
         it("InstanceOutput.recycle creates a new InstanceOutput with the previous instance's lineCount", function() {
