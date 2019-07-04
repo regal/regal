@@ -7,7 +7,7 @@
 
 import { FK, PK } from "../../common";
 import { RegalError } from "../../error";
-import { DEFAULT_EVENT_ID, EventRecord } from "../../events";
+import { EventRecord, getUntrackedEventPK } from "../../events";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
 import { AgentManager } from "../agent-manager";
@@ -183,7 +183,8 @@ class AgentManagerImpl implements AgentManager {
             // A change should be replaced if it happened during the same event,
             // or if the change happened after any potential recycling
             const shouldReplaceSingle = (pc: PropertyChange) =>
-                pc.eventId === event.id || pc.eventId > DEFAULT_EVENT_ID;
+                pc.eventId === event.id ||
+                pc.eventId.index > getUntrackedEventPK().index;
 
             // If the property history has two changes, update the more recent one.
             // If property history has only change, check when the change happened.

@@ -8,7 +8,8 @@ import {
     makeAgents,
     smartObjectEquals,
     TestProperty,
-    aPKs
+    aPKs,
+    ePKs
 } from "../test-utils";
 import { Game } from "../../src/api";
 import {
@@ -18,10 +19,7 @@ import {
     getGameInstancePK
 } from "../../src/agents";
 import { RegalError } from "../../src/error";
-import {
-    DEFAULT_EVENT_ID,
-    DEFAULT_EVENT_NAME
-} from "../../src/events/event-record";
+import { DEFAULT_EVENT_NAME, getUntrackedEventPK } from "../../src/events";
 import { on } from "../../src/events";
 import { buildGameInstance } from "../../src/state";
 import { STATIC_AGENT_PK_PROVIDER } from "../../src/agents/impl";
@@ -1722,6 +1720,7 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 15));
             const dr = myGame.agents.getAgentManager(d.id);
+            const [epk0, epk1] = ePKs(1);
 
             const addHealth = (dummy: Dummy) =>
                 on("ADD HEALTH", game => {
@@ -1732,7 +1731,7 @@ describe("Agents", function() {
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: epk0,
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
@@ -1742,14 +1741,14 @@ describe("Agents", function() {
 
             expect(dr.getPropertyHistory("health")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID + 1,
+                    eventId: epk1,
                     eventName: "ADD HEALTH",
                     op: PropertyOperation.MODIFIED,
                     init: 15,
                     final: 30
                 },
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: epk0,
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
@@ -1777,11 +1776,12 @@ describe("Agents", function() {
             addHealth(d)(myGame);
 
             const dr = myGame.agents.getAgentManager(d.id);
+            const [epk0, epk1] = ePKs(1);
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([]);
             expect(dr.getPropertyHistory("health")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID + 1,
+                    eventId: epk1,
                     eventName: "ADD HEALTH",
                     op: PropertyOperation.MODIFIED,
                     init: 15,
@@ -1790,7 +1790,7 @@ describe("Agents", function() {
             ]);
             expect(dr.getPropertyHistory("foo")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: epk0,
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.DELETED,
                     init: "bar",
@@ -1840,7 +1840,7 @@ describe("Agents", function() {
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: getUntrackedEventPK(),
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
@@ -1878,14 +1878,14 @@ describe("Agents", function() {
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: getUntrackedEventPK(),
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.DELETED,
                     init: "D1",
                     final: undefined
                 },
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: getUntrackedEventPK(),
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,

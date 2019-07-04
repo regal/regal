@@ -10,3 +10,4 @@ export { buildInstanceEvents } from "./instance-events-impl";
 export { buildEventQueue, buildThenMethod } from "./event-queue-impl";
 export { buildEventRecord } from "./event-record-impl";
 export { enqueue, nq, on } from "./event-builders";
+export { getUntrackedEventPK } from "./event-keys";

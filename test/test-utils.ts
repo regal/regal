@@ -5,6 +5,7 @@ import { expect } from "chai";
 import { getGameInstancePK, Agent } from "../src/agents";
 import { buildPKProvider, PK } from "../src/common";
 import { OutputLine } from "../src/output";
+import { getUntrackedEventPK } from "../src/events";
 
 export const log = (o: any, title?: string) =>
     console.log(
@@ -96,3 +97,9 @@ export const aPKs = (additional: number) =>
 // OutputLine PKs
 export const oPKs = (additional: number) =>
     pks(additional, getInitialOutputPK());
+
+// EventRecord PKs
+export const ePKs = (additional: number) =>
+    pks(additional, getUntrackedEventPK());
+
+export const ePKAtNum = (index: number) => getUntrackedEventPK().plus(index);

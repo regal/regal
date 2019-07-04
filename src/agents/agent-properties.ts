@@ -25,7 +25,7 @@ export enum PropertyOperation {
  */
 export interface PropertyChange {
     /** The numeric id of the `TrackedEvent` during which the change took place (optional). */
-    eventId?: number;
+    eventId?: FK<Agent>;
 
     /** The name of the `TrackedEvent` during which the change took place (optional). */
     eventName?: string;

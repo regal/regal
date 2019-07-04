@@ -6,38 +6,44 @@
  */
 
 import { PropertyChange } from "../../agents";
-import { FK } from "../../common";
+import { FK, PK } from "../../common";
 import { OutputLine } from "../../output";
 import { RandomRecord } from "../../random";
-import {
-    DEFAULT_EVENT_ID,
-    DEFAULT_EVENT_NAME,
-    EventRecord
-} from "../event-record";
+import { EventRecord } from "../event-record";
 import { noop, TrackedEvent } from "../event-types";
+import { getUntrackedEventPK } from "./event-keys";
+
+/** Name of untracked `EventFunction`s. */
+export const DEFAULT_EVENT_NAME: string = "DEFAULT";
 
 /**
  * Builds a new `EventRecord`.
  *
- * @param id The event's unique numeric ID (optional).
+ * @param id The event's unique ID (optional).
  * @param name The event's name (optional).
  * @param func The event's `TrackedEvent`. Defaults to `noop`.
  */
 export const buildEventRecord = (
-    id: number = DEFAULT_EVENT_ID,
+    id: PK<EventRecord> = undefined,
     name: string = DEFAULT_EVENT_NAME,
     func: TrackedEvent = noop
-): EventRecord => new EventRecordImpl(id, name, func);
+): EventRecord => {
+    if (id === undefined) {
+        id = getUntrackedEventPK();
+    }
+
+    return new EventRecordImpl(id, name, func);
+};
 
 class EventRecordImpl implements EventRecord {
     public output?: Array<FK<OutputLine>>;
-    public causedBy?: number;
-    public caused?: number[];
+    public causedBy?: FK<EventRecord>;
+    public caused?: Array<FK<EventRecord>>;
     public changes?: PropertyChange[];
     public randoms?: RandomRecord[];
 
     constructor(
-        public id: number,
+        public id: PK<EventRecord>,
         public name: string,
         public func: TrackedEvent
     ) {}
@@ -53,8 +59,8 @@ class EventRecordImpl implements EventRecord {
         if (this.caused === undefined) {
             this.caused = [];
         }
-        this.caused.push(...events.map(e => e.id));
-        events.forEach(e => (e.causedBy = this.id));
+        this.caused.push(...events.map(e => e.id.ref()));
+        events.forEach(e => (e.causedBy = this.id.ref()));
     }
 
     public trackChange(propChange: PropertyChange): void {
