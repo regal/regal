@@ -52,7 +52,7 @@ describe("Events", function() {
 
         expect(myGame.events.history).to.deep.equal([
             {
-                id: 1,
+                id: getUntrackedEventPK().plus(1),
                 name: "GREET",
                 output: [getInitialOutputPK()]
             }
@@ -79,7 +79,7 @@ describe("Events", function() {
 
         expect(myGame.events.history).to.deep.equal([
             {
-                id: 1,
+                id: getUntrackedEventPK().plus(1),
                 name: "GREET <Regal>",
                 output: [getInitialOutputPK()]
             }
