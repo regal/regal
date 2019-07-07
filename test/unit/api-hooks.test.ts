@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 
-import { on, noop } from "../../src/events";
+import { on, noop, getUntrackedEventPK } from "../../src/events";
 import { metadataWithOptions, getDemoMetadata } from "../test-utils";
 import { PropertyOperation, getGameInstancePK } from "../../src/agents";
 import { RegalError } from "../../src/error";
@@ -55,7 +55,7 @@ describe("API Hooks", function() {
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 1,
+                    id: getUntrackedEventPK().plus(1),
                     name: "INPUT",
                     changes: [
                         {
@@ -226,7 +226,7 @@ describe("API Hooks", function() {
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 1,
+                    id: getUntrackedEventPK().plus(1),
                     name: "START",
                     changes: [
                         {
