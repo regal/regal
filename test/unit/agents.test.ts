@@ -545,6 +545,7 @@ describe("Agents", function() {
                 })(myGame);
 
                 const [pk0, pk1] = aPKs(1);
+                const epk1 = getUntrackedEventPK().plus(1);
 
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -554,7 +555,7 @@ describe("Agents", function() {
                         game: myGame,
                         arr: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -567,7 +568,7 @@ describe("Agents", function() {
                         game: myGame,
                         length: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -578,7 +579,7 @@ describe("Agents", function() {
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
-                        id: 1,
+                        id: epk1,
                         name: "MOD",
                         changes: [
                             {
@@ -620,6 +621,7 @@ describe("Agents", function() {
                 })(myGame);
 
                 const [pk0, pk1] = aPKs(1);
+                const epk1 = getUntrackedEventPK().plus(1);
 
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -629,7 +631,7 @@ describe("Agents", function() {
                         game: myGame,
                         arr: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -642,7 +644,7 @@ describe("Agents", function() {
                         game: myGame,
                         length: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -651,7 +653,7 @@ describe("Agents", function() {
                         ],
                         0: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -660,7 +662,7 @@ describe("Agents", function() {
                         ],
                         1: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -669,7 +671,7 @@ describe("Agents", function() {
                         ],
                         2: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -680,7 +682,7 @@ describe("Agents", function() {
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
-                        id: 1,
+                        id: epk1,
                         name: "MOD",
                         changes: [
                             {
@@ -753,6 +755,7 @@ describe("Agents", function() {
                 })(myGame);
 
                 const [pk0, pk1, pk2, pk3, pk4] = aPKs(4);
+                const [epk0, epk1] = ePKs(1);
 
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -762,7 +765,7 @@ describe("Agents", function() {
                         game: myGame,
                         arr: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -775,8 +778,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: "D1"
@@ -784,8 +787,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 5
@@ -797,8 +800,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: "D2"
@@ -806,8 +809,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 10
@@ -819,8 +822,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: "D3"
@@ -828,8 +831,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 15
@@ -841,7 +844,7 @@ describe("Agents", function() {
                         game: myGame,
                         length: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -850,7 +853,7 @@ describe("Agents", function() {
                         ],
                         0: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -859,7 +862,7 @@ describe("Agents", function() {
                         ],
                         1: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -868,7 +871,7 @@ describe("Agents", function() {
                         ],
                         2: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -879,7 +882,7 @@ describe("Agents", function() {
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
-                        id: 1,
+                        id: epk1,
                         name: "MOD",
                         changes: [
                             {
@@ -1136,7 +1139,7 @@ describe("Agents", function() {
                     game: myGame,
                     0: [
                         {
-                            eventId: 0,
+                            eventId: getUntrackedEventPK(),
                             eventName: "DEFAULT",
                             final: {
                                 arRefId: pk2
@@ -1147,7 +1150,7 @@ describe("Agents", function() {
                     ],
                     1: [
                         {
-                            eventId: 0,
+                            eventId: getUntrackedEventPK(),
                             eventName: "DEFAULT",
                             final: {
                                 arRefId: pk8
@@ -1158,7 +1161,7 @@ describe("Agents", function() {
                     ],
                     length: [
                         {
-                            eventId: 0,
+                            eventId: getUntrackedEventPK(),
                             eventName: "DEFAULT",
                             final: 2,
                             init: 1,
@@ -1187,6 +1190,7 @@ describe("Agents", function() {
                 const [pk0, pk1, pk2, pk3, pk4, pk5, pk6, pk7, pk8, pk9] = aPKs(
                     9
                 );
+                const epk0 = getUntrackedEventPK();
 
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
@@ -1196,8 +1200,8 @@ describe("Agents", function() {
                         game: myGame,
                         arr: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: {
                                     arRefId: pk1
                                 },
@@ -1211,8 +1215,8 @@ describe("Agents", function() {
                         game: myGame,
                         0: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: {
                                     arRefId: pk5
                                 },
@@ -1222,8 +1226,8 @@ describe("Agents", function() {
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: {
                                     arRefId: pk2
                                 },
@@ -1233,8 +1237,8 @@ describe("Agents", function() {
                         ],
                         1: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: {
                                     arRefId: pk2
                                 },
@@ -1244,15 +1248,15 @@ describe("Agents", function() {
                         ],
                         length: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 2,
                                 init: 1,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 1,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1264,8 +1268,8 @@ describe("Agents", function() {
                         game: myGame,
                         0: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: { refId: pk3 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1273,8 +1277,8 @@ describe("Agents", function() {
                         ],
                         1: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: { refId: pk4 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1282,8 +1286,8 @@ describe("Agents", function() {
                         ],
                         length: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 2,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1295,8 +1299,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D0",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1304,8 +1308,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 0,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1317,8 +1321,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D1",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1326,8 +1330,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 1,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1339,8 +1343,8 @@ describe("Agents", function() {
                         game: myGame,
                         0: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: { refId: pk6 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1348,8 +1352,8 @@ describe("Agents", function() {
                         ],
                         1: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: { refId: pk7 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1357,8 +1361,8 @@ describe("Agents", function() {
                         ],
                         2: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: { refId: pk8 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1366,8 +1370,8 @@ describe("Agents", function() {
                         ],
                         3: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: { refId: pk9 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1375,8 +1379,8 @@ describe("Agents", function() {
                         ],
                         length: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 4,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1388,8 +1392,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D3",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1397,8 +1401,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 3,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1410,8 +1414,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D4",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1419,8 +1423,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 4,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1432,8 +1436,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D5",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1441,8 +1445,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 5,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1454,8 +1458,8 @@ describe("Agents", function() {
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D6",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1463,8 +1467,8 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 6,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
