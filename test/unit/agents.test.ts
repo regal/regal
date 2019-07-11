@@ -2045,6 +2045,7 @@ describe("Agents", function() {
             })(myGame);
 
             const [pk0, pk1] = aPKs(1);
+            const [epk0, epk1, epk2] = ePKs(2);
 
             // Verify initial condition
             smartObjectEquals(myGame.agents, {
@@ -2055,7 +2056,7 @@ describe("Agents", function() {
                     game: myGame,
                     dummy: [
                         {
-                            eventId: 1,
+                            eventId: epk1,
                             eventName: "INIT",
                             init: undefined,
                             final: {
@@ -2066,7 +2067,7 @@ describe("Agents", function() {
                     ],
                     foo: [
                         {
-                            eventId: 2,
+                            eventId: epk2,
                             eventName: "MOD",
                             init: undefined,
                             final: true,
@@ -2079,7 +2080,7 @@ describe("Agents", function() {
                     game: myGame,
                     name: [
                         {
-                            eventId: 2,
+                            eventId: epk2,
                             eventName: "MOD",
                             init: "D1",
                             final: "Jimmy",
@@ -2088,7 +2089,7 @@ describe("Agents", function() {
                     ],
                     health: [
                         {
-                            eventId: 1,
+                            eventId: epk1,
                             eventName: "INIT",
                             init: undefined,
                             final: 10,
@@ -2108,8 +2109,8 @@ describe("Agents", function() {
                     game: myGame2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
                                 refId: pk1
@@ -2119,8 +2120,8 @@ describe("Agents", function() {
                     ],
                     foo: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: true,
                             op: PropertyOperation.ADDED
@@ -2132,8 +2133,8 @@ describe("Agents", function() {
                     game: myGame2,
                     name: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: "Jimmy",
                             op: PropertyOperation.ADDED
@@ -2141,8 +2142,8 @@ describe("Agents", function() {
                     ],
                     health: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: 10,
                             op: PropertyOperation.ADDED
