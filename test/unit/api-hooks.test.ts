@@ -2,7 +2,7 @@ import { expect } from "chai";
 import "mocha";
 
 import { on, noop, getUntrackedEventPK } from "../../src/events";
-import { metadataWithOptions, getDemoMetadata } from "../test-utils";
+import { metadataWithOptions, getDemoMetadata, ePKs } from "../test-utils";
 import { PropertyOperation, getGameInstancePK } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import {
@@ -264,9 +264,11 @@ describe("API Hooks", function() {
             const myGame = buildGameInstance();
             HookManager.startCommandHook(myGame);
 
+            const [_epk0, epk1, epk2] = ePKs(2);
+
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 2,
+                    id: epk2,
                     name: "SET INIT",
                     changes: [
                         {
@@ -277,12 +279,12 @@ describe("API Hooks", function() {
                             final: true
                         }
                     ],
-                    causedBy: 1
+                    causedBy: epk1
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "START",
-                    caused: [2]
+                    caused: [epk2]
                 }
             ]);
         });
