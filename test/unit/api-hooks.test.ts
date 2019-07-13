@@ -333,11 +333,12 @@ describe("API Hooks", function() {
             onStartCommand(setInit.thenq(appendFoo("Two")));
 
             const myGame = buildGameInstance();
+            const [_epk0, epk1, epk2, epk3, epk4] = ePKs(4);
             HookManager.startCommandHook(myGame);
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 3,
+                    id: epk3,
                     name: "APPEND FOO",
                     changes: [
                         {
@@ -348,10 +349,10 @@ describe("API Hooks", function() {
                             final: "OneTwo"
                         }
                     ],
-                    causedBy: 1
+                    causedBy: epk1
                 },
                 {
-                    id: 4,
+                    id: epk4,
                     name: "SET FOO",
                     changes: [
                         {
@@ -362,10 +363,10 @@ describe("API Hooks", function() {
                             final: "One"
                         }
                     ],
-                    causedBy: 2
+                    causedBy: epk2
                 },
                 {
-                    id: 2,
+                    id: epk2,
                     name: "SET INIT",
                     changes: [
                         {
@@ -376,13 +377,13 @@ describe("API Hooks", function() {
                             final: true
                         }
                     ],
-                    causedBy: 1,
-                    caused: [4]
+                    causedBy: epk1,
+                    caused: [epk4]
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "START",
-                    caused: [2, 3]
+                    caused: [epk2, epk3]
                 }
             ]);
         });
