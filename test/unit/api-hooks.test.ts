@@ -95,9 +95,11 @@ describe("API Hooks", function() {
             const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
+            const [_epk0, epk1, epk2] = ePKs(2);
+
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 2,
+                    id: epk2,
                     name: "SET INPUT",
                     changes: [
                         {
@@ -108,12 +110,12 @@ describe("API Hooks", function() {
                             final: "Test Command"
                         }
                     ],
-                    causedBy: 1
+                    causedBy: epk1
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "INPUT",
-                    caused: [2]
+                    caused: [epk2]
                 }
             ]);
         });
