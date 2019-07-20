@@ -2242,8 +2242,8 @@ describe("Agents", function() {
                     game: game2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: getUntrackedEventPK(),
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
                                 refId: pk1
@@ -2257,8 +2257,8 @@ describe("Agents", function() {
                     game: game2,
                     health: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: getUntrackedEventPK(),
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: 10,
                             op: PropertyOperation.ADDED
