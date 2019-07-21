@@ -228,4 +228,11 @@ describe("Keys", function() {
         expect(buildPKProvider().isPossibleKeyValue("lars")).to.be.false;
         expect(buildPKProvider().isPossibleKeyValue(undefined)).to.be.false;
     });
+
+    it("PKProvider.countGenerated returns the number of keys generated", function() {
+        const prov = buildPKProvider(RESERVED_KEYS);
+        const baseCount = prov.countGenerated();
+        prov.next();
+        expect(prov.countGenerated()).to.equal(baseCount + 1);
+    });
 });
