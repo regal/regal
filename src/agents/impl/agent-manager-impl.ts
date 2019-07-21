@@ -183,8 +183,8 @@ class AgentManagerImpl implements AgentManager {
             // A change should be replaced if it happened during the same event,
             // or if the change happened after any potential recycling
             const shouldReplaceSingle = (pc: PropertyChange) =>
-                pc.eventId === event.id ||
-                pc.eventId.index > getUntrackedEventPK().index;
+                pc.eventId.equals(event.id) ||
+                pc.eventId.index() > getUntrackedEventPK().index();
 
             // If the property history has two changes, update the more recent one.
             // If property history has only change, check when the change happened.

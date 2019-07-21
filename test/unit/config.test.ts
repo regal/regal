@@ -272,6 +272,7 @@ describe("Config", function() {
             it("Full agent property history is shown when GameOptions.trackAgentChanges is set to true", function() {
                 prepAgentTest();
                 const [apk0, apk1, apk2] = aPKs(2);
+                const epks0_8 = ePKs(8);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: true
@@ -287,7 +288,7 @@ describe("Config", function() {
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 2,
+                                eventId: epks0_8[2],
                                 eventName: "INIT",
                                 final: 0,
                                 init: undefined,
@@ -298,9 +299,9 @@ describe("Config", function() {
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 2,
+                        id: epks0_8[2],
                         name: "INIT",
-                        causedBy: 1,
+                        causedBy: epks0_8[1],
                         changes: [
                             {
                                 agentId: apk0,
@@ -312,9 +313,9 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 1,
+                        id: epks0_8[1],
                         name: "START",
-                        caused: [2]
+                        caused: [epks0_8[2]]
                     }
                 ]);
 
@@ -329,14 +330,14 @@ describe("Config", function() {
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: 1,
                                 init: 0,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: 0,
                                 init: undefined,
@@ -345,7 +346,7 @@ describe("Config", function() {
                         ],
                         currentDummy: [
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: { refId: apk1 },
                                 init: undefined,
@@ -358,14 +359,14 @@ describe("Config", function() {
                         game: response.instance,
                         name: [
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: "Lars the Great",
                                 init: "Lars",
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: "Lars",
                                 init: undefined,
@@ -374,14 +375,14 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 5,
+                                eventId: epks0_8[5],
                                 eventName: "INTRODUCE",
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: 10,
                                 init: undefined,
@@ -392,9 +393,9 @@ describe("Config", function() {
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 5,
+                        id: epks0_8[5],
                         name: "INTRODUCE",
-                        causedBy: 4,
+                        causedBy: epks0_8[4],
                         output: [getInitialOutputPK()],
                         changes: [
                             {
@@ -407,10 +408,10 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 4,
+                        id: epks0_8[4],
                         name: "ADD",
-                        causedBy: 3,
-                        caused: [5],
+                        causedBy: epks0_8[3],
+                        caused: [epks0_8[5]],
                         changes: [
                             {
                                 agentId: apk1,
@@ -450,9 +451,9 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 3,
+                        id: epks0_8[3],
                         name: "INPUT",
-                        caused: [4]
+                        caused: [epks0_8[4]]
                     }
                 ]);
 
@@ -467,14 +468,14 @@ describe("Config", function() {
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: 2,
                                 init: 1,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: 1,
                                 init: undefined,
@@ -483,14 +484,14 @@ describe("Config", function() {
                         ],
                         currentDummy: [
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: { refId: apk2 },
                                 init: { refId: apk1 },
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: { refId: apk1 },
                                 init: undefined,
@@ -503,7 +504,7 @@ describe("Config", function() {
                         game: response.instance,
                         name: [
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: "Lars the Great",
                                 init: undefined,
@@ -512,7 +513,7 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: 15,
                                 init: undefined,
@@ -525,14 +526,14 @@ describe("Config", function() {
                         game: response.instance,
                         name: [
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: "Jeffrey the Great",
                                 init: "Jeffrey",
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: "Jeffrey",
                                 init: undefined,
@@ -541,14 +542,14 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 8,
+                                eventId: epks0_8[8],
                                 eventName: "INTRODUCE",
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: 10,
                                 init: undefined,
@@ -559,9 +560,9 @@ describe("Config", function() {
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 8,
+                        id: epks0_8[8],
                         name: "INTRODUCE",
-                        causedBy: 7,
+                        causedBy: epks0_8[7],
                         output: [getInitialOutputPK().plus(1)],
                         changes: [
                             {
@@ -574,10 +575,10 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 7,
+                        id: epks0_8[7],
                         name: "ADD",
-                        causedBy: 6,
-                        caused: [8],
+                        causedBy: epks0_8[6],
+                        caused: [epks0_8[8]],
                         changes: [
                             {
                                 agentId: apk2,
@@ -617,9 +618,9 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 6,
+                        id: epks0_8[6],
                         name: "INPUT",
-                        caused: [7]
+                        caused: [epks0_8[7]]
                     }
                 ]);
             });

@@ -16,6 +16,7 @@ import {
 } from "../../agents";
 import { isAgentArrayReference } from "../../agents/agent-array-reference";
 import { isAgentReference } from "../../agents/agent-reference";
+import { FK } from "../../common";
 import {
     buildInstanceOptions,
     GameOptions,
@@ -24,17 +25,16 @@ import {
 import { RegalError } from "../../error";
 import {
     buildInstanceEvents,
+    EventRecord,
+    getUntrackedEventPK,
     InstanceEventsInternal,
     on,
-    TrackedEvent,
-    getUntrackedEventPK,
-    EventRecord
+    TrackedEvent
 } from "../../events";
 import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
 import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
 import { ContextManager } from "../context-manager";
 import { GameInstanceInternal } from "../game-instance-internal";
-import { FK } from "../../common";
 
 /**
  * Constructs a new `GameInstance` with optional `GameOption` overrides.

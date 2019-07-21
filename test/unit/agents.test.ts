@@ -2170,6 +2170,7 @@ describe("Agents", function() {
             })(myGame);
 
             const [pk0, pk1] = aPKs(1);
+            const epk0 = getUntrackedEventPK();
 
             const game2 = myGame.recycle();
 
@@ -2181,8 +2182,8 @@ describe("Agents", function() {
                     game: game2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
                                 refId: pk1
@@ -2192,8 +2193,8 @@ describe("Agents", function() {
                     ],
                     foo: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: true,
                             op: PropertyOperation.ADDED
@@ -2205,8 +2206,8 @@ describe("Agents", function() {
                     game: game2,
                     name: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: "D1",
                             final: "Jimmy",
                             op: PropertyOperation.MODIFIED
@@ -2295,8 +2296,8 @@ describe("Agents", function() {
                     game: game2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: getUntrackedEventPK(),
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
                                 refId: pk1
@@ -2310,8 +2311,8 @@ describe("Agents", function() {
                     game: game2,
                     name: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: getUntrackedEventPK(),
+                            eventName: DEFAULT_EVENT_NAME,
                             init: "D1",
                             final: undefined,
                             op: PropertyOperation.DELETED

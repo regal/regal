@@ -6,12 +6,12 @@
  */
 
 import { InstanceAgentsInternal } from "../agents";
+import { FK } from "../common";
 import { GameOptions, InstanceOptionsInternal } from "../config";
-import { InstanceEventsInternal, EventRecord } from "../events";
+import { EventRecord, InstanceEventsInternal } from "../events";
 import { InstanceOutputInternal } from "../output";
 import { InstanceRandomInternal } from "../random";
 import { GameInstance } from "./game-instance";
-import { FK } from "../common";
 
 /**
  * Internal interface for `GameInstance`.
