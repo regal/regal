@@ -11,7 +11,7 @@ import {
 } from "../../src/random";
 import { buildGameInstance } from "../../src/state";
 import { RegalError } from "../../src/error";
-import { log, getDemoMetadata } from "../test-utils";
+import { log, getDemoMetadata, ePKs } from "../test-utils";
 import { Game } from "../../src/api";
 import { Agent, isAgent } from "../../src/agents";
 import { on } from "../../src/events";
@@ -351,6 +351,8 @@ describe("Random", function() {
             const myGame = buildGameInstance<S>({ seed: "wooof" });
             rand1.then(rand2)(myGame);
 
+            const [_epk0, epk1, epk2] = ePKs(2);
+
             expect(myGame.state.randos).to.deep.equal([
                 false,
                 0.0217038414025921,
@@ -361,7 +363,7 @@ describe("Random", function() {
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 2,
+                    id: epk2,
                     name: "RAND2",
                     randoms: [
                         { id: 2, value: 10 },
@@ -370,7 +372,7 @@ describe("Random", function() {
                     ]
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "RAND1",
                     randoms: [
                         { id: 0, value: false },

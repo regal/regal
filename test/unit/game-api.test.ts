@@ -17,7 +17,9 @@ import {
     metadataWithOptions,
     metadataWithVersion,
     Dummy,
-    pks
+    aPKs,
+    getInitialOutputPK,
+    oPKs
 } from "../test-utils";
 import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
@@ -116,7 +118,7 @@ describe("Game API", function() {
                 wasSuccessful: true,
                 log: [
                     {
-                        id: 1,
+                        id: getInitialOutputPK(),
                         data: 'You typed "Hello, World!".',
                         type: OutputLineType.NORMAL
                     }
@@ -168,8 +170,18 @@ describe("Game API", function() {
                 wasSuccessful: true,
                 log: [
                     {
-                        id: 2,
+                        id: getInitialOutputPK().plus(5),
                         data: "Set guy[foo4] to true.",
+                        type: OutputLineType.NORMAL
+                    }
+                ]
+            });
+            expect(init.output).to.deep.equal({
+                wasSuccessful: true,
+                log: [
+                    {
+                        id: getInitialOutputPK(),
+                        data: "Set guy[init] to true.",
                         type: OutputLineType.NORMAL
                     }
                 ]
@@ -272,18 +284,19 @@ describe("Game API", function() {
 
             const r1 = Game.postStartCommand();
             const r1_instance = r1.instance as GameInstanceInternal;
-            const pks0_3 = pks(3);
+            const apks0_3 = aPKs(3);
+            const [opk0, opk1, opk2] = oPKs(2);
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks0_3);
+            ).to.deep.equal(apks0_3);
 
             expect(r1.output).to.deep.equal({
                 wasSuccessful: true,
                 log: [
                     {
                         data: "Dummies: D1, D2.",
-                        id: 1,
+                        id: opk0,
                         type: OutputLineType.NORMAL
                     }
                 ]
@@ -294,17 +307,17 @@ describe("Game API", function() {
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks0_3);
+            ).to.deep.equal(apks0_3);
             expect(
                 r2_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks0_3);
+            ).to.deep.equal(apks0_3);
 
             expect(r2.output).to.deep.equal({
                 wasSuccessful: true,
                 log: [
                     {
                         data: "Dummies: D1.",
-                        id: 2,
+                        id: opk1,
                         type: OutputLineType.NORMAL
                     }
                 ]
@@ -315,17 +328,17 @@ describe("Game API", function() {
 
             expect(
                 r2_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks0_3);
+            ).to.deep.equal(apks0_3);
             expect(
                 r3_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks(2));
+            ).to.deep.equal(aPKs(2));
 
             expect(r3.output).to.deep.equal({
                 wasSuccessful: true,
                 log: [
                     {
                         data: "Dummies: .",
-                        id: 3,
+                        id: opk2,
                         type: OutputLineType.NORMAL
                     }
                 ]
@@ -336,10 +349,10 @@ describe("Game API", function() {
 
             expect(
                 r3_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks(2));
+            ).to.deep.equal(aPKs(2));
             expect(
                 r4_instance.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal(pks(1));
+            ).to.deep.equal(aPKs(1));
         });
 
         it("Calling before initialization throws an error", function() {
@@ -367,7 +380,7 @@ describe("Game API", function() {
                 wasSuccessful: true,
                 log: [
                     {
-                        id: 1,
+                        id: getInitialOutputPK(),
                         data: "Hello, world!",
                         type: OutputLineType.NORMAL
                     }
@@ -630,7 +643,7 @@ describe("Game API", function() {
 
             const r1 = Game.postStartCommand();
             const r1_instance = r1.instance as GameInstanceInternal;
-            const pks0_3 = pks(3);
+            const pks0_3 = aPKs(3);
 
             expect(
                 r1_instance.agents.agentManagers().map(am => am.id)

@@ -103,7 +103,7 @@ export const isEventQueue = (o: any): o is EventQueue =>
  * `noop` is short for *no operation*.
  *
  * Meant to be used in rare cases where an event cannot return `void`
- * (i.e. forced by the TypeScript compiler).
+ * (e.g. forced by the TypeScript compiler).
  */
 export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;

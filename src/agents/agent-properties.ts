@@ -1,4 +1,4 @@
-import { PK } from "../common";
+import { FK } from "../common";
 import { Agent } from "./agent";
 
 /*
@@ -24,14 +24,14 @@ export enum PropertyOperation {
  * Describes a single operation on an active agent's property.
  */
 export interface PropertyChange {
-    /** The numeric id of the `TrackedEvent` during which the change took place (optional). */
-    eventId?: number;
+    /** The id of the `TrackedEvent` during which the change took place (optional). */
+    eventId?: FK<Agent>;
 
     /** The name of the `TrackedEvent` during which the change took place (optional). */
     eventName?: string;
 
     /** The id of the registered `Agent` (optional). */
-    agentId?: PK<Agent>;
+    agentId?: FK<Agent>;
 
     /** The operation performed on the agent's property. */
     op: PropertyOperation;

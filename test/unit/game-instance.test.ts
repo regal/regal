@@ -1,11 +1,17 @@
 import { expect } from "chai";
 import "mocha";
 
-import { getDemoMetadata, Dummy, makeAgents, log } from "../test-utils";
+import {
+    getDemoMetadata,
+    Dummy,
+    makeAgents,
+    log,
+    ePKAtNum
+} from "../test-utils";
 import { Game } from "../../src/api";
 import { RegalError } from "../../src/error";
 import { buildGameInstance } from "../../src/state";
-import { on, nq } from "../../src/events";
+import { on, nq, getUntrackedEventPK } from "../../src/events";
 import { getGameInstancePK } from "../../src/agents";
 
 describe("GameInstance", function() {
@@ -121,7 +127,7 @@ describe("GameInstance", function() {
             expect(myGame.state[5]).to.equal("Yo 5");
             expect(myGame.state[9]).to.equal("Yo 9");
 
-            myGame = myGame.revert(1);
+            myGame = myGame.revert(ePKAtNum(1));
 
             expect(myGame.state.foo).to.equal("Hello, world!");
             expect(myGame.state[0]).to.be.undefined;
@@ -154,28 +160,28 @@ describe("GameInstance", function() {
             expect(myGame.state[5]).to.equal("Yo 5");
             expect(myGame.state[9]).to.equal("Yo 9");
 
-            const g1 = myGame.revert(8);
+            const g1 = myGame.revert(ePKAtNum(8));
 
             expect(g1.state.foo).to.equal("Hello, world!-0-1-2-3-4-5-6");
             expect(g1.state[0]).to.equal("Yo 0");
             expect(g1.state[5]).to.equal("Yo 5");
             expect(g1.state[9]).to.be.undefined;
 
-            const g2 = myGame.revert(6);
+            const g2 = myGame.revert(ePKAtNum(6));
 
             expect(g2.state.foo).to.equal("Hello, world!-0-1-2-3-4");
             expect(g2.state[0]).to.equal("Yo 0");
             expect(g2.state[5]).to.be.undefined;
             expect(g2.state[9]).to.be.undefined;
 
-            const g3 = myGame.revert(4);
+            const g3 = myGame.revert(ePKAtNum(4));
 
             expect(g3.state.foo).to.equal("Hello, world!-0-1-2");
             expect(g3.state[0]).to.equal("Yo 0");
             expect(g3.state[5]).to.be.undefined;
             expect(g3.state[9]).to.be.undefined;
 
-            const g4 = myGame.revert(1);
+            const g4 = myGame.revert(ePKAtNum(1));
 
             expect(g4.state.foo).to.equal("Hello, world!");
             expect(g4.state[0]).to.be.undefined;
@@ -191,7 +197,7 @@ describe("GameInstance", function() {
 
             let myGame = buildGameInstance();
             init(myGame);
-            myGame = myGame.revert(0);
+            myGame = myGame.revert(getUntrackedEventPK());
 
             const id = getGameInstancePK().plus(1);
 
@@ -274,7 +280,7 @@ describe("GameInstance", function() {
             expect(myGame.state.arr).to.deep.equal([1, 2, 3, 4, 5, 6]); // Precondition
             expect(myGame.state.arr.length).to.equal(6);
 
-            const revGame = myGame.revert(1);
+            const revGame = myGame.revert(ePKAtNum(1));
 
             expect(revGame.state.arr).to.deep.equal([1, 2, 3]);
             expect(revGame.state.arr.length).to.equal(3);
@@ -323,7 +329,7 @@ describe("GameInstance", function() {
 
             expect(myGame.state.randos).to.deep.equal([3, 2, 2, 3, 1]); // Precondition
 
-            const revGame = myGame.revert(3);
+            const revGame = myGame.revert(ePKAtNum(3));
             expect(revGame.state.randos).to.deep.equal([3, 2]);
 
             nq(add, add, add)(revGame);
@@ -354,7 +360,7 @@ describe("GameInstance", function() {
 
             expect(myGame.state.dummy.health).to.equal(62); // Precondition
 
-            const revGame = myGame.revert(4);
+            const revGame = myGame.revert(ePKAtNum(4));
             expect(revGame.state.dummy.health).to.equal(85);
 
             nq(atk, atk, atk, atk)(revGame);
@@ -362,15 +368,14 @@ describe("GameInstance", function() {
         });
 
         it("Throw an error if given a revertTo arg less than zero", function() {
-            expect(() => buildGameInstance().revert(-1)).to.throw(
-                RegalError,
-                "revertTo must be zero or greater."
+            expect(() => buildGameInstance().revert(ePKAtNum(-1))).to.throw(
+                RegalError
             );
         });
 
         it("Throw an error if revertTo is nonzero when trackAgentChanges is disabled", function() {
             const myGame = buildGameInstance({ trackAgentChanges: false });
-            expect(() => myGame.revert(1)).to.throw(
+            expect(() => myGame.revert(ePKAtNum(1))).to.throw(
                 RegalError,
                 "In order to revert to an intermediate event ID, GameOptions.trackAgentChanges must be true."
             );

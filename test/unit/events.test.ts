@@ -11,9 +11,18 @@ import {
     isEventQueue,
     enqueue,
     buildInstanceEvents,
-    GameEventBuilder
+    GameEventBuilder,
+    getUntrackedEventPK
 } from "../../src/events";
-import { log, getDemoMetadata, Dummy, pks } from "../test-utils";
+import {
+    log,
+    getDemoMetadata,
+    Dummy,
+    aPKs,
+    oPKs,
+    getInitialOutputPK,
+    ePKs
+} from "../test-utils";
 import {
     Agent,
     PropertyOperation,
@@ -43,14 +52,14 @@ describe("Events", function() {
 
         expect(myGame.events.history).to.deep.equal([
             {
-                id: 1,
+                id: getUntrackedEventPK().plus(1),
                 name: "GREET",
-                output: [1]
+                output: [getInitialOutputPK()]
             }
         ]);
         expect(myGame.output.lines).to.deep.equal([
             {
-                id: 1,
+                id: getInitialOutputPK(),
                 type: OutputLineType.NORMAL,
                 data: "Hello, world!"
             }
@@ -70,14 +79,14 @@ describe("Events", function() {
 
         expect(myGame.events.history).to.deep.equal([
             {
-                id: 1,
+                id: getUntrackedEventPK().plus(1),
                 name: "GREET <Regal>",
-                output: [1]
+                output: [getInitialOutputPK()]
             }
         ]);
         expect(myGame.output.lines).to.deep.equal([
             {
-                id: 1,
+                id: getInitialOutputPK(),
                 type: OutputLineType.NORMAL,
                 data: "Hello, Regal!"
             }
@@ -105,22 +114,24 @@ describe("Events", function() {
 
         motivate(myDate)(myGame);
 
+        const [_epk0, epk1, epk2] = ePKs(2);
+
         expect(myGame.events.history).to.deep.equal([
             {
-                id: 2,
-                causedBy: 1,
+                id: epk2,
+                causedBy: epk1,
                 name: "MORNING",
-                output: [1]
+                output: [getInitialOutputPK()]
             },
             {
-                id: 1,
-                caused: [2],
+                id: epk1,
+                caused: [epk2],
                 name: "MOTIVATE"
             }
         ]);
         expect(myGame.output.lines).to.deep.equal([
             {
-                id: 1,
+                id: getInitialOutputPK(),
                 type: OutputLineType.NORMAL,
                 data: "Have a great day!"
             }
@@ -215,42 +226,44 @@ describe("Events", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const [opk0, opk1, opk2] = oPKs(2);
+            const [_epk0, epk1, epk2, epk3] = ePKs(3);
 
             makeSword("King Arthur")(myGame);
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 3,
-                    causedBy: 1,
+                    id: epk3,
+                    causedBy: epk1,
                     name: "ADD ITEM <Sword>",
-                    output: [3]
+                    output: [opk2]
                 },
                 {
-                    id: 2,
-                    causedBy: 1,
+                    id: epk2,
+                    causedBy: epk1,
                     name: "LEARN SKILL <Blacksmithing>",
-                    output: [2]
+                    output: [opk1]
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "MAKE SWORD",
-                    output: [1],
-                    caused: [2, 3]
+                    output: [opk0],
+                    caused: [epk2, epk3]
                 }
             ]);
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.NORMAL,
                     data: "King Arthur made a sword!"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.NORMAL,
                     data: "King Arthur learned Blacksmithing!"
                 },
                 {
-                    id: 3,
+                    id: opk2,
                     type: OutputLineType.NORMAL,
                     data: "Added Sword to King Arthur's inventory."
                 }
@@ -270,31 +283,33 @@ describe("Events", function() {
             const myGame = buildGameInstance();
             complex(myGame);
 
+            const [_epk0, epk1, epk2, epk3, epk4, epk5] = ePKs(5);
+
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 5,
-                    causedBy: 1,
+                    id: epk5,
+                    causedBy: epk1,
                     name: "FOO <FOUR>"
                 },
                 {
-                    id: 4,
-                    causedBy: 1,
+                    id: epk4,
+                    causedBy: epk1,
                     name: "FOO <THREE>"
                 },
                 {
-                    id: 3,
-                    causedBy: 1,
+                    id: epk3,
+                    causedBy: epk1,
                     name: "FOO <TWO>"
                 },
                 {
-                    id: 2,
-                    causedBy: 1,
+                    id: epk2,
+                    causedBy: epk1,
                     name: "FOO <ONE>"
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "COMPLEX",
-                    caused: [2, 3, 4, 5]
+                    caused: [epk2, epk3, epk4, epk5]
                 }
             ]);
         });
@@ -323,84 +338,86 @@ describe("Events", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const [opk0, opk1, opk2, opk3, opk4, opk5] = oPKs(5);
+            const [_epk0, epk1, epk2, epk3, epk4, epk5, epk6, epk7] = ePKs(7);
             const items = ["Hat", "Duck", "Spoon"];
 
             drop(items)(myGame);
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 7,
-                    causedBy: 4,
+                    id: epk7,
+                    causedBy: epk4,
                     name: "HIT GROUND <Spoon>",
-                    output: [6]
+                    output: [opk5]
                 },
                 {
-                    id: 6,
-                    causedBy: 3,
+                    id: epk6,
+                    causedBy: epk3,
                     name: "HIT GROUND <Duck>",
-                    output: [5]
+                    output: [opk4]
                 },
                 {
-                    id: 5,
-                    causedBy: 2,
+                    id: epk5,
+                    causedBy: epk2,
                     name: "HIT GROUND <Hat>",
-                    output: [4]
+                    output: [opk3]
                 },
                 {
-                    id: 4,
-                    causedBy: 1,
+                    id: epk4,
+                    causedBy: epk1,
                     name: "FALL <Spoon>",
-                    output: [3],
-                    caused: [7]
+                    output: [opk2],
+                    caused: [epk7]
                 },
                 {
-                    id: 3,
-                    causedBy: 1,
+                    id: epk3,
+                    causedBy: epk1,
                     name: "FALL <Duck>",
-                    output: [2],
-                    caused: [6]
+                    output: [opk1],
+                    caused: [epk6]
                 },
                 {
-                    id: 2,
-                    causedBy: 1,
+                    id: epk2,
+                    causedBy: epk1,
                     name: "FALL <Hat>",
-                    output: [1],
-                    caused: [5]
+                    output: [opk0],
+                    caused: [epk5]
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "DROP ITEMS",
-                    caused: [2, 3, 4]
+                    caused: [epk2, epk3, epk4]
                 }
             ]);
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.NORMAL,
                     data: "Hat falls."
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.NORMAL,
                     data: "Duck falls."
                 },
                 {
-                    id: 3,
+                    id: opk2,
                     type: OutputLineType.NORMAL,
                     data: "Spoon falls."
                 },
                 {
-                    id: 4,
+                    id: opk3,
                     type: OutputLineType.NORMAL,
                     data: "Hat hits the ground. Thud!"
                 },
                 {
-                    id: 5,
+                    id: opk4,
                     type: OutputLineType.NORMAL,
                     data: "Duck hits the ground. Thud!"
                 },
                 {
-                    id: 6,
+                    id: opk5,
                     type: OutputLineType.NORMAL,
                     data: "Spoon hits the ground. Thud!"
                 }
@@ -415,12 +432,13 @@ describe("Events", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const [opk0, opk1] = oPKs(1);
 
             spam.then(spam)(myGame);
 
             expect(myGame.output.lines).to.deep.equal([
-                { data: "Get spammed.", id: 1, type: OutputLineType.NORMAL },
-                { data: "Get spammed.", id: 2, type: OutputLineType.NORMAL }
+                { data: "Get spammed.", id: opk0, type: OutputLineType.NORMAL },
+                { data: "Get spammed.", id: opk1, type: OutputLineType.NORMAL }
             ]);
         });
 
@@ -435,11 +453,12 @@ describe("Events", function() {
                     throw new Error("Args must be the same length.");
                 }
 
-                let id = 0;
+                let id = getUntrackedEventPK();
 
                 const eventRecords = events.map(name => {
+                    id = id.plus(1);
                     return {
-                        id: ++id,
+                        id,
                         name
                     } as Partial<EventRecord>;
                 });
@@ -747,9 +766,9 @@ describe("Events", function() {
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 1,
+                    id: getUntrackedEventPK().plus(1),
                     name: "HEAL",
-                    output: [1],
+                    output: [getInitialOutputPK()],
                     changes: [
                         {
                             agentId: getGameInstancePK().plus(1),
@@ -763,7 +782,7 @@ describe("Events", function() {
             ]);
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: getInitialOutputPK(),
                     type: OutputLineType.NORMAL,
                     data: "Healed Lars by 15. Health is now 25."
                 }
@@ -812,22 +831,24 @@ describe("Events", function() {
             const myGame = buildGameInstance({ trackAgentChanges: true });
             start(myGame);
 
-            const [pk0, pk1, pk2] = pks(2);
+            const [apk0, apk1, apk2] = aPKs(2);
+            const [opk0, opk1, opk2] = oPKs(2);
+            const [_epk0, epk1, epk2, epk3, epk4] = ePKs(4);
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 3,
+                    id: epk3,
                     name: "READ STATUS",
-                    causedBy: 1,
-                    output: [2, 3]
+                    causedBy: epk1,
+                    output: [opk1, opk2]
                 },
                 {
-                    id: 4,
+                    id: epk4,
                     name: "CHANGE <Bill> HEALTH",
-                    causedBy: 2,
+                    causedBy: epk2,
                     changes: [
                         {
-                            agentId: pk2,
+                            agentId: apk2,
                             op: PropertyOperation.MODIFIED,
                             property: "health",
                             init: 25,
@@ -836,63 +857,63 @@ describe("Events", function() {
                     ]
                 },
                 {
-                    id: 2,
+                    id: epk2,
                     name: "ADD FRIEND",
-                    output: [1],
-                    causedBy: 1,
-                    caused: [4],
+                    output: [opk0],
+                    causedBy: epk1,
+                    caused: [epk4],
                     changes: [
                         {
-                            agentId: pk2,
+                            agentId: apk2,
                             op: PropertyOperation.ADDED,
                             property: "name",
                             init: undefined,
                             final: "Bill"
                         },
                         {
-                            agentId: pk2,
+                            agentId: apk2,
                             op: PropertyOperation.ADDED,
                             property: "health",
                             init: undefined,
                             final: 25
                         },
                         {
-                            agentId: pk1,
+                            agentId: apk1,
                             op: PropertyOperation.ADDED,
                             property: "friend",
                             init: undefined,
                             final: {
-                                refId: pk2
+                                refId: apk2
                             }
                         }
                     ]
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "START",
-                    caused: [2, 3],
+                    caused: [epk2, epk3],
                     changes: [
                         {
-                            agentId: pk1,
+                            agentId: apk1,
                             op: PropertyOperation.ADDED,
                             property: "name",
                             init: undefined,
                             final: "Lars"
                         },
                         {
-                            agentId: pk1,
+                            agentId: apk1,
                             op: PropertyOperation.ADDED,
                             property: "health",
                             init: undefined,
                             final: 10
                         },
                         {
-                            agentId: pk0,
+                            agentId: apk0,
                             op: PropertyOperation.ADDED,
                             property: "mainAgent",
                             init: undefined,
                             final: {
-                                refId: pk1
+                                refId: apk1
                             }
                         }
                     ]
@@ -900,17 +921,17 @@ describe("Events", function() {
             ]);
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.NORMAL,
                     data: "Lars has a new friend! (Bill)"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.NORMAL,
                     data: "Lars's health is 10."
                 },
                 {
-                    id: 3,
+                    id: opk2,
                     type: OutputLineType.NORMAL,
                     data: "Bill's health is 36."
                 }
@@ -919,63 +940,44 @@ describe("Events", function() {
     });
 
     describe("Other InstanceEvents Behavior", function() {
-        it("InstanceEvents.lastEventId property getter works properly when startingEventId is not set", function() {
-            const spam = on("SPAM", game => {
-                game.output.write("Get spammed.");
-            });
-
-            Game.init(MD);
-
-            const myGame = buildGameInstance();
-
-            expect(myGame.events.lastEventId).to.equal(0);
-
-            myGame.events.invoke(spam.then(spam));
-
-            expect(myGame.events.lastEventId).to.equal(2);
-        });
-
-        it("InstanceEvents.lastEventId property getter works properly when startingEventId is a custom value", function() {
-            const spam = on("SPAM", game => {
-                game.output.write("Get spammed.");
-            });
-
-            Game.init(MD);
-
-            const myGame = buildGameInstance();
-            myGame.events = buildInstanceEvents(myGame, 10);
-
-            expect(myGame.events.lastEventId).to.equal(10);
-
-            myGame.events.invoke(spam.then(spam, spam));
-
-            expect(myGame.events.lastEventId).to.equal(13);
-        });
-
-        it("recycleInstanceEvents creates a new InstanceEvents with the previous instance's lastEventId", function() {
-            const spam = on("SPAM", game => {
-                game.output.write("Get spammed.");
-            });
-
-            Game.init(MD);
-
-            const game1 = buildGameInstance();
-
-            const game2 = buildGameInstance();
-            const events2 = game1.events.recycle(game2);
-
-            expect(events2.lastEventId).to.equal(0);
-            expect(events2.game).to.equal(game2);
-            expect(events2.history).to.be.empty;
-
-            events2.invoke(spam.then(spam).thenq(spam));
-
-            const game3 = buildGameInstance();
-            const events3 = events2.recycle(game3);
-
-            expect(events3.lastEventId).to.equal(3);
-            expect(events3.game).to.equal(game3);
-            expect(events3.history).to.be.empty;
-        });
+        // it("InstanceEvents.lastEventId property getter works properly when startingEventId is not set", function() {
+        //     const spam = on("SPAM", game => {
+        //         game.output.write("Get spammed.");
+        //     });
+        //     Game.init(MD);
+        //     const myGame = buildGameInstance();
+        //     expect(myGame.events.lastEventId).to.equal(0);
+        //     myGame.events.invoke(spam.then(spam));
+        //     expect(myGame.events.lastEventId).to.equal(2);
+        // });
+        // it("InstanceEvents.lastEventId property getter works properly when startingEventId is a custom value", function() {
+        //     const spam = on("SPAM", game => {
+        //         game.output.write("Get spammed.");
+        //     });
+        //     Game.init(MD);
+        //     const myGame = buildGameInstance();
+        //     myGame.events = buildInstanceEvents(myGame, 10);
+        //     expect(myGame.events.lastEventId).to.equal(10);
+        //     myGame.events.invoke(spam.then(spam, spam));
+        //     expect(myGame.events.lastEventId).to.equal(13);
+        // });
+        // it("recycleInstanceEvents creates a new InstanceEvents with the previous instance's lastEventId", function() {
+        //     const spam = on("SPAM", game => {
+        //         game.output.write("Get spammed.");
+        //     });
+        //     Game.init(MD);
+        //     const game1 = buildGameInstance();
+        //     const game2 = buildGameInstance();
+        //     const events2 = game1.events.recycle(game2);
+        //     expect(events2.lastEventId).to.equal(0);
+        //     expect(events2.game).to.equal(game2);
+        //     expect(events2.history).to.be.empty;
+        //     events2.invoke(spam.then(spam).thenq(spam));
+        //     const game3 = buildGameInstance();
+        //     const events3 = events2.recycle(game3);
+        //     expect(events3.lastEventId).to.equal(3);
+        //     expect(events3.game).to.equal(game3);
+        //     expect(events3.history).to.be.empty;
+        // });
     });
 });

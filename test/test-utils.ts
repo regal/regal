@@ -1,9 +1,11 @@
 import { inspect } from "util";
 import { GameMetadata, GameOptions } from "../src/config";
 import { version as regalVersion } from "../package.json";
-import { Agent } from "../src";
 import { expect } from "chai";
-import { getGameInstancePK } from "../src/agents";
+import { getGameInstancePK, Agent } from "../src/agents";
+import { buildPKProvider, PK } from "../src/common";
+import { OutputLine } from "../src/output";
+import { getUntrackedEventPK } from "../src/events";
 
 export const log = (o: any, title?: string) =>
     console.log(
@@ -78,10 +80,26 @@ export const smartObjectEquals = (actual: object, expected: object) => {
     }
 };
 
-export const pks = (additional: number) => {
-    const result = [getGameInstancePK()];
+export const getInitialOutputPK = () => buildPKProvider<OutputLine>().next();
+
+const pks = <T>(additional: number, initialPK: PK<T>) => {
+    const result = [initialPK];
     for (let i = 0; i < additional; i++) {
         result.push(result[result.length - 1].plus(1));
     }
     return result;
 };
+
+// Agent PKs
+export const aPKs = (additional: number) =>
+    pks(additional, getGameInstancePK());
+
+// OutputLine PKs
+export const oPKs = (additional: number) =>
+    pks(additional, getInitialOutputPK());
+
+// EventRecord PKs
+export const ePKs = (additional: number) =>
+    pks(additional, getUntrackedEventPK());
+
+export const ePKAtNum = (index: number) => getUntrackedEventPK().plus(index);

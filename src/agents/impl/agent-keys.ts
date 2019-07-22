@@ -6,6 +6,7 @@
  */
 
 import { buildPKProvider } from "../../common";
+import { Agent } from "../agent";
 
 /** The set of reserved `Agent` primary keys. */
 export const AGENT_RESERVED_KEYS = {
@@ -21,4 +22,6 @@ export const AGENT_RESERVED_KEYS = {
 };
 
 /** The `Agent` `PKProvider` for static agents. */
-export const STATIC_AGENT_PK_PROVIDER = buildPKProvider(AGENT_RESERVED_KEYS);
+export const STATIC_AGENT_PK_PROVIDER = buildPKProvider<Agent>(
+    AGENT_RESERVED_KEYS
+);

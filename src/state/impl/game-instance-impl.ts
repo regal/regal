@@ -16,6 +16,7 @@ import {
 } from "../../agents";
 import { isAgentArrayReference } from "../../agents/agent-array-reference";
 import { isAgentReference } from "../../agents/agent-reference";
+import { FK } from "../../common";
 import {
     buildInstanceOptions,
     GameOptions,
@@ -24,6 +25,8 @@ import {
 import { RegalError } from "../../error";
 import {
     buildInstanceEvents,
+    EventRecord,
+    getUntrackedEventPK,
     InstanceEventsInternal,
     on,
     TrackedEvent
@@ -135,10 +138,14 @@ class GameInstanceImpl<StateType = any>
         return returnObj;
     }
 
-    public revert(revertTo: number = 0): GameInstanceImpl {
-        if (revertTo !== 0) {
-            if (revertTo < 0) {
-                throw new RegalError("revertTo must be zero or greater.");
+    public revert(
+        revertTo: FK<EventRecord> = getUntrackedEventPK()
+    ): GameInstanceImpl {
+        if (!revertTo.equals(getUntrackedEventPK())) {
+            if (revertTo.index() < getUntrackedEventPK().index()) {
+                throw new RegalError(
+                    "The earliest event ID you may revert to is the untracked event ID."
+                );
             }
             if (!this.options.trackAgentChanges) {
                 throw new RegalError(
@@ -182,7 +189,7 @@ class GameInstanceImpl<StateType = any>
      * Internal helper that builds an `InstanceRandom` constructor with its `numGenerations`
      * set to the appropriate revert event.
      */
-    private _buildRandomRevertCtor(revertTo: number) {
+    private _buildRandomRevertCtor(revertTo: FK<EventRecord>) {
         return (game: GameInstanceImpl) => {
             let numGens: number = this.random.numGenerations;
 
@@ -192,7 +199,7 @@ class GameInstanceImpl<StateType = any>
 
             if (eventsWithRandoms.length > 0) {
                 const lastEvent = eventsWithRandoms.find(
-                    er => er.id <= revertTo
+                    er => er.id.index() <= revertTo.index()
                 );
 
                 if (lastEvent === undefined) {
@@ -211,7 +218,7 @@ class GameInstanceImpl<StateType = any>
     }
 
     /** Internal helper that builds a `TrackedEvent` to revert agent changes */
-    private _buildAgentRevertFunc(revertTo: number): TrackedEvent {
+    private _buildAgentRevertFunc(revertTo: FK<EventRecord>): TrackedEvent {
         return on("REVERT", (game: GameInstanceInternal) => {
             const target = game.agents;
 
@@ -225,7 +232,7 @@ class GameInstanceImpl<StateType = any>
                 for (const prop of props) {
                     const history = am.getPropertyHistory(prop);
                     const lastChangeIdx = history.findIndex(
-                        change => change.eventId <= revertTo
+                        change => change.eventId.index() <= revertTo.index()
                     );
 
                     if (lastChangeIdx === -1) {
