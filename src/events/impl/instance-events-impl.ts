@@ -15,6 +15,7 @@ import {
     TrackedEvent
 } from "../event-types";
 import { InstanceEventsInternal } from "../instance-events-internal";
+import { EVENT_RESERVED_KEYS } from "./event-keys";
 import { buildEventRecord } from "./event-record-impl";
 
 /**
@@ -40,7 +41,9 @@ class InstanceEventsImpl implements InstanceEventsInternal {
         public game: GameInstanceInternal,
         pkProvider: PKProvider<EventRecord>
     ) {
-        this._pkProvider = pkProvider ? pkProvider : buildPKProvider();
+        this._pkProvider = pkProvider
+            ? pkProvider
+            : buildPKProvider(EVENT_RESERVED_KEYS);
     }
 
     get current(): EventRecord {

@@ -15,7 +15,7 @@ import { TrackedEvent } from "./event-types";
  * Record of a `TrackedEvent`'s effects in a game cycle.
  */
 export interface EventRecord {
-    /* The event's unique numeric ID. */
+    /* The event's unique =ID. */
     id: PK<EventRecord>;
 
     /* The event's name. */

@@ -104,7 +104,7 @@ class AgentManagerImpl implements AgentManager {
 
         const propChange: PropertyChange = {
             agentId: this.id.ref(),
-            eventId: event.id,
+            eventId: event.id.ref(),
             eventName: event.name,
             final: value,
             init: initValue,
@@ -142,7 +142,7 @@ class AgentManagerImpl implements AgentManager {
 
         const propChange: PropertyChange = {
             agentId: this.id.ref(),
-            eventId: event.id,
+            eventId: event.id.ref(),
             eventName: event.name,
             final: undefined,
             init: initValue,

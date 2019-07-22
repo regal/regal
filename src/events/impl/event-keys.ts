@@ -19,8 +19,8 @@ export const EVENT_RESERVED_KEYS = {
 };
 
 /**
- * Reference this `PKProvider` for `EventRecord` PKs so we don't have
- * to do additional instantiations.
+ * Reference this `PKProvider` for helper functions to get reserved `EventRecord`
+ * PKs so we don't have to do additional instantiations.
  */
 const INTERNAL_EVENT_PK_PROVIDER = buildPKProvider<EventRecord>(
     EVENT_RESERVED_KEYS

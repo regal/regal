@@ -24,7 +24,7 @@ export enum PropertyOperation {
  * Describes a single operation on an active agent's property.
  */
 export interface PropertyChange {
-    /** The numeric id of the `TrackedEvent` during which the change took place (optional). */
+    /** The id of the `TrackedEvent` during which the change took place (optional). */
     eventId?: FK<Agent>;
 
     /** The name of the `TrackedEvent` during which the change took place (optional). */
