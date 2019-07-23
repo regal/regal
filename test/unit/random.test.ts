@@ -11,7 +11,7 @@ import {
 } from "../../src/random";
 import { buildGameInstance } from "../../src/state";
 import { RegalError } from "../../src/error";
-import { log, getDemoMetadata, ePKs } from "../test-utils";
+import { log, getDemoMetadata, ePKs, rPKs } from "../test-utils";
 import { Game } from "../../src/api";
 import { Agent, isAgent } from "../../src/agents";
 import { on } from "../../src/events";
@@ -352,6 +352,7 @@ describe("Random", function() {
             rand1.then(rand2)(myGame);
 
             const [_epk0, epk1, epk2] = ePKs(2);
+            const [rpk0, rpk1, rpk2, rpk3, rpk4] = rPKs(4);
 
             expect(myGame.state.randos).to.deep.equal([
                 false,
@@ -366,17 +367,17 @@ describe("Random", function() {
                     id: epk2,
                     name: "RAND2",
                     randoms: [
-                        { id: 2, value: 10 },
-                        { id: 3, value: "IcR*G" },
-                        { id: 4, value: 0 } // InstanceRandom.choice records the index of the selected element, not the element itself
+                        { id: rpk2, value: 10 },
+                        { id: rpk3, value: "IcR*G" },
+                        { id: rpk4, value: 0 } // InstanceRandom.choice records the index of the selected element, not the element itself
                     ]
                 },
                 {
                     id: epk1,
                     name: "RAND1",
                     randoms: [
-                        { id: 0, value: false },
-                        { id: 1, value: 0.0217038414025921 }
+                        { id: rpk0, value: false },
+                        { id: rpk1, value: 0.0217038414025921 }
                     ]
                 }
             ]);

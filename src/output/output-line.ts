@@ -1,5 +1,3 @@
-import { PK } from "../common";
-
 /*
  * Contains interfaces that represent lines of output generated
  * within a Regal game.
@@ -7,6 +5,8 @@ import { PK } from "../common";
  * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
+
+import { PK } from "../common";
 
 /**
  * Conveys semantic meaning of an `OutputLine` to the client.

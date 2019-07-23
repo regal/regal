@@ -6,7 +6,7 @@
  */
 
 import { RegalError } from "../../error";
-import { PK, PKProvider, ReservedPKSet } from "../keys";
+import { FK, PK, PKProvider, ReservedPKSet } from "../keys";
 
 export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
     public static readonly START_VALUE = 0;
@@ -110,5 +110,13 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
 
     public countGenerated(): number {
         return this.lastPK.index();
+    }
+
+    public forkAfterKey(key: PK<PKClass> | FK<PKClass>): PKProvider<PKClass> {
+        return new PKProviderImpl(this.buildPK, key, this.reservedPKs);
+    }
+
+    public previous(): PK<PKClass> {
+        return this.lastPK;
     }
 }

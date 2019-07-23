@@ -1,4 +1,3 @@
-import { inspect } from "util";
 import { GameMetadata, GameOptions } from "../src/config";
 import { version as regalVersion } from "../package.json";
 import { expect } from "chai";
@@ -6,11 +5,11 @@ import { getGameInstancePK, Agent } from "../src/agents";
 import { buildPKProvider, PK } from "../src/common";
 import { OutputLine } from "../src/output";
 import { getUntrackedEventPK } from "../src/events";
+import { RandomRecord } from "../src/random";
 
-export const log = (o: any, title?: string) =>
-    console.log(
-        `${title ? `${title}: ` : ""}${inspect(o, { depth: Infinity })}`
-    );
+// log had to be moved to its own file to eliminate circular dependencies
+// when used to debug src
+export { log } from "./test-log";
 
 export const getDemoMetadata = (): GameMetadata => ({
     name: "Demo Game",
@@ -82,6 +81,8 @@ export const smartObjectEquals = (actual: object, expected: object) => {
 
 export const getInitialOutputPK = () => buildPKProvider<OutputLine>().next();
 
+export const getInitialRandomPK = () => buildPKProvider<RandomRecord>().next();
+
 const pks = <T>(additional: number, initialPK: PK<T>) => {
     const result = [initialPK];
     for (let i = 0; i < additional; i++) {
@@ -103,3 +104,7 @@ export const ePKs = (additional: number) =>
     pks(additional, getUntrackedEventPK());
 
 export const ePKAtNum = (index: number) => getUntrackedEventPK().plus(index);
+
+// RandomRecord PKs
+export const rPKs = (additional: number) =>
+    pks(additional, getInitialRandomPK());

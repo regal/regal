@@ -16,7 +16,7 @@ import {
 } from "../../agents";
 import { isAgentArrayReference } from "../../agents/agent-array-reference";
 import { isAgentReference } from "../../agents/agent-reference";
-import { FK } from "../../common";
+import { buildPKProvider, FK } from "../../common";
 import {
     buildInstanceOptions,
     GameOptions,
@@ -32,7 +32,11 @@ import {
     TrackedEvent
 } from "../../events";
 import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
-import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
+import {
+    buildInstanceRandom,
+    InstanceRandomInternal,
+    RandomRecord
+} from "../../random";
 import { ContextManager } from "../context-manager";
 import { GameInstanceInternal } from "../game-instance-internal";
 
@@ -191,7 +195,7 @@ class GameInstanceImpl<StateType = any>
      */
     private _buildRandomRevertCtor(revertTo: FK<EventRecord>) {
         return (game: GameInstanceImpl) => {
-            let numGens: number = this.random.numGenerations;
+            let lastKey = this.random.lastKey;
 
             const eventsWithRandoms = this.events.history.filter(
                 er => er.randoms !== undefined && er.randoms.length > 0
@@ -204,16 +208,21 @@ class GameInstanceImpl<StateType = any>
 
                 if (lastEvent === undefined) {
                     // All random values were generated after the target event
-                    numGens =
+                    lastKey =
                         eventsWithRandoms[eventsWithRandoms.length - 1]
                             .randoms[0].id;
                 } else {
-                    // Otherwise, set num generations to its value AFTER (+1) the target event
+                    // Otherwise, set lastKey to its value AFTER (+1) the target event
                     const lastRandoms = lastEvent.randoms;
-                    numGens = lastRandoms[lastRandoms.length - 1].id + 1;
+                    lastKey = lastRandoms[lastRandoms.length - 1].id.plus(1);
                 }
             }
-            return buildInstanceRandom(game, numGens);
+            return buildInstanceRandom(
+                game,
+                // Subtract lastKey by one to fix an off-by-one error caused by
+                // using PK indices to skip the Prando generator
+                buildPKProvider<RandomRecord>().forkAfterKey(lastKey.minus(1))
+            );
         };
     }
 
