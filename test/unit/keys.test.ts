@@ -235,4 +235,22 @@ describe("Keys", function() {
         prov.next();
         expect(prov.countGenerated()).to.equal(baseCount + 1);
     });
+
+    it("PKProvider.previous is equal to the previous key", function() {
+        const prov = buildPKProvider(RESERVED_KEYS);
+        const first = prov.next();
+        expect(prov.previous().equals(first)).to.be.true;
+    });
+
+    it("PKProvider.forkAfterKey creates a fork as if the new provider's last key was the given key", function() {
+        const prov = buildPKProvider(RESERVED_KEYS);
+        const provKey = prov.next();
+        const fork = prov.forkAfterKey(provKey.plus(100));
+        expect(
+            prov
+                .next()
+                .plus(100)
+                .equals(fork.next())
+        ).to.be.true;
+    });
 });
