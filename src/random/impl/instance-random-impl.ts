@@ -16,7 +16,7 @@ import { RandomRecord } from "../random-record";
 /**
  * Constructs an `InstanceRandom` using the current implementation.
  * @param game The managing `GameInstance`.
- * @param numGenerations The existing random PK provider (optional).
+ * @param pkProvider The existing random PK provider (optional).
  */
 export const buildInstanceRandom = (
     game: GameInstanceInternal,
