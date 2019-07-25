@@ -28,6 +28,8 @@ import {
     isAgentActive,
     propertyIsAgentId
 } from "./agent-utils";
+import { activateAgentMeta } from "./agent-meta-transformers";
+import { ReservedAgentProperty } from "../agent-meta";
 
 /**
  * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`
@@ -90,8 +92,8 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
             value = StaticAgentRegistry.getAgentProperty(id, property);
         } else {
-            if (property === "id") {
-                value = id;
+            if (property === ReservedAgentProperty.META) {
+                value = am.meta;
             } else if (am.hasPropertyRecord(property)) {
                 value = am.getProperty(property);
             } else if (StaticAgentRegistry.hasAgent(id)) {
@@ -101,9 +103,9 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         if (isAgent(value)) {
             if (value instanceof Array) {
-                value = buildActiveAgentArrayProxy(value.id, this.game);
+                value = buildActiveAgentArrayProxy(value.meta.id, this.game);
             } else {
-                value = buildActiveAgentProxy(value.id, this.game);
+                value = buildActiveAgentProxy(value.meta.id, this.game);
             }
         } else if (isAgentReference(value)) {
             value = buildActiveAgentProxy(value.refId, this.game);
@@ -137,7 +139,10 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         property: PropertyKey,
         value: any
     ): boolean {
-        if (property === "id" || property === "game") {
+        if (
+            property === ReservedAgentProperty.META ||
+            property === ReservedAgentProperty.GAME
+        ) {
             throw new RegalError(
                 `The agent's <${property}> property cannot be set.`
             );
@@ -156,19 +161,20 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         }
 
         if (isAgent(value)) {
-            if (!isAgentActive(value.id)) {
-                const newId = this.reserveNewId();
-                (value as Mutable<Agent>).id = newId;
+            if (!isAgentActive(value.meta.id)) {
+                value.meta = activateAgentMeta(this.reserveNewId())(value.meta);
                 value = this.game.using(value);
             }
             value =
                 value instanceof Array
-                    ? new AgentArrayReference((value as any).id)
-                    : new AgentReference(value.id);
+                    ? new AgentArrayReference((value as any).meta.id)
+                    : new AgentReference(value.meta.id);
         } else if (value instanceof Array) {
-            (value as any).id = this.reserveNewId();
+            (value as any).meta = activateAgentMeta(this.reserveNewId())(
+                {} as any // TODO - make meta for array
+            );
             value = this.game.using(value);
-            value = new AgentArrayReference(value.id);
+            value = new AgentArrayReference(value.meta.id);
         }
 
         am.setProperty(property, value);
@@ -194,7 +200,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             return staticPropExists;
         }
 
-        if (property === "id") {
+        if (property === ReservedAgentProperty.META) {
             return true;
         }
 
@@ -204,7 +210,10 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public deleteAgentProperty(id: PK<Agent>, property: PropertyKey): boolean {
-        if (property === "id" || property === "game") {
+        if (
+            property === ReservedAgentProperty.META ||
+            property === ReservedAgentProperty.GAME
+        ) {
             throw new RegalError(
                 `The agent's <${property}> property cannot be deleted.`
             );
@@ -245,7 +254,9 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             const am = newAgents.createAgentManager(id);
 
             const propsToAdd = Object.keys(formerAgent).filter(
-                key => key !== "game" && key !== "id"
+                key =>
+                    key !== ReservedAgentProperty.GAME &&
+                    key !== ReservedAgentProperty.META
             );
 
             // For each updated property on the old agent, add its last value to the new agent.
@@ -281,8 +292,8 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
             for (const prop of this.getAgentPropertyKeys(id)) {
                 const val = this.getAgentProperty(id, prop);
-                if (isAgent(val) && !seen.has(val.id.value())) {
-                    q.push(val.id);
+                if (isAgent(val) && !seen.has(val.meta.id.value())) {
+                    q.push(val.meta.id);
                 }
             }
         }

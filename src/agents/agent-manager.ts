@@ -9,6 +9,7 @@ import { FK } from "../common";
 import { GameInstance } from "../state";
 import { Agent } from "./agent";
 import { PropertyChange } from "./agent-properties";
+import { AgentMeta } from "./agent-meta";
 
 /**
  * Manager for all data relating to a single active agent.
@@ -19,7 +20,9 @@ import { PropertyChange } from "./agent-properties";
  */
 export interface AgentManager {
     /** The managed agent's id. */
-    id: FK<Agent>;
+    id: FK<Agent>; // TODO - REMOVE
+
+    meta: AgentMeta;
 
     /** The `GameInstance` in which the agent is active. */
     game: GameInstance;

@@ -264,12 +264,12 @@ class GameInstanceImpl<StateType = any>
                             const areEqAgents =
                                 isAgentReference(targetVal) &&
                                 isAgent(currentVal) &&
-                                targetVal.refId === currentVal.id;
+                                targetVal.refId === currentVal.meta.id;
 
                             const areEqAgentArrs =
                                 isAgentArrayReference(targetVal) &&
                                 isAgent(currentVal) &&
-                                targetVal.arRefId === currentVal.id;
+                                targetVal.arRefId === currentVal.meta.id;
 
                             if (!areEqAgents && !areEqAgentArrs) {
                                 target.setAgentProperty(id, prop, targetVal);
