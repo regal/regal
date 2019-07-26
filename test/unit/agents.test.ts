@@ -206,10 +206,7 @@ describe("Agents", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
-            // const parent = myGame.using(new Parent(new Dummy("D1", 10)));
-            const child = new Dummy("D1", 10);
-            let parent = new Parent(child);
-            parent = myGame.using(parent);
+            const parent = myGame.using(new Parent(new Dummy("D1", 10)));
             expect(parent.child.name).to.equal("D1");
             expect(parent.child.health).to.equal(10);
         });

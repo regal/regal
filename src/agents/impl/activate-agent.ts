@@ -29,7 +29,7 @@ export const activateAgent = <T extends Agent>(
     game: GameInstanceInternal,
     agent: T
 ): T => {
-    if (!isAgentActive(agent.meta.id)) {
+    if (agent.meta === undefined || !isAgentActive(agent.meta.id)) {
         agent.meta = activateAgentMeta(game.agents.reserveNewId())(agent.meta);
     }
 

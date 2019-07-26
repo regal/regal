@@ -20,6 +20,7 @@ import {
 } from "../agent-properties";
 import { isAgentReference } from "../agent-reference";
 import { StaticAgentRegistry } from "../static-agent-registry";
+import { activateAgentMeta, defaultAgentMeta } from "./agent-meta-transformers";
 
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
@@ -29,10 +30,18 @@ export const buildAgentManager = (
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
-    constructor(public id: FK<Agent>, public game: GameInstanceInternal) {}
+    private _meta: AgentMeta;
+
+    constructor(id: FK<Agent>, public game: GameInstanceInternal) {
+        this._meta = activateAgentMeta(id)(defaultAgentMeta());
+    }
 
     public get meta(): AgentMeta {
-        throw new Error("you tried to get meta"); // TODO - need to set meta somewhere
+        return this._meta;
+    }
+
+    public get id(): FK<Agent> {
+        return this._meta.id;
     }
 
     public hasPropertyRecord(property: PropertyKey): boolean {
