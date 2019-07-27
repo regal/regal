@@ -10,7 +10,10 @@ import { ContextManager } from "../../state";
 import { Agent } from "../agent";
 import { ReservedAgentProperty } from "../agent-meta";
 import { StaticAgentRegistry } from "../static-agent-registry";
-import { initInactiveAgentMeta } from "./agent-meta-transformers";
+import {
+    defaultAgentMeta,
+    initInactiveAgentMeta
+} from "./agent-meta-transformers";
 import { isAgentActive } from "./agent-utils";
 
 /**
@@ -72,8 +75,9 @@ export const buildInactiveAgentProxy = (agent: Agent): Agent => {
                 // treat that array like an agent and register a static id for it
                 if (
                     value instanceof Array &&
-                    (value as any).meta.id === undefined
+                    (value as any).meta === undefined
                 ) {
+                    (value as any).meta = defaultAgentMeta();
                     StaticAgentRegistry.addAgent(value as any);
                 }
                 return Reflect.set(target, property, value);

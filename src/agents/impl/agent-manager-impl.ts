@@ -30,18 +30,14 @@ export const buildAgentManager = (
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
-    private _meta: AgentMeta;
+    public meta: AgentMeta;
 
     constructor(id: FK<Agent>, public game: GameInstanceInternal) {
-        this._meta = activateAgentMeta(id)(defaultAgentMeta());
-    }
-
-    public get meta(): AgentMeta {
-        return this._meta;
+        this.meta = activateAgentMeta(id)(defaultAgentMeta());
     }
 
     public get id(): FK<Agent> {
-        return this._meta.id;
+        return this.meta.id;
     }
 
     public hasPropertyRecord(property: PropertyKey): boolean {

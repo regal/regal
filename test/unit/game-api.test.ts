@@ -19,7 +19,9 @@ import {
     Dummy,
     aPKs,
     getInitialOutputPK,
-    oPKs
+    oPKs,
+    smartObjectEquals,
+    testMeta
 } from "../test-utils";
 import { Agent, StaticAgentRegistry } from "../../src/agents";
 import {
@@ -735,8 +737,8 @@ describe("Game API", function() {
             const pk2 = getGameInstancePK().plus(2);
 
             const r1 = Game.postStartCommand();
-            expect(r1.instance.state.parent.child).to.deep.equal({
-                id: pk2,
+            smartObjectEquals(r1.instance.state.parent.child, {
+                meta: testMeta(pk2),
                 name: "D2",
                 health: 15
             });
@@ -745,8 +747,8 @@ describe("Game API", function() {
             expect(r2.instance.state.parent).to.be.undefined;
 
             const r3 = Game.postUndoCommand(r2.instance);
-            expect(r3.instance.state.parent.child).to.deep.equal({
-                id: pk2,
+            smartObjectEquals(r3.instance.state.parent.child, {
+                meta: testMeta(pk2),
                 name: "D2",
                 health: 15
             });

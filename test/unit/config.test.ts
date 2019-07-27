@@ -21,7 +21,9 @@ import {
     TestProperty,
     aPKs,
     getInitialOutputPK,
-    ePKs
+    ePKs,
+    smartObj,
+    testMeta
 } from "../test-utils";
 import { on, DEFAULT_EVENT_NAME } from "../../src/events";
 import { Agent, PropertyOperation, getGameInstancePK } from "../../src/agents";
@@ -648,8 +650,8 @@ describe("Config", function() {
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    [apk0.value()]: {
-                        id: apk0,
+                    [apk0.value()]: smartObj({
+                        meta: testMeta(apk0),
                         game: response.instance,
                         dummyCount: [
                             {
@@ -660,7 +662,7 @@ describe("Config", function() {
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    }
+                    })
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {

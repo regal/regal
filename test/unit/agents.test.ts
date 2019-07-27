@@ -9,7 +9,9 @@ import {
     smartObjectEquals,
     TestProperty,
     aPKs,
-    ePKs
+    ePKs,
+    testMeta,
+    smartObj
 } from "../test-utils";
 import { Game } from "../../src/api";
 import {
@@ -549,8 +551,8 @@ describe("Agents", function() {
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: myGame,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [pk0.value()]: smartObj({
+                        meta: testMeta(pk0),
                         game: myGame,
                         arr: [
                             {
@@ -561,9 +563,9 @@ describe("Agents", function() {
                                 final: { arRefId: pk1 }
                             }
                         ]
-                    },
-                    [pk1.value()]: {
-                        id: pk1,
+                    }),
+                    [pk1.value()]: smartObj({
+                        meta: testMeta(pk1),
                         game: myGame,
                         length: [
                             {
@@ -574,7 +576,7 @@ describe("Agents", function() {
                                 final: 0
                             }
                         ]
-                    }
+                    })
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
@@ -625,8 +627,8 @@ describe("Agents", function() {
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: myGame,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [pk0.value()]: smartObj({
+                        meta: testMeta(pk0),
                         game: myGame,
                         arr: [
                             {
@@ -637,9 +639,9 @@ describe("Agents", function() {
                                 final: { arRefId: pk1 }
                             }
                         ]
-                    },
-                    [pk1.value()]: {
-                        id: pk1,
+                    }),
+                    [pk1.value()]: smartObj({
+                        meta: testMeta(pk1),
                         game: myGame,
                         length: [
                             {
@@ -677,7 +679,7 @@ describe("Agents", function() {
                                 final: "foo"
                             }
                         ]
-                    }
+                    })
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
@@ -759,8 +761,8 @@ describe("Agents", function() {
                 smartObjectEquals(myGame.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: myGame,
-                    [pk0.value()]: {
-                        id: pk0,
+                    [pk0.value()]: smartObj({
+                        meta: testMeta(pk0),
                         game: myGame,
                         arr: [
                             {
@@ -771,9 +773,9 @@ describe("Agents", function() {
                                 final: { arRefId: pk4 }
                             }
                         ]
-                    },
-                    [pk1.value()]: {
-                        id: pk1,
+                    }),
+                    [pk1.value()]: smartObj({
+                        meta: testMeta(pk1),
                         game: myGame,
                         name: [
                             {
@@ -793,9 +795,9 @@ describe("Agents", function() {
                                 final: 5
                             }
                         ]
-                    },
-                    [pk2.value()]: {
-                        id: pk2,
+                    }),
+                    [pk2.value()]: smartObj({
+                        meta: testMeta(pk2),
                         game: myGame,
                         name: [
                             {
@@ -815,9 +817,9 @@ describe("Agents", function() {
                                 final: 10
                             }
                         ]
-                    },
-                    [pk3.value()]: {
-                        id: pk3,
+                    }),
+                    [pk3.value()]: smartObj({
+                        meta: testMeta(pk3),
                         game: myGame,
                         name: [
                             {
@@ -837,9 +839,9 @@ describe("Agents", function() {
                                 final: 15
                             }
                         ]
-                    },
-                    [pk4.value()]: {
-                        id: pk4,
+                    }),
+                    [pk4.value()]: smartObj({
+                        meta: testMeta(pk4),
                         game: myGame,
                         length: [
                             {
@@ -877,7 +879,7 @@ describe("Agents", function() {
                                 final: { refId: pk3 }
                             }
                         ]
-                    }
+                    })
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
@@ -965,8 +967,8 @@ describe("Agents", function() {
                     myGame.using(d1)
                 );
                 expect(myGame.state.dummy.dummies[1].name).to.equal("D2");
-                expect(myGame.state.dummy.dummies[1].dummies[0]).to.deep.equal({
-                    id: getGameInstancePK().plus(1),
+                smartObjectEquals(myGame.state.dummy.dummies[1].dummies[0], {
+                    meta: testMeta(getGameInstancePK().plus(1)),
                     name: "D1",
                     health: 10
                 });
@@ -985,10 +987,13 @@ describe("Agents", function() {
 
                 const [_pk0, pk1, pk2] = aPKs(2);
 
-                expect(myGame.state.dummies).to.deep.equal([
-                    { id: pk1, name: "D1", health: 10 },
-                    { id: pk2, name: "D2", health: 15 }
-                ]);
+                const expectedVal = [
+                    smartObj({ meta: testMeta(pk1), name: "D1", health: 10 }),
+                    smartObj({ meta: testMeta(pk2), name: "D2", health: 15 })
+                ];
+                (expectedVal as any).meta = TestProperty.REQUIRE_BUT_SKIP;
+
+                smartObjectEquals(myGame.state.dummies, expectedVal);
             });
 
             it("Array.prototype.unshift is functional on agent arrays", function() {
@@ -1033,25 +1038,28 @@ describe("Agents", function() {
                 const pk2 = getGameInstancePK().plus(2);
                 const pk4 = pk2.plus(2);
 
-                expect(myGame.state.allVals).to.deep.equal([
-                    true,
-                    {
-                        id: pk2,
-                        name: "D1",
-                        health: 10
-                    },
-                    "hello",
-                    {
-                        id: pk4,
-                        name: "D2",
-                        health: 15
-                    },
-                    {
-                        id: pk2,
-                        name: "D1",
-                        health: 10
-                    }
-                ]);
+                smartObjectEquals(
+                    [...myGame.state.allVals],
+                    [
+                        true,
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        }),
+                        "hello",
+                        smartObj({
+                            meta: testMeta(pk4),
+                            name: "D2",
+                            health: 15
+                        }),
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        })
+                    ]
+                );
             });
 
             it("Length property of agent arrays is functional", function() {
@@ -1081,13 +1089,16 @@ describe("Agents", function() {
                     game.state.arr = arr;
                 })(myGame);
 
-                expect(myGame.state.arr).to.deep.equal([
-                    {
-                        id: getGameInstancePK().plus(2),
-                        health: 30,
-                        foo: true
-                    }
-                ]);
+                smartObjectEquals(
+                    [...myGame.state.arr],
+                    [
+                        smartObj({
+                            meta: testMeta(getGameInstancePK().plus(2)),
+                            health: 30,
+                            foo: true
+                        })
+                    ]
+                );
             });
 
             it("Multi-dimensional agent arrays are functional", function() {
@@ -1098,43 +1109,48 @@ describe("Agents", function() {
 
                 const [_pk0, pk1, pk2, pk3, pk4, pk5, pk6, pk7, pk8] = aPKs(8);
 
-                expect(arr).to.deep.equal([
-                    [
-                        {
-                            id: pk3,
-                            name: "D10",
-                            health: 10
-                        },
-                        {
-                            id: pk4,
-                            name: "D11",
-                            health: 11
-                        },
-                        {
-                            id: pk5,
-                            name: "D12",
-                            health: 12
-                        },
-                        {
-                            id: pk6,
-                            name: "D13",
-                            health: 13
-                        },
-                        {
-                            id: pk7,
-                            name: "D14",
-                            health: 14
-                        }
-                    ]
-                ]);
+                const expectedInnerArray = [
+                    smartObj({
+                        meta: testMeta(pk3),
+                        name: "D10",
+                        health: 10
+                    }),
+                    smartObj({
+                        meta: testMeta(pk4),
+                        name: "D11",
+                        health: 11
+                    }),
+                    smartObj({
+                        meta: testMeta(pk5),
+                        name: "D12",
+                        health: 12
+                    }),
+                    smartObj({
+                        meta: testMeta(pk6),
+                        name: "D13",
+                        health: 13
+                    }),
+                    smartObj({
+                        meta: testMeta(pk7),
+                        name: "D14",
+                        health: 14
+                    })
+                ] as any;
+                expectedInnerArray.meta = testMeta(pk2);
+                const expectedOuterArray = [
+                    smartObj(expectedInnerArray)
+                ] as any;
+                expectedOuterArray.meta = testMeta(pk1);
+
+                smartObjectEquals(arr, expectedOuterArray);
                 expect(arr.length).to.equal(1);
                 expect(arr[0].length).to.equal(5);
                 expect((arr as any).meta.id.equals(pk1)).to.be.true;
 
                 arr.push(makeAgents(16, 10));
 
-                expect(myGame.agents.getAgentManager(pk1)).to.deep.equal({
-                    id: pk1,
+                smartObjectEquals(myGame.agents.getAgentManager(pk1), {
+                    meta: testMeta(pk1),
                     game: myGame,
                     0: [
                         {
@@ -1169,10 +1185,8 @@ describe("Agents", function() {
                     ]
                 });
 
-                expect(
-                    arr[1].find(dummy => dummy.health % 9 == 0)
-                ).to.deep.equal({
-                    id: pk8.plus(3),
+                smartObjectEquals(arr[1].find(dummy => dummy.health % 9 == 0), {
+                    meta: testMeta(pk8.plus(3)),
                     name: "D18",
                     health: 18
                 });
