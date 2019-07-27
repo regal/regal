@@ -683,8 +683,8 @@ describe("Config", function() {
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    [apk0.value()]: {
-                        id: apk0,
+                    [apk0.value()]: smartObj({
+                        meta: testMeta(apk0),
                         game: response.instance,
                         dummyCount: [
                             {
@@ -711,9 +711,9 @@ describe("Config", function() {
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    [apk1.value()]: {
-                        id: apk1,
+                    }),
+                    [apk1.value()]: smartObj({
+                        meta: testMeta(apk1),
                         game: response.instance,
                         name: [
                             {
@@ -733,7 +733,7 @@ describe("Config", function() {
                                 op: PropertyOperation.MODIFIED
                             }
                         ]
-                    }
+                    })
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
