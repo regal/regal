@@ -14,6 +14,7 @@ import {
     isAgentArrayReference
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
+import { ReservedAgentProperty } from "../agent-meta";
 import { AgentReference, isAgentReference } from "../agent-reference";
 import { InstanceAgentsInternal } from "../instance-agents-internal";
 import { StaticAgentRegistry } from "../static-agent-registry";
@@ -23,13 +24,12 @@ import {
 } from "./active-agent-proxy";
 import { STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 import { buildAgentManager } from "./agent-manager-impl";
+import { activateAgentMeta } from "./agent-meta-transformers";
 import {
     getGameInstancePK,
     isAgentActive,
     propertyIsAgentId
 } from "./agent-utils";
-import { activateAgentMeta } from "./agent-meta-transformers";
-import { ReservedAgentProperty } from "../agent-meta";
 
 /**
  * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`

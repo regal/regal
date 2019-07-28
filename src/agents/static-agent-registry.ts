@@ -66,7 +66,7 @@ export class StaticAgentRegistry {
     public static addAgent(agent: Agent): void {
         const currentId = agent.meta.id;
 
-        if (currentId !== undefined && !isAgentActive(currentId)) {
+        if (currentId !== undefined && isAgentActive(currentId)) {
             throw new RegalError(
                 `Only inactive agents can be added to the static registry. This one already has an id of <${currentId.value()}>.`
             );
