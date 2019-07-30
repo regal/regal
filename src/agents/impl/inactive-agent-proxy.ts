@@ -10,10 +10,7 @@ import { ContextManager } from "../../state";
 import { Agent } from "../agent";
 import { ReservedAgentProperty } from "../agent-meta";
 import { StaticAgentRegistry } from "../static-agent-registry";
-import {
-    defaultAgentMeta,
-    initInactiveAgentMeta
-} from "./agent-meta-transformers";
+import { defaultAgentMeta, inactiveAgentMeta } from "./agent-meta-transformers";
 import { isAgentActive } from "./agent-utils";
 
 /**
@@ -37,7 +34,7 @@ export const buildInactiveAgentProxy = (agent: Agent): Agent => {
     if (ContextManager.isContextStatic()) {
         StaticAgentRegistry.addAgent(agent);
     } else {
-        agent.meta = initInactiveAgentMeta(agent.meta);
+        agent.meta = inactiveAgentMeta(agent.meta);
     }
 
     return new Proxy(agent, {

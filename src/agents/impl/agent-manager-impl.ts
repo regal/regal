@@ -20,7 +20,7 @@ import {
 } from "../agent-properties";
 import { isAgentReference } from "../agent-reference";
 import { StaticAgentRegistry } from "../static-agent-registry";
-import { activateAgentMeta, defaultAgentMeta } from "./agent-meta-transformers";
+import { agentMetaWithID, defaultAgentMeta } from "./agent-meta-transformers";
 
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
@@ -33,7 +33,7 @@ class AgentManagerImpl implements AgentManager {
     public meta: AgentMeta;
 
     constructor(id: FK<Agent>, public game: GameInstanceInternal) {
-        this.meta = activateAgentMeta(id)(defaultAgentMeta());
+        this.meta = agentMetaWithID(id)(defaultAgentMeta());
     }
 
     public get id(): FK<Agent> {

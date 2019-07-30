@@ -16,7 +16,7 @@ import {
     propertyIsAgentId,
     STATIC_AGENT_PK_PROVIDER
 } from "./impl";
-import { initStaticAgentMeta } from "./impl/agent-meta-transformers";
+import { staticAgentMeta } from "./impl/agent-meta-transformers";
 import { isAgentActive } from "./impl/agent-utils";
 
 /**
@@ -72,7 +72,7 @@ export class StaticAgentRegistry {
             );
         }
 
-        agent.meta = initStaticAgentMeta(agent.meta);
+        agent.meta = staticAgentMeta(agent.meta);
 
         this[agent.meta.id.value()] = agent;
     }

@@ -24,7 +24,7 @@ import {
 } from "./active-agent-proxy";
 import { STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 import { buildAgentManager } from "./agent-manager-impl";
-import { activateAgentMeta } from "./agent-meta-transformers";
+import { agentMetaWithID } from "./agent-meta-transformers";
 import {
     getGameInstancePK,
     isAgentActive,
@@ -162,7 +162,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         if (isAgent(value)) {
             if (!isAgentActive(value.meta.id)) {
-                value.meta = activateAgentMeta(this.reserveNewId())(value.meta);
+                value.meta = agentMetaWithID(this.reserveNewId())(value.meta);
                 value = this.game.using(value);
             }
             value =
@@ -170,7 +170,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
                     ? new AgentArrayReference((value as any).meta.id)
                     : new AgentReference(value.meta.id);
         } else if (value instanceof Array) {
-            (value as any).meta = activateAgentMeta(this.reserveNewId())(
+            (value as any).meta = agentMetaWithID(this.reserveNewId())(
                 {} as any // TODO - make meta for array
             );
             value = this.game.using(value);

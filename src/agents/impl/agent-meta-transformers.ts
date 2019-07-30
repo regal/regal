@@ -13,15 +13,15 @@ export const defaultAgentMeta = (): AgentMeta => ({
     protoId: undefined
 });
 
-export const initStaticAgentMeta = transformMeta(() => ({
+export const staticAgentMeta = transformMeta(() => ({
     id: STATIC_AGENT_PK_PROVIDER.next()
 }));
 
-export const initInactiveAgentMeta = transformMeta(() => ({
+export const inactiveAgentMeta = transformMeta(() => ({
     id: getInactiveAgentPK()
 }));
 
-export const activateAgentMeta = (id: PK<Agent>) =>
+export const agentMetaWithID = (id: PK<Agent>) =>
     transformMeta(() => ({
         id
     }));

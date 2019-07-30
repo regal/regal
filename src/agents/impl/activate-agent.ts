@@ -13,7 +13,7 @@ import {
     buildActiveAgentArrayProxy,
     buildActiveAgentProxy
 } from "./active-agent-proxy";
-import { activateAgentMeta } from "./agent-meta-transformers";
+import { agentMetaWithID } from "./agent-meta-transformers";
 import { isAgentActive, propertyIsAgentId } from "./agent-utils";
 
 /**
@@ -30,7 +30,7 @@ export const activateAgent = <T extends Agent>(
     agent: T
 ): T => {
     if (agent.meta === undefined || !isAgentActive(agent.meta.id)) {
-        agent.meta = activateAgentMeta(game.agents.reserveNewId())(agent.meta);
+        agent.meta = agentMetaWithID(game.agents.reserveNewId())(agent.meta);
     }
 
     let activeAgent: T;
