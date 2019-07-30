@@ -1,26 +1,49 @@
 import { PK } from "../../common";
 import { Agent } from "../agent";
 import { AgentMeta } from "../agent-meta";
+/*
+ * Functional transformers for `AgentMeta` objects.
+ *
+ * Copyright (c) Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 import { getInactiveAgentPK } from "./agent-utils";
 
+/**
+ * Utility that builds an `AgentMeta` transformer.
+ * @param transformFn Function that returns a new `AgentMeta`, optionally
+ * using the previous `AgentMeta`.
+ */
 const transformMeta = (
-    transformer: (meta?: AgentMeta) => Partial<AgentMeta>
-) => (oldMeta: AgentMeta) => ({ ...oldMeta, ...transformer(oldMeta) });
+    transformFn: (meta?: AgentMeta) => Partial<AgentMeta>
+) => (oldMeta: AgentMeta) => ({ ...oldMeta, ...transformFn(oldMeta) });
 
+/** Returns an `AgentMeta` with its default values. */
 export const defaultAgentMeta = (): AgentMeta => ({
     id: undefined,
     protoId: undefined
 });
 
+/**
+ * Returns an `AgentMeta` with its id set to the next static agent PK.
+ */
 export const staticAgentMeta = transformMeta(() => ({
     id: STATIC_AGENT_PK_PROVIDER.next()
 }));
 
+/**
+ * Returns an `AgentMeta` with its id set to the reserved inactive agent PK.
+ */
 export const inactiveAgentMeta = transformMeta(() => ({
     id: getInactiveAgentPK()
 }));
 
+/**
+ * Returns an `AgentMeta` transformer that transforms an `AgentMeta` id
+ * into the given id.
+ */
 export const agentMetaWithID = (id: PK<Agent>) =>
     transformMeta(() => ({
         id
