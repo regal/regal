@@ -24,8 +24,17 @@ import { RegalError } from "../../src/error";
 import { DEFAULT_EVENT_NAME, getUntrackedEventPK } from "../../src/events";
 import { on } from "../../src/events";
 import { buildGameInstance } from "../../src/state";
-import { STATIC_AGENT_PK_PROVIDER } from "../../src/agents/impl";
+import {
+    STATIC_AGENT_PK_PROVIDER,
+    getInactiveAgentPK
+} from "../../src/agents/impl";
 import { ReservedAgentProperty } from "../../src/agents/agent-meta";
+import {
+    defaultAgentMeta,
+    staticAgentMeta,
+    inactiveAgentMeta,
+    agentMetaWithID
+} from "../../src/agents/impl/agent-meta-transformers";
 
 class Parent extends Agent {
     constructor(public child: Dummy) {
@@ -1937,6 +1946,17 @@ describe("Agents", function() {
                 }
             ]);
         });
+
+        it("AgentManager.id is a getter for AgentManager.meta.id", function() {
+            Game.init(MD);
+
+            const myGame = buildGameInstance();
+
+            const d = myGame.using(new Dummy("D1", 15));
+            const dr = myGame.agents.getAgentManager(d.meta.id);
+
+            expect(dr.id).to.equal(dr.meta.id);
+        })
     });
 
     describe("InstanceAgents", function() {
@@ -2917,6 +2937,46 @@ describe("Agents", function() {
                 name: "D1",
                 health: 1
             });
+        });
+    });
+
+    describe("AgentMeta", function() {
+        it("defaultAgentMeta transformer", function() {
+            expect(defaultAgentMeta()).to.deep.equal({
+                id: undefined,
+                protoId: undefined
+            });
+        });
+
+        it("staticAgentMeta transformer", function() {
+            const expectedId = STATIC_AGENT_PK_PROVIDER.peek();
+            expect(staticAgentMeta(defaultAgentMeta()).id.equals(expectedId)).to
+                .be.true;
+        });
+
+        it("inactiveAgentMeta transformer", function() {
+            expect(
+                inactiveAgentMeta(defaultAgentMeta()).id.equals(
+                    getInactiveAgentPK()
+                )
+            ).to.be.true;
+        });
+
+        it("agentMetaWithID transformer", function() {
+            const id = getGameInstancePK();
+            expect(agentMetaWithID(id)(defaultAgentMeta()).id.equals(id)).to.be
+                .true;
+        });
+
+        it("Agent meta transformers are pure functions", function() {
+            const meta1 = defaultAgentMeta();
+
+            const id2 = getGameInstancePK();
+            const meta2 = agentMetaWithID(id2)(meta1);
+
+            expect(meta1).to.not.deep.equal(meta2);
+            expect(meta1.id).equals(undefined);
+            expect(meta2.id.equals(id2)).to.be.true;
         });
     });
 });
