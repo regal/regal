@@ -21,11 +21,11 @@ export class NumericPKImpl<T> implements PK<T> {
         return new NumericPKImpl(this.internalValue - n);
     }
 
-    public equals(key: PK<T> | FK<T>): boolean {
+    public equals(key: PK<T> | FK<PK<T>>): boolean {
         return this === key || this.value() === key.value();
     }
 
-    public ref(): FK<T> {
+    public ref(): FK<PK<T>> {
         return this;
     }
 

@@ -36,9 +36,9 @@ export const buildEventRecord = (
 };
 
 class EventRecordImpl implements EventRecord {
-    public output?: Array<FK<OutputLine>>;
-    public causedBy?: FK<EventRecord>;
-    public caused?: Array<FK<EventRecord>>;
+    public output?: Array<FK<PK<OutputLine>>>;
+    public causedBy?: FK<PK<EventRecord>>;
+    public caused?: Array<FK<PK<EventRecord>>>;
     public changes?: PropertyChange[];
     public randoms?: RandomRecord[];
 

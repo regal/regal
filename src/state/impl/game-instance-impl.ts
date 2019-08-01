@@ -17,7 +17,7 @@ import {
 import { isAgentArrayReference } from "../../agents/agent-array-reference";
 import { ReservedAgentProperty } from "../../agents/agent-meta";
 import { isAgentReference } from "../../agents/agent-reference";
-import { buildPKProvider, FK } from "../../common";
+import { buildPKProvider, FK, PK } from "../../common";
 import {
     buildInstanceOptions,
     GameOptions,
@@ -144,7 +144,7 @@ class GameInstanceImpl<StateType = any>
     }
 
     public revert(
-        revertTo: FK<EventRecord> = getUntrackedEventPK()
+        revertTo: FK<PK<EventRecord>> = getUntrackedEventPK()
     ): GameInstanceImpl {
         if (!revertTo.equals(getUntrackedEventPK())) {
             if (revertTo.index() < getUntrackedEventPK().index()) {
@@ -194,7 +194,7 @@ class GameInstanceImpl<StateType = any>
      * Internal helper that builds an `InstanceRandom` constructor with its `numGenerations`
      * set to the appropriate revert event.
      */
-    private _buildRandomRevertCtor(revertTo: FK<EventRecord>) {
+    private _buildRandomRevertCtor(revertTo: FK<PK<EventRecord>>) {
         return (game: GameInstanceImpl) => {
             let lastKey = this.random.lastKey;
 
@@ -228,7 +228,7 @@ class GameInstanceImpl<StateType = any>
     }
 
     /** Internal helper that builds a `TrackedEvent` to revert agent changes */
-    private _buildAgentRevertFunc(revertTo: FK<EventRecord>): TrackedEvent {
+    private _buildAgentRevertFunc(revertTo: FK<PK<EventRecord>>): TrackedEvent {
         return on("REVERT", (game: GameInstanceInternal) => {
             const target = game.agents;
 

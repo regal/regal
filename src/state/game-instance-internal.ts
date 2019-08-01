@@ -6,7 +6,7 @@
  */
 
 import { InstanceAgentsInternal } from "../agents";
-import { FK } from "../common";
+import { FK, PK } from "../common";
 import { GameOptions, InstanceOptionsInternal } from "../config";
 import { EventRecord, InstanceEventsInternal } from "../events";
 import { InstanceOutputInternal } from "../output";
@@ -54,5 +54,5 @@ export interface GameInstanceInternal<StateType = any>
      * Defaults to `EVENT_RESERVED_KEYS.UNTRACKED`. If an argument is given and the
      * `trackAgentChanges` option is disabled, an error will throw.
      */
-    revert(revertTo?: FK<EventRecord>): GameInstanceInternal<StateType>;
+    revert(revertTo?: FK<PK<EventRecord>>): GameInstanceInternal<StateType>;
 }

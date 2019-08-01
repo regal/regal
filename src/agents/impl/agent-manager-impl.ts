@@ -9,7 +9,6 @@ import { FK } from "../../common";
 import { RegalError } from "../../error";
 import { EventRecord, getUntrackedEventPK } from "../../events";
 import { GameInstanceInternal } from "../../state";
-import { Agent } from "../agent";
 import { AgentManager } from "../agent-manager";
 import { AgentId, AgentMeta } from "../agent-meta";
 import {
@@ -32,11 +31,11 @@ export const buildAgentManager = (
 class AgentManagerImpl implements AgentManager {
     public meta: AgentMeta;
 
-    constructor(id: FK<Agent>, public game: GameInstanceInternal) {
+    constructor(id: FK<AgentId>, public game: GameInstanceInternal) {
         this.meta = agentMetaWithID(id)(defaultAgentMeta());
     }
 
-    public get id(): FK<Agent> {
+    public get id(): FK<AgentId> {
         return this.meta.id;
     }
 

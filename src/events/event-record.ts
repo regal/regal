@@ -25,13 +25,13 @@ export interface EventRecord {
     func: TrackedEvent;
 
     /** The IDs of the `OutputLine`s emitted by the event. */
-    output?: Array<FK<OutputLine>>;
+    output?: Array<FK<PK<OutputLine>>>;
 
     /** The ID of the event that caused this event. */
-    causedBy?: FK<EventRecord>;
+    causedBy?: FK<PK<EventRecord>>;
 
     /** The IDs of the events that were caused by this event. */
-    caused?: Array<FK<EventRecord>>;
+    caused?: Array<FK<PK<EventRecord>>>;
 
     /** The records of all changes to registered agents that were caused by this event. */
     changes?: PropertyChange[];
