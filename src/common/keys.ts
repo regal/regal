@@ -9,7 +9,7 @@
  * Primary key for an indexed class, a class of which there
  * are many instances that each need a unique identifier.
  *
- * @template T The class referenced by this primary key type - i.e. `PK<Agent>`
+ * @template T The class referenced by this primary key type - i.e. `AgentId`
  */
 export interface PK<T> {
     /**

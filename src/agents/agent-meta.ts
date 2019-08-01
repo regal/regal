@@ -8,9 +8,8 @@
 import { PK } from "../common";
 import { Agent } from "./agent";
 
-/** Placeholder type for classifying `PK<AgentProto>`. */
-// tslint:disable-next-line: no-empty-interface
-export interface AgentProto {}
+export type AgentId = PK<Agent>;
+export type AgentProtoId = PK<"AgentProto">;
 
 /**
  * A special object associated with every agent which contains
@@ -19,9 +18,9 @@ export interface AgentProto {}
  */
 export interface AgentMeta {
     /** The agent's unique identifier in the context of the current game. */
-    id: PK<Agent>;
+    id: AgentId;
     /** The unique identifier for the agent's prototype. */
-    protoId: PK<AgentProto>;
+    protoId: AgentProtoId;
 }
 
 /** Constants for reserved Agent properties. */

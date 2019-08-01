@@ -6,7 +6,7 @@ import { buildPKProvider, PK } from "../src/common";
 import { OutputLine } from "../src/output";
 import { getUntrackedEventPK } from "../src/events";
 import { RandomRecord } from "../src/random";
-import { AgentMeta } from "../src/agents/agent-meta";
+import { AgentId } from "../src/agents/agent-meta";
 
 // log had to be moved to its own file to eliminate circular dependencies
 // when used to debug src
@@ -128,7 +128,7 @@ export const ePKAtNum = (index: number) => getUntrackedEventPK().plus(index);
 export const rPKs = (additional: number) =>
     pks(additional, getInitialRandomPK());
 
-export const testMeta = (id: PK<Agent>) => {
+export const testMeta = (id: AgentId) => {
     const meta = {
         id,
         protoId: TestProperty.REQUIRE_BUT_SKIP

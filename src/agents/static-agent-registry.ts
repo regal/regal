@@ -8,14 +8,10 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { Mutable, PK } from "../common";
 import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent";
-import {
-    getInactiveAgentPK,
-    propertyIsAgentId,
-    STATIC_AGENT_PK_PROVIDER
-} from "./impl";
+import { AgentId } from "./agent-meta";
+import { propertyIsAgentId, STATIC_AGENT_PK_PROVIDER } from "./impl";
 import { staticAgentMeta } from "./impl/agent-meta-transformers";
 import { isAgentActive } from "./impl/agent-utils";
 
@@ -31,7 +27,7 @@ export class StaticAgentRegistry {
      * @param property The agent's property.
      */
     public static hasAgentProperty(
-        id: PK<Agent>,
+        id: AgentId,
         property: PropertyKey
     ): boolean {
         return this.hasAgent(id) && this[id.value()].hasOwnProperty(property);
@@ -44,7 +40,7 @@ export class StaticAgentRegistry {
      * @param propertyKey The name of the property.
      * @returns The value of the property.
      */
-    public static getAgentProperty(id: PK<Agent>, property: PropertyKey): any {
+    public static getAgentProperty(id: AgentId, property: PropertyKey): any {
         if (!this.hasAgent(id)) {
             throw new RegalError(
                 `No agent with the id <${id.value()}> exists in the static registry.`
@@ -55,7 +51,7 @@ export class StaticAgentRegistry {
     }
 
     /** Whether an agent with the given id is stored in the static agent registry. */
-    public static hasAgent(id: PK<Agent>): boolean {
+    public static hasAgent(id: AgentId): boolean {
         return isAgent(this[id.value()]);
     }
 

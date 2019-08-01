@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { Mutable, PK, PKProvider } from "../../common";
+import { PKProvider } from "../../common";
 import { RegalError } from "../../error";
 import { GameInstanceInternal } from "../../state";
 import { Agent, isAgent } from "../agent";
@@ -14,7 +14,7 @@ import {
     isAgentArrayReference
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
-import { ReservedAgentProperty } from "../agent-meta";
+import { AgentId, ReservedAgentProperty } from "../agent-meta";
 import { AgentReference, isAgentReference } from "../agent-reference";
 import { InstanceAgentsInternal } from "../instance-agents-internal";
 import { StaticAgentRegistry } from "../static-agent-registry";
@@ -65,7 +65,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             .map(key => this[key] as AgentManager);
     }
 
-    public reserveNewId(): PK<Agent> {
+    public reserveNewId(): AgentId {
         const id = this._pkProvider.next();
 
         this.createAgentManager(id);
@@ -73,13 +73,13 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return id;
     }
 
-    public createAgentManager(id: PK<Agent>): AgentManager {
+    public createAgentManager(id: AgentId): AgentManager {
         const am = buildAgentManager(id, this.game);
         this[id.value()] = am;
         return am;
     }
 
-    public getAgentProperty(id: PK<Agent>, property: PropertyKey) {
+    public getAgentProperty(id: AgentId, property: PropertyKey) {
         const am = this.getAgentManager(id);
         let value: any;
 
@@ -116,7 +116,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return value;
     }
 
-    public getAgentPropertyKeys(id: PK<Agent>) {
+    public getAgentPropertyKeys(id: AgentId) {
         const am = this.getAgentManager(id);
 
         let keys: string[] = [];
@@ -135,7 +135,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public setAgentProperty(
-        id: PK<Agent>,
+        id: AgentId,
         property: PropertyKey,
         value: any
     ): boolean {
@@ -182,7 +182,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return true;
     }
 
-    public hasAgentProperty(id: PK<Agent>, property: PropertyKey): boolean {
+    public hasAgentProperty(id: AgentId, property: PropertyKey): boolean {
         const am = this.getAgentManager(id);
 
         const staticPropExists = StaticAgentRegistry.hasAgentProperty(
@@ -209,7 +209,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return propExists && !am.propertyWasDeleted(property);
     }
 
-    public deleteAgentProperty(id: PK<Agent>, property: PropertyKey): boolean {
+    public deleteAgentProperty(id: AgentId, property: PropertyKey): boolean {
         if (
             property === ReservedAgentProperty.META ||
             property === ReservedAgentProperty.GAME
@@ -236,7 +236,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return true;
     }
 
-    public getAgentManager(id: PK<Agent>): AgentManager {
+    public getAgentManager(id: AgentId): AgentManager {
         const result = this[id.value()];
 
         if (isAgentManager(result)) {

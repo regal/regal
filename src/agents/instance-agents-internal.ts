@@ -5,10 +5,9 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { PK } from "../common";
 import { GameInstanceInternal } from "../state";
-import { Agent } from "./agent";
 import { AgentManager } from "./agent-manager";
+import { AgentId } from "./agent-meta";
 
 /**
  * Manager for all agents in a `GameInstance`.
@@ -32,7 +31,7 @@ export interface InstanceAgentsInternal {
      * Gets the `AgentManager` for the active agent with the given id.
      * @param id The agent's manager, or undefined if it doesn't exist.
      */
-    getAgentManager(id: PK<Agent>): AgentManager;
+    getAgentManager(id: AgentId): AgentManager;
 
     /**
      * Creates an `AgentManager` for the given id and assigns it as a
@@ -41,13 +40,13 @@ export interface InstanceAgentsInternal {
      * @param id The agent's id.
      * @returns The created `AgentManager`.
      */
-    createAgentManager(id: PK<Agent>): AgentManager;
+    createAgentManager(id: AgentId): AgentManager;
 
     /**
      * Reserves an id with the `InstanceAgentsInternal` for a newly activated agent.
      * @returns The reserved agent id.
      */
-    reserveNewId(): PK<Agent>;
+    reserveNewId(): AgentId;
 
     /**
      * Get the value of an active agent's property.
@@ -56,7 +55,7 @@ export interface InstanceAgentsInternal {
      * @param property The name of the property.
      * @returns The value of the property, if it exists.
      */
-    getAgentProperty(id: PK<Agent>, property: PropertyKey): any;
+    getAgentProperty(id: AgentId, property: PropertyKey): any;
 
     /**
      * Lists the names of each of the agent's properties.
@@ -64,7 +63,7 @@ export interface InstanceAgentsInternal {
      * @param id The agent's id.
      * @returns A list of property keys.
      */
-    getAgentPropertyKeys(id: PK<Agent>): string[];
+    getAgentPropertyKeys(id: AgentId): string[];
 
     /**
      * Sets the value of an active agent's property, or adds the
@@ -75,7 +74,7 @@ export interface InstanceAgentsInternal {
      * @param value The new value of the property.
      * @returns Whether the update was successful.
      */
-    setAgentProperty(id: PK<Agent>, property: PropertyKey, value: any): boolean;
+    setAgentProperty(id: AgentId, property: PropertyKey, value: any): boolean;
 
     /**
      * Whether this `InstanceAgentsInternal` has the agent property or if there's
@@ -85,7 +84,7 @@ export interface InstanceAgentsInternal {
      * @param agentId The agent id.
      * @param property The name of the property.
      */
-    hasAgentProperty(id: PK<Agent>, property: PropertyKey): boolean;
+    hasAgentProperty(id: AgentId, property: PropertyKey): boolean;
 
     /**
      * Deletes the active agent's property.
@@ -94,7 +93,7 @@ export interface InstanceAgentsInternal {
      * @param property The name of the property.
      * @returns Whether the property was deleted.
      */
-    deleteAgentProperty(id: PK<Agent>, property: PropertyKey): boolean;
+    deleteAgentProperty(id: AgentId, property: PropertyKey): boolean;
 
     /**
      * Creates an `InstanceAgentsInternal` for the new game cycle, keeping only

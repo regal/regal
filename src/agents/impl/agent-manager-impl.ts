@@ -5,13 +5,13 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { FK, PK } from "../../common";
+import { FK } from "../../common";
 import { RegalError } from "../../error";
 import { EventRecord, getUntrackedEventPK } from "../../events";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
 import { AgentManager } from "../agent-manager";
-import { AgentMeta, ReservedAgentProperty } from "../agent-meta";
+import { AgentId, AgentMeta } from "../agent-meta";
 import {
     pcForAgentManager,
     pcForEventRecord,
@@ -24,7 +24,7 @@ import { agentMetaWithID, defaultAgentMeta } from "./agent-meta-transformers";
 
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
-    id: PK<Agent>,
+    id: AgentId,
     game: GameInstanceInternal
 ): AgentManager => new AgentManagerImpl(id.ref(), game);
 
