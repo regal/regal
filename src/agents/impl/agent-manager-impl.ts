@@ -11,6 +11,7 @@ import { EventRecord, getUntrackedEventPK } from "../../events";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
 import { AgentManager } from "../agent-manager";
+import { AgentMeta, ReservedAgentProperty } from "../agent-meta";
 import {
     pcForAgentManager,
     pcForEventRecord,
@@ -19,6 +20,7 @@ import {
 } from "../agent-properties";
 import { isAgentReference } from "../agent-reference";
 import { StaticAgentRegistry } from "../static-agent-registry";
+import { agentMetaWithID, defaultAgentMeta } from "./agent-meta-transformers";
 
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
@@ -28,7 +30,15 @@ export const buildAgentManager = (
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
-    constructor(public id: FK<Agent>, public game: GameInstanceInternal) {}
+    public meta: AgentMeta;
+
+    constructor(id: FK<Agent>, public game: GameInstanceInternal) {
+        this.meta = agentMetaWithID(id)(defaultAgentMeta());
+    }
+
+    public get id(): FK<Agent> {
+        return this.meta.id;
+    }
 
     public hasPropertyRecord(property: PropertyKey): boolean {
         if (property === "constructor") {

@@ -16,6 +16,8 @@ import {
     propertyIsAgentId,
     STATIC_AGENT_PK_PROVIDER
 } from "./impl";
+import { staticAgentMeta } from "./impl/agent-meta-transformers";
+import { isAgentActive } from "./impl/agent-utils";
 
 /**
  * Static class that manages all static agents used in the game.
@@ -61,15 +63,18 @@ export class StaticAgentRegistry {
      * Adds an agent to the registry, setting its id to the next available primary key.
      * @param agent The agent to be added.
      */
-    public static addAgent(agent: Mutable<Agent>): void {
-        if (agent.id !== undefined && !agent.id.equals(getInactiveAgentPK())) {
+    public static addAgent(agent: Agent): void {
+        const currentId = agent.meta.id;
+
+        if (currentId !== undefined && isAgentActive(currentId)) {
             throw new RegalError(
-                `Only inactive agents can be added to the static registry. This one already has an id of <${agent.id.value()}>.`
+                `Only inactive agents can be added to the static registry. This one already has an id of <${currentId.value()}>.`
             );
         }
-        agent.id = STATIC_AGENT_PK_PROVIDER.next();
 
-        this[agent.id.value()] = agent;
+        agent.meta = staticAgentMeta(agent.meta);
+
+        this[agent.meta.id.value()] = agent;
     }
 
     /** Removes all agents from the registry and resets the static PK provider. */

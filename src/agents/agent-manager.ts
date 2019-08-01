@@ -8,6 +8,7 @@
 import { FK } from "../common";
 import { GameInstance } from "../state";
 import { Agent } from "./agent";
+import { AgentMeta } from "./agent-meta";
 import { PropertyChange } from "./agent-properties";
 
 /**
@@ -19,7 +20,10 @@ import { PropertyChange } from "./agent-properties";
  */
 export interface AgentManager {
     /** The managed agent's id. */
-    id: FK<Agent>;
+    readonly id: FK<Agent>;
+
+    /** The managed agent's metadata. */
+    meta: AgentMeta;
 
     /** The `GameInstance` in which the agent is active. */
     game: GameInstance;

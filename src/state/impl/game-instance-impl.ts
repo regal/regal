@@ -15,6 +15,7 @@ import {
     StaticAgentRegistry
 } from "../../agents";
 import { isAgentArrayReference } from "../../agents/agent-array-reference";
+import { ReservedAgentProperty } from "../../agents/agent-meta";
 import { isAgentReference } from "../../agents/agent-reference";
 import { buildPKProvider, FK } from "../../common";
 import {
@@ -235,7 +236,9 @@ class GameInstanceImpl<StateType = any>
                 const id = am.id;
 
                 const props = Object.keys(am).filter(
-                    key => key !== "game" && key !== "id"
+                    key =>
+                        key !== ReservedAgentProperty.GAME &&
+                        key !== ReservedAgentProperty.META
                 );
 
                 for (const prop of props) {
@@ -264,12 +267,12 @@ class GameInstanceImpl<StateType = any>
                             const areEqAgents =
                                 isAgentReference(targetVal) &&
                                 isAgent(currentVal) &&
-                                targetVal.refId === currentVal.id;
+                                targetVal.refId === currentVal.meta.id;
 
                             const areEqAgentArrs =
                                 isAgentArrayReference(targetVal) &&
                                 isAgent(currentVal) &&
-                                targetVal.arRefId === currentVal.id;
+                                targetVal.arRefId === currentVal.meta.id;
 
                             if (!areEqAgents && !areEqAgentArrs) {
                                 target.setAgentProperty(id, prop, targetVal);

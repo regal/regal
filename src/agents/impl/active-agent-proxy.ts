@@ -8,6 +8,7 @@
 import { PK } from "../../common";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
+import { ReservedAgentProperty } from "../agent-meta";
 
 /** Builds the proxy handler for an active agent proxy. */
 const activeAgentProxyHandler = (

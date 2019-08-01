@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export { Agent } from "./agents";
+export { Agent, AgentMeta, AgentProto } from "./agents";
 export { RegalError } from "./error";
 export {
     EventFunction,
