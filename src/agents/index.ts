@@ -15,3 +15,4 @@ export {
     activateAgent,
     getGameInstancePK
 } from "./impl";
+export { AgentMeta, AgentProto } from "./agent-meta";
