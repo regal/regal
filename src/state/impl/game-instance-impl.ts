@@ -26,7 +26,7 @@ import {
 import { RegalError } from "../../error";
 import {
     buildInstanceEvents,
-    EventRecord,
+    EventId,
     getUntrackedEventPK,
     InstanceEventsInternal,
     on,
@@ -144,7 +144,7 @@ class GameInstanceImpl<StateType = any>
     }
 
     public revert(
-        revertTo: FK<PK<EventRecord>> = getUntrackedEventPK()
+        revertTo: FK<EventId> = getUntrackedEventPK()
     ): GameInstanceImpl {
         if (!revertTo.equals(getUntrackedEventPK())) {
             if (revertTo.index() < getUntrackedEventPK().index()) {
@@ -194,7 +194,7 @@ class GameInstanceImpl<StateType = any>
      * Internal helper that builds an `InstanceRandom` constructor with its `numGenerations`
      * set to the appropriate revert event.
      */
-    private _buildRandomRevertCtor(revertTo: FK<PK<EventRecord>>) {
+    private _buildRandomRevertCtor(revertTo: FK<EventId>) {
         return (game: GameInstanceImpl) => {
             let lastKey = this.random.lastKey;
 
@@ -228,7 +228,7 @@ class GameInstanceImpl<StateType = any>
     }
 
     /** Internal helper that builds a `TrackedEvent` to revert agent changes */
-    private _buildAgentRevertFunc(revertTo: FK<PK<EventRecord>>): TrackedEvent {
+    private _buildAgentRevertFunc(revertTo: FK<EventId>): TrackedEvent {
         return on("REVERT", (game: GameInstanceInternal) => {
             const target = game.agents;
 

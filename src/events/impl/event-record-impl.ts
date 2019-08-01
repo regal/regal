@@ -9,7 +9,7 @@ import { PropertyChange } from "../../agents";
 import { FK, PK } from "../../common";
 import { OutputLine } from "../../output";
 import { RandomRecord } from "../../random";
-import { EventRecord } from "../event-record";
+import { EventId, EventRecord } from "../event-record";
 import { noop, TrackedEvent } from "../event-types";
 import { getUntrackedEventPK } from "./event-keys";
 
@@ -24,7 +24,7 @@ export const DEFAULT_EVENT_NAME: string = "DEFAULT";
  * @param func The event's `TrackedEvent`. Defaults to `noop`.
  */
 export const buildEventRecord = (
-    id: PK<EventRecord> = undefined,
+    id: EventId = undefined,
     name: string = DEFAULT_EVENT_NAME,
     func: TrackedEvent = noop
 ): EventRecord => {
@@ -37,13 +37,13 @@ export const buildEventRecord = (
 
 class EventRecordImpl implements EventRecord {
     public output?: Array<FK<PK<OutputLine>>>;
-    public causedBy?: FK<PK<EventRecord>>;
-    public caused?: Array<FK<PK<EventRecord>>>;
+    public causedBy?: FK<EventId>;
+    public caused?: Array<FK<EventId>>;
     public changes?: PropertyChange[];
     public randoms?: RandomRecord[];
 
     constructor(
-        public id: PK<EventRecord>,
+        public id: EventId,
         public name: string,
         public func: TrackedEvent
     ) {}

@@ -14,7 +14,7 @@ export {
     isEventQueue,
     isTrackedEvent
 } from "./event-types";
-export { EventRecord } from "./event-record";
+export { EventRecord, EventId } from "./event-record";
 export { InstanceEvents } from "./instance-events";
 export { InstanceEventsInternal } from "./instance-events-internal";
 export {
@@ -22,6 +22,6 @@ export {
     enqueue,
     nq,
     on,
-    getUntrackedEventPK
+    getUntrackedEventPK,
+    DEFAULT_EVENT_NAME
 } from "./impl";
-export { DEFAULT_EVENT_NAME } from "./impl/event-record-impl";

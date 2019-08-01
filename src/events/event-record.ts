@@ -11,12 +11,15 @@ import { OutputLine } from "../output";
 import { RandomRecord } from "../random";
 import { TrackedEvent } from "./event-types";
 
+/** An event primary key. */
+export type EventId = PK<EventRecord>;
+
 /**
  * Record of a `TrackedEvent`'s effects in a game cycle.
  */
 export interface EventRecord {
     /* The event's unique ID. */
-    id: PK<EventRecord>;
+    id: EventId;
 
     /* The event's name. */
     name: string;
@@ -28,10 +31,10 @@ export interface EventRecord {
     output?: Array<FK<PK<OutputLine>>>;
 
     /** The ID of the event that caused this event. */
-    causedBy?: FK<PK<EventRecord>>;
+    causedBy?: FK<EventId>;
 
     /** The IDs of the events that were caused by this event. */
-    caused?: Array<FK<PK<EventRecord>>>;
+    caused?: Array<FK<EventId>>;
 
     /** The records of all changes to registered agents that were caused by this event. */
     changes?: PropertyChange[];
