@@ -20,7 +20,7 @@ import { PropertyChange } from "./agent-properties";
  */
 export interface AgentManager {
     /** The managed agent's id. */
-    id: FK<Agent>; // TODO - REMOVE
+    readonly id: FK<Agent>;
 
     /** The managed agent's metadata. */
     meta: AgentMeta;
