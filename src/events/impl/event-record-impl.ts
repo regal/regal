@@ -6,8 +6,8 @@
  */
 
 import { PropertyChange } from "../../agents";
-import { FK, PK } from "../../common";
-import { OutputLine } from "../../output";
+import { FK } from "../../common";
+import { OutputLine, OutputLineId } from "../../output";
 import { RandomRecord } from "../../random";
 import { EventId, EventRecord } from "../event-record";
 import { noop, TrackedEvent } from "../event-types";
@@ -36,7 +36,7 @@ export const buildEventRecord = (
 };
 
 class EventRecordImpl implements EventRecord {
-    public output?: Array<FK<PK<OutputLine>>>;
+    public output?: Array<FK<OutputLineId>>;
     public causedBy?: FK<EventId>;
     public caused?: Array<FK<EventId>>;
     public changes?: PropertyChange[];
