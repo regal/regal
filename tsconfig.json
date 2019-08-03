@@ -6,7 +6,10 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "sourceMap": false,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "lib": [
+            "es2017"
+        ]
     },
     "include": [
         "src/**/*"

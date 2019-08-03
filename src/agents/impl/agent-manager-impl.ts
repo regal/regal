@@ -10,7 +10,7 @@ import { RegalError } from "../../error";
 import { EventRecord, getUntrackedEventPK } from "../../events";
 import { GameInstanceInternal } from "../../state";
 import { AgentManager } from "../agent-manager";
-import { AgentId, AgentMeta } from "../agent-meta";
+import { AgentId, AgentMeta, AgentProtoId } from "../agent-meta";
 import {
     pcForAgentManager,
     pcForEventRecord,
@@ -19,7 +19,11 @@ import {
 } from "../agent-properties";
 import { isAgentReference } from "../agent-reference";
 import { StaticAgentRegistry } from "../static-agent-registry";
-import { agentMetaWithID, defaultAgentMeta } from "./agent-meta-transformers";
+import {
+    agentMetaWithID,
+    agentMetaWithProtoID,
+    defaultAgentMeta
+} from "./agent-meta-transformers";
 
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
@@ -160,6 +164,10 @@ class AgentManagerImpl implements AgentManager {
         };
 
         this.recordChange(event, propChange, history);
+    }
+
+    public setProtoId(protoId: FK<AgentProtoId>): void {
+        this.meta = agentMetaWithProtoID(protoId)(this.meta);
     }
 
     /**

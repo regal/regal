@@ -1673,7 +1673,7 @@ describe("Agents", function() {
                 }
             }
 
-            it.skip("An agent subclass may have a method which returns an array of its properties, which are also agents", function() {
+            it("An agent subclass may have a method which returns an array of its properties, which are also agents", function() {
                 Game.init(MD);
 
                 const myGame = buildGameInstance();
@@ -1956,7 +1956,7 @@ describe("Agents", function() {
             const dr = myGame.agents.getAgentManager(d.meta.id);
 
             expect(dr.id).to.equal(dr.meta.id);
-        })
+        });
     });
 
     describe("InstanceAgents", function() {

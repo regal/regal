@@ -6,8 +6,9 @@
  */
 
 import { GameInstanceInternal } from "../state";
+import { Agent } from "./agent";
 import { AgentManager } from "./agent-manager";
-import { AgentId } from "./agent-meta";
+import { AgentId, AgentProtoId } from "./agent-meta";
 
 /**
  * Manager for all agents in a `GameInstance`.
@@ -112,4 +113,8 @@ export interface InstanceAgentsInternal {
      * instance reverting. Make sure to use this correctly.
      */
     scrubAgents(): void;
+
+    registerAgentPrototype(agent: Agent): AgentProtoId;
+
+    getAgentPrototypeByProtoId(protoId: AgentProtoId): object;
 }

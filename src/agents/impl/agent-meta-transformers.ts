@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { AgentId, AgentMeta } from "../agent-meta";
+import { AgentId, AgentMeta, AgentProtoId } from "../agent-meta";
 import { STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 import { getInactiveAgentPK } from "./agent-utils";
 
@@ -42,7 +42,7 @@ export const inactiveAgentMeta = transformMeta(() => ({
  * Returns an `AgentMeta` transformer that transforms an `AgentMeta` id
  * into the given id.
  */
-export const agentMetaWithID = (id: AgentId) =>
-    transformMeta(() => ({
-        id
-    }));
+export const agentMetaWithID = (id: AgentId) => transformMeta(() => ({ id }));
+
+export const agentMetaWithProtoID = (protoId: AgentProtoId) =>
+    transformMeta(() => ({ protoId }));

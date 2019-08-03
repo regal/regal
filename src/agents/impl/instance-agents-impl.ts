@@ -14,9 +14,10 @@ import {
     isAgentArrayReference
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
-import { AgentId, ReservedAgentProperty } from "../agent-meta";
+import { AgentId, AgentProtoId, ReservedAgentProperty } from "../agent-meta";
 import { AgentReference, isAgentReference } from "../agent-reference";
 import { InstanceAgentsInternal } from "../instance-agents-internal";
+import { PrototypeRegistry } from "../prototype-registry";
 import { StaticAgentRegistry } from "../static-agent-registry";
 import {
     buildActiveAgentArrayProxy,
@@ -30,6 +31,8 @@ import {
     isAgentActive,
     propertyIsAgentId
 } from "./agent-utils";
+import { buildPrototypeRegistry } from "./prototype/prototype-registry-impl";
+import { StaticPrototypeRegistry } from "./prototype/static-prototype-registry-impl";
 
 /**
  * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`
@@ -45,6 +48,7 @@ export const buildInstanceAgents = (
 class InstanceAgentsImpl implements InstanceAgentsInternal {
     /** The internal `Agent` `PKProvider`. */
     private _pkProvider: PKProvider<Agent>;
+    private _prototypeRegistry: PrototypeRegistry;
 
     constructor(
         public game: GameInstanceInternal,
@@ -54,6 +58,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             pkProvider !== undefined
                 ? pkProvider
                 : STATIC_AGENT_PK_PROVIDER.fork();
+        this._prototypeRegistry = buildPrototypeRegistry();
 
         // Create agent manager for the game instance
         this.createAgentManager(getGameInstancePK());
@@ -305,5 +310,33 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         for (const id of waste) {
             delete this[id];
         }
+    }
+
+    public registerAgentPrototype(agent: Agent): AgentProtoId {
+        const staticProtoId = StaticPrototypeRegistry.getPrototypeIdOrDefault(
+            agent
+        );
+
+        if (staticProtoId !== undefined) {
+            return staticProtoId;
+        }
+
+        const protoId = this._prototypeRegistry.register(agent);
+        const am = this.getAgentManager(agent.meta.id);
+        am.setProtoId(protoId);
+
+        return protoId;
+    }
+
+    public getAgentPrototypeByProtoId(protoId: AgentProtoId): object {
+        const staticInstance = StaticPrototypeRegistry.newInstanceOrDefault(
+            protoId
+        );
+
+        if (staticInstance !== undefined) {
+            return staticInstance;
+        }
+
+        return this._prototypeRegistry.newInstance(protoId);
     }
 }

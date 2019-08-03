@@ -63,8 +63,9 @@ const activeAgentProxyHandler = (id: AgentId, game: GameInstanceInternal) => ({
  */
 export const buildActiveAgentProxy = (
     id: AgentId,
-    game: GameInstanceInternal
-): Agent => new Proxy({} as any, activeAgentProxyHandler(id, game));
+    game: GameInstanceInternal,
+    prototype: object = {}
+): Agent => new Proxy(prototype, activeAgentProxyHandler(id, game)) as Agent;
 
 /**
  * Builds a proxy for an active agent array. An agent array is an array

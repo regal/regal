@@ -121,4 +121,12 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
     public previous(): PK<PKClass> {
         return this.lastPK;
     }
+
+    public keyFromValue(value: string): PK<PKClass> {
+        if (!this.isPossibleKeyValue(value)) {
+            throw new RegalError(`${value} is not a valid PK value.`);
+        }
+
+        return this.buildPK(Math.floor(Number(value)));
+    }
 }

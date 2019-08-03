@@ -122,6 +122,8 @@ export interface PKProvider<T> {
 
     /** Returns the key that was last generated. */
     previous(): PK<T>;
+
+    keyFromValue(value: string): PK<T>;
 }
 
 /**

@@ -7,7 +7,7 @@
 
 import { FK } from "../common";
 import { GameInstance } from "../state";
-import { AgentId, AgentMeta } from "./agent-meta";
+import { AgentId, AgentMeta, AgentProtoId } from "./agent-meta";
 import { PropertyChange } from "./agent-properties";
 
 /**
@@ -65,6 +65,8 @@ export interface AgentManager {
      * @param property The name of the property.
      */
     deleteProperty(property: PropertyKey): void;
+
+    setProtoId(protoId: FK<AgentProtoId>): void;
 }
 
 /** Determines whether an object is an `AgentManager`. */
