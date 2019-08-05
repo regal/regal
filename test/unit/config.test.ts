@@ -284,6 +284,7 @@ describe("Config", function() {
 
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
                     [apk0.value()]: smartObj({
                         meta: testMeta(apk0),
@@ -326,6 +327,7 @@ describe("Config", function() {
 
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
                     [apk0.value()]: smartObj({
                         meta: testMeta(apk0),
@@ -464,6 +466,7 @@ describe("Config", function() {
 
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
                     [apk0.value()]: smartObj({
                         meta: testMeta(apk0),
@@ -649,6 +652,7 @@ describe("Config", function() {
 
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
                     [apk0.value()]: smartObj({
                         meta: testMeta(apk0),
@@ -682,6 +686,7 @@ describe("Config", function() {
 
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
                     [apk0.value()]: smartObj({
                         meta: testMeta(apk0),
@@ -760,6 +765,7 @@ describe("Config", function() {
 
                 smartObjectEquals(responseInstance.agents, {
                     _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
                     [apk0.value()]: smartObj({
                         meta: testMeta(apk0),
