@@ -1980,6 +1980,7 @@ describe("Agents", function() {
             // Verify initial condition
             smartObjectEquals(myGame.agents, {
                 _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: myGame,
                 [pk0.value()]: smartObj({
                     meta: testMeta(pk0),
@@ -2040,6 +2041,7 @@ describe("Agents", function() {
 
             smartObjectEquals(myGame2.agents, {
                 _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: myGame2,
                 [pk0.value()]: smartObj({
                     meta: testMeta(pk0),
