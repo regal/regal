@@ -10,8 +10,13 @@ import { ContextManager } from "../../state";
 import { Agent } from "../agent";
 import { ReservedAgentProperty } from "../agent-meta";
 import { StaticAgentRegistry } from "../static-agent-registry";
-import { defaultAgentMeta, inactiveAgentMeta } from "./agent-meta-transformers";
+import {
+    agentMetaWithProtoID,
+    defaultAgentMeta,
+    inactiveAgentMeta
+} from "./agent-meta-transformers";
 import { isAgentActive } from "./agent-utils";
+import { StaticPrototypeRegistry } from "./prototype/static-prototype-registry-impl";
 
 /**
  * Builds a proxy for an inactive agent. Before an agent is activated
@@ -33,6 +38,9 @@ import { isAgentActive } from "./agent-utils";
 export const buildInactiveAgentProxy = (agent: Agent): Agent => {
     if (ContextManager.isContextStatic()) {
         StaticAgentRegistry.addAgent(agent);
+
+        const protoId = StaticPrototypeRegistry.register(agent);
+        agent.meta = agentMetaWithProtoID(protoId)(agent.meta);
     } else {
         agent.meta = inactiveAgentMeta(agent.meta);
     }

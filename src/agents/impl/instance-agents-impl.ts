@@ -323,6 +323,9 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         const protoId = this._prototypeRegistry.register(agent);
         const am = this.getAgentManager(agent.meta.id);
+        // if (!isAgentManager(am)) {
+        //     am = this.createAgentManager(agent.meta.id);
+        // }
         am.setProtoId(protoId);
 
         return protoId;
