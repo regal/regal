@@ -48,12 +48,7 @@ export const activateAgent = <T extends Agent>(
 
         activeAgent = buildActiveAgentArrayProxy(agent.meta.id, game) as T;
     } else {
-        let protoId = agent.meta.protoId;
-
-        if (protoId === undefined) {
-            protoId = game.agents.registerAgentPrototype(agent);
-        }
-
+        const protoId = game.agents.registerAgentPrototype(agent);
         const prototype = game.agents.getAgentPrototypeByProtoId(protoId);
 
         activeAgent = buildActiveAgentProxy(

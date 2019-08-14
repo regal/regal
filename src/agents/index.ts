@@ -13,6 +13,7 @@ export {
     buildActiveAgentProxy,
     buildInstanceAgents,
     activateAgent,
-    getGameInstancePK
+    getGameInstancePK,
+    StaticPrototypeRegistry
 } from "./impl";
 export { AgentMeta, AgentId, AgentProtoId } from "./agent-meta";

@@ -20,3 +20,6 @@ export {
     getInactiveAgentPK,
     propertyIsAgentId
 } from "./agent-utils";
+export {
+    StaticPrototypeRegistry
+} from "./prototype/static-prototype-registry-impl";

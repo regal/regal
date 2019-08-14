@@ -4,7 +4,7 @@ import { IStaticPrototypeRegistry } from "../../prototype-registry";
 import { buildAgentProtoPKProvider } from "./agent-proto-keys";
 import { PrototypeRegistryImplBase } from "./prototype-registry-impl-base";
 
-const STATIC_PROTO_PK_PROVIDER = buildAgentProtoPKProvider();
+export const STATIC_PROTO_PK_PROVIDER = buildAgentProtoPKProvider();
 
 /** Implementation of `IStaticPrototypeRegistry`. */
 class StaticPrototypeRegistryImpl extends PrototypeRegistryImplBase

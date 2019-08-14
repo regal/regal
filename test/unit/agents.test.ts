@@ -18,7 +18,8 @@ import {
     Agent,
     PropertyOperation,
     StaticAgentRegistry,
-    getGameInstancePK
+    getGameInstancePK,
+    StaticPrototypeRegistry
 } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import { DEFAULT_EVENT_NAME, getUntrackedEventPK } from "../../src/events";
@@ -393,6 +394,27 @@ describe("Agents", function() {
 
             expect(parent2.child.name).to.equal("Jenkins");
             expect(parent2.child.health).to.equal(1);
+        });
+
+        it("test repro", function() {
+            const CHILD = new Dummy("Bab", 1);
+            StaticPrototypeRegistry;
+
+            // 1
+            Game.init(MD);
+
+            const myGame = buildGameInstance();
+
+            const parentInactive = new Parent(CHILD);
+            // 2
+
+            const parent = myGame.using(parentInactive);
+            // 3
+
+            parent.child.health += 15;
+            // 4
+
+            expect(parent.child.health).to.equal(16);
         });
 
         it("Activating an agent multiple times returns a reference to the same agent", function() {

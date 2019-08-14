@@ -3,7 +3,6 @@ import { RegalError } from "../../../error";
 import { Agent } from "../../agent";
 import { AgentProtoId } from "../../agent-meta";
 import { PrototypeRegistry } from "../../prototype-registry";
-import { agentMetaWithProtoID } from "../agent-meta-transformers";
 
 export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
     protected _store: { [key: string]: object } = {};
@@ -48,6 +47,11 @@ export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
         }
 
         return undefined;
+    }
+
+    public hasPrototypeWithId(prototypeId: AgentProtoId): boolean {
+        const proto = this._store[prototypeId.value()];
+        return proto !== undefined;
     }
 
     protected abstract getProtoPKProvider(): PKProvider<AgentProtoId>;

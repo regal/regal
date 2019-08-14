@@ -110,10 +110,18 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             if (value instanceof Array) {
                 value = buildActiveAgentArrayProxy(value.meta.id, this.game);
             } else {
-                value = buildActiveAgentProxy(value.meta.id, this.game);
+                const prototype = this.getAgentPrototypeByProtoId(
+                    value.meta.protoId
+                );
+                value = buildActiveAgentProxy(
+                    value.meta.id,
+                    this.game,
+                    prototype
+                );
             }
         } else if (isAgentReference(value)) {
-            value = buildActiveAgentProxy(value.refId, this.game);
+            const prototype = this._getAgentPrototypeByAgentId(value.refId);
+            value = buildActiveAgentProxy(value.refId, this.game, prototype);
         } else if (isAgentArrayReference(value)) {
             value = buildActiveAgentArrayProxy(value.arRefId, this.game);
         }
@@ -163,6 +171,12 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             }
 
             am = this.createAgentManager(id);
+
+            const protoId = StaticAgentRegistry.getAgentProperty(
+                id,
+                ReservedAgentProperty.META
+            ).protoId;
+            am.setProtoId(protoId);
         }
 
         if (isAgent(value)) {
@@ -170,6 +184,10 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
                 value.meta = agentMetaWithID(this.reserveNewId())(value.meta);
                 value = this.game.using(value);
             }
+            if (am.meta.protoId === undefined) {
+                am.setProtoId(value.meta.protoId);
+            }
+
             value =
                 value instanceof Array
                     ? new AgentArrayReference((value as any).meta.id)
@@ -313,21 +331,38 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public registerAgentPrototype(agent: Agent): AgentProtoId {
-        const staticProtoId = StaticPrototypeRegistry.getPrototypeIdOrDefault(
-            agent
-        );
+        // const priorProtoId = agent.meta.protoId;
 
-        if (staticProtoId !== undefined) {
-            return staticProtoId;
-        }
-
-        const protoId = this._prototypeRegistry.register(agent);
-        const am = this.getAgentManager(agent.meta.id);
-        // if (!isAgentManager(am)) {
-        //     am = this.createAgentManager(agent.meta.id);
+        // if (
+        //     priorProtoId !== undefined &&
+        //     StaticPrototypeRegistry.hasPrototypeWithId(priorProtoId)
+        // ) {
+        //     return priorProtoId;
         // }
-        am.setProtoId(protoId);
 
+        // const staticProtoId = StaticPrototypeRegistry.getPrototypeIdOrDefault(
+        //     agent
+        // );
+
+        // if (staticProtoId !== undefined) {
+        //     return staticProtoId;
+        // }
+
+        // const protoId = this._prototypeRegistry.register(agent);
+        // const am = this.getAgentManager(agent.meta.id);
+        // am.setProtoId(protoId);
+
+        // return protoId;
+        let protoId = agent.meta.protoId;
+        const am = this.getAgentManager(agent.meta.id);
+        if (protoId !== undefined) {
+            if (am === undefined) {
+                return protoId;
+            }
+        } else {
+            protoId = this._prototypeRegistry.register(agent);
+        }
+        am.setProtoId(protoId);
         return protoId;
     }
 
@@ -341,5 +376,16 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         }
 
         return this._prototypeRegistry.newInstance(protoId);
+    }
+
+    private _getAgentPrototypeByAgentId(agentId: AgentId): object {
+        const meta = this.getAgentProperty(agentId, ReservedAgentProperty.META);
+        const protoId = meta.protoId;
+
+        if (protoId === undefined) {
+            throw new RegalError("protoId is undefined");
+        }
+
+        return this.getAgentPrototypeByProtoId(protoId);
     }
 }
