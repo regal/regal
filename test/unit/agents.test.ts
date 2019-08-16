@@ -1818,6 +1818,30 @@ describe("Agents", function() {
                 expect(lars2.getName()).to.equal(name2);
                 expect(lars3.getName()).to.equal(name1);
             });
+
+            it.skip("Separate instances' prototype registries are entirely separate and therefore do not have key conflicts", function() {
+                Game.init(MD);
+
+                const myGame1 = buildGameInstance();
+                const agent1ForBothGames = myGame1.using(new Dummy("Door", 1));
+                const protoPK1ForBothGames = agent1ForBothGames.meta.protoId;
+
+                const myGame2 = myGame1.recycle();
+                const agent2ForGame2 = myGame2.using(new MethodAgent("Lars"));
+                const protoPK2ForGame2 = agent2ForGame2.meta.protoId;
+
+                const agent2ForGame1 = myGame1.using(new ArrayGetterAgent());
+                const protoPK2ForGame1 = agent2ForGame1.meta.protoId;
+
+                expect(protoPK1ForBothGames.plus(1).equals(protoPK2ForGame2)).to
+                    .be.true;
+                expect(protoPK1ForBothGames.plus(1).equals(protoPK2ForGame1)).to
+                    .be.true;
+                expect(agent2ForGame2.getName()).to.equal("Lars");
+                expect(agent2ForGame1.getList()[0].name).to.equal("D1");
+            });
+
+            // TODO - write test for reusing prototypes that are already in the static registry
         });
     });
 
