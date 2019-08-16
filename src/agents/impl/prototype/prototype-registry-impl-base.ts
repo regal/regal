@@ -3,6 +3,7 @@ import { RegalError } from "../../../error";
 import { Agent } from "../../agent";
 import { AgentProtoId } from "../../agent-meta";
 import { PrototypeRegistry } from "../../prototype-registry";
+import { getInstanceStateAgentProtoPK } from "./agent-proto-keys";
 
 export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
     protected _store: { [key: string]: object } = {};
@@ -21,11 +22,15 @@ export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
     }
 
     public newInstance(prototypeId: AgentProtoId): Agent {
+        if (prototypeId.equals(getInstanceStateAgentProtoPK())) {
+            return {} as any;
+        }
+
         const instance = this.newInstanceOrDefault(prototypeId);
 
         if (instance === undefined) {
             throw new RegalError(
-                `No prototype exists with the id <${prototypeId}>.`
+                `No prototype exists with the id <${prototypeId.value()}>.`
             );
         }
 
@@ -47,11 +52,6 @@ export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
         }
 
         return undefined;
-    }
-
-    public hasPrototypeWithId(prototypeId: AgentProtoId): boolean {
-        const proto = this._store[prototypeId.value()];
-        return proto !== undefined;
     }
 
     protected abstract getProtoPKProvider(): PKProvider<AgentProtoId>;

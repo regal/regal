@@ -2,7 +2,13 @@ import { buildPKProvider } from "../../../common";
 import { AgentProtoId } from "../../agent-meta";
 
 export const AGENT_PROTO_RESERVED_KEYS = {
-    GAME_INSTANCE: 0
+    INSTANCE_STATE: 100
 };
 
-export const buildAgentProtoPKProvider = () => buildPKProvider<AgentProtoId>();
+export const buildAgentProtoPKProvider = () =>
+    buildPKProvider<AgentProtoId>(AGENT_PROTO_RESERVED_KEYS);
+
+export const STATIC_PROTO_PK_PROVIDER = buildAgentProtoPKProvider();
+
+export const getInstanceStateAgentProtoPK = () =>
+    STATIC_PROTO_PK_PROVIDER.reserved(AGENT_PROTO_RESERVED_KEYS.INSTANCE_STATE);

@@ -1712,6 +1712,18 @@ describe("Agents", function() {
 
                 expect(props).to.deep.equal(["D1", "D2"]);
             });
+
+            it("The instance state does not have any functions, but accessing its prototype is still functional", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                myGame.state.foo = "foo";
+                myGame.state.ref = myGame.state;
+                myGame.state.ref.bar = "bar";
+
+                expect(myGame.state.ref.foo).to.equal("foo");
+                expect(myGame.state.bar).to.equal("bar");
+            });
         });
     });
 

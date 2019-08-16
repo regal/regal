@@ -17,7 +17,7 @@ import {
 import { isAgentArrayReference } from "../../agents/agent-array-reference";
 import { ReservedAgentProperty } from "../../agents/agent-meta";
 import { isAgentReference } from "../../agents/agent-reference";
-import { buildPKProvider, FK, PK } from "../../common";
+import { buildPKProvider, FK } from "../../common";
 import {
     buildInstanceOptions,
     GameOptions,

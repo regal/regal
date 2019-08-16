@@ -39,8 +39,6 @@ export interface PrototypeRegistry {
     newInstanceOrDefault(prototypeId: AgentProtoId): Agent;
 
     getPrototypeIdOrDefault(obj: Agent): AgentProtoId;
-
-    hasPrototypeWithId(prototypeId: AgentProtoId): boolean;
 }
 
 /**

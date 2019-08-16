@@ -31,6 +31,7 @@ import {
     isAgentActive,
     propertyIsAgentId
 } from "./agent-utils";
+import { getInstanceStateAgentProtoPK } from "./prototype/agent-proto-keys";
 import { buildPrototypeRegistry } from "./prototype/prototype-registry-impl";
 import { StaticPrototypeRegistry } from "./prototype/static-prototype-registry-impl";
 
@@ -41,8 +42,10 @@ import { StaticPrototypeRegistry } from "./prototype/static-prototype-registry-i
  */
 export const buildInstanceAgents = (
     game: GameInstanceInternal,
-    pkProvider?: PKProvider<Agent>
-): InstanceAgentsInternal => new InstanceAgentsImpl(game, pkProvider);
+    pkProvider?: PKProvider<Agent>,
+    prototypeRegistry?: PrototypeRegistry
+): InstanceAgentsInternal =>
+    new InstanceAgentsImpl(game, pkProvider, prototypeRegistry);
 
 /** Implementation of `InstanceAgentsInternal`. */
 class InstanceAgentsImpl implements InstanceAgentsInternal {
@@ -52,16 +55,20 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
     constructor(
         public game: GameInstanceInternal,
-        pkProvider: PKProvider<Agent>
+        pkProvider: PKProvider<Agent>,
+        prototypeRegistry: PrototypeRegistry
     ) {
         this._pkProvider =
             pkProvider !== undefined
                 ? pkProvider
                 : STATIC_AGENT_PK_PROVIDER.fork();
-        this._prototypeRegistry = buildPrototypeRegistry();
+        this._prototypeRegistry =
+            prototypeRegistry !== undefined
+                ? prototypeRegistry // TODO: Deep copy
+                : buildPrototypeRegistry();
 
         // Create agent manager for the game instance
-        this.createAgentManager(getGameInstancePK()); // TODO: set protoId
+        this.createAgentManager(getGameInstancePK());
     }
 
     public agentManagers(): AgentManager[] {
@@ -80,6 +87,11 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
     public createAgentManager(id: AgentId): AgentManager {
         const am = buildAgentManager(id, this.game);
+
+        if (id.equals(getGameInstancePK())) {
+            am.setProtoId(getInstanceStateAgentProtoPK());
+        }
+
         this[id.value()] = am;
         return am;
     }
@@ -270,11 +282,16 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public recycle(newInstance: GameInstanceInternal): InstanceAgentsInternal {
-        const newAgents = buildInstanceAgents(newInstance, this._pkProvider);
+        const newAgents = buildInstanceAgents(
+            newInstance,
+            this._pkProvider,
+            this._prototypeRegistry
+        );
 
         for (const formerAgent of this.agentManagers()) {
             const id = formerAgent.id;
             const am = newAgents.createAgentManager(id);
+            am.setProtoId(formerAgent.meta.protoId);
 
             const propsToAdd = Object.keys(formerAgent).filter(
                 key =>

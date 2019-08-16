@@ -367,7 +367,7 @@ describe("GameInstance", function() {
             expect(revGame.state.dummy.health).to.equal(62);
         });
 
-        it.only("test repro", function() {
+        it("test repro", function() {
             const init = on("INIT", game => {
                 game.state.dummy = new Dummy("D1", 1);
             });
@@ -381,7 +381,7 @@ describe("GameInstance", function() {
             expect(myGame.state.dummy.health).to.equal(5);
 
             const revGame = myGame.revert(ePKAtNum(1)); // THE ISSUE IS WITH REVERT
-            expect(revGame.state.dummy).to.be.undefined;
+            expect(revGame.state.dummy.health).to.equal(1);
         });
 
         it("Throw an error if given a revertTo arg less than zero", function() {
