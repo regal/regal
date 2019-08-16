@@ -1699,6 +1699,20 @@ describe("Agents", function() {
                 }
             }
 
+            class MethodAgent extends Agent {
+                constructor(private name: string) {
+                    super();
+                }
+
+                public getName() {
+                    return this.name;
+                }
+
+                public setName(name: string) {
+                    this.name = name;
+                }
+            }
+
             it("An agent subclass may have a method which returns an array of its properties, which are also agents", function() {
                 Game.init(MD);
 
@@ -1723,6 +1737,86 @@ describe("Agents", function() {
 
                 expect(myGame.state.ref.foo).to.equal("foo");
                 expect(myGame.state.bar).to.equal("bar");
+            });
+
+            it("An agent with a getter/setter is functional", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const lars = myGame.using(new MethodAgent(name1));
+
+                expect(lars.getName()).to.equal(name1);
+
+                lars.setName(name2);
+
+                expect(lars.getName()).to.equal(name2);
+            });
+
+            it("A static agent with a getter/setter is functional outside the game cycle", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                const LARS = new MethodAgent(name1);
+
+                expect(LARS.getName()).to.equal(name1);
+
+                LARS.setName(name2);
+                expect(LARS.getName()).to.equal(name2);
+            });
+
+            it("A static agent's method can't be used inside a game cycle", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                const LARS = new MethodAgent(name1);
+
+                Game.init(MD);
+
+                expect(() => LARS.setName(name2)).to.throw(RegalError);
+            });
+
+            it("A static agent's getter/setter is functional inside the game cycle", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                const LARS = new MethodAgent(name1);
+
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const lars = myGame.using(LARS);
+
+                expect(lars.getName()).to.equal(name1);
+
+                lars.setName(name2);
+                expect(lars.getName()).to.equal(name2);
+            });
+
+            it("When multiple instances use the same static agent prototype, their respective states are separate", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                const LARS = new MethodAgent(name1);
+
+                Game.init(MD);
+
+                const game1 = buildGameInstance();
+                const lars1 = game1.using(LARS);
+
+                const game2 = buildGameInstance();
+                const lars2 = game2.using(LARS);
+
+                lars2.setName(name2);
+                expect(lars1.getName()).to.equal(name1);
+                expect(lars2.getName()).to.equal(name2);
+
+                const lars3 = buildGameInstance().using(LARS);
+                expect(lars1.getName()).to.equal(name1);
+                expect(lars2.getName()).to.equal(name2);
+                expect(lars3.getName()).to.equal(name1);
             });
         });
     });

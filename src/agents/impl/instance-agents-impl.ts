@@ -348,37 +348,17 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public registerAgentPrototype(agent: Agent): AgentProtoId {
-        // const priorProtoId = agent.meta.protoId;
-
-        // if (
-        //     priorProtoId !== undefined &&
-        //     StaticPrototypeRegistry.hasPrototypeWithId(priorProtoId)
-        // ) {
-        //     return priorProtoId;
-        // }
-
-        // const staticProtoId = StaticPrototypeRegistry.getPrototypeIdOrDefault(
-        //     agent
-        // );
-
-        // if (staticProtoId !== undefined) {
-        //     return staticProtoId;
-        // }
-
-        // const protoId = this._prototypeRegistry.register(agent);
-        // const am = this.getAgentManager(agent.meta.id);
-        // am.setProtoId(protoId);
-
-        // return protoId;
         let protoId = agent.meta.protoId;
         const am = this.getAgentManager(agent.meta.id);
+
         if (protoId !== undefined) {
-            if (am === undefined) {
+            if (am === undefined || am.meta.protoId !== undefined) {
                 return protoId;
             }
         } else {
             protoId = this._prototypeRegistry.register(agent);
         }
+
         am.setProtoId(protoId);
         return protoId;
     }
@@ -398,11 +378,6 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     private _getAgentPrototypeByAgentId(agentId: AgentId): object {
         const meta = this.getAgentProperty(agentId, ReservedAgentProperty.META);
         const protoId = meta.protoId;
-
-        if (protoId === undefined) {
-            throw new RegalError("protoId is undefined");
-        }
-
         return this.getAgentPrototypeByProtoId(protoId);
     }
 }
