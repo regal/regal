@@ -61,7 +61,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         this._prototypeRegistry = buildPrototypeRegistry();
 
         // Create agent manager for the game instance
-        this.createAgentManager(getGameInstancePK());
+        this.createAgentManager(getGameInstancePK()); // TODO: set protoId
     }
 
     public agentManagers(): AgentManager[] {
