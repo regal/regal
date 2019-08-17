@@ -2882,6 +2882,24 @@ describe("Agents", function() {
             expect(myGame.agents.getAgentManager(getGameInstancePK().minus(1)))
                 .to.be.undefined;
         });
+
+        it("InstanceAgents.recycle breaks the connection between Agent PK providers", function() {
+            // TODO - write similar tests for other managers
+            Game.init(MD);
+
+            const baseGame = buildGameInstance();
+            const baseAgent = baseGame.using(new Dummy("D1", 1));
+
+            const newGame = baseGame.recycle();
+
+            const agent2ForBase = baseGame.using(new Dummy("D2", 2));
+            const agent2ForNew = newGame.using(new Dummy("D3", 3));
+
+            expect(baseAgent.meta.id.plus(1).equals(agent2ForBase.meta.id)).to
+                .be.true;
+            expect(agent2ForBase.meta.id.equals(agent2ForNew.meta.id)).to.be
+                .true;
+        });
     });
 
     describe("StaticAgentRegistry", function() {

@@ -67,7 +67,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
                 : STATIC_AGENT_PK_PROVIDER.fork();
         this._prototypeRegistry =
             prototypeRegistry !== undefined
-                ? prototypeRegistry.copy()
+                ? prototypeRegistry
                 : buildPrototypeRegistry(STATIC_PROTO_PK_PROVIDER.fork());
 
         // Create agent manager for the game instance
@@ -287,8 +287,8 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     public recycle(newInstance: GameInstanceInternal): InstanceAgentsInternal {
         const newAgents = buildInstanceAgents(
             newInstance,
-            this._pkProvider,
-            this._prototypeRegistry
+            this._pkProvider.fork(),
+            this._prototypeRegistry.copy()
         );
 
         for (const formerAgent of this.agentManagers()) {
