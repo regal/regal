@@ -62,7 +62,7 @@ class InstanceEventsImpl implements InstanceEventsInternal {
     }
 
     public recycle(newInstance: GameInstanceInternal): InstanceEventsInternal {
-        return new InstanceEventsImpl(newInstance, this._pkProvider);
+        return new InstanceEventsImpl(newInstance, this._pkProvider.fork());
     }
 
     /**
