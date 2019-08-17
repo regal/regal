@@ -39,6 +39,8 @@ export interface PrototypeRegistry {
     newInstanceOrDefault(prototypeId: AgentProtoId): Agent;
 
     getPrototypeIdOrDefault(obj: Agent): AgentProtoId;
+
+    copy(): PrototypeRegistry;
 }
 
 /**

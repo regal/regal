@@ -1,6 +1,10 @@
 import { PKProvider } from "../../../common";
+import { RegalError } from "../../../error";
 import { AgentProtoId } from "../../agent-meta";
-import { IStaticPrototypeRegistry } from "../../prototype-registry";
+import {
+    IStaticPrototypeRegistry,
+    PrototypeRegistry
+} from "../../prototype-registry";
 import { STATIC_PROTO_PK_PROVIDER } from "./agent-proto-keys";
 import { PrototypeRegistryImplBase } from "./prototype-registry-impl-base";
 
@@ -10,6 +14,12 @@ class StaticPrototypeRegistryImpl extends PrototypeRegistryImplBase
     public reset(): void {
         this._store = {};
         STATIC_PROTO_PK_PROVIDER.reset();
+    }
+
+    public copy(): PrototypeRegistry {
+        throw new RegalError(
+            "Copying the static prototype registry is not supported."
+        );
     }
 
     protected getProtoPKProvider(): PKProvider<AgentProtoId> {

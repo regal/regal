@@ -5,8 +5,12 @@ import { AgentProtoId } from "../../agent-meta";
 import { PrototypeRegistry } from "../../prototype-registry";
 import { getInstanceStateAgentProtoPK } from "./agent-proto-keys";
 
+export interface ProtoRegistryStore {
+    [key: string]: object;
+}
+
 export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
-    protected _store: { [key: string]: object } = {};
+    constructor(protected _store: ProtoRegistryStore = {}) {}
 
     public register(newObj: Agent): AgentProtoId {
         const existingId = this.getPrototypeIdOrDefault(newObj);
@@ -53,6 +57,8 @@ export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
 
         return undefined;
     }
+
+    public abstract copy(): PrototypeRegistry;
 
     protected abstract getProtoPKProvider(): PKProvider<AgentProtoId>;
 }

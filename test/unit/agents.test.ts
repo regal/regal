@@ -1819,7 +1819,7 @@ describe("Agents", function() {
                 expect(lars3.getName()).to.equal(name1);
             });
 
-            it.skip("Separate instances' prototype registries are entirely separate and therefore do not have key conflicts", function() {
+            it("Separate instances' prototype registries are entirely separate and therefore do not have key conflicts", function() {
                 Game.init(MD);
 
                 const myGame1 = buildGameInstance();

@@ -31,7 +31,10 @@ import {
     isAgentActive,
     propertyIsAgentId
 } from "./agent-utils";
-import { getInstanceStateAgentProtoPK } from "./prototype/agent-proto-keys";
+import {
+    getInstanceStateAgentProtoPK,
+    STATIC_PROTO_PK_PROVIDER
+} from "./prototype/agent-proto-keys";
 import { buildPrototypeRegistry } from "./prototype/prototype-registry-impl";
 import { StaticPrototypeRegistry } from "./prototype/static-prototype-registry-impl";
 
@@ -64,8 +67,8 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
                 : STATIC_AGENT_PK_PROVIDER.fork();
         this._prototypeRegistry =
             prototypeRegistry !== undefined
-                ? prototypeRegistry // TODO: Deep copy
-                : buildPrototypeRegistry();
+                ? prototypeRegistry.copy()
+                : buildPrototypeRegistry(STATIC_PROTO_PK_PROVIDER.fork());
 
         // Create agent manager for the game instance
         this.createAgentManager(getGameInstancePK());
