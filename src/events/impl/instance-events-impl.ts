@@ -50,6 +50,10 @@ class InstanceEventsImpl implements InstanceEventsInternal {
         let event = this._queue[0];
 
         if (event === undefined) {
+            // Note: InstanceRandom (and possibly other managers) record their changes
+            // that happen outside of an event to this default object, which is
+            // ultimately wasted. I hesitate to say this is a bug, since all operations
+            // should be done inside events anyway. Just something to be aware of.
             event = buildEventRecord();
         }
 
