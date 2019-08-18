@@ -2,7 +2,7 @@ import { expect } from "chai";
 import "mocha";
 
 import { OutputLineType, buildInstanceOutput } from "../../src/output";
-import { getDemoMetadata, oPKs, getInitialOutputPK } from "../test-utils";
+import { getDemoMetadata, oPKs, getInitialOutputPK, log } from "../test-utils";
 import { Game } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
 
@@ -219,6 +219,23 @@ describe("Output", function() {
             expect(output3.lineCount).to.equal(3);
             expect(output3.game).to.equal(game3);
             expect(output3.lines).to.be.empty;
+        });
+
+        it("InstanceOutput.recycle breaks the connection between OutputLine PK providers", function() {
+            const baseGame = buildGameInstance();
+            baseGame.output.write("Base");
+
+            const newGame = baseGame.recycle();
+
+            baseGame.output.write("2-Base");
+            newGame.output.write("2-New");
+
+            const basePKs = baseGame.output.lines.map(
+                outputLine => outputLine.id
+            );
+
+            expect(basePKs[0].plus(1).equals(basePKs[1])).to.be.true;
+            expect(basePKs[1].equals(newGame.output.lines[0].id)).to.be.true;
         });
     });
 });

@@ -172,7 +172,7 @@ describe("Game API", function() {
                 wasSuccessful: true,
                 log: [
                     {
-                        id: getInitialOutputPK().plus(5),
+                        id: getInitialOutputPK().plus(1),
                         data: "Set guy[foo4] to true.",
                         type: OutputLineType.NORMAL
                     }
