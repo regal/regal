@@ -359,7 +359,10 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
                 return protoId;
             }
         } else {
-            protoId = this._prototypeRegistry.register(agent);
+            protoId = StaticPrototypeRegistry.getPrototypeIdOrDefault(agent);
+            if (protoId === undefined) {
+                protoId = this._prototypeRegistry.register(agent);
+            }
         }
 
         am.setProtoId(protoId);

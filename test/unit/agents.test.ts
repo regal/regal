@@ -1843,8 +1843,6 @@ describe("Agents", function() {
                 expect(agent2ForGame1.getList()[0].name).to.equal("D1");
             });
 
-            // TODO - write test for reusing prototypes that are already in the static registry
-
             it("The instance state has a reserved proto ID", function() {
                 Game.init(MD);
 
@@ -1939,6 +1937,30 @@ describe("Agents", function() {
                 expect(agentProtoIDs[1].equals(appk2)).to.be.true;
                 expect(agentProtoIDs[2].equals(appk3)).to.be.true;
             });
+
+            it("Instances of Agents instantiated in the static context reuse the proto id", function() {
+                const DUMMY = new Dummy("D", 10);
+                expect(
+                    DUMMY.meta.protoId.equals(
+                        getInstanceStateAgentProtoPK().plus(1)
+                    )
+                ).to.be.true;
+
+                Game.init(MD);
+
+                const game1 = buildGameInstance();
+                const d1 = game1.using(new Dummy("D1", 1));
+                expect(d1.meta.protoId.equals(DUMMY.meta.protoId)).to.be.true;
+
+                const game2 = buildGameInstance();
+                const ma = game2.using(new MethodAgent("Ma"));
+                const d2 = game2.using(new Dummy("D2", 2));
+                expect(d2.meta.protoId.equals(DUMMY.meta.protoId)).to.be.true;
+                expect(ma.meta.protoId.equals(d2.meta.protoId.plus(1))).to.be
+                    .true;
+            });
+
+            // TODO - write test to verify reused prototypes are not added to the instance
         });
     });
 
