@@ -7,6 +7,7 @@ import { OutputLine } from "../src/output";
 import { getUntrackedEventPK } from "../src/events";
 import { RandomRecord } from "../src/random";
 import { AgentId } from "../src/agents/agent-meta";
+import { getInstanceStateAgentProtoPK } from "../src/agents/impl/prototype/agent-proto-keys";
 
 // log had to be moved to its own file to eliminate circular dependencies
 // when used to debug src
@@ -127,6 +128,10 @@ export const ePKAtNum = (index: number) => getUntrackedEventPK().plus(index);
 // RandomRecord PKs
 export const rPKs = (additional: number) =>
     pks(additional, getInitialRandomPK());
+
+// AgentProto PKs
+export const aprPKs = (additional: number) =>
+    pks(additional, getInstanceStateAgentProtoPK());
 
 export const testMeta = (id: AgentId) => {
     const meta = {

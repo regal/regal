@@ -11,7 +11,8 @@ import {
     aPKs,
     ePKs,
     testMeta,
-    smartObj
+    smartObj,
+    aprPKs
 } from "../test-utils";
 import { Game } from "../../src/api";
 import {
@@ -36,6 +37,7 @@ import {
     inactiveAgentMeta,
     agentMetaWithID
 } from "../../src/agents/impl/agent-meta-transformers";
+import { getInstanceStateAgentProtoPK } from "../../src/agents/impl/prototype/agent-proto-keys";
 
 class Parent extends Agent {
     constructor(public child: Dummy) {
@@ -1842,6 +1844,101 @@ describe("Agents", function() {
             });
 
             // TODO - write test for reusing prototypes that are already in the static registry
+
+            it("The instance state has a reserved proto ID", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                expect(
+                    myGame.state.meta.protoId.equals(
+                        getInstanceStateAgentProtoPK()
+                    )
+                ).to.be.true;
+            });
+
+            it("Activating an agent reserves a proto ID for it", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const d1 = myGame.using(new Dummy("D1", 1));
+                expect(
+                    d1.meta.protoId.equals(
+                        getInstanceStateAgentProtoPK().plus(1)
+                    )
+                ).to.be.true;
+            });
+
+            it("Agents of the same class get the same proto ID", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const [d1, d2] = myGame.using([
+                    new Dummy("D1", 1),
+                    new Dummy("D2", 2)
+                ]);
+
+                expect(d1.meta.protoId.equals(d2.meta.protoId)).to.be.true;
+            });
+
+            it("Agents of differing classes receive new proto IDs incrementally", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const [a1, a2] = myGame.using([
+                    new Dummy("D1", 1),
+                    new MethodAgent("foo")
+                ]);
+
+                expect(a1.meta.protoId.plus(1).equals(a2.meta.protoId)).to.be
+                    .true;
+            });
+
+            class MethodAgentChild extends MethodAgent {
+                constructor(name: string, private suffix: string) {
+                    super(name);
+                }
+
+                // New method
+                public getSuffix() {
+                    return this.suffix;
+                }
+
+                // Override method
+                public getName() {
+                    return `${super.getName()} ${this.suffix}`;
+                }
+            }
+
+            it("A child class of a custom Agent class is functional", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const mac = myGame.using(new MethodAgentChild("Mac", "Jr."));
+
+                expect(mac.getSuffix()).to.equal("Jr.");
+                expect(mac.getName()).to.equal("Mac Jr.");
+
+                mac.setName("Lars");
+                expect(mac.getName()).to.equal("Lars Jr.");
+            });
+
+            it("Proto IDs are assigned properly with inheritance", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const agents = myGame.using([
+                    new MethodAgentChild("Mac", "Jr."),
+                    new Dummy("D1", 10),
+                    new MethodAgent("Lars")
+                ]);
+
+                const agentProtoIDs = agents.map(agent => agent.meta.protoId);
+                const [_appk0, appk1, appk2, appk3] = aprPKs(3);
+
+                expect(agentProtoIDs[0].equals(appk1)).to.be.true;
+                expect(agentProtoIDs[1].equals(appk2)).to.be.true;
+                expect(agentProtoIDs[2].equals(appk3)).to.be.true;
+            });
         });
     });
 
@@ -2884,7 +2981,6 @@ describe("Agents", function() {
         });
 
         it("InstanceAgents.recycle breaks the connection between Agent PK providers", function() {
-            // TODO - write similar tests for other managers
             Game.init(MD);
 
             const baseGame = buildGameInstance();
