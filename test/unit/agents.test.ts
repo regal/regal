@@ -1960,7 +1960,33 @@ describe("Agents", function() {
                     .true;
             });
 
-            // TODO - write test to verify reused prototypes are not added to the instance
+            it("When a new Agent's prototype does not exist in the static context, it is added to the game instance", function() {
+                Game.init(MD);
+                const myGame = buildGameInstance();
+                const dummy = myGame.using(new Dummy("D1", 1));
+
+                expect(
+                    myGame.agents
+                        .getPrototypeRegistry()
+                        .newInstance(dummy.meta.protoId)
+                ).to.not.be.undefined;
+            });
+
+            it("When a new Agent's prototype already exists in the static context, it is added to the static registry and not the game instance", function() {
+                const _D = new Dummy("D", 10);
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const d1 = myGame.using(new Dummy("D1", 1));
+
+                expect(StaticPrototypeRegistry.newInstance(d1.meta.protoId)).to
+                    .not.be.undefined;
+                expect(() =>
+                    myGame.agents
+                        .getPrototypeRegistry()
+                        .newInstance(d1.meta.protoId)
+                ).to.throw(RegalError);
+            });
         });
     });
 

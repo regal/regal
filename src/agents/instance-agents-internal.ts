@@ -9,6 +9,7 @@ import { GameInstanceInternal } from "../state";
 import { Agent } from "./agent";
 import { AgentManager } from "./agent-manager";
 import { AgentId, AgentProtoId } from "./agent-meta";
+import { PrototypeRegistry } from "./prototype-registry";
 
 /**
  * Manager for all agents in a `GameInstance`.
@@ -117,4 +118,6 @@ export interface InstanceAgentsInternal {
     registerAgentPrototype(agent: Agent): AgentProtoId;
 
     getAgentPrototypeByProtoId(protoId: AgentProtoId): object;
+
+    getPrototypeRegistry(): PrototypeRegistry;
 }

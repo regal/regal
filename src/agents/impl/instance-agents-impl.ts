@@ -381,6 +381,10 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return this._prototypeRegistry.newInstance(protoId);
     }
 
+    public getPrototypeRegistry(): PrototypeRegistry {
+        return this._prototypeRegistry;
+    }
+
     private _getAgentPrototypeByAgentId(agentId: AgentId): object {
         const meta = this.getAgentProperty(agentId, ReservedAgentProperty.META);
         const protoId = meta.protoId;
