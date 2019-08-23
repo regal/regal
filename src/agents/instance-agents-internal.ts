@@ -115,9 +115,29 @@ export interface InstanceAgentsInternal {
      */
     scrubAgents(): void;
 
+    /**
+     * Ensures an agent's prototype is tracked in either the instance
+     * `PrototypeRegistry` or the `StaticPrototypeRegistry`.
+     *
+     * If `agent.meta.protoId` is already defined, nothing will happen.
+     * If the agent's prototype exists in the static registry, the agent's
+     * `protoId` will be assigned.
+     * Otherwise, the agent's prototype will be added to the instance registry
+     * and the agent's `protoId` will be assigned.
+     * @param agent The agent to be registered.
+     */
     registerAgentPrototype(agent: Agent): AgentProtoId;
 
+    /**
+     * Gets the Agent prototype that corresponds to the given `protoId` from
+     * either the instance registry or the `StaticPrototypeRegistry`.
+     * @param protoId The prototype's id.
+     */
     getAgentPrototypeByProtoId(protoId: AgentProtoId): object;
 
+    /**
+     * Gets the instance's internal agent prototype registry.
+     * Right now, this is used for testing convenience only.
+     */
     getPrototypeRegistry(): PrototypeRegistry;
 }
