@@ -1,3 +1,10 @@
+/*
+ * Contains the `Agent` prototype primary key system.
+ *
+ * Copyright (c) Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { buildPKProvider } from "../../../common";
 import { AgentProtoId } from "../../agent-meta";
 
