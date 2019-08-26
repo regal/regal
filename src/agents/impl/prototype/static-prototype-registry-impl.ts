@@ -1,3 +1,10 @@
+/*
+ * Contains the static `PrototypeRegistry` type definition and implementation.
+ *
+ * Copyright (c) Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { PKProvider } from "../../../common";
 import { RegalError } from "../../../error";
 import { AgentProtoId } from "../../agent-meta";
