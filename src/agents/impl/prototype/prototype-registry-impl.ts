@@ -1,3 +1,10 @@
+/*
+ * Contains the non-static `PrototypeRegistry` implementation.
+ *
+ * Copyright (c) Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { PKProvider } from "../../../common";
 import { AgentProtoId } from "../../agent-meta";
 import { PrototypeRegistry } from "../../prototype-registry";
@@ -13,6 +20,9 @@ export const buildPrototypeRegistry = (
     pkProvider: PKProvider<AgentProtoId>
 ): PrototypeRegistry => new PrototypeRegistryImpl(pkProvider);
 
+/**
+ * Non-static `PrototypeRegistry` implementation.
+ */
 class PrototypeRegistryImpl extends PrototypeRegistryImplBase {
     constructor(
         private _pkProvider: PKProvider<AgentProtoId>,

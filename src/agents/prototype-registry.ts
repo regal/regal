@@ -36,10 +36,21 @@ export interface PrototypeRegistry {
      */
     newInstance(prototypeId: AgentProtoId): Agent;
 
+    /**
+     * Creates an agent from the registered prototype specified by the given id,
+     * using `Object.create()`. Returns `undefined` if no prototype exists with the id.
+     * @param prototypeId The prototype id.
+     */
     newInstanceOrDefault(prototypeId: AgentProtoId): Agent;
 
+    /**
+     * Gets the `protoId` which corresponds to the given prototype, or returns undefined
+     * if none exists.
+     * @param obj The `Agent` prototype.
+     */
     getPrototypeIdOrDefault(obj: Agent): AgentProtoId;
 
+    /** Makes a deep copy of this `PrototypeRegistry`. */
     copy(): PrototypeRegistry;
 }
 

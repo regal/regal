@@ -1,3 +1,12 @@
+/*
+ * Contains the abstract base class for `PrototypeRegistry` implementations,
+ * which implements the shared functionality between the static and non-static
+ * prototype registries.
+ *
+ * Copyright (c) Joseph R Cowman
+ * Licensed under MIT License (see https://github.com/regal/regal)
+ */
+
 import { PKProvider } from "../../../common";
 import { RegalError } from "../../../error";
 import { Agent } from "../../agent";
@@ -5,10 +14,17 @@ import { AgentProtoId } from "../../agent-meta";
 import { PrototypeRegistry } from "../../prototype-registry";
 import { getInstanceStateAgentProtoPK } from "./agent-proto-keys";
 
+/**
+ * Helper interface for the structure of `PrototypeRegistryImplBase`'s
+ * internal prototype store.
+ */
 export interface ProtoRegistryStore {
     [key: string]: object;
 }
 
+/**
+ * Abstract base class for `PrototypeRegistry`.
+ */
 export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
     constructor(protected _store: ProtoRegistryStore = {}) {}
 
@@ -60,5 +76,8 @@ export abstract class PrototypeRegistryImplBase implements PrototypeRegistry {
 
     public abstract copy(): PrototypeRegistry;
 
+    /**
+     * Returns the prototype registry's `AgentProtoId` `PKProvider`.
+     */
     protected abstract getProtoPKProvider(): PKProvider<AgentProtoId>;
 }

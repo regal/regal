@@ -1,5 +1,5 @@
 /*
- * Contains the static `PrototypeRegistry` type definition and implementation.
+ * Contains the `StaticPrototypeRegistry` type definition and implementation.
  *
  * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
