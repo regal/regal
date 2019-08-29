@@ -8,7 +8,9 @@
 import { PK } from "../common";
 import { Agent } from "./agent";
 
+/** Type alias for `Agent` primary key. */
 export type AgentId = PK<Agent>;
+/** Type alias for `Agent` prototype primary key. */
 export type AgentProtoId = PK<"AgentProto">;
 
 /**

@@ -66,6 +66,10 @@ export interface AgentManager {
      */
     deleteProperty(property: PropertyKey): void;
 
+    /**
+     * Sets the agent manager's `AgentProtoId`
+     * @param protoId The prototype id
+     */
     setProtoId(protoId: FK<AgentProtoId>): void;
 }
 
