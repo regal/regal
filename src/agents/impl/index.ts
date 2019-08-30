@@ -23,3 +23,4 @@ export {
 export {
     StaticPrototypeRegistry
 } from "./prototype/static-prototype-registry-impl";
+export { defaultAgentMeta } from "./agent-meta-transformers";

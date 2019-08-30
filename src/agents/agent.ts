@@ -10,8 +10,7 @@
  */
 
 import { AgentMeta } from "./agent-meta";
-import { buildInactiveAgentProxy } from "./impl";
-import { defaultAgentMeta } from "./impl/agent-meta-transformers";
+import { buildInactiveAgentProxy, defaultAgentMeta } from "./impl";
 
 /** Determines whether an object is an `Agent`. */
 export const isAgent = (o: any): o is Agent =>
@@ -27,6 +26,7 @@ export const isAgent = (o: any): o is Agent =>
  * a `RegalError` will be thrown.
  */
 export class Agent {
+    /** The agent's metadata, such as its agent id and prototype id. */
     public meta: AgentMeta;
 
     /**
