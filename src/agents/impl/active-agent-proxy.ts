@@ -60,6 +60,7 @@ const activeAgentProxyHandler = (id: AgentId, game: GameInstanceInternal) => ({
  *
  * @param id    The proxy agent's id.
  * @param game  The `GameInstance` of the current context.
+ * @param prototype The agent prototype for the proxy to target. Defaults to `{}`.
  */
 export const buildActiveAgentProxy = (
     id: AgentId,
