@@ -44,5 +44,9 @@ export const inactiveAgentMeta = transformMeta(() => ({
  */
 export const agentMetaWithID = (id: AgentId) => transformMeta(() => ({ id }));
 
+/**
+ * `AgentMeta` transformer that sets the meta's prototype id to the
+ * given `protoId`.
+ */
 export const agentMetaWithProtoID = (protoId: AgentProtoId) =>
     transformMeta(() => ({ protoId }));
