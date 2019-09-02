@@ -56,7 +56,7 @@ export const buildInactiveAgentProxy = (agent: Agent): Agent => {
 
             if (
                 property !== ReservedAgentProperty.META &&
-                property !== "refId" && // TODO - Remove refId
+                property !== ReservedAgentProperty.REF_ID &&
                 !ContextManager.isContextStatic()
             ) {
                 throw new RegalError(

@@ -32,5 +32,7 @@ export enum ReservedAgentProperty {
     /** `AgentManager.game` */
     GAME = "game",
     /** Used by `InactiveAgentProxy` */
-    TEMP_VALUES = "tempValues"
+    TEMP_VALUES = "tempValues",
+    /** Used by `AgentReference` */
+    REF_ID = "refId"
 }
