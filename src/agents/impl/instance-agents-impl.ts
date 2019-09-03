@@ -25,7 +25,7 @@ import {
 } from "./active-agent-proxy";
 import { STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 import { buildAgentManager } from "./agent-manager-impl";
-import { agentMetaWithID } from "./agent-meta-transformers";
+import { agentMetaWithID, defaultAgentMeta } from "./agent-meta-transformers";
 import {
     getGameInstancePK,
     isAgentActive,
@@ -54,6 +54,8 @@ export const buildInstanceAgents = (
 class InstanceAgentsImpl implements InstanceAgentsInternal {
     /** The internal `Agent` `PKProvider`. */
     private _pkProvider: PKProvider<Agent>;
+
+    /** The internal `PrototypeRegistry` for non-static agents. */
     private _prototypeRegistry: PrototypeRegistry;
 
     constructor(
@@ -209,7 +211,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
                     : new AgentReference(value.meta.id);
         } else if (value instanceof Array) {
             (value as any).meta = agentMetaWithID(this.reserveNewId())(
-                {} as any // TODO - make meta for array
+                defaultAgentMeta()
             );
             value = this.game.using(value);
             value = new AgentArrayReference(value.meta.id);
