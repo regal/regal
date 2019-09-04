@@ -6,7 +6,6 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { Mutable } from "../../common";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
 import {
@@ -49,7 +48,7 @@ export const activateAgent = <T extends Agent>(
         activeAgent = buildActiveAgentArrayProxy(agent.meta.id, game) as T;
     } else {
         const protoId = game.agents.registerAgentPrototype(agent);
-        const prototype = game.agents.getAgentPrototypeByProtoId(protoId);
+        const prototype = game.agents.createAgentWithPrototype(protoId);
 
         activeAgent = buildActiveAgentProxy(
             agent.meta.id,

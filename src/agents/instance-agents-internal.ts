@@ -129,11 +129,11 @@ export interface InstanceAgentsInternal {
     registerAgentPrototype(agent: Agent): AgentProtoId;
 
     /**
-     * Gets the Agent prototype that corresponds to the given `protoId` from
-     * either the instance registry or the `StaticPrototypeRegistry`.
+     * Creates an agent with a prototype that corresponds to the given `protoId`
+     * from either the instance registry or the `StaticPrototypeRegistry`.
      * @param protoId The prototype's id.
      */
-    getAgentPrototypeByProtoId(protoId: AgentProtoId): object;
+    createAgentWithPrototype(protoId: AgentProtoId): object;
 
     /**
      * Gets the instance's internal agent prototype registry.

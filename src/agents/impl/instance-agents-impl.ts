@@ -127,7 +127,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             if (value instanceof Array) {
                 value = buildActiveAgentArrayProxy(value.meta.id, this.game);
             } else {
-                const prototype = this.getAgentPrototypeByProtoId(
+                const prototype = this.createAgentWithPrototype(
                     value.meta.protoId
                 );
                 value = buildActiveAgentProxy(
@@ -371,7 +371,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return protoId;
     }
 
-    public getAgentPrototypeByProtoId(protoId: AgentProtoId): object {
+    public createAgentWithPrototype(protoId: AgentProtoId): object {
         const staticInstance = StaticPrototypeRegistry.newInstanceOrDefault(
             protoId
         );
@@ -390,6 +390,6 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     private _getAgentPrototypeByAgentId(agentId: AgentId): object {
         const meta = this.getAgentProperty(agentId, ReservedAgentProperty.META);
         const protoId = meta.protoId;
-        return this.getAgentPrototypeByProtoId(protoId);
+        return this.createAgentWithPrototype(protoId);
     }
 }
