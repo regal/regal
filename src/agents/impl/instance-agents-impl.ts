@@ -137,7 +137,9 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
                 );
             }
         } else if (isAgentReference(value)) {
-            const prototype = this._getAgentPrototypeByAgentId(value.refId);
+            const prototype = this._createAgentWithPrototypeOfAgent(
+                value.refId
+            );
             value = buildActiveAgentProxy(value.refId, this.game, prototype);
         } else if (isAgentArrayReference(value)) {
             value = buildActiveAgentArrayProxy(value.arRefId, this.game);
@@ -387,7 +389,11 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return this._prototypeRegistry;
     }
 
-    private _getAgentPrototypeByAgentId(agentId: AgentId): object {
+    /**
+     * Creates a new agent with the same prototype as the given agent.
+     * @param agentId The given agent's id.
+     */
+    private _createAgentWithPrototypeOfAgent(agentId: AgentId): object {
         const meta = this.getAgentProperty(agentId, ReservedAgentProperty.META);
         const protoId = meta.protoId;
         return this.createAgentWithPrototype(protoId);
