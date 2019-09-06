@@ -1,12 +1,8 @@
 import { expect } from "chai";
 import "mocha";
 
-import {
-    FK,
-    ReservedPKSet,
-    PKProvider,
-    buildPKProvider
-} from "../../src/common";
+import { ReservedPKSet, buildPKProvider } from "../../src/common";
+import { RegalError } from "../../src";
 
 interface Dummy {}
 const RESERVED_KEYS: ReservedPKSet<Dummy> = {
@@ -252,5 +248,17 @@ describe("Keys", function() {
                 .plus(100)
                 .equals(fork.next())
         ).to.be.true;
+    });
+
+    it("PKProvider.keyFromValue creates a key from a valid value", function() {
+        const prov = buildPKProvider();
+        const first = prov.next();
+        expect(first.equals(prov.keyFromValue(first.value()))).to.be.true;
+    });
+
+    it("PKProvider.keyFromValue throws an error if the value is invalid", function() {
+        expect(() => buildPKProvider().keyFromValue("bork")).to.throw(
+            RegalError
+        );
     });
 });
