@@ -1987,6 +1987,12 @@ describe("Agents", function() {
                         .newInstance(d1.meta.protoId)
                 ).to.throw(RegalError);
             });
+
+            it("The StaticPrototypeRegistry cannot be copied", function() {
+                expect(() => StaticPrototypeRegistry.copy()).to.throw(
+                    RegalError
+                );
+            });
         });
     });
 
