@@ -41,7 +41,8 @@ import { StaticPrototypeRegistry } from "./prototype/static-prototype-registry-i
 /**
  * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`
  * @param game The `GameInstance`.
- * @param pkProvider The existing agent PK provider (optional).
+ * @param pkProvider The new agent PK provider (optional).
+ * @param prototypeRegistry The new prototype registry (optional).
  */
 export const buildInstanceAgents = (
     game: GameInstanceInternal,
