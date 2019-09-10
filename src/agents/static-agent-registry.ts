@@ -11,9 +11,12 @@
 import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent";
 import { AgentId } from "./agent-meta";
-import { propertyIsAgentId, STATIC_AGENT_PK_PROVIDER } from "./impl";
-import { staticAgentMeta } from "./impl/agent-meta-transformers";
-import { isAgentActive } from "./impl/agent-utils";
+import {
+    isAgentActive,
+    propertyIsAgentId,
+    STATIC_AGENT_PK_PROVIDER,
+    staticAgentMeta
+} from "./impl";
 
 /**
  * Static class that manages all static agents used in the game.
