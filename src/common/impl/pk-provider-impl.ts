@@ -112,9 +112,7 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
         return this.lastPK.index();
     }
 
-    public forkAfterKey(
-        key: PK<PKClass> | FK<PK<PKClass>>
-    ): PKProvider<PKClass> {
+    public forkAfterKey(key: PK<PKClass>): PKProvider<PKClass> {
         return new PKProviderImpl(this.buildPK, key, this.reservedPKs);
     }
 
