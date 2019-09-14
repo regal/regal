@@ -5,7 +5,6 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { FK } from "../common";
 import { AgentId } from "./agent-meta";
 
 /** Whether the given object is an `AgentArrayReference`. */
@@ -20,5 +19,5 @@ export class AgentArrayReference {
      * Constructs a new `AgentReference` in place of an active agent array.
      * @param arRefId The agent array's numeric id.
      */
-    constructor(public arRefId: FK<AgentId>) {}
+    constructor(public arRefId: AgentId) {}
 }

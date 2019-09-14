@@ -121,14 +121,6 @@ describe("Keys", function() {
         );
     });
 
-    it("PK.ref() creates an equivalent key", function() {
-        const prov = buildPKProvider(RESERVED_KEYS);
-        const pk = prov.next();
-        const fk = pk.ref();
-        expect(pk.equals(fk));
-        expect(pk.plus(1).equals(fk.plus(1))).to.be.true;
-    });
-
     it("A forked PK provider generates keys just like the original would", function() {
         const original = buildPKProvider(RESERVED_KEYS);
         const pkFirst = original.next();

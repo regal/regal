@@ -29,9 +29,6 @@ export interface PK<T> {
     /** Whether this key is equivalent to the given one. */
     equals(key: PK<T>): boolean;
 
-    /** Generates a foreign key that references this key. */
-    ref(): FK<PK<T>>;
-
     /**
      * Generates a string value representative of this key.
      * This is used for the `equals` method, which is strongly preferred
@@ -123,12 +120,6 @@ export interface PKProvider<T> {
     /** Returns the key that was last generated. */
     previous(): PK<T>;
 
+    /** Returns the key that is associated with the given value. */
     keyFromValue(value: string): PK<T>;
 }
-
-/**
- * A foreign key, which is a reference to another object's primary key.
- *
- * @template T The class referenced by this foreign key type.
- */
-export interface FK<T extends PK<any>> extends PK<T> {}

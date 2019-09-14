@@ -6,7 +6,7 @@
  */
 
 import { RegalError } from "../../error";
-import { FK, PK, PKProvider, ReservedPKSet } from "../keys";
+import { PK, PKProvider, ReservedPKSet } from "../keys";
 
 export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
     public static readonly START_VALUE = 0;

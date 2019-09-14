@@ -5,7 +5,6 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { FK } from "../common";
 import { AgentId } from "./agent-meta";
 
 /** Whether the given object is an `AgentReference`. */
@@ -18,7 +17,7 @@ export const isAgentReference = (o: any): o is AgentReference =>
 export class AgentReference {
     /**
      * Constructs a new `AgentReference` in place of an active agent.
-     * @param refId The mocked agent's numeric id.
+     * @param refId The mocked agent's id.
      */
-    constructor(public refId: FK<AgentId>) {}
+    constructor(public refId: AgentId) {}
 }

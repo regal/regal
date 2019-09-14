@@ -5,7 +5,6 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { FK } from "../../common";
 import { RegalError } from "../../error";
 import { EventRecord, getUntrackedEventPK } from "../../events";
 import { GameInstanceInternal } from "../../state";
@@ -29,17 +28,17 @@ import {
 export const buildAgentManager = (
     id: AgentId,
     game: GameInstanceInternal
-): AgentManager => new AgentManagerImpl(id.ref(), game);
+): AgentManager => new AgentManagerImpl(id, game);
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
     public meta: AgentMeta;
 
-    constructor(id: FK<AgentId>, public game: GameInstanceInternal) {
+    constructor(id: AgentId, public game: GameInstanceInternal) {
         this.meta = agentMetaWithID(id)(defaultAgentMeta());
     }
 
-    public get id(): FK<AgentId> {
+    public get id(): AgentId {
         return this.meta.id;
     }
 
@@ -116,8 +115,8 @@ class AgentManagerImpl implements AgentManager {
         const event = this.game.events.current;
 
         const propChange: PropertyChange = {
-            agentId: this.id.ref(),
-            eventId: event.id.ref(),
+            agentId: this.id,
+            eventId: event.id,
             eventName: event.name,
             final: value,
             init: initValue,
@@ -154,8 +153,8 @@ class AgentManagerImpl implements AgentManager {
         const event = this.game.events.current;
 
         const propChange: PropertyChange = {
-            agentId: this.id.ref(),
-            eventId: event.id.ref(),
+            agentId: this.id,
+            eventId: event.id,
             eventName: event.name,
             final: undefined,
             init: initValue,
@@ -166,7 +165,7 @@ class AgentManagerImpl implements AgentManager {
         this.recordChange(event, propChange, history);
     }
 
-    public setProtoId(protoId: FK<AgentProtoId>): void {
+    public setProtoId(protoId: AgentProtoId): void {
         this.meta = agentMetaWithProtoID(protoId)(this.meta);
     }
 
