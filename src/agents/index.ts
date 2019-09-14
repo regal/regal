@@ -16,4 +16,10 @@ export {
     getGameInstancePK,
     StaticPrototypeRegistry
 } from "./impl";
-export { AgentMeta, AgentId, AgentProtoId } from "./agent-meta";
+export {
+    AgentMeta,
+    AgentId,
+    AgentProtoId,
+    ReservedAgentProperty
+} from "./agent-meta";
+export { isAgentArrayReference } from "./agent-array-reference";

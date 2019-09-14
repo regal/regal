@@ -12,10 +12,10 @@ import {
     getGameInstancePK,
     InstanceAgentsInternal,
     isAgent,
+    isAgentArrayReference,
+    ReservedAgentProperty,
     StaticAgentRegistry
 } from "../../agents";
-import { isAgentArrayReference } from "../../agents/agent-array-reference";
-import { ReservedAgentProperty } from "../../agents/agent-meta";
 import { isAgentReference } from "../../agents/agent-reference";
 import { buildPKProvider } from "../../common";
 import {
