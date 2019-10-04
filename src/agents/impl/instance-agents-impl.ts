@@ -362,6 +362,10 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         if (protoId !== undefined) {
             if (am === undefined || am.meta.protoId !== undefined) {
                 return protoId;
+            } else {
+                throw new RegalError(
+                    "Failed registering the agent's prototype because a bad protoId was already set"
+                );
             }
         } else {
             protoId = StaticPrototypeRegistry.getPrototypeIdOrDefault(agent);

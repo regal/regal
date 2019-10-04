@@ -1993,6 +1993,16 @@ describe("Agents", function() {
                     RegalError
                 );
             });
+
+            it("Throws a RegalError if an agent's protoId is forced to some value", function() {
+                Game.init(MD);
+                const myGame = buildGameInstance();
+
+                const _d = new Dummy("D1", 1);
+                _d.meta.protoId = "foo" as any;
+
+                expect(() => myGame.using(_d)).to.throw(RegalError);
+            });
         });
     });
 
