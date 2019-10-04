@@ -2003,6 +2003,16 @@ describe("Agents", function() {
 
                 expect(() => myGame.using(_d)).to.throw(RegalError);
             });
+
+            it("Throws a RegalError if an agent's property is set to an arrow function", function() {
+                Game.init(MD);
+                const myGame = buildGameInstance();
+                const dummy = myGame.using(new Dummy("D1", 1));
+
+                expect(() => ((dummy as any).foo = () => "yo")).to.throw(
+                    RegalError
+                );
+            });
         });
     });
 
