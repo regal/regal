@@ -8,5 +8,5 @@
 
 export { buildInstanceOutput } from "./impl";
 export { InstanceOutput } from "./instance-output";
-export { OutputLine, OutputLineType } from "./output-line";
+export { OutputLine, OutputLineType, OutputLineId } from "./output-line";
 export { InstanceOutputInternal } from "./instance-output-internal";

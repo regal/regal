@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { Mutable, PK, PKProvider } from "../../common";
+import { PKProvider } from "../../common";
 import { RegalError } from "../../error";
 import { GameInstanceInternal } from "../../state";
 import { Agent, isAgent } from "../agent";
@@ -14,8 +14,10 @@ import {
     isAgentArrayReference
 } from "../agent-array-reference";
 import { AgentManager, isAgentManager } from "../agent-manager";
+import { AgentId, AgentProtoId, ReservedAgentProperty } from "../agent-meta";
 import { AgentReference, isAgentReference } from "../agent-reference";
 import { InstanceAgentsInternal } from "../instance-agents-internal";
+import { PrototypeRegistry } from "../prototype-registry";
 import { StaticAgentRegistry } from "../static-agent-registry";
 import {
     buildActiveAgentArrayProxy,
@@ -23,35 +25,53 @@ import {
 } from "./active-agent-proxy";
 import { STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 import { buildAgentManager } from "./agent-manager-impl";
+import { agentMetaWithID, defaultAgentMeta } from "./agent-meta-transformers";
 import {
     getGameInstancePK,
     isAgentActive,
     propertyIsAgentId
 } from "./agent-utils";
+import {
+    getInstanceStateAgentProtoPK,
+    STATIC_PROTO_PK_PROVIDER
+} from "./prototype/agent-proto-keys";
+import { buildPrototypeRegistry } from "./prototype/prototype-registry-impl";
+import { StaticPrototypeRegistry } from "./prototype/static-prototype-registry-impl";
 
 /**
  * Builds an implementation of `InstanceAgentsInternal` for the given `GameInstance`
  * @param game The `GameInstance`.
- * @param pkProvider The existing agent PK provider (optional).
+ * @param pkProvider The new agent PK provider (optional).
+ * @param prototypeRegistry The new prototype registry (optional).
  */
 export const buildInstanceAgents = (
     game: GameInstanceInternal,
-    pkProvider?: PKProvider<Agent>
-): InstanceAgentsInternal => new InstanceAgentsImpl(game, pkProvider);
+    pkProvider?: PKProvider<Agent>,
+    prototypeRegistry?: PrototypeRegistry
+): InstanceAgentsInternal =>
+    new InstanceAgentsImpl(game, pkProvider, prototypeRegistry);
 
 /** Implementation of `InstanceAgentsInternal`. */
 class InstanceAgentsImpl implements InstanceAgentsInternal {
     /** The internal `Agent` `PKProvider`. */
     private _pkProvider: PKProvider<Agent>;
 
+    /** The internal `PrototypeRegistry` for non-static agents. */
+    private _prototypeRegistry: PrototypeRegistry;
+
     constructor(
         public game: GameInstanceInternal,
-        pkProvider: PKProvider<Agent>
+        pkProvider: PKProvider<Agent>,
+        prototypeRegistry: PrototypeRegistry
     ) {
         this._pkProvider =
             pkProvider !== undefined
                 ? pkProvider
                 : STATIC_AGENT_PK_PROVIDER.fork();
+        this._prototypeRegistry =
+            prototypeRegistry !== undefined
+                ? prototypeRegistry
+                : buildPrototypeRegistry(STATIC_PROTO_PK_PROVIDER.fork());
 
         // Create agent manager for the game instance
         this.createAgentManager(getGameInstancePK());
@@ -63,7 +83,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             .map(key => this[key] as AgentManager);
     }
 
-    public reserveNewId(): PK<Agent> {
+    public reserveNewId(): AgentId {
         const id = this._pkProvider.next();
 
         this.createAgentManager(id);
@@ -71,13 +91,18 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return id;
     }
 
-    public createAgentManager(id: PK<Agent>): AgentManager {
+    public createAgentManager(id: AgentId): AgentManager {
         const am = buildAgentManager(id, this.game);
+
+        if (id.equals(getGameInstancePK())) {
+            am.setProtoId(getInstanceStateAgentProtoPK());
+        }
+
         this[id.value()] = am;
         return am;
     }
 
-    public getAgentProperty(id: PK<Agent>, property: PropertyKey) {
+    public getAgentProperty(id: AgentId, property: PropertyKey) {
         const am = this.getAgentManager(id);
         let value: any;
 
@@ -90,8 +115,8 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
             value = StaticAgentRegistry.getAgentProperty(id, property);
         } else {
-            if (property === "id") {
-                value = id;
+            if (property === ReservedAgentProperty.META) {
+                value = am.meta;
             } else if (am.hasPropertyRecord(property)) {
                 value = am.getProperty(property);
             } else if (StaticAgentRegistry.hasAgent(id)) {
@@ -101,12 +126,22 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
         if (isAgent(value)) {
             if (value instanceof Array) {
-                value = buildActiveAgentArrayProxy(value.id, this.game);
+                value = buildActiveAgentArrayProxy(value.meta.id, this.game);
             } else {
-                value = buildActiveAgentProxy(value.id, this.game);
+                const prototype = this.createAgentWithPrototype(
+                    value.meta.protoId
+                );
+                value = buildActiveAgentProxy(
+                    value.meta.id,
+                    this.game,
+                    prototype
+                );
             }
         } else if (isAgentReference(value)) {
-            value = buildActiveAgentProxy(value.refId, this.game);
+            const prototype = this._createAgentWithPrototypeOfAgent(
+                value.refId
+            );
+            value = buildActiveAgentProxy(value.refId, this.game, prototype);
         } else if (isAgentArrayReference(value)) {
             value = buildActiveAgentArrayProxy(value.arRefId, this.game);
         }
@@ -114,7 +149,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return value;
     }
 
-    public getAgentPropertyKeys(id: PK<Agent>) {
+    public getAgentPropertyKeys(id: AgentId) {
         const am = this.getAgentManager(id);
 
         let keys: string[] = [];
@@ -133,11 +168,14 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public setAgentProperty(
-        id: PK<Agent>,
+        id: AgentId,
         property: PropertyKey,
         value: any
     ): boolean {
-        if (property === "id" || property === "game") {
+        if (
+            property === ReservedAgentProperty.META ||
+            property === ReservedAgentProperty.GAME
+        ) {
             throw new RegalError(
                 `The agent's <${property}> property cannot be set.`
             );
@@ -153,22 +191,33 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             }
 
             am = this.createAgentManager(id);
+
+            const protoId = StaticAgentRegistry.getAgentProperty(
+                id,
+                ReservedAgentProperty.META
+            ).protoId;
+            am.setProtoId(protoId);
         }
 
         if (isAgent(value)) {
-            if (!isAgentActive(value.id)) {
-                const newId = this.reserveNewId();
-                (value as Mutable<Agent>).id = newId;
+            if (!isAgentActive(value.meta.id)) {
+                value.meta = agentMetaWithID(this.reserveNewId())(value.meta);
                 value = this.game.using(value);
             }
+            if (am.meta.protoId === undefined) {
+                am.setProtoId(value.meta.protoId);
+            }
+
             value =
                 value instanceof Array
-                    ? new AgentArrayReference((value as any).id)
-                    : new AgentReference(value.id);
+                    ? new AgentArrayReference((value as any).meta.id)
+                    : new AgentReference(value.meta.id);
         } else if (value instanceof Array) {
-            (value as any).id = this.reserveNewId();
+            (value as any).meta = agentMetaWithID(this.reserveNewId())(
+                defaultAgentMeta()
+            );
             value = this.game.using(value);
-            value = new AgentArrayReference(value.id);
+            value = new AgentArrayReference(value.meta.id);
         }
 
         am.setProperty(property, value);
@@ -176,7 +225,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return true;
     }
 
-    public hasAgentProperty(id: PK<Agent>, property: PropertyKey): boolean {
+    public hasAgentProperty(id: AgentId, property: PropertyKey): boolean {
         const am = this.getAgentManager(id);
 
         const staticPropExists = StaticAgentRegistry.hasAgentProperty(
@@ -194,7 +243,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             return staticPropExists;
         }
 
-        if (property === "id") {
+        if (property === ReservedAgentProperty.META) {
             return true;
         }
 
@@ -203,8 +252,11 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return propExists && !am.propertyWasDeleted(property);
     }
 
-    public deleteAgentProperty(id: PK<Agent>, property: PropertyKey): boolean {
-        if (property === "id" || property === "game") {
+    public deleteAgentProperty(id: AgentId, property: PropertyKey): boolean {
+        if (
+            property === ReservedAgentProperty.META ||
+            property === ReservedAgentProperty.GAME
+        ) {
             throw new RegalError(
                 `The agent's <${property}> property cannot be deleted.`
             );
@@ -227,7 +279,7 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         return true;
     }
 
-    public getAgentManager(id: PK<Agent>): AgentManager {
+    public getAgentManager(id: AgentId): AgentManager {
         const result = this[id.value()];
 
         if (isAgentManager(result)) {
@@ -238,14 +290,21 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
     }
 
     public recycle(newInstance: GameInstanceInternal): InstanceAgentsInternal {
-        const newAgents = buildInstanceAgents(newInstance, this._pkProvider);
+        const newAgents = buildInstanceAgents(
+            newInstance,
+            this._pkProvider.fork(),
+            this._prototypeRegistry.copy()
+        );
 
         for (const formerAgent of this.agentManagers()) {
             const id = formerAgent.id;
             const am = newAgents.createAgentManager(id);
+            am.setProtoId(formerAgent.meta.protoId);
 
             const propsToAdd = Object.keys(formerAgent).filter(
-                key => key !== "game" && key !== "id"
+                key =>
+                    key !== ReservedAgentProperty.GAME &&
+                    key !== ReservedAgentProperty.META
             );
 
             // For each updated property on the old agent, add its last value to the new agent.
@@ -281,8 +340,8 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
 
             for (const prop of this.getAgentPropertyKeys(id)) {
                 const val = this.getAgentProperty(id, prop);
-                if (isAgent(val) && !seen.has(val.id.value())) {
-                    q.push(val.id);
+                if (isAgent(val) && !seen.has(val.meta.id.value())) {
+                    q.push(val.meta.id);
                 }
             }
         }
@@ -294,5 +353,54 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
         for (const id of waste) {
             delete this[id];
         }
+    }
+
+    public registerAgentPrototype(agent: Agent): AgentProtoId {
+        let protoId = agent.meta.protoId;
+        const am = this.getAgentManager(agent.meta.id);
+
+        if (protoId !== undefined) {
+            if (am === undefined || am.meta.protoId !== undefined) {
+                return protoId;
+            } else {
+                throw new RegalError(
+                    "Failed registering the agent's prototype because a bad protoId was already set"
+                );
+            }
+        } else {
+            protoId = StaticPrototypeRegistry.getPrototypeIdOrDefault(agent);
+            if (protoId === undefined) {
+                protoId = this._prototypeRegistry.register(agent);
+            }
+        }
+
+        am.setProtoId(protoId);
+        return protoId;
+    }
+
+    public createAgentWithPrototype(protoId: AgentProtoId): object {
+        const staticInstance = StaticPrototypeRegistry.newInstanceOrDefault(
+            protoId
+        );
+
+        if (staticInstance !== undefined) {
+            return staticInstance;
+        }
+
+        return this._prototypeRegistry.newInstance(protoId);
+    }
+
+    public getPrototypeRegistry(): PrototypeRegistry {
+        return this._prototypeRegistry;
+    }
+
+    /**
+     * Creates a new agent with the same prototype as the given agent.
+     * @param agentId The given agent's id.
+     */
+    private _createAgentWithPrototypeOfAgent(agentId: AgentId): object {
+        const meta = this.getAgentProperty(agentId, ReservedAgentProperty.META);
+        const protoId = meta.protoId;
+        return this.createAgentWithPrototype(protoId);
     }
 }

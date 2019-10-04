@@ -5,12 +5,11 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { FK, PK } from "../../common";
 import { RegalError } from "../../error";
 import { EventRecord, getUntrackedEventPK } from "../../events";
 import { GameInstanceInternal } from "../../state";
-import { Agent } from "../agent";
 import { AgentManager } from "../agent-manager";
+import { AgentId, AgentMeta, AgentProtoId } from "../agent-meta";
 import {
     pcForAgentManager,
     pcForEventRecord,
@@ -19,16 +18,29 @@ import {
 } from "../agent-properties";
 import { isAgentReference } from "../agent-reference";
 import { StaticAgentRegistry } from "../static-agent-registry";
+import {
+    agentMetaWithID,
+    agentMetaWithProtoID,
+    defaultAgentMeta
+} from "./agent-meta-transformers";
 
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
-    id: PK<Agent>,
+    id: AgentId,
     game: GameInstanceInternal
-): AgentManager => new AgentManagerImpl(id.ref(), game);
+): AgentManager => new AgentManagerImpl(id, game);
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
-    constructor(public id: FK<Agent>, public game: GameInstanceInternal) {}
+    public meta: AgentMeta;
+
+    constructor(id: AgentId, public game: GameInstanceInternal) {
+        this.meta = agentMetaWithID(id)(defaultAgentMeta());
+    }
+
+    public get id(): AgentId {
+        return this.meta.id;
+    }
 
     public hasPropertyRecord(property: PropertyKey): boolean {
         if (property === "constructor") {
@@ -103,8 +115,8 @@ class AgentManagerImpl implements AgentManager {
         const event = this.game.events.current;
 
         const propChange: PropertyChange = {
-            agentId: this.id.ref(),
-            eventId: event.id.ref(),
+            agentId: this.id,
+            eventId: event.id,
             eventName: event.name,
             final: value,
             init: initValue,
@@ -141,8 +153,8 @@ class AgentManagerImpl implements AgentManager {
         const event = this.game.events.current;
 
         const propChange: PropertyChange = {
-            agentId: this.id.ref(),
-            eventId: event.id.ref(),
+            agentId: this.id,
+            eventId: event.id,
             eventName: event.name,
             final: undefined,
             init: initValue,
@@ -151,6 +163,10 @@ class AgentManagerImpl implements AgentManager {
         };
 
         this.recordChange(event, propChange, history);
+    }
+
+    public setProtoId(protoId: AgentProtoId): void {
+        this.meta = agentMetaWithProtoID(protoId)(this.meta);
     }
 
     /**

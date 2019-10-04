@@ -10,7 +10,6 @@ import {
     nq,
     isEventQueue,
     enqueue,
-    buildInstanceEvents,
     GameEventBuilder,
     getUntrackedEventPK
 } from "../../src/events";
@@ -940,44 +939,27 @@ describe("Events", function() {
     });
 
     describe("Other InstanceEvents Behavior", function() {
-        // it("InstanceEvents.lastEventId property getter works properly when startingEventId is not set", function() {
-        //     const spam = on("SPAM", game => {
-        //         game.output.write("Get spammed.");
-        //     });
-        //     Game.init(MD);
-        //     const myGame = buildGameInstance();
-        //     expect(myGame.events.lastEventId).to.equal(0);
-        //     myGame.events.invoke(spam.then(spam));
-        //     expect(myGame.events.lastEventId).to.equal(2);
-        // });
-        // it("InstanceEvents.lastEventId property getter works properly when startingEventId is a custom value", function() {
-        //     const spam = on("SPAM", game => {
-        //         game.output.write("Get spammed.");
-        //     });
-        //     Game.init(MD);
-        //     const myGame = buildGameInstance();
-        //     myGame.events = buildInstanceEvents(myGame, 10);
-        //     expect(myGame.events.lastEventId).to.equal(10);
-        //     myGame.events.invoke(spam.then(spam, spam));
-        //     expect(myGame.events.lastEventId).to.equal(13);
-        // });
-        // it("recycleInstanceEvents creates a new InstanceEvents with the previous instance's lastEventId", function() {
-        //     const spam = on("SPAM", game => {
-        //         game.output.write("Get spammed.");
-        //     });
-        //     Game.init(MD);
-        //     const game1 = buildGameInstance();
-        //     const game2 = buildGameInstance();
-        //     const events2 = game1.events.recycle(game2);
-        //     expect(events2.lastEventId).to.equal(0);
-        //     expect(events2.game).to.equal(game2);
-        //     expect(events2.history).to.be.empty;
-        //     events2.invoke(spam.then(spam).thenq(spam));
-        //     const game3 = buildGameInstance();
-        //     const events3 = events2.recycle(game3);
-        //     expect(events3.lastEventId).to.equal(3);
-        //     expect(events3.game).to.equal(game3);
-        //     expect(events3.history).to.be.empty;
-        // });
+        it("InstanceEvents.recycle breaks the connection between EventRecord PK providers", function() {
+            const spam = on("SPAM", game => {
+                game.output.write("Get spammed.");
+            });
+
+            Game.init(MD);
+
+            const baseGame = buildGameInstance();
+            spam(baseGame);
+
+            const newGame = baseGame.recycle();
+
+            spam(baseGame);
+            spam(newGame);
+
+            const basePKs = baseGame.events.history.map(
+                eventRecord => eventRecord.id
+            );
+
+            expect(basePKs[0].minus(1).equals(basePKs[1])).to.be.true;
+            expect(basePKs[0].equals(newGame.events.history[0].id)).to.be.true;
+        });
     });
 });

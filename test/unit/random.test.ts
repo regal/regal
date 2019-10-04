@@ -119,6 +119,28 @@ describe("Random", function() {
             );
         });
 
+        it("InstanceRandom.recycle breaks the connection between RandomRecord PK providers", function() {
+            const rand = on("GEN", game => {
+                game.random.boolean();
+            });
+
+            const baseGame = buildGameInstance();
+            rand(baseGame);
+
+            const newGame = baseGame.recycle();
+
+            rand(baseGame);
+            rand(newGame);
+
+            const basePKs = baseGame.events.history.map(
+                eventRecord => eventRecord.randoms[0].id
+            );
+
+            expect(basePKs[0].minus(1).equals(basePKs[1])).to.be.true;
+            expect(basePKs[0].equals(newGame.events.history[0].randoms[0].id))
+                .to.be.true;
+        });
+
         describe("InstanceRandom.int()", function() {
             it("Generates a random integer within the range (inclusive)", function() {
                 const myGame = buildGameInstance();
@@ -306,7 +328,7 @@ describe("Random", function() {
             });
         });
 
-        describe("InstanceAgents.boolean()", function() {
+        describe("InstanceRandom.boolean()", function() {
             it("Picks either true or false", function() {
                 const myGame = buildGameInstance();
                 let result = myGame.random.boolean();

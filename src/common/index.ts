@@ -5,6 +5,6 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-export { PK, FK, ReservedPKSet, PKProvider } from "./keys";
+export { PK, ReservedPKSet, PKProvider } from "./keys";
 export { buildPKProvider } from "./impl";
 export { Mutable } from "./type-utils";

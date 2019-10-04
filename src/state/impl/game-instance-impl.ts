@@ -12,11 +12,12 @@ import {
     getGameInstancePK,
     InstanceAgentsInternal,
     isAgent,
+    isAgentArrayReference,
+    ReservedAgentProperty,
     StaticAgentRegistry
 } from "../../agents";
-import { isAgentArrayReference } from "../../agents/agent-array-reference";
 import { isAgentReference } from "../../agents/agent-reference";
-import { buildPKProvider, FK } from "../../common";
+import { buildPKProvider } from "../../common";
 import {
     buildInstanceOptions,
     GameOptions,
@@ -25,7 +26,7 @@ import {
 import { RegalError } from "../../error";
 import {
     buildInstanceEvents,
-    EventRecord,
+    EventId,
     getUntrackedEventPK,
     InstanceEventsInternal,
     on,
@@ -142,9 +143,7 @@ class GameInstanceImpl<StateType = any>
         return returnObj;
     }
 
-    public revert(
-        revertTo: FK<EventRecord> = getUntrackedEventPK()
-    ): GameInstanceImpl {
+    public revert(revertTo: EventId = getUntrackedEventPK()): GameInstanceImpl {
         if (!revertTo.equals(getUntrackedEventPK())) {
             if (revertTo.index() < getUntrackedEventPK().index()) {
                 throw new RegalError(
@@ -193,7 +192,7 @@ class GameInstanceImpl<StateType = any>
      * Internal helper that builds an `InstanceRandom` constructor with its `numGenerations`
      * set to the appropriate revert event.
      */
-    private _buildRandomRevertCtor(revertTo: FK<EventRecord>) {
+    private _buildRandomRevertCtor(revertTo: EventId) {
         return (game: GameInstanceImpl) => {
             let lastKey = this.random.lastKey;
 
@@ -227,7 +226,7 @@ class GameInstanceImpl<StateType = any>
     }
 
     /** Internal helper that builds a `TrackedEvent` to revert agent changes */
-    private _buildAgentRevertFunc(revertTo: FK<EventRecord>): TrackedEvent {
+    private _buildAgentRevertFunc(revertTo: EventId): TrackedEvent {
         return on("REVERT", (game: GameInstanceInternal) => {
             const target = game.agents;
 
@@ -235,7 +234,9 @@ class GameInstanceImpl<StateType = any>
                 const id = am.id;
 
                 const props = Object.keys(am).filter(
-                    key => key !== "game" && key !== "id"
+                    key =>
+                        key !== ReservedAgentProperty.GAME &&
+                        key !== ReservedAgentProperty.META
                 );
 
                 for (const prop of props) {
@@ -264,12 +265,12 @@ class GameInstanceImpl<StateType = any>
                             const areEqAgents =
                                 isAgentReference(targetVal) &&
                                 isAgent(currentVal) &&
-                                targetVal.refId === currentVal.id;
+                                targetVal.refId === currentVal.meta.id;
 
                             const areEqAgentArrs =
                                 isAgentArrayReference(targetVal) &&
                                 isAgent(currentVal) &&
-                                targetVal.arRefId === currentVal.id;
+                                targetVal.arRefId === currentVal.meta.id;
 
                             if (!areEqAgents && !areEqAgentArrs) {
                                 target.setAgentProperty(id, prop, targetVal);

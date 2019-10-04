@@ -8,13 +8,14 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { Mutable, PK } from "../common";
 import { RegalError } from "../error";
 import { Agent, isAgent } from "./agent";
+import { AgentId } from "./agent-meta";
 import {
-    getInactiveAgentPK,
+    isAgentActive,
     propertyIsAgentId,
-    STATIC_AGENT_PK_PROVIDER
+    STATIC_AGENT_PK_PROVIDER,
+    staticAgentMeta
 } from "./impl";
 
 /**
@@ -29,7 +30,7 @@ export class StaticAgentRegistry {
      * @param property The agent's property.
      */
     public static hasAgentProperty(
-        id: PK<Agent>,
+        id: AgentId,
         property: PropertyKey
     ): boolean {
         return this.hasAgent(id) && this[id.value()].hasOwnProperty(property);
@@ -42,7 +43,7 @@ export class StaticAgentRegistry {
      * @param propertyKey The name of the property.
      * @returns The value of the property.
      */
-    public static getAgentProperty(id: PK<Agent>, property: PropertyKey): any {
+    public static getAgentProperty(id: AgentId, property: PropertyKey): any {
         if (!this.hasAgent(id)) {
             throw new RegalError(
                 `No agent with the id <${id.value()}> exists in the static registry.`
@@ -53,7 +54,7 @@ export class StaticAgentRegistry {
     }
 
     /** Whether an agent with the given id is stored in the static agent registry. */
-    public static hasAgent(id: PK<Agent>): boolean {
+    public static hasAgent(id: AgentId): boolean {
         return isAgent(this[id.value()]);
     }
 
@@ -61,15 +62,18 @@ export class StaticAgentRegistry {
      * Adds an agent to the registry, setting its id to the next available primary key.
      * @param agent The agent to be added.
      */
-    public static addAgent(agent: Mutable<Agent>): void {
-        if (agent.id !== undefined && !agent.id.equals(getInactiveAgentPK())) {
+    public static addAgent(agent: Agent): void {
+        const currentId = agent.meta.id;
+
+        if (currentId !== undefined && isAgentActive(currentId)) {
             throw new RegalError(
-                `Only inactive agents can be added to the static registry. This one already has an id of <${agent.id.value()}>.`
+                `Only inactive agents can be added to the static registry. This one already has an id of <${currentId.value()}>.`
             );
         }
-        agent.id = STATIC_AGENT_PK_PROVIDER.next();
 
-        this[agent.id.value()] = agent;
+        agent.meta = staticAgentMeta(agent.meta);
+
+        this[agent.meta.id.value()] = agent;
     }
 
     /** Removes all agents from the registry and resets the static PK provider. */

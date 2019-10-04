@@ -5,9 +5,8 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { FK } from "../common";
 import { GameInstance } from "../state";
-import { Agent } from "./agent";
+import { AgentId, AgentMeta, AgentProtoId } from "./agent-meta";
 import { PropertyChange } from "./agent-properties";
 
 /**
@@ -19,7 +18,10 @@ import { PropertyChange } from "./agent-properties";
  */
 export interface AgentManager {
     /** The managed agent's id. */
-    id: FK<Agent>;
+    readonly id: AgentId;
+
+    /** The managed agent's metadata. */
+    meta: AgentMeta;
 
     /** The `GameInstance` in which the agent is active. */
     game: GameInstance;
@@ -62,6 +64,12 @@ export interface AgentManager {
      * @param property The name of the property.
      */
     deleteProperty(property: PropertyKey): void;
+
+    /**
+     * Sets the agent manager's `AgentProtoId`
+     * @param protoId The prototype id
+     */
+    setProtoId(protoId: AgentProtoId): void;
 }
 
 /** Determines whether an object is an `AgentManager`. */

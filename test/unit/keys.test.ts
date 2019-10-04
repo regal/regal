@@ -1,12 +1,8 @@
 import { expect } from "chai";
 import "mocha";
 
-import {
-    FK,
-    ReservedPKSet,
-    PKProvider,
-    buildPKProvider
-} from "../../src/common";
+import { ReservedPKSet, buildPKProvider } from "../../src/common";
+import { RegalError } from "../../src";
 
 interface Dummy {}
 const RESERVED_KEYS: ReservedPKSet<Dummy> = {
@@ -123,14 +119,6 @@ describe("Keys", function() {
         expect(() => prov.reserved(212)).to.throw(
             "No reserved PK exists with the reserved key 212."
         );
-    });
-
-    it("PK.ref() creates an equivalent key", function() {
-        const prov = buildPKProvider(RESERVED_KEYS);
-        const pk = prov.next();
-        const fk = pk.ref();
-        expect(pk.equals(fk));
-        expect(pk.plus(1).equals(fk.plus(1))).to.be.true;
     });
 
     it("A forked PK provider generates keys just like the original would", function() {
@@ -252,5 +240,17 @@ describe("Keys", function() {
                 .plus(100)
                 .equals(fork.next())
         ).to.be.true;
+    });
+
+    it("PKProvider.keyFromValue creates a key from a valid value", function() {
+        const prov = buildPKProvider();
+        const first = prov.next();
+        expect(first.equals(prov.keyFromValue(first.value()))).to.be.true;
+    });
+
+    it("PKProvider.keyFromValue throws an error if the value is invalid", function() {
+        expect(() => buildPKProvider().keyFromValue("bork")).to.throw(
+            RegalError
+        );
     });
 });

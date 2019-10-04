@@ -6,7 +6,7 @@
  */
 
 import { RegalError } from "../../error";
-import { FK, PK, PKProvider, ReservedPKSet } from "../keys";
+import { PK, PKProvider, ReservedPKSet } from "../keys";
 
 export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
     public static readonly START_VALUE = 0;
@@ -112,11 +112,19 @@ export class PKProviderImpl<PKClass> implements PKProvider<PKClass> {
         return this.lastPK.index();
     }
 
-    public forkAfterKey(key: PK<PKClass> | FK<PKClass>): PKProvider<PKClass> {
+    public forkAfterKey(key: PK<PKClass>): PKProvider<PKClass> {
         return new PKProviderImpl(this.buildPK, key, this.reservedPKs);
     }
 
     public previous(): PK<PKClass> {
         return this.lastPK;
+    }
+
+    public keyFromValue(value: string): PK<PKClass> {
+        if (!this.isPossibleKeyValue(value)) {
+            throw new RegalError(`${value} is not a valid PK value.`);
+        }
+
+        return this.buildPK(Math.floor(Number(value)));
     }
 }

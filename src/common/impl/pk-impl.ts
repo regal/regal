@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { FK, PK } from "../keys";
+import { PK } from "../keys";
 
 /**
  * Current implementation of `PK`. Uses a numeric key.
@@ -21,12 +21,8 @@ export class NumericPKImpl<T> implements PK<T> {
         return new NumericPKImpl(this.internalValue - n);
     }
 
-    public equals(key: PK<T> | FK<T>): boolean {
+    public equals(key: PK<T>): boolean {
         return this === key || this.value() === key.value();
-    }
-
-    public ref(): FK<T> {
-        return this;
     }
 
     public value(): string {

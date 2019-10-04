@@ -18,5 +18,10 @@ export { AGENT_RESERVED_KEYS, STATIC_AGENT_PK_PROVIDER } from "./agent-keys";
 export {
     getGameInstancePK,
     getInactiveAgentPK,
-    propertyIsAgentId
+    propertyIsAgentId,
+    isAgentActive
 } from "./agent-utils";
+export {
+    StaticPrototypeRegistry
+} from "./prototype/static-prototype-registry-impl";
+export { defaultAgentMeta, staticAgentMeta } from "./agent-meta-transformers";

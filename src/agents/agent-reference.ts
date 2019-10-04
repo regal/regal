@@ -1,12 +1,11 @@
-import { FK } from "../common";
-import { Agent } from "./agent";
-
 /*
  * Contains mock object that is used in place of active agent circular references.
  *
  * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
+
+import { AgentId } from "./agent-meta";
 
 /** Whether the given object is an `AgentReference`. */
 export const isAgentReference = (o: any): o is AgentReference =>
@@ -18,7 +17,7 @@ export const isAgentReference = (o: any): o is AgentReference =>
 export class AgentReference {
     /**
      * Constructs a new `AgentReference` in place of an active agent.
-     * @param refId The mocked agent's numeric id.
+     * @param refId The mocked agent's id.
      */
-    constructor(public refId: FK<Agent>) {}
+    constructor(public refId: AgentId) {}
 }

@@ -9,12 +9,12 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { PK } from "../common";
-import { buildInactiveAgentProxy } from "./impl";
+import { AgentMeta } from "./agent-meta";
+import { buildInactiveAgentProxy, defaultAgentMeta } from "./impl";
 
 /** Determines whether an object is an `Agent`. */
 export const isAgent = (o: any): o is Agent =>
-    o !== undefined && (o as Agent).id !== undefined;
+    o !== undefined && (o as Agent).meta !== undefined;
 
 /**
  * A game object, or *agent*, is a JavaScript object that contains Regal game state.
@@ -26,8 +26,8 @@ export const isAgent = (o: any): o is Agent =>
  * a `RegalError` will be thrown.
  */
 export class Agent {
-    /** The agent's unique identifier in the context of the current game. */
-    public readonly id: PK<Agent>;
+    /** The agent's metadata, such as its agent id and prototype id. */
+    public meta: AgentMeta;
 
     /**
      * Constructs a new `Agent`. This constructor should almost never be called
@@ -38,6 +38,7 @@ export class Agent {
      * for all game instances.
      */
     constructor() {
+        this.meta = defaultAgentMeta();
         return buildInactiveAgentProxy(this);
     }
 }

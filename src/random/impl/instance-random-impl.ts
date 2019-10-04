@@ -57,7 +57,7 @@ class InstanceRandomImpl implements InstanceRandomInternal {
     }
 
     public recycle(newInstance: GameInstanceInternal): InstanceRandomInternal {
-        return new InstanceRandomImpl(newInstance, this._pkProvider);
+        return new InstanceRandomImpl(newInstance, this._pkProvider.fork());
     }
 
     public int(min: number, max: number): number {

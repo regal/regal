@@ -6,13 +6,13 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { Mutable } from "../../common";
 import { GameInstanceInternal } from "../../state";
 import { Agent } from "../agent";
 import {
     buildActiveAgentArrayProxy,
     buildActiveAgentProxy
 } from "./active-agent-proxy";
+import { agentMetaWithID } from "./agent-meta-transformers";
 import { isAgentActive, propertyIsAgentId } from "./agent-utils";
 
 /**
@@ -28,11 +28,8 @@ export const activateAgent = <T extends Agent>(
     game: GameInstanceInternal,
     agent: T
 ): T => {
-    let id = agent.id;
-
-    if (id === undefined || !isAgentActive(id)) {
-        id = game.agents.reserveNewId();
-        (agent as Mutable<Agent>).id = id;
+    if (agent.meta === undefined || !isAgentActive(agent.meta.id)) {
+        agent.meta = agentMetaWithID(game.agents.reserveNewId())(agent.meta);
     }
 
     let activeAgent: T;
@@ -48,9 +45,16 @@ export const activateAgent = <T extends Agent>(
             .filter(propertyIsAgentId)
             .forEach(key => (tempValues[key] = agent[key]));
 
-        activeAgent = buildActiveAgentArrayProxy(id, game) as T;
+        activeAgent = buildActiveAgentArrayProxy(agent.meta.id, game) as T;
     } else {
-        activeAgent = buildActiveAgentProxy(id, game) as T;
+        const protoId = game.agents.registerAgentPrototype(agent);
+        const prototype = game.agents.createAgentWithPrototype(protoId);
+
+        activeAgent = buildActiveAgentProxy(
+            agent.meta.id,
+            game,
+            prototype
+        ) as T;
     }
 
     for (const prop of Object.keys(tempValues)) {

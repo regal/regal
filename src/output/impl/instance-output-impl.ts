@@ -38,7 +38,7 @@ class InstanceOutputImpl implements InstanceOutputInternal {
     }
 
     public recycle(newInstance: GameInstanceInternal): InstanceOutputInternal {
-        return new InstanceOutputImpl(newInstance, this._pkProvider);
+        return new InstanceOutputImpl(newInstance, this._pkProvider.fork());
     }
 
     public writeLine(

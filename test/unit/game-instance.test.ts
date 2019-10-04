@@ -367,6 +367,23 @@ describe("GameInstance", function() {
             expect(revGame.state.dummy.health).to.equal(62);
         });
 
+        it("test repro", function() {
+            const init = on("INIT", game => {
+                game.state.dummy = new Dummy("D1", 1);
+            });
+            const add = on("ADD", game => {
+                game.state.dummy.health += 1;
+            });
+
+            const myGame = buildGameInstance({ trackAgentChanges: true });
+
+            init.then(add, add, add, add)(myGame);
+            expect(myGame.state.dummy.health).to.equal(5);
+
+            const revGame = myGame.revert(ePKAtNum(1)); // THE ISSUE IS WITH REVERT
+            expect(revGame.state.dummy.health).to.equal(1);
+        });
+
         it("Throw an error if given a revertTo arg less than zero", function() {
             expect(() => buildGameInstance().revert(ePKAtNum(-1))).to.throw(
                 RegalError

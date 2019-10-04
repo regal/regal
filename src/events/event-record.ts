@@ -6,17 +6,20 @@
  */
 
 import { PropertyChange } from "../agents";
-import { FK, PK } from "../common";
-import { OutputLine } from "../output";
+import { PK } from "../common";
+import { OutputLine, OutputLineId } from "../output";
 import { RandomRecord } from "../random";
 import { TrackedEvent } from "./event-types";
+
+/** An event primary key. */
+export type EventId = PK<EventRecord>;
 
 /**
  * Record of a `TrackedEvent`'s effects in a game cycle.
  */
 export interface EventRecord {
     /* The event's unique ID. */
-    id: PK<EventRecord>;
+    id: EventId;
 
     /* The event's name. */
     name: string;
@@ -25,13 +28,13 @@ export interface EventRecord {
     func: TrackedEvent;
 
     /** The IDs of the `OutputLine`s emitted by the event. */
-    output?: Array<FK<OutputLine>>;
+    output?: OutputLineId[];
 
     /** The ID of the event that caused this event. */
-    causedBy?: FK<EventRecord>;
+    causedBy?: EventId;
 
     /** The IDs of the events that were caused by this event. */
-    caused?: Array<FK<EventRecord>>;
+    caused?: EventId[];
 
     /** The records of all changes to registered agents that were caused by this event. */
     changes?: PropertyChange[];

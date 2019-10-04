@@ -6,6 +6,8 @@ import { buildPKProvider, PK } from "../src/common";
 import { OutputLine } from "../src/output";
 import { getUntrackedEventPK } from "../src/events";
 import { RandomRecord } from "../src/random";
+import { AgentId } from "../src/agents/agent-meta";
+import { getInstanceStateAgentProtoPK } from "../src/agents/impl/prototype/agent-proto-keys";
 
 // log had to be moved to its own file to eliminate circular dependencies
 // when used to debug src
@@ -62,8 +64,22 @@ export const makeAgents = (startFrom: number, amount: number) => {
 };
 
 export enum TestProperty {
-    REQUIRE_BUT_SKIP
+    REQUIRE_BUT_SKIP,
+    SMART_OBJECT
 }
+
+export interface SmartObject {
+    prop: TestProperty;
+    object: object;
+}
+
+export const smartObj = (obj: object): SmartObject => ({
+    prop: TestProperty.SMART_OBJECT,
+    object: obj
+});
+
+export const isSmartObject = (obj: any): obj is SmartObject =>
+    obj !== undefined && obj.prop !== undefined;
 
 export const smartObjectEquals = (actual: object, expected: object) => {
     // Test property key match
@@ -72,9 +88,13 @@ export const smartObjectEquals = (actual: object, expected: object) => {
     expect(actualKeys).to.deep.equal(expectedKeys);
 
     for (const prop in expected) {
+        const actualVal = actual[prop];
         const expectedVal = expected[prop];
-        if (expectedVal !== TestProperty.REQUIRE_BUT_SKIP) {
-            expect(actual[prop]).to.deep.equal(expectedVal);
+
+        if (isSmartObject(expectedVal)) {
+            smartObjectEquals(actualVal, expectedVal.object);
+        } else if (expectedVal !== TestProperty.REQUIRE_BUT_SKIP) {
+            expect(actualVal).to.deep.equal(expectedVal);
         }
     }
 };
@@ -108,3 +128,15 @@ export const ePKAtNum = (index: number) => getUntrackedEventPK().plus(index);
 // RandomRecord PKs
 export const rPKs = (additional: number) =>
     pks(additional, getInitialRandomPK());
+
+// AgentProto PKs
+export const aprPKs = (additional: number) =>
+    pks(additional, getInstanceStateAgentProtoPK());
+
+export const testMeta = (id: AgentId) => {
+    const meta = {
+        id,
+        protoId: TestProperty.REQUIRE_BUT_SKIP
+    };
+    return smartObj(meta);
+};

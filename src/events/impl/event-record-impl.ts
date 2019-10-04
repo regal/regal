@@ -6,10 +6,9 @@
  */
 
 import { PropertyChange } from "../../agents";
-import { FK, PK } from "../../common";
-import { OutputLine } from "../../output";
+import { OutputLine, OutputLineId } from "../../output";
 import { RandomRecord } from "../../random";
-import { EventRecord } from "../event-record";
+import { EventId, EventRecord } from "../event-record";
 import { noop, TrackedEvent } from "../event-types";
 import { getUntrackedEventPK } from "./event-keys";
 
@@ -24,7 +23,7 @@ export const DEFAULT_EVENT_NAME: string = "DEFAULT";
  * @param func The event's `TrackedEvent`. Defaults to `noop`.
  */
 export const buildEventRecord = (
-    id: PK<EventRecord> = undefined,
+    id: EventId = undefined,
     name: string = DEFAULT_EVENT_NAME,
     func: TrackedEvent = noop
 ): EventRecord => {
@@ -36,14 +35,14 @@ export const buildEventRecord = (
 };
 
 class EventRecordImpl implements EventRecord {
-    public output?: Array<FK<OutputLine>>;
-    public causedBy?: FK<EventRecord>;
-    public caused?: Array<FK<EventRecord>>;
+    public output?: OutputLineId[];
+    public causedBy?: EventId;
+    public caused?: EventId[];
     public changes?: PropertyChange[];
     public randoms?: RandomRecord[];
 
     constructor(
-        public id: PK<EventRecord>,
+        public id: EventId,
         public name: string,
         public func: TrackedEvent
     ) {}
@@ -52,15 +51,15 @@ class EventRecordImpl implements EventRecord {
         if (this.output === undefined) {
             this.output = [];
         }
-        this.output.push(line.id.ref());
+        this.output.push(line.id);
     }
 
     public trackCausedEvent(...events: EventRecord[]): void {
         if (this.caused === undefined) {
             this.caused = [];
         }
-        this.caused.push(...events.map(e => e.id.ref()));
-        events.forEach(e => (e.causedBy = this.id.ref()));
+        this.caused.push(...events.map(e => e.id));
+        events.forEach(e => (e.causedBy = this.id));
     }
 
     public trackChange(propChange: PropertyChange): void {

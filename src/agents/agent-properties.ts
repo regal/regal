@@ -1,12 +1,11 @@
-import { FK } from "../common";
-import { Agent } from "./agent";
-
 /*
  * Contains models for tracking modifications made to active agents.
  *
  * Copyright (c) Joseph R Cowman
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
+
+import { AgentId } from "./agent-meta";
 
 /** Type of modification done to an agent's property. */
 export enum PropertyOperation {
@@ -25,13 +24,13 @@ export enum PropertyOperation {
  */
 export interface PropertyChange {
     /** The id of the `TrackedEvent` during which the change took place (optional). */
-    eventId?: FK<Agent>;
+    eventId?: AgentId;
 
     /** The name of the `TrackedEvent` during which the change took place (optional). */
     eventName?: string;
 
     /** The id of the registered `Agent` (optional). */
-    agentId?: FK<Agent>;
+    agentId?: AgentId;
 
     /** The operation performed on the agent's property. */
     op: PropertyOperation;
