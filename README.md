@@ -2622,7 +2622,7 @@ A line of text that is sent to the client and is meant to notify the player of s
 
 ```ts
 interface OutputLine {
-    id: number
+    id: PK<OutputLine>
     data: string
     type: OutputLineType
 }
@@ -2632,7 +2632,7 @@ interface OutputLine {
 
 Property | Description
 --- | ---
-`id: number` | The `OutputLine`'s unique identifier.
+`id: PK<OutputLine>` | The `OutputLine`'s unique identifier.
 `data: string` | The text string.
 `type: OutputLineType` | The line's semantic type. (see [`OutputLineType`](#outputlinetype))
 
