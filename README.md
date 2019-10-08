@@ -1694,7 +1694,7 @@ A game object.
 
 ```ts
 class Agent {
-    id: number
+    meta: AgentMeta
     constructor()
 }
 ```
@@ -1739,7 +1739,7 @@ If called in the game's static context (i.e. outside of a game cycle), a static 
 
 Property | Description
 --- | ---
-`id: number` | The agent's unique identifier in the context of the current game.
+`meta: AgentMeta` | The agent's metadata, such as its agent id and prototype id.
 
 ### `Charsets`
 
