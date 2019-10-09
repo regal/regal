@@ -15,8 +15,9 @@ export type AgentProtoId = PK<"AgentProto">;
 
 /**
  * A special object associated with every agent which contains
- * important metadata related to that agent. Properties in `AgentMeta`
- * are not tracked like all other agent properties.
+ * important metadata related to that agent. Properties in
+ * `AgentMeta` do not have their changes tracked through
+ * `InstanceEvents` like all other agent properties.
  */
 export interface AgentMeta {
     /** The agent's unique identifier in the context of the current game. */

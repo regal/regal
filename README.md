@@ -1741,6 +1741,30 @@ Property | Description
 --- | ---
 `meta: AgentMeta` | The agent's metadata, such as its agent id and prototype id.
 
+### `AgentMeta`
+
+**_Interface_**
+
+A special object associated with every [`Agent`](#agent) which contains important metadata related to that [`Agent`](#agent).
+
+```ts
+interface AgentMeta {
+    id: PK<Agent>
+    protoId: PK<"AgentProto">
+}
+```
+
+#### Description
+
+Properties in `AgentMeta` do not have their changes tracked through [`InstanceEvents`](#instanceevents) like all other agent properties.
+
+#### Properties
+
+Property | Description
+--- | ---
+`id: PK<Agent>` | The agent's unique identifier in the context of the current game.
+`protoId: PK<"AgentProto">` | The unique identifier for the agent's prototype.
+
 ### `Charsets`
 
 **_Const Object_**
