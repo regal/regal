@@ -1658,6 +1658,7 @@ Once your game is bundled, only the bundle file is needed to play it.
 ## API Reference
 
 * [`Agent`](#agent)
+* [`AgentMeta`](#agentmeta)
 * [`Charsets`](#charsets)
 * [`EventFunction`](#eventfunction)
 * [`EventQueue`](#eventqueue)
@@ -1676,6 +1677,7 @@ Once your game is bundled, only the bundle file is needed to play it.
 * [`InstanceRandom`](#instancerandom)
 * [`OutputLine`](#outputline)
 * [`OutputLineType`](#outputlinetype)
+* [`PK`](#pk)
 * [`RegalError`](#regalerror)
 * [`TrackedEvent`](#trackedevent)
 * [`enqueue`](#enqueue-1)
@@ -2685,6 +2687,53 @@ Member | Description
 `MINOR = "MINOR"` | Non-important line; emphasized less than `OutputLineType.NORMAL` lines, and won't always be shown to the player. <br> Use for repetitive/flavor text that might add a bit to the game experience, but won't be missed if it isn't seen.
 `DEBUG = "DEBUG"` | Meant for debugging purposes; only visible when the `debug` option is enabled.
 `SECTION_TITLE = "SECTION_TITLE"` | Signifies the start of a new section or scene in the game. (i.e. **West of House**)
+
+### `PK`
+
+**_Interface_**
+
+Primary key for an indexed class, a class of which there are many instances that each need a unique identifier.
+
+```ts
+interface PK<T> {
+    plus(n: number): PK<T>
+    minus(n: number): PK<T>
+    equals(key: PK<T>): boolean
+    value(): string
+    index(): number
+}
+```
+
+#### Description
+
+The `PK` interface is mainly for internal use, but as there are other interfaces within the public API which depend on `PK` (such as `Agent` and `OutputLine`), it is part of the public API as well.
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`T` | An identifier for the class referenced by this `PK` type.
+
+#### Methods
+
+##### `plus()`
+
+Generates the primary key that would be generated `n` keys after this one. The result of this function should never be used to assign a key to an object. It's only for comparison.
+
+```ts
+plus(n: number): PK<T>
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`n: number` | The number of times the returned key should be incremented
+
+**Returns**
+
+`PK<T>`: The generated primary key
+
 
 ### `RegalError`
 
