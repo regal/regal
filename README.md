@@ -2734,6 +2734,23 @@ Parameter | Description
 
 `PK<T>`: The generated primary key
 
+##### `minus()`
+
+Generates the primary key that would be generated `n` keys before this one. The result of this function should never be used to assign a key to an object. It's only for comparison.
+
+```ts
+minus(n: number): PK<T>
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`n: number` | The number of times the returned key should be decremented
+
+**Returns**
+
+`PK<T>`: The generated primary key
 
 ### `RegalError`
 
