@@ -2752,6 +2752,24 @@ Parameter | Description
 
 `PK<T>`: The generated primary key
 
+##### `equals()`
+
+Calculates whether this key is equivalent to the given one.
+
+```ts
+equals(key: PK<T>): boolean
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`key: PK<T>` | The key to test
+
+**Returns**
+
+`boolean`: Whether they are equivalent
+
 ### `RegalError`
 
 **_Class_**
