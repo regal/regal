@@ -2770,6 +2770,16 @@ Parameter | Description
 
 `boolean`: Whether they are equivalent
 
+##### `value()`
+
+Generates a string value representative of this key.
+
+```ts
+value(): string
+```
+
+This is used for the `equals` method, which is strongly preferred for testing the equality of two keys.
+
 ### `RegalError`
 
 **_Class_**
