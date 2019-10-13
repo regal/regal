@@ -2780,6 +2780,14 @@ value(): string
 
 This is used for the `equals` method, which is strongly preferred for testing the equality of two keys.
 
+**Parameters**
+
+None
+
+**Returns**
+
+`string`: A hash value representative of the key.
+
 ### `RegalError`
 
 **_Class_**
