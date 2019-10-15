@@ -2778,15 +2778,31 @@ Generates a string value representative of this key.
 value(): string
 ```
 
+**Description**
+
 This is used for the `equals` method, which is strongly preferred for testing the equality of two keys.
-
-**Parameters**
-
-None
 
 **Returns**
 
 `string`: A hash value representative of the key.
+
+##### `index()`
+
+Returns the placement of this key in the list of all keys.
+
+```ts
+index(): number
+```
+
+**Description**
+
+For example, an index of 2 means this was the second key generated.
+
+This includes reserved keys; if a set of reserved keys was used to generate this key's `PKProvider`, the entry with the lowest value will have an index of 0.
+
+**Returns**
+
+`number`: The index of this key.
 
 ### `RegalError`
 
