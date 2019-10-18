@@ -1658,6 +1658,7 @@ Once your game is bundled, only the bundle file is needed to play it.
 ## API Reference
 
 * [`Agent`](#agent)
+* [`AgentMeta`](#agentmeta)
 * [`Charsets`](#charsets)
 * [`EventFunction`](#eventfunction)
 * [`EventQueue`](#eventqueue)
@@ -1676,6 +1677,7 @@ Once your game is bundled, only the bundle file is needed to play it.
 * [`InstanceRandom`](#instancerandom)
 * [`OutputLine`](#outputline)
 * [`OutputLineType`](#outputlinetype)
+* [`PK`](#pk)
 * [`RegalError`](#regalerror)
 * [`TrackedEvent`](#trackedevent)
 * [`enqueue`](#enqueue-1)
@@ -1694,7 +1696,7 @@ A game object.
 
 ```ts
 class Agent {
-    id: number
+    meta: AgentMeta
     constructor()
 }
 ```
@@ -1739,7 +1741,31 @@ If called in the game's static context (i.e. outside of a game cycle), a static 
 
 Property | Description
 --- | ---
-`id: number` | The agent's unique identifier in the context of the current game.
+`meta: AgentMeta` | The agent's metadata, such as its agent id and prototype id.
+
+### `AgentMeta`
+
+**_Interface_**
+
+A special object associated with every [`Agent`](#agent) which contains important metadata related to that [`Agent`](#agent).
+
+```ts
+interface AgentMeta {
+    id: PK<Agent>
+    protoId: PK<"AgentProto">
+}
+```
+
+#### Description
+
+Properties in `AgentMeta` do not have their changes tracked through [`InstanceEvents`](#instanceevents) like all other agent properties.
+
+#### Properties
+
+Property | Description
+--- | ---
+`id: PK<Agent>` | The agent's unique identifier in the context of the current game.
+`protoId: PK<"AgentProto">` | The unique identifier for the agent's prototype.
 
 ### `Charsets`
 
@@ -2622,7 +2648,7 @@ A line of text that is sent to the client and is meant to notify the player of s
 
 ```ts
 interface OutputLine {
-    id: number
+    id: PK<OutputLine>
     data: string
     type: OutputLineType
 }
@@ -2632,7 +2658,7 @@ interface OutputLine {
 
 Property | Description
 --- | ---
-`id: number` | The `OutputLine`'s unique identifier.
+`id: PK<OutputLine>` | The `OutputLine`'s unique identifier.
 `data: string` | The text string.
 `type: OutputLineType` | The line's semantic type. (see [`OutputLineType`](#outputlinetype))
 
@@ -2661,6 +2687,122 @@ Member | Description
 `MINOR = "MINOR"` | Non-important line; emphasized less than `OutputLineType.NORMAL` lines, and won't always be shown to the player. <br> Use for repetitive/flavor text that might add a bit to the game experience, but won't be missed if it isn't seen.
 `DEBUG = "DEBUG"` | Meant for debugging purposes; only visible when the `debug` option is enabled.
 `SECTION_TITLE = "SECTION_TITLE"` | Signifies the start of a new section or scene in the game. (i.e. **West of House**)
+
+### `PK`
+
+**_Interface_**
+
+Primary key for an indexed class, a class of which there are many instances that each need a unique identifier.
+
+```ts
+interface PK<T> {
+    plus(n: number): PK<T>
+    minus(n: number): PK<T>
+    equals(key: PK<T>): boolean
+    value(): string
+    index(): number
+}
+```
+
+#### Description
+
+The `PK` interface is mainly for internal use, but as there are other interfaces within the public API which depend on `PK` (such as `Agent` and `OutputLine`), it is part of the public API as well.
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`T` | An identifier for the class referenced by this `PK` type.
+
+#### Methods
+
+##### `plus()`
+
+Generates the primary key that would be generated `n` keys after this one. The result of this function should never be used to assign a key to an object. It's only for comparison.
+
+```ts
+plus(n: number): PK<T>
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`n: number` | The number of times the returned key should be incremented
+
+**Returns**
+
+`PK<T>`: The generated primary key
+
+##### `minus()`
+
+Generates the primary key that would be generated `n` keys before this one. The result of this function should never be used to assign a key to an object. It's only for comparison.
+
+```ts
+minus(n: number): PK<T>
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`n: number` | The number of times the returned key should be decremented
+
+**Returns**
+
+`PK<T>`: The generated primary key
+
+##### `equals()`
+
+Calculates whether this key is equivalent to the given one.
+
+```ts
+equals(key: PK<T>): boolean
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`key: PK<T>` | The key to test
+
+**Returns**
+
+`boolean`: Whether they are equivalent
+
+##### `value()`
+
+Generates a string value representative of this key.
+
+```ts
+value(): string
+```
+
+**Description**
+
+This is used for the `equals` method, which is strongly preferred for testing the equality of two keys.
+
+**Returns**
+
+`string`: A hash value representative of the key.
+
+##### `index()`
+
+Returns the placement of this key in the list of all keys.
+
+```ts
+index(): number
+```
+
+**Description**
+
+For example, an index of 2 means this was the second key generated.
+
+This includes reserved keys; if a set of reserved keys was used to generate this key's `PKProvider`, the entry with the lowest value will have an index of 0.
+
+**Returns**
+
+`number`: The index of this key.
 
 ### `RegalError`
 

@@ -9,7 +9,12 @@
  * Primary key for an indexed class, a class of which there
  * are many instances that each need a unique identifier.
  *
- * @template T The class referenced by this primary key type - i.e. `AgentId`
+ * The `PK` interface is mainly for internal use, but as there
+ * are other interfaces within the public API which depend on
+ * `PK` (such as `Agent` and `OutputLine`), it is part of the
+ * public API as well.
+ *
+ * @template T An identifier for the class referenced by this `PK` type.
  */
 export interface PK<T> {
     /**
