@@ -10,6 +10,7 @@ import {
     EventFunction,
     EventQueue,
     isEventQueue,
+    isTrackedEvent,
     TrackedEvent
 } from "../event-types";
 import { buildEventQueue, buildThenMethod } from "./event-queue-impl";
@@ -75,11 +76,20 @@ export const on = <StateType = any>(
 ): TrackedEvent<StateType> => {
     // Make the TrackedEvent callable like a function.
     const event = ((game: GameInstance) => {
-        game.events.invoke(event);
+        if (isEventQueue(eventFunc)) {
+            game.events.invoke(eventFunc);
+        } else {
+            game.events.invoke(event);
+        }
     }) as TrackedEvent;
 
     event.eventName = eventName;
-    event.target = eventFunc;
+
+    if (isTrackedEvent(eventFunc)) {
+        event.target = eventFunc.target;
+    } else {
+        event.target = eventFunc;
+    }
 
     event.then = buildThenMethod(event);
     event.thenq = (...events: TrackedEvent[]) => event.then(enqueue(...events));

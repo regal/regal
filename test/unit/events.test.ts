@@ -202,6 +202,42 @@ describe("Events", function() {
         expect(myGame.state.arr).to.deep.equal(["foo"]);
     });
 
+    it("Passing another TrackedEvent as the second argument to `on` does not infinite loop", function() {
+        const inner = on("inner", game => {
+            game.output.write("Reached inner");
+        });
+
+        const outer = on("outer", inner);
+
+        Game.init(MD);
+
+        const myGame = buildGameInstance();
+        outer(myGame);
+
+        expect(myGame.output.lines.map(line => line.data)).to.deep.equal([
+            "Reached inner"
+        ]);
+    });
+
+    it("Passing an EventQueue as the second argument to `on` does not infinite loop", function() {
+        const inner = (num: number) =>
+            on("inner", game => {
+                game.output.write("Reached inner" + num);
+            });
+
+        const outer = on("outer", inner(1).then(inner(2)));
+
+        Game.init(MD);
+
+        const myGame = buildGameInstance();
+        outer(myGame);
+
+        expect(myGame.output.lines.map(line => line.data)).to.deep.equal([
+            "Reached inner1",
+            "Reached inner2"
+        ]);
+    });
+
     describe("Queueing", function() {
         it("Executing a singleton EventQueue immediately with `then`", function() {
             const learnSkill = (name: string, skill: string) =>
