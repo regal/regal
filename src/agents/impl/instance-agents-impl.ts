@@ -218,10 +218,6 @@ class InstanceAgentsImpl implements InstanceAgentsInternal {
             );
             value = this.game.using(value);
             value = new AgentArrayReference(value.meta.id);
-        } else if (typeof value === "function") {
-            throw new RegalError(
-                "Agents can't have arrow functions as properties. If you need a class method, please use traditional function syntax."
-            );
         }
 
         am.setProperty(property, value);
