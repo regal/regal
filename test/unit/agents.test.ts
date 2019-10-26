@@ -2004,14 +2004,18 @@ describe("Agents", function() {
                 expect(() => myGame.using(_d)).to.throw(RegalError);
             });
 
-            it("Throws a RegalError if an agent's property is set to an arrow function", function() {
+            class ArrowFuncAgent extends Agent {
+                constructor(public func: () => {}) {
+                    super();
+                }
+            }
+
+            it("Agent properties can be arrow functions", function() {
                 Game.init(MD);
                 const myGame = buildGameInstance();
-                const dummy = myGame.using(new Dummy("D1", 1));
+                const dummy = myGame.using(new ArrowFuncAgent(() => "yo"));
 
-                expect(() => ((dummy as any).foo = () => "yo")).to.throw(
-                    RegalError
-                );
+                expect(dummy.func()).to.equal("yo");
             });
         });
     });
