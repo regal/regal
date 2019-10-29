@@ -14,7 +14,7 @@ import {
     smartObj,
     aprPKs
 } from "../test-utils";
-import { Game } from "../../src/api";
+import { Game, onStartCommand } from "../../src/api";
 import {
     Agent,
     PropertyOperation,
@@ -23,7 +23,12 @@ import {
     StaticPrototypeRegistry
 } from "../../src/agents";
 import { RegalError } from "../../src/error";
-import { DEFAULT_EVENT_NAME, getUntrackedEventPK } from "../../src/events";
+import {
+    DEFAULT_EVENT_NAME,
+    getUntrackedEventPK,
+    TrackedEvent,
+    EventFunction
+} from "../../src/events";
 import { on } from "../../src/events";
 import { buildGameInstance } from "../../src/state";
 import {
@@ -2016,6 +2021,44 @@ describe("Agents", function() {
                 const dummy = myGame.using(new ArrowFuncAgent(() => "yo"));
 
                 expect(dummy.func()).to.equal("yo");
+            });
+
+            class TrackedEventAgent extends Agent {
+                public fn: TrackedEvent;
+                constructor(_fn: EventFunction) {
+                    super();
+                    this.fn = on("AGENT METHOD", _fn);
+                }
+            }
+
+            it("Agent properties can be tracked events with event queues as their second argument", function() {
+                Game.init(MD);
+
+                const first = on("first", game => {
+                    game.output.write("first");
+                });
+
+                const second = on("second", game => {
+                    game.output.write("second");
+                });
+
+                const myGame = buildGameInstance();
+                const agent = myGame.using(
+                    new TrackedEventAgent(first.then(second))
+                );
+
+                agent.fn(myGame);
+                expect(myGame.output.lines.map(l => l.data)).to.deep.equal([
+                    "first",
+                    "second"
+                ]);
+            });
+
+            it("Complicated nesting of TrackedEvents is okay", function() {
+                Game.init(MD);
+                const func = on("1", on("2", () => {}).then(on("3", () => {})));
+                const myGame = buildGameInstance();
+                myGame.using(new TrackedEventAgent(func)).fn(myGame);
             });
         });
     });
