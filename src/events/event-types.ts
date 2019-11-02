@@ -41,6 +41,7 @@ export interface TrackedEvent<StateType = any>
     /** The name of the event. */
     eventName: string;
 
+    /** Flag to designate the `TrackedEvent`. */
     isTrackedEvent: boolean;
 
     /**
