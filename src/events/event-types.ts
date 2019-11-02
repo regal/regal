@@ -41,8 +41,8 @@ export interface TrackedEvent<StateType = any>
     /** The name of the event. */
     eventName: string;
 
-    /** Flag to designate the `TrackedEvent`. */
-    isTrackedEvent: boolean;
+    /** The `EventFunction` that is wrapped by the `TrackedEvent`. */
+    target: EventFunction<StateType>;
 
     /**
      * Adds events to the front of the event queue.
@@ -91,7 +91,7 @@ export interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
 
 /** Ensures the object is a `TrackedEvent`. */
 export const isTrackedEvent = (o: any): o is TrackedEvent =>
-    o !== undefined && (o as TrackedEvent).isTrackedEvent === true;
+    o !== undefined && (o as TrackedEvent).target !== undefined;
 
 /** Ensures the object is an `EventQueue`. */
 export const isEventQueue = (o: any): o is EventQueue =>
@@ -109,8 +109,9 @@ export const noop: TrackedEvent = (() => {
     const nonEvent = (game: GameInstance) => undefined;
 
     const event = nonEvent as TrackedEvent;
-    event.isTrackedEvent = true;
+
     event.eventName = "noop";
+    event.target = nonEvent;
 
     return event;
 })();
