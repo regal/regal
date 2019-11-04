@@ -477,6 +477,12 @@ describe("Events", function() {
             ]);
         });
 
+        it("TrackedEvent.then returns an EventQueue", function() {
+            Game.init(MD);
+            const eq = on("FOO", on("BAZ", () => {})).then(on("BAR", () => {}));
+            expect(isEventQueue(eq)).to.be.true;
+        });
+
         describe("QTests", function() {
             // Start utility functions
 
