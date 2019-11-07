@@ -483,6 +483,18 @@ describe("Events", function() {
             expect(isEventQueue(eq)).to.be.true;
         });
 
+        it("Complicated nesting of TrackedEvents is okay", function() {
+            Game.init(MD);
+            const bar = on("BAR", game => game.output.write("bar"));
+            const inner = on("INNER", bar.then(bar));
+            const func = on("OUTER", inner);
+
+            const myGame = buildGameInstance();
+            func(myGame);
+
+            expect(myGame.output.lines[0].data).to.equal("bar");
+        });
+
         describe("QTests", function() {
             // Start utility functions
 
@@ -1002,6 +1014,22 @@ describe("Events", function() {
 
             expect(basePKs[0].minus(1).equals(basePKs[1])).to.be.true;
             expect(basePKs[0].equals(newGame.events.history[0].id)).to.be.true;
+        });
+
+        it("When `on` has a TrackedEvent as its second argument, the event is considered caused by the outer", function() {
+            Game.init(MD);
+            const bar = on("BAR", game => game.output.write("bar"));
+            const outer = on("OUTER", bar);
+
+            const myGame = buildGameInstance();
+            outer(myGame);
+
+            const [event1, event2] = myGame.events.history;
+
+            expect(event1.name).to.equal("BAR");
+            expect(event2.name).to.equal("OUTER");
+            expect(event1.causedBy.equals(event2.id)).to.be.true;
+            expect(event2.caused[0].equals(event1.id)).to.be.true;
         });
     });
 });

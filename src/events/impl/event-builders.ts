@@ -86,7 +86,7 @@ export const on = <StateType = any>(
     event.eventName = eventName;
 
     if (isTrackedEvent(eventFunc)) {
-        event.target = eventFunc.target;
+        event.target = () => eventFunc; // Boy oh boy this line gave me grief
     } else {
         event.target = eventFunc;
     }

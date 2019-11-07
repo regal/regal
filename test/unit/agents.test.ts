@@ -27,7 +27,8 @@ import {
     DEFAULT_EVENT_NAME,
     getUntrackedEventPK,
     TrackedEvent,
-    EventFunction
+    EventFunction,
+    isEventQueue
 } from "../../src/events";
 import { on } from "../../src/events";
 import { buildGameInstance } from "../../src/state";
@@ -2054,7 +2055,7 @@ describe("Agents", function() {
                 ]);
             });
 
-            it("Complicated nesting of TrackedEvents is okay", function() {
+            it("Setting complex tracked events as agent properties is okay", function() {
                 Game.init(MD);
                 const func = on("1", on("2", () => {}).then(on("3", () => {})));
                 const myGame = buildGameInstance();
