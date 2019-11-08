@@ -202,6 +202,42 @@ describe("Events", function() {
         expect(myGame.state.arr).to.deep.equal(["foo"]);
     });
 
+    it("Passing another TrackedEvent as the second argument to `on` does not infinite loop", function() {
+        const inner = on("inner", game => {
+            game.output.write("Reached inner");
+        });
+
+        const outer = on("outer", inner);
+
+        Game.init(MD);
+
+        const myGame = buildGameInstance();
+        outer(myGame);
+
+        expect(myGame.output.lines.map(line => line.data)).to.deep.equal([
+            "Reached inner"
+        ]);
+    });
+
+    it("Passing an EventQueue as the second argument to `on` does not infinite loop", function() {
+        const inner = (num: number) =>
+            on("inner", game => {
+                game.output.write("Reached inner" + num);
+            });
+
+        const outer = on("outer", inner(1).then(inner(2)));
+
+        Game.init(MD);
+
+        const myGame = buildGameInstance();
+        outer(myGame);
+
+        expect(myGame.output.lines.map(line => line.data)).to.deep.equal([
+            "Reached inner1",
+            "Reached inner2"
+        ]);
+    });
+
     describe("Queueing", function() {
         it("Executing a singleton EventQueue immediately with `then`", function() {
             const learnSkill = (name: string, skill: string) =>
@@ -439,6 +475,24 @@ describe("Events", function() {
                 { data: "Get spammed.", id: opk0, type: OutputLineType.NORMAL },
                 { data: "Get spammed.", id: opk1, type: OutputLineType.NORMAL }
             ]);
+        });
+
+        it("TrackedEvent.then returns an EventQueue", function() {
+            Game.init(MD);
+            const eq = on("FOO", on("BAZ", () => {})).then(on("BAR", () => {}));
+            expect(isEventQueue(eq)).to.be.true;
+        });
+
+        it("Complicated nesting of TrackedEvents is okay", function() {
+            Game.init(MD);
+            const bar = on("BAR", game => game.output.write("bar"));
+            const inner = on("INNER", bar.then(bar));
+            const func = on("OUTER", inner);
+
+            const myGame = buildGameInstance();
+            func(myGame);
+
+            expect(myGame.output.lines[0].data).to.equal("bar");
         });
 
         describe("QTests", function() {
@@ -960,6 +1014,22 @@ describe("Events", function() {
 
             expect(basePKs[0].minus(1).equals(basePKs[1])).to.be.true;
             expect(basePKs[0].equals(newGame.events.history[0].id)).to.be.true;
+        });
+
+        it("When `on` has a TrackedEvent as its second argument, the event is considered caused by the outer", function() {
+            Game.init(MD);
+            const bar = on("BAR", game => game.output.write("bar"));
+            const outer = on("OUTER", bar);
+
+            const myGame = buildGameInstance();
+            outer(myGame);
+
+            const [event1, event2] = myGame.events.history;
+
+            expect(event1.name).to.equal("BAR");
+            expect(event2.name).to.equal("OUTER");
+            expect(event1.causedBy.equals(event2.id)).to.be.true;
+            expect(event2.caused[0].equals(event1.id)).to.be.true;
         });
     });
 });
