@@ -6,48 +6,58 @@
  */
 
 import Prando from "prando";
+import { buildPKProvider, PKProvider } from "../../common";
 import { RegalError } from "../../error";
 import { GameInstanceInternal } from "../../state";
 import { EXPANDED_CHARSET } from "../charsets";
 import { InstanceRandomInternal } from "../instance-random-internal";
+import { RandomRecord } from "../random-record";
 
 /**
  * Constructs an `InstanceRandom` using the current implementation.
  * @param game The managing `GameInstance`.
- * @param numGenerations The number of generations to start from.
- * Defaults to zero.
+ * @param pkProvider The existing random PK provider (optional).
  */
 export const buildInstanceRandom = (
     game: GameInstanceInternal,
-    numGenerations: number = 0
-): InstanceRandomInternal => new InstanceRandomImpl(game, numGenerations);
+    pkProvider?: PKProvider<RandomRecord>
+): InstanceRandomInternal => new InstanceRandomImpl(game, pkProvider);
 
 class InstanceRandomImpl implements InstanceRandomInternal {
-    private _numGenerations: number;
     private _generator: Prando;
+
+    /** The internal `RandomRecord` `PKProvider`. */
+    private _pkProvider: PKProvider<RandomRecord>;
 
     public get seed() {
         return this.game.options.seed;
     }
 
     public get numGenerations() {
-        return this._numGenerations;
+        return this._pkProvider.countGenerated();
     }
 
-    constructor(public game: GameInstanceInternal, numGenerations: number) {
+    public get lastKey() {
+        return this._pkProvider.previous();
+    }
+
+    constructor(
+        public game: GameInstanceInternal,
+        pkProvider: PKProvider<RandomRecord>
+    ) {
         if (this.seed === undefined) {
             throw new RegalError(
                 "Seed must be defined before an InstanceRandom can be constructed."
             );
         }
 
-        this._numGenerations = numGenerations;
+        this._pkProvider = pkProvider ? pkProvider : buildPKProvider();
         this._generator = new Prando(this.seed);
-        this._generator.skip(numGenerations);
+        this._generator.skip(this.numGenerations);
     }
 
     public recycle(newInstance: GameInstanceInternal): InstanceRandomInternal {
-        return new InstanceRandomImpl(newInstance, this.numGenerations);
+        return new InstanceRandomImpl(newInstance, this._pkProvider.fork());
     }
 
     public int(min: number, max: number): number {
@@ -60,14 +70,12 @@ class InstanceRandomImpl implements InstanceRandomInternal {
         const value = this._generator.nextInt(min, max);
         this.trackRandom(value);
 
-        this._numGenerations++;
         return value;
     }
 
     public decimal(): number {
         const value = this._generator.next(0, 1);
         this.trackRandom(value);
-        this._numGenerations++;
         return value;
     }
 
@@ -87,7 +95,6 @@ class InstanceRandomImpl implements InstanceRandomInternal {
         const value = this._generator.nextString(length, charset);
         this.trackRandom(value);
 
-        this._numGenerations++;
         return value;
     }
 
@@ -99,21 +106,19 @@ class InstanceRandomImpl implements InstanceRandomInternal {
         const idx = this._generator.nextInt(0, array.length - 1);
         this.trackRandom(idx); // Track the index of the selected element, rather than the element itself
 
-        this._numGenerations++;
         return array[idx];
     }
 
     public boolean(): boolean {
         const value = this._generator.nextBoolean();
         this.trackRandom(value);
-        this._numGenerations++;
         return value;
     }
 
     /** Internal helper method to add the `RandomRecord` to the current `EventRecord`. */
     private trackRandom(value: string | number | boolean): void {
         this.game.events.current.trackRandom({
-            id: this.numGenerations,
+            id: this._pkProvider.next(),
             value
         });
     }

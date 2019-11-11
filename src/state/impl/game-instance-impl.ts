@@ -9,12 +9,15 @@ import {
     activateAgent,
     buildActiveAgentProxy,
     buildInstanceAgents,
+    getGameInstancePK,
     InstanceAgentsInternal,
     isAgent,
+    isAgentArrayReference,
+    ReservedAgentProperty,
     StaticAgentRegistry
 } from "../../agents";
-import { isAgentArrayReference } from "../../agents/agent-array-reference";
 import { isAgentReference } from "../../agents/agent-reference";
+import { buildPKProvider } from "../../common";
 import {
     buildInstanceOptions,
     GameOptions,
@@ -23,12 +26,18 @@ import {
 import { RegalError } from "../../error";
 import {
     buildInstanceEvents,
+    EventId,
+    getUntrackedEventPK,
     InstanceEventsInternal,
     on,
     TrackedEvent
 } from "../../events";
 import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
-import { buildInstanceRandom, InstanceRandomInternal } from "../../random";
+import {
+    buildInstanceRandom,
+    InstanceRandomInternal,
+    RandomRecord
+} from "../../random";
 import { ContextManager } from "../context-manager";
 import { GameInstanceInternal } from "../game-instance-internal";
 
@@ -96,7 +105,10 @@ class GameInstanceImpl<StateType = any>
         this.agents = agentsBuilder(this);
         this.output = outputBuilder(this);
         this.random = randomBuilder(this);
-        this.state = (buildActiveAgentProxy(0, this) as unknown) as StateType;
+        this.state = (buildActiveAgentProxy(
+            getGameInstancePK(),
+            this
+        ) as unknown) as StateType;
     }
 
     public recycle(newOptions?: Partial<GameOptions>): GameInstanceImpl {
@@ -131,10 +143,12 @@ class GameInstanceImpl<StateType = any>
         return returnObj;
     }
 
-    public revert(revertTo: number = 0): GameInstanceImpl {
-        if (revertTo !== 0) {
-            if (revertTo < 0) {
-                throw new RegalError("revertTo must be zero or greater.");
+    public revert(revertTo: EventId = getUntrackedEventPK()): GameInstanceImpl {
+        if (!revertTo.equals(getUntrackedEventPK())) {
+            if (revertTo.index() < getUntrackedEventPK().index()) {
+                throw new RegalError(
+                    "The earliest event ID you may revert to is the untracked event ID."
+                );
             }
             if (!this.options.trackAgentChanges) {
                 throw new RegalError(
@@ -178,9 +192,9 @@ class GameInstanceImpl<StateType = any>
      * Internal helper that builds an `InstanceRandom` constructor with its `numGenerations`
      * set to the appropriate revert event.
      */
-    private _buildRandomRevertCtor(revertTo: number) {
+    private _buildRandomRevertCtor(revertTo: EventId) {
         return (game: GameInstanceImpl) => {
-            let numGens: number = this.random.numGenerations;
+            let lastKey = this.random.lastKey;
 
             const eventsWithRandoms = this.events.history.filter(
                 er => er.randoms !== undefined && er.randoms.length > 0
@@ -188,26 +202,31 @@ class GameInstanceImpl<StateType = any>
 
             if (eventsWithRandoms.length > 0) {
                 const lastEvent = eventsWithRandoms.find(
-                    er => er.id <= revertTo
+                    er => er.id.index() <= revertTo.index()
                 );
 
                 if (lastEvent === undefined) {
                     // All random values were generated after the target event
-                    numGens =
+                    lastKey =
                         eventsWithRandoms[eventsWithRandoms.length - 1]
                             .randoms[0].id;
                 } else {
-                    // Otherwise, set num generations to its value AFTER (+1) the target event
+                    // Otherwise, set lastKey to its value AFTER (+1) the target event
                     const lastRandoms = lastEvent.randoms;
-                    numGens = lastRandoms[lastRandoms.length - 1].id + 1;
+                    lastKey = lastRandoms[lastRandoms.length - 1].id.plus(1);
                 }
             }
-            return buildInstanceRandom(game, numGens);
+            return buildInstanceRandom(
+                game,
+                // Subtract lastKey by one to fix an off-by-one error caused by
+                // using PK indices to skip the Prando generator
+                buildPKProvider<RandomRecord>().forkAfterKey(lastKey.minus(1))
+            );
         };
     }
 
     /** Internal helper that builds a `TrackedEvent` to revert agent changes */
-    private _buildAgentRevertFunc(revertTo: number): TrackedEvent {
+    private _buildAgentRevertFunc(revertTo: EventId): TrackedEvent {
         return on("REVERT", (game: GameInstanceInternal) => {
             const target = game.agents;
 
@@ -215,13 +234,15 @@ class GameInstanceImpl<StateType = any>
                 const id = am.id;
 
                 const props = Object.keys(am).filter(
-                    key => key !== "game" && key !== "id"
+                    key =>
+                        key !== ReservedAgentProperty.GAME &&
+                        key !== ReservedAgentProperty.META
                 );
 
                 for (const prop of props) {
                     const history = am.getPropertyHistory(prop);
                     const lastChangeIdx = history.findIndex(
-                        change => change.eventId <= revertTo
+                        change => change.eventId.index() <= revertTo.index()
                     );
 
                     if (lastChangeIdx === -1) {
@@ -244,12 +265,12 @@ class GameInstanceImpl<StateType = any>
                             const areEqAgents =
                                 isAgentReference(targetVal) &&
                                 isAgent(currentVal) &&
-                                targetVal.refId === currentVal.id;
+                                targetVal.refId === currentVal.meta.id;
 
                             const areEqAgentArrs =
                                 isAgentArrayReference(targetVal) &&
                                 isAgent(currentVal) &&
-                                targetVal.arRefId === currentVal.id;
+                                targetVal.arRefId === currentVal.meta.id;
 
                             if (!areEqAgents && !areEqAgentArrs) {
                                 target.setAgentProperty(id, prop, targetVal);

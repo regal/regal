@@ -16,10 +16,17 @@ import {
     log,
     libraryVersion,
     metadataWithVersion,
-    Dummy
+    Dummy,
+    smartObjectEquals,
+    TestProperty,
+    aPKs,
+    getInitialOutputPK,
+    ePKs,
+    smartObj,
+    testMeta
 } from "../test-utils";
-import { on } from "../../src/events";
-import { Agent, PropertyOperation } from "../../src/agents";
+import { on, DEFAULT_EVENT_NAME } from "../../src/events";
+import { Agent, PropertyOperation, getGameInstancePK } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 import { buildGameInstance, GameInstanceInternal } from "../../src/state";
 import { SEED_LENGTH, DEFAULT_SEED_CHARSET } from "../../src/random";
@@ -205,7 +212,7 @@ describe("Config", function() {
 
                 expect(myGame.output.lines).to.deep.equal([
                     {
-                        id: 1,
+                        id: getInitialOutputPK(),
                         type: OutputLineType.DEBUG,
                         data: "Hello, world!"
                     }
@@ -227,7 +234,7 @@ describe("Config", function() {
 
                 expect(myGame.output.lines).to.deep.equal([
                     {
-                        id: 1,
+                        id: getInitialOutputPK(),
                         type: OutputLineType.MINOR,
                         data: "Hello, world!"
                     }
@@ -266,6 +273,8 @@ describe("Config", function() {
 
             it("Full agent property history is shown when GameOptions.trackAgentChanges is set to true", function() {
                 prepAgentTest();
+                const [apk0, apk1, apk2] = aPKs(2);
+                const epks0_8 = ePKs(8);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: true
@@ -273,31 +282,32 @@ describe("Config", function() {
 
                 let responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 1,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [apk0.value()]: smartObj({
+                        meta: testMeta(apk0),
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 2,
+                                eventId: epks0_8[2],
                                 eventName: "INIT",
                                 final: 0,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    }
+                    })
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 2,
+                        id: epks0_8[2],
                         name: "INIT",
-                        causedBy: 1,
+                        causedBy: epks0_8[1],
                         changes: [
                             {
-                                agentId: 0,
+                                agentId: apk0,
                                 final: 0,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
@@ -306,31 +316,32 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 1,
+                        id: epks0_8[1],
                         name: "START",
-                        caused: [2]
+                        caused: [epks0_8[2]]
                     }
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Lars");
                 responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 2,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [apk0.value()]: smartObj({
+                        meta: testMeta(apk0),
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: 1,
                                 init: 0,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: 0,
                                 init: undefined,
@@ -339,27 +350,27 @@ describe("Config", function() {
                         ],
                         currentDummy: [
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
-                                final: { refId: 1 },
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    "1": {
-                        id: 1,
+                    }),
+                    [apk1.value()]: smartObj({
+                        meta: testMeta(apk1),
                         game: response.instance,
                         name: [
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: "Lars the Great",
                                 init: "Lars",
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: "Lars",
                                 init: undefined,
@@ -368,31 +379,31 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 5,
+                                eventId: epks0_8[5],
                                 eventName: "INTRODUCE",
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 4,
+                                eventId: epks0_8[4],
                                 eventName: "ADD",
                                 final: 10,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    }
+                    })
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 5,
+                        id: epks0_8[5],
                         name: "INTRODUCE",
-                        causedBy: 4,
-                        output: [1],
+                        causedBy: epks0_8[4],
+                        output: [getInitialOutputPK()],
                         changes: [
                             {
-                                agentId: 1,
+                                agentId: apk1,
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED,
@@ -401,41 +412,41 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 4,
+                        id: epks0_8[4],
                         name: "ADD",
-                        causedBy: 3,
-                        caused: [5],
+                        causedBy: epks0_8[3],
+                        caused: [epks0_8[5]],
                         changes: [
                             {
-                                agentId: 1,
+                                agentId: apk1,
                                 final: "Lars",
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "name"
                             },
                             {
-                                agentId: 1,
+                                agentId: apk1,
                                 final: 10,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "health"
                             },
                             {
-                                agentId: 1,
+                                agentId: apk1,
                                 final: "Lars the Great",
                                 init: "Lars",
                                 op: PropertyOperation.MODIFIED,
                                 property: "name"
                             },
                             {
-                                agentId: 0,
-                                final: { refId: 1 },
+                                agentId: apk0,
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "currentDummy"
                             },
                             {
-                                agentId: 0,
+                                agentId: apk0,
                                 final: 1,
                                 init: 0,
                                 op: PropertyOperation.MODIFIED,
@@ -444,31 +455,32 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 3,
+                        id: epks0_8[3],
                         name: "INPUT",
-                        caused: [4]
+                        caused: [epks0_8[4]]
                     }
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
                 responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 3,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [apk0.value()]: smartObj({
+                        meta: testMeta(apk0),
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: 2,
                                 init: 1,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: 1,
                                 init: undefined,
@@ -477,27 +489,27 @@ describe("Config", function() {
                         ],
                         currentDummy: [
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
-                                final: { refId: 2 },
-                                init: { refId: 1 },
+                                final: { refId: apk2 },
+                                init: { refId: apk1 },
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
-                                final: { refId: 1 },
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    "1": {
-                        id: 1,
+                    }),
+                    [apk1.value()]: smartObj({
+                        meta: testMeta(apk1),
                         game: response.instance,
                         name: [
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: "Lars the Great",
                                 init: undefined,
@@ -506,27 +518,27 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
+                                eventId: epks0_8[0],
                                 eventName: "DEFAULT",
                                 final: 15,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    "2": {
-                        id: 2,
+                    }),
+                    [apk2.value()]: smartObj({
+                        meta: testMeta(apk2),
                         game: response.instance,
                         name: [
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: "Jeffrey the Great",
                                 init: "Jeffrey",
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: "Jeffrey",
                                 init: undefined,
@@ -535,31 +547,31 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 8,
+                                eventId: epks0_8[8],
                                 eventName: "INTRODUCE",
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 7,
+                                eventId: epks0_8[7],
                                 eventName: "ADD",
                                 final: 10,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    }
+                    })
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 8,
+                        id: epks0_8[8],
                         name: "INTRODUCE",
-                        causedBy: 7,
-                        output: [2],
+                        causedBy: epks0_8[7],
+                        output: [getInitialOutputPK().plus(1)],
                         changes: [
                             {
-                                agentId: 2,
+                                agentId: apk2,
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED,
@@ -568,41 +580,41 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 7,
+                        id: epks0_8[7],
                         name: "ADD",
-                        causedBy: 6,
-                        caused: [8],
+                        causedBy: epks0_8[6],
+                        caused: [epks0_8[8]],
                         changes: [
                             {
-                                agentId: 2,
+                                agentId: apk2,
                                 final: "Jeffrey",
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "name"
                             },
                             {
-                                agentId: 2,
+                                agentId: apk2,
                                 final: 10,
                                 init: undefined,
                                 op: PropertyOperation.ADDED,
                                 property: "health"
                             },
                             {
-                                agentId: 2,
+                                agentId: apk2,
                                 final: "Jeffrey the Great",
                                 init: "Jeffrey",
                                 op: PropertyOperation.MODIFIED,
                                 property: "name"
                             },
                             {
-                                agentId: 0,
-                                final: { refId: 2 },
-                                init: { refId: 1 },
+                                agentId: apk0,
+                                final: { refId: apk2 },
+                                init: { refId: apk1 },
                                 op: PropertyOperation.MODIFIED,
                                 property: "currentDummy"
                             },
                             {
-                                agentId: 0,
+                                agentId: apk0,
                                 final: 2,
                                 init: 1,
                                 op: PropertyOperation.MODIFIED,
@@ -611,71 +623,85 @@ describe("Config", function() {
                         ]
                     },
                     {
-                        id: 6,
+                        id: epks0_8[6],
                         name: "INPUT",
-                        caused: [7]
+                        caused: [epks0_8[7]]
                     }
                 ]);
             });
 
             it("Reduced agent property history is shown when GameOptions.trackAgentChanges is set to false", function() {
                 prepAgentTest();
+                const [apk0, apk1, apk2] = aPKs(2);
+                const [
+                    epk0,
+                    epk1,
+                    epk2,
+                    epk3,
+                    epk4,
+                    epk5,
+                    epk6,
+                    epk7,
+                    epk8
+                ] = ePKs(8);
 
                 let response = Game.postStartCommand({
                     trackAgentChanges: false
                 });
                 let responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 1,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [apk0.value()]: smartObj({
+                        meta: testMeta(apk0),
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 2,
+                                eventId: epk2,
                                 eventName: "INIT",
                                 final: 0,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    }
+                    })
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 2,
+                        id: epk2,
                         name: "INIT",
-                        causedBy: 1
+                        causedBy: epk1
                     },
                     {
-                        id: 1,
+                        id: epk1,
                         name: "START",
-                        caused: [2]
+                        caused: [epk2]
                     }
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Lars");
                 responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 2,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [apk0.value()]: smartObj({
+                        meta: testMeta(apk0),
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 4,
+                                eventId: epk4,
                                 eventName: "ADD",
                                 final: 1,
                                 init: 0,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 0,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -683,20 +709,20 @@ describe("Config", function() {
                         ],
                         currentDummy: [
                             {
-                                eventId: 4,
+                                eventId: epk4,
                                 eventName: "ADD",
-                                final: { refId: 1 },
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    "1": {
-                        id: 1,
+                    }),
+                    [apk1.value()]: smartObj({
+                        meta: testMeta(apk1),
                         game: response.instance,
                         name: [
                             {
-                                eventId: 4,
+                                eventId: epk4,
                                 eventName: "ADD",
                                 final: "Lars the Great",
                                 init: "Lars",
@@ -705,55 +731,56 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 5,
+                                eventId: epk5,
                                 eventName: "INTRODUCE",
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED
                             }
                         ]
-                    }
+                    })
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 5,
+                        id: epk5,
                         name: "INTRODUCE",
-                        causedBy: 4,
-                        output: [1]
+                        causedBy: epk4,
+                        output: [getInitialOutputPK()]
                     },
                     {
-                        id: 4,
+                        id: epk4,
                         name: "ADD",
-                        causedBy: 3,
-                        caused: [5]
+                        causedBy: epk3,
+                        caused: [epk5]
                     },
                     {
-                        id: 3,
+                        id: epk3,
                         name: "INPUT",
-                        caused: [4]
+                        caused: [epk4]
                     }
                 ]);
 
                 response = Game.postPlayerCommand(response.instance, "Jeffrey");
                 responseInstance = response.instance as GameInstanceInternal;
 
-                expect(responseInstance.agents).to.deep.equal({
-                    _nextId: 3,
+                smartObjectEquals(responseInstance.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: response.instance,
-                    "0": {
-                        id: 0,
+                    [apk0.value()]: smartObj({
+                        meta: testMeta(apk0),
                         game: response.instance,
                         dummyCount: [
                             {
-                                eventId: 7,
+                                eventId: epk7,
                                 eventName: "ADD",
                                 final: 2,
                                 init: 1,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 1,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -761,28 +788,28 @@ describe("Config", function() {
                         ],
                         currentDummy: [
                             {
-                                eventId: 7,
+                                eventId: epk7,
                                 eventName: "ADD",
-                                final: { refId: 2 },
-                                init: { refId: 1 },
+                                final: { refId: apk2 },
+                                init: { refId: apk1 },
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
-                                final: { refId: 1 },
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
+                                final: { refId: apk1 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    "1": {
-                        id: 1,
+                    }),
+                    [apk1.value()]: smartObj({
+                        meta: testMeta(apk1),
                         game: response.instance,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "Lars the Great",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -790,20 +817,20 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 15,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    "2": {
-                        id: 2,
+                    }),
+                    [apk2.value()]: smartObj({
+                        meta: testMeta(apk2),
                         game: response.instance,
                         name: [
                             {
-                                eventId: 7,
+                                eventId: epk7,
                                 eventName: "ADD",
                                 final: "Jeffrey the Great",
                                 init: "Jeffrey",
@@ -812,32 +839,32 @@ describe("Config", function() {
                         ],
                         health: [
                             {
-                                eventId: 8,
+                                eventId: epk8,
                                 eventName: "INTRODUCE",
                                 final: 15,
                                 init: 10,
                                 op: PropertyOperation.MODIFIED
                             }
                         ]
-                    }
+                    })
                 });
                 expect(responseInstance.events.history).to.deep.equal([
                     {
-                        id: 8,
+                        id: epk8,
                         name: "INTRODUCE",
-                        causedBy: 7,
-                        output: [2]
+                        causedBy: epk7,
+                        output: [getInitialOutputPK().plus(1)]
                     },
                     {
-                        id: 7,
+                        id: epk7,
                         name: "ADD",
-                        causedBy: 6,
-                        caused: [8]
+                        causedBy: epk6,
+                        caused: [epk8]
                     },
                     {
-                        id: 6,
+                        id: epk6,
                         name: "INPUT",
-                        caused: [7]
+                        caused: [epk7]
                     }
                 ]);
             });
@@ -851,7 +878,7 @@ describe("Config", function() {
                 })(myGame);
 
                 myGame.agents
-                    .getAgentManager(1)
+                    .getAgentManager(getGameInstancePK().plus(1))
                     .getPropertyHistory("name")
                     .unshift({} as any);
 
@@ -954,7 +981,7 @@ describe("Config", function() {
 
             MetadataManager.setMetadata(metadata);
 
-            (metadata as any).author = "Sneaky guy"; // Avoid readonly modifier
+            metadata.author = "Sneaky guy";
 
             expect(MetadataManager.getMetadata().author).to.equal("Joe Cowman");
         });
@@ -968,11 +995,35 @@ describe("Config", function() {
             };
 
             MetadataManager.setMetadata(metadata);
-            const retVal = MetadataManager.getMetadata() as any;
+            const retVal = MetadataManager.getMetadata();
 
-            retVal.author = "Sneaky guy"; // Avoid readonly modifier
+            retVal.author = "Sneaky guy";
 
             expect(MetadataManager.getMetadata().author).to.equal("Joe Cowman");
+        });
+
+        it("Set all metadata properties successfully", function() {
+            MetadataManager.reset();
+
+            const metadata = {
+                name: "Cool Game",
+                author: "Joe Cowman",
+                headline: "The headline of my cool game.",
+                description: "The description of my cool game.",
+                homepage: "https://github.com/regal/about",
+                repository: "https://github.com/regal/regal",
+                options: {
+                    debug: true
+                },
+                gameVersion: "1.0.1"
+            };
+
+            MetadataManager.setMetadata(metadata);
+
+            expect(MetadataManager.getMetadata()).to.deep.equal({
+                ...metadata,
+                regalVersion: libraryVersion
+            });
         });
 
         describe("Validate Metadata", function() {
@@ -1085,6 +1136,19 @@ describe("Config", function() {
                 ).to.throw(
                     RegalError,
                     "The metadata property <repository> is of type <number>, must be of type <string>."
+                );
+            });
+
+            it("gameVersion must be a string if it's defined", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "Cool Game",
+                        author: "Joe Cowman",
+                        gameVersion: 1
+                    } as any)
+                ).to.throw(
+                    RegalError,
+                    "The metadata property <gameVersion> is of type <number>, must be of type <string>."
                 );
             });
 

@@ -5,6 +5,8 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { AgentId } from "./agent-meta";
+
 /** Whether the given object is an `AgentArrayReference`. */
 export const isAgentArrayReference = (o: any): o is AgentArrayReference =>
     o && (o as AgentArrayReference).arRefId !== undefined;
@@ -17,5 +19,5 @@ export class AgentArrayReference {
      * Constructs a new `AgentReference` in place of an active agent array.
      * @param arRefId The agent array's numeric id.
      */
-    constructor(public arRefId: number) {}
+    constructor(public arRefId: AgentId) {}
 }

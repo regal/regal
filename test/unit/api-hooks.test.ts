@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import "mocha";
 
-import { on, noop } from "../../src/events";
-import { metadataWithOptions, getDemoMetadata } from "../test-utils";
-import { PropertyOperation } from "../../src/agents";
+import { on, noop, getUntrackedEventPK } from "../../src/events";
+import { metadataWithOptions, getDemoMetadata, ePKs } from "../test-utils";
+import { PropertyOperation, getGameInstancePK } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import {
     Game,
@@ -55,11 +55,11 @@ describe("API Hooks", function() {
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 1,
+                    id: getUntrackedEventPK().plus(1),
                     name: "INPUT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "input",
                             init: undefined,
@@ -95,25 +95,27 @@ describe("API Hooks", function() {
             const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
+            const [_epk0, epk1, epk2] = ePKs(2);
+
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 2,
+                    id: epk2,
                     name: "SET INPUT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "input",
                             init: undefined,
                             final: "Test Command"
                         }
                     ],
-                    causedBy: 1
+                    causedBy: epk1
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "INPUT",
-                    caused: [2]
+                    caused: [epk2]
                 }
             ]);
         });
@@ -151,39 +153,41 @@ describe("API Hooks", function() {
             const myGame = buildGameInstance();
             HookManager.playerCommandHook("Test Command")(myGame);
 
+            const [_epk0, epk1, epk2, epk3] = ePKs(3);
+
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 3,
+                    id: epk3,
                     name: "DOUBLE INPUT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.MODIFIED,
                             property: "input",
                             init: "Test Command",
                             final: "Test Command Test Command"
                         }
                     ],
-                    causedBy: 1
+                    causedBy: epk1
                 },
                 {
-                    id: 2,
+                    id: epk2,
                     name: "SET INPUT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "input",
                             init: undefined,
                             final: "Test Command"
                         }
                     ],
-                    causedBy: 1
+                    causedBy: epk1
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "INPUT",
-                    caused: [2, 3]
+                    caused: [epk2, epk3]
                 }
             ]);
         });
@@ -226,11 +230,11 @@ describe("API Hooks", function() {
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 1,
+                    id: getUntrackedEventPK().plus(1),
                     name: "START",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "init",
                             init: undefined,
@@ -264,25 +268,27 @@ describe("API Hooks", function() {
             const myGame = buildGameInstance();
             HookManager.startCommandHook(myGame);
 
+            const [_epk0, epk1, epk2] = ePKs(2);
+
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 2,
+                    id: epk2,
                     name: "SET INIT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "init",
                             init: undefined,
                             final: true
                         }
                     ],
-                    causedBy: 1
+                    causedBy: epk1
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "START",
-                    caused: [2]
+                    caused: [epk2]
                 }
             ]);
         });
@@ -331,56 +337,57 @@ describe("API Hooks", function() {
             onStartCommand(setInit.thenq(appendFoo("Two")));
 
             const myGame = buildGameInstance();
+            const [_epk0, epk1, epk2, epk3, epk4] = ePKs(4);
             HookManager.startCommandHook(myGame);
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 3,
+                    id: epk3,
                     name: "APPEND FOO",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.MODIFIED,
                             property: "foo",
                             init: "One",
                             final: "OneTwo"
                         }
                     ],
-                    causedBy: 1
+                    causedBy: epk1
                 },
                 {
-                    id: 4,
+                    id: epk4,
                     name: "SET FOO",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "foo",
                             init: undefined,
                             final: "One"
                         }
                     ],
-                    causedBy: 2
+                    causedBy: epk2
                 },
                 {
-                    id: 2,
+                    id: epk2,
                     name: "SET INIT",
                     changes: [
                         {
-                            agentId: 0,
+                            agentId: getGameInstancePK(),
                             op: PropertyOperation.ADDED,
                             property: "init",
                             init: undefined,
                             final: true
                         }
                     ],
-                    causedBy: 1,
-                    caused: [4]
+                    causedBy: epk1,
+                    caused: [epk4]
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "START",
-                    caused: [2, 3]
+                    caused: [epk2, epk3]
                 }
             ]);
         });

@@ -41,7 +41,7 @@ export class MetadataManager {
         }
 
         if (!metadata.hasOwnProperty("options")) {
-            (metadata as any).options = {};
+            metadata.options = {};
         }
 
         validateMetadata(metadata);

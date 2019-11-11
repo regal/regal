@@ -1,12 +1,17 @@
-import { inspect } from "util";
 import { GameMetadata, GameOptions } from "../src/config";
 import { version as regalVersion } from "../package.json";
-import { Agent } from "../src";
+import { expect } from "chai";
+import { getGameInstancePK, Agent } from "../src/agents";
+import { buildPKProvider, PK } from "../src/common";
+import { OutputLine } from "../src/output";
+import { getUntrackedEventPK } from "../src/events";
+import { RandomRecord } from "../src/random";
+import { AgentId } from "../src/agents/agent-meta";
+import { getInstanceStateAgentProtoPK } from "../src/agents/impl/prototype/agent-proto-keys";
 
-export const log = (o: any, title?: string) =>
-    console.log(
-        `${title ? `${title}: ` : ""}${inspect(o, { depth: Infinity })}`
-    );
+// log had to be moved to its own file to eliminate circular dependencies
+// when used to debug src
+export { log } from "./test-log";
 
 export const getDemoMetadata = (): GameMetadata => ({
     name: "Demo Game",
@@ -15,7 +20,8 @@ export const getDemoMetadata = (): GameMetadata => ({
     description: "Game Description",
     homepage: "demogame.example",
     repository: "github.com/demogame",
-    options: {}
+    options: {},
+    gameVersion: "1.2.1"
 });
 
 export const metadataWithOptions = (opts: Partial<GameOptions>) => {
@@ -27,6 +33,7 @@ export const metadataWithOptions = (opts: Partial<GameOptions>) => {
 export const metadataWithVersion = (metadata: GameMetadata): GameMetadata => ({
     author: metadata.author,
     description: metadata.description,
+    gameVersion: metadata.gameVersion,
     headline: metadata.headline,
     homepage: metadata.homepage,
     name: metadata.name,
@@ -54,4 +61,82 @@ export const makeAgents = (startFrom: number, amount: number) => {
     }
 
     return arr;
+};
+
+export enum TestProperty {
+    REQUIRE_BUT_SKIP,
+    SMART_OBJECT
+}
+
+export interface SmartObject {
+    prop: TestProperty;
+    object: object;
+}
+
+export const smartObj = (obj: object): SmartObject => ({
+    prop: TestProperty.SMART_OBJECT,
+    object: obj
+});
+
+export const isSmartObject = (obj: any): obj is SmartObject =>
+    obj !== undefined && obj.prop !== undefined;
+
+export const smartObjectEquals = (actual: object, expected: object) => {
+    // Test property key match
+    const expectedKeys = Object.keys(expected).sort();
+    const actualKeys = Object.keys(actual).sort();
+    expect(actualKeys).to.deep.equal(expectedKeys);
+
+    for (const prop in expected) {
+        const actualVal = actual[prop];
+        const expectedVal = expected[prop];
+
+        if (isSmartObject(expectedVal)) {
+            smartObjectEquals(actualVal, expectedVal.object);
+        } else if (expectedVal !== TestProperty.REQUIRE_BUT_SKIP) {
+            expect(actualVal).to.deep.equal(expectedVal);
+        }
+    }
+};
+
+export const getInitialOutputPK = () => buildPKProvider<OutputLine>().next();
+
+export const getInitialRandomPK = () => buildPKProvider<RandomRecord>().next();
+
+const pks = <T>(additional: number, initialPK: PK<T>) => {
+    const result = [initialPK];
+    for (let i = 0; i < additional; i++) {
+        result.push(result[result.length - 1].plus(1));
+    }
+    return result;
+};
+
+// Agent PKs
+export const aPKs = (additional: number) =>
+    pks(additional, getGameInstancePK());
+
+// OutputLine PKs
+export const oPKs = (additional: number) =>
+    pks(additional, getInitialOutputPK());
+
+// EventRecord PKs
+export const ePKs = (additional: number) =>
+    pks(additional, getUntrackedEventPK());
+
+export const ePKAtNum = (index: number) => getUntrackedEventPK().plus(index);
+
+// RandomRecord PKs
+export const rPKs = (additional: number) =>
+    pks(additional, getInitialRandomPK());
+
+// AgentProto PKs
+export const aprPKs = (additional: number) =>
+    pks(additional, getInstanceStateAgentProtoPK());
+
+export const testMeta = (id: AgentId) => {
+    const meta = {
+        id,
+        protoId: TestProperty.REQUIRE_BUT_SKIP
+    };
+    return smartObj(meta);
 };

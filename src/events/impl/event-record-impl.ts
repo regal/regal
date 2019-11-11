@@ -6,37 +6,43 @@
  */
 
 import { PropertyChange } from "../../agents";
-import { OutputLine } from "../../output";
+import { OutputLine, OutputLineId } from "../../output";
 import { RandomRecord } from "../../random";
-import {
-    DEFAULT_EVENT_ID,
-    DEFAULT_EVENT_NAME,
-    EventRecord
-} from "../event-record";
+import { EventId, EventRecord } from "../event-record";
 import { noop, TrackedEvent } from "../event-types";
+import { getUntrackedEventPK } from "./event-keys";
+
+/** Name of untracked `EventFunction`s. */
+export const DEFAULT_EVENT_NAME: string = "DEFAULT";
 
 /**
  * Builds a new `EventRecord`.
  *
- * @param id The event's unique numeric ID (optional).
+ * @param id The event's unique ID (optional).
  * @param name The event's name (optional).
  * @param func The event's `TrackedEvent`. Defaults to `noop`.
  */
 export const buildEventRecord = (
-    id: number = DEFAULT_EVENT_ID,
+    id: EventId = undefined,
     name: string = DEFAULT_EVENT_NAME,
     func: TrackedEvent = noop
-): EventRecord => new EventRecordImpl(id, name, func);
+): EventRecord => {
+    if (id === undefined) {
+        id = getUntrackedEventPK();
+    }
+
+    return new EventRecordImpl(id, name, func);
+};
 
 class EventRecordImpl implements EventRecord {
-    public output?: number[];
-    public causedBy?: number;
-    public caused?: number[];
+    public output?: OutputLineId[];
+    public causedBy?: EventId;
+    public caused?: EventId[];
     public changes?: PropertyChange[];
     public randoms?: RandomRecord[];
 
     constructor(
-        public id: number,
+        public id: EventId,
         public name: string,
         public func: TrackedEvent
     ) {}

@@ -6,6 +6,11 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { PK } from "../common";
+
+/** An output line primary key. */
+export type OutputLineId = PK<OutputLine>;
+
 /**
  * Conveys semantic meaning of an `OutputLine` to the client.
  */
@@ -50,7 +55,7 @@ export enum OutputLineType {
  */
 export interface OutputLine {
     /** The `OutputLine`'s unique identifier. */
-    id: number;
+    id: OutputLineId;
 
     /** The text string. */
     data: string;

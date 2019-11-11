@@ -12,5 +12,14 @@ export { PropertyChange, PropertyOperation } from "./agent-properties";
 export {
     buildActiveAgentProxy,
     buildInstanceAgents,
-    activateAgent
+    activateAgent,
+    getGameInstancePK,
+    StaticPrototypeRegistry
 } from "./impl";
+export {
+    AgentMeta,
+    AgentId,
+    AgentProtoId,
+    ReservedAgentProperty
+} from "./agent-meta";
+export { isAgentArrayReference } from "./agent-array-reference";

@@ -7,6 +7,7 @@
 
 import { GameInstanceInternal } from "../state";
 import { InstanceRandom } from "./instance-random";
+import { RandomRecordId } from "./random-record";
 
 /**
  * Internal interface for `InstanceRandom`.
@@ -22,6 +23,12 @@ export interface InstanceRandomInternal extends InstanceRandom {
      * sequence of pseudo-random data stays consistent for a given seed.
      */
     readonly numGenerations: number;
+
+    /**
+     * The key of the last `RandomRecord` that was generated, or the default key if
+     * none have been.
+     */
+    readonly lastKey: RandomRecordId;
 
     /**
      * Generates a new `InstanceRandomInternal` for the new `GameInstance`, preserving

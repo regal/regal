@@ -5,8 +5,9 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { buildPKProvider, PKProvider } from "../../common";
 import { GameInstanceInternal } from "../../state";
-import { DEFAULT_EVENT_ID, EventRecord } from "../event-record";
+import { EventRecord } from "../event-record";
 import {
     isEventQueue,
     isTrackedEvent,
@@ -14,49 +15,49 @@ import {
     TrackedEvent
 } from "../event-types";
 import { InstanceEventsInternal } from "../instance-events-internal";
+import { EVENT_RESERVED_KEYS } from "./event-keys";
 import { buildEventRecord } from "./event-record-impl";
 
 /**
  * Builds an `InstanceEventsInternal`.
  * @param game The game instance that owns this `InstanceEventsInternal`.
- * @param startingEventId Optional starting ID for new `EventRecord`s.
+ * @param pkProvider The existing event PK provider (optional).
  */
 export const buildInstanceEvents = (
     game: GameInstanceInternal,
-    startingEventId?: number
-): InstanceEventsInternal =>
-    startingEventId !== undefined
-        ? new InstanceEventsImpl(game, startingEventId)
-        : new InstanceEventsImpl(game);
+    pkProvider?: PKProvider<EventRecord>
+): InstanceEventsInternal => new InstanceEventsImpl(game, pkProvider);
 
 class InstanceEventsImpl implements InstanceEventsInternal {
     public history: EventRecord[] = [];
 
-    /** Internal member for the ID of the most recently generated `EventRecord`. */
-    private _lastEventId: number;
-
     /** Internal queue of events that have yet to be executed. */
     private _queue: EventRecord[] = [];
 
+    /** The internal `EventRecord` `PKProvider`. */
+    private _pkProvider: PKProvider<EventRecord>;
+
     constructor(
         public game: GameInstanceInternal,
-        startingEventId = DEFAULT_EVENT_ID
+        pkProvider: PKProvider<EventRecord>
     ) {
-        this._lastEventId = startingEventId;
+        this._pkProvider = pkProvider
+            ? pkProvider
+            : buildPKProvider(EVENT_RESERVED_KEYS);
     }
 
     get current(): EventRecord {
         let event = this._queue[0];
 
         if (event === undefined) {
+            // Note: InstanceRandom (and possibly other managers) record their changes
+            // that happen outside of an event to this default object, which is
+            // ultimately wasted. I hesitate to say this is a bug, since all operations
+            // should be done inside events anyway. Just something to be aware of.
             event = buildEventRecord();
         }
 
         return event;
-    }
-
-    get lastEventId() {
-        return this._lastEventId;
     }
 
     public invoke(event: TrackedEvent): void {
@@ -65,7 +66,7 @@ class InstanceEventsImpl implements InstanceEventsInternal {
     }
 
     public recycle(newInstance: GameInstanceInternal): InstanceEventsInternal {
-        return new InstanceEventsImpl(newInstance, this.lastEventId);
+        return new InstanceEventsImpl(newInstance, this._pkProvider.fork());
     }
 
     /**
@@ -89,7 +90,7 @@ class InstanceEventsImpl implements InstanceEventsInternal {
         }
 
         const mapToRecord = (evObj: TrackedEvent) =>
-            buildEventRecord(++this._lastEventId, evObj.eventName, evObj);
+            buildEventRecord(this._pkProvider.next(), evObj.eventName, evObj);
 
         const immediateEventRecords = immediateEvents.map(mapToRecord);
         const delayedEventRecords = delayedEvents.map(mapToRecord);

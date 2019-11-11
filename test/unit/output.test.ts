@@ -2,7 +2,7 @@ import { expect } from "chai";
 import "mocha";
 
 import { OutputLineType, buildInstanceOutput } from "../../src/output";
-import { getDemoMetadata } from "../test-utils";
+import { getDemoMetadata, oPKs, getInitialOutputPK, log } from "../test-utils";
 import { Game } from "../../src/api";
 import { buildGameInstance } from "../../src/state";
 
@@ -20,7 +20,7 @@ describe("Output", function() {
 
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: getInitialOutputPK(),
                     type: OutputLineType.NORMAL,
                     data: "Hello, world!"
                 }
@@ -34,7 +34,7 @@ describe("Output", function() {
 
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: getInitialOutputPK(),
                     type: OutputLineType.DEBUG,
                     data: "Hello, world!"
                 }
@@ -43,17 +43,18 @@ describe("Output", function() {
 
         it("InstanceOutput.write writes NORMAL lines", function() {
             const myGame = buildGameInstance();
+            const [opk0, opk1] = oPKs(1);
 
             myGame.output.write("Line 1", "Line 2");
 
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.NORMAL,
                     data: "Line 1"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.NORMAL,
                     data: "Line 2"
                 }
@@ -62,17 +63,18 @@ describe("Output", function() {
 
         it("InstanceOutput.writeNormal writes NORMAL lines", function() {
             const myGame = buildGameInstance();
+            const [opk0, opk1] = oPKs(1);
 
             myGame.output.writeNormal("Line 1", "Line 2");
 
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.NORMAL,
                     data: "Line 1"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.NORMAL,
                     data: "Line 2"
                 }
@@ -81,17 +83,18 @@ describe("Output", function() {
 
         it("InstanceOutput.writeMajor writes MAJOR lines", function() {
             const myGame = buildGameInstance();
+            const [opk0, opk1] = oPKs(1);
 
             myGame.output.writeMajor("Line 1", "Line 2");
 
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.MAJOR,
                     data: "Line 1"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.MAJOR,
                     data: "Line 2"
                 }
@@ -100,17 +103,18 @@ describe("Output", function() {
 
         it("InstanceOutput.writeMinor writes MINOR lines", function() {
             const myGame = buildGameInstance();
+            const [opk0, opk1] = oPKs(1);
 
             myGame.output.writeMinor("Line 1", "Line 2");
 
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.MINOR,
                     data: "Line 1"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.MINOR,
                     data: "Line 2"
                 }
@@ -119,17 +123,18 @@ describe("Output", function() {
 
         it("InstanceOutput.writeDebug writes DEBUG lines", function() {
             const myGame = buildGameInstance({ debug: true });
+            const [opk0, opk1] = oPKs(1);
 
             myGame.output.writeDebug("Line 1", "Line 2");
 
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: opk0,
                     type: OutputLineType.DEBUG,
                     data: "Line 1"
                 },
                 {
-                    id: 2,
+                    id: opk1,
                     type: OutputLineType.DEBUG,
                     data: "Line 2"
                 }
@@ -143,7 +148,7 @@ describe("Output", function() {
 
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: getInitialOutputPK(),
                     type: OutputLineType.SECTION_TITLE,
                     data: "Title"
                 }
@@ -160,31 +165,33 @@ describe("Output", function() {
                 "There are things here."
             );
 
+            const [pk0, pk1, pk2, pk3] = oPKs(3);
+
             expect(myGame.output.lines).to.deep.equal([
                 {
-                    id: 1,
+                    id: pk0,
                     type: OutputLineType.DEBUG,
                     data: "Room loaded."
                 },
                 {
-                    id: 2,
+                    id: pk1,
                     type: OutputLineType.SECTION_TITLE,
                     data: "West of House"
                 },
                 {
-                    id: 3,
+                    id: pk2,
                     type: OutputLineType.NORMAL,
                     data: "You are west of a house."
                 },
                 {
-                    id: 4,
+                    id: pk3,
                     type: OutputLineType.NORMAL,
                     data: "There are things here."
                 }
             ]);
         });
 
-        it("The lineCount getter works properly when startingLineCount = 0", function() {
+        it("InstanceOutput.lineCount is equal to the number of lines generated", function() {
             const myGame = buildGameInstance();
 
             expect(myGame.output.lineCount).to.equal(0);
@@ -192,17 +199,6 @@ describe("Output", function() {
             myGame.output.write("Foo");
 
             expect(myGame.output.lineCount).to.equal(1);
-        });
-
-        it("The lineCount getter works properly when startingLineCount is not 0", function() {
-            const myGame = buildGameInstance();
-            myGame.output = buildInstanceOutput(myGame, 10);
-
-            expect(myGame.output.lineCount).to.equal(10);
-
-            myGame.output.write("Foo");
-
-            expect(myGame.output.lineCount).to.equal(11);
         });
 
         it("InstanceOutput.recycle creates a new InstanceOutput with the previous instance's lineCount", function() {
@@ -223,6 +219,23 @@ describe("Output", function() {
             expect(output3.lineCount).to.equal(3);
             expect(output3.game).to.equal(game3);
             expect(output3.lines).to.be.empty;
+        });
+
+        it("InstanceOutput.recycle breaks the connection between OutputLine PK providers", function() {
+            const baseGame = buildGameInstance();
+            baseGame.output.write("Base");
+
+            const newGame = baseGame.recycle();
+
+            baseGame.output.write("2-Base");
+            newGame.output.write("2-New");
+
+            const basePKs = baseGame.output.lines.map(
+                outputLine => outputLine.id
+            );
+
+            expect(basePKs[0].plus(1).equals(basePKs[1])).to.be.true;
+            expect(basePKs[1].equals(newGame.output.lines[0].id)).to.be.true;
         });
     });
 });

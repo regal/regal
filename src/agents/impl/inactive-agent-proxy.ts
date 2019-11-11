@@ -8,7 +8,15 @@
 import { RegalError } from "../../error";
 import { ContextManager } from "../../state";
 import { Agent } from "../agent";
+import { ReservedAgentProperty } from "../agent-meta";
 import { StaticAgentRegistry } from "../static-agent-registry";
+import {
+    agentMetaWithProtoID,
+    defaultAgentMeta,
+    inactiveAgentMeta
+} from "./agent-meta-transformers";
+import { isAgentActive } from "./agent-utils";
+import { StaticPrototypeRegistry } from "./prototype/static-prototype-registry-impl";
 
 /**
  * Builds a proxy for an inactive agent. Before an agent is activated
@@ -27,19 +35,28 @@ import { StaticAgentRegistry } from "../static-agent-registry";
  * @param agent The agent to be proxied.
  * @returns The inactive agent proxy.
  */
-export const buildInactiveAgentProxy = (agent: Agent): Agent =>
-    new Proxy(agent, {
+export const buildInactiveAgentProxy = (agent: Agent): Agent => {
+    if (ContextManager.isContextStatic()) {
+        StaticAgentRegistry.addAgent(agent);
+
+        const protoId = StaticPrototypeRegistry.register(agent);
+        agent.meta = agentMetaWithProtoID(protoId)(agent.meta);
+    } else {
+        agent.meta = inactiveAgentMeta(agent.meta);
+    }
+
+    return new Proxy(agent, {
         /** Hidden property that contains any initialized values. */
         tempValues: {},
 
         get(target: Agent, property: PropertyKey) {
-            if (property === "tempValues") {
+            if (property === ReservedAgentProperty.TEMP_VALUES) {
                 return this.tempValues;
             }
 
             if (
-                property !== "id" &&
-                property !== "refId" &&
+                property !== ReservedAgentProperty.META &&
+                property !== ReservedAgentProperty.REF_ID &&
                 !ContextManager.isContextStatic()
             ) {
                 throw new RegalError(
@@ -51,19 +68,25 @@ export const buildInactiveAgentProxy = (agent: Agent): Agent =>
         },
 
         set(target: Agent, property: PropertyKey, value: any) {
-            if (property === "id" && target.id < 0) {
+            if (
+                property === ReservedAgentProperty.META &&
+                !isAgentActive(target.meta.id)
+            ) {
                 return Reflect.set(target, property, value);
             }
 
             if (ContextManager.isContextStatic()) {
                 // When adding an array as a property of a static agent, we need to
                 // treat that array like an agent and register a static id for it
-                if (value instanceof Array && (value as any).id === undefined) {
-                    (value as any).id = StaticAgentRegistry.getNextAvailableId();
+                if (
+                    value instanceof Array &&
+                    (value as any).meta === undefined
+                ) {
+                    (value as any).meta = defaultAgentMeta();
                     StaticAgentRegistry.addAgent(value as any);
                 }
                 return Reflect.set(target, property, value);
-            } else if (StaticAgentRegistry.hasAgent(target.id)) {
+            } else if (StaticAgentRegistry.hasAgent(target.meta.id)) {
                 throw new RegalError(
                     "This static agent must be activated before it may be modified."
                 );
@@ -91,3 +114,4 @@ export const buildInactiveAgentProxy = (agent: Agent): Agent =>
             return Reflect.deleteProperty(target, property);
         }
     } as ProxyHandler<Agent>);
+};

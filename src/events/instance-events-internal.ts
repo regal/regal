@@ -17,9 +17,6 @@ export interface InstanceEventsInternal extends InstanceEvents {
     /** The current `EventRecord`. */
     readonly current: EventRecord;
 
-    /** The ID of the most recently generated `EventRecord`. */
-    readonly lastEventId: number;
-
     /** Contains records of the past events executed during the game cycle. */
     history: EventRecord[];
 

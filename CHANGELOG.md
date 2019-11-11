@@ -1,5 +1,13 @@
 # Regal Changelog
 
+## v2.0.0 - "Dakota" (2019-11-11)
+
+* Fix Agents' ability to have methods by building a prototype registry ([#104](https://github.com/regal/regal/pull/104)), ([#82](https://github.com/regal/regal/pull/82)), ([#119](https://github.com/regal/regal/pull/119))
+* Update API reference to reflect prototype registry changes ([#105](https://github.com/regal/regal/pull/105))
+* Update documentation to use Regal CLI ([#101](https://github.com/regal/regal/pull/101))
+* Metadata property for gameVersion ([#97](https://github.com/regal/regal/pull/97))
+* Fix infinite loop when an event queue is created ([#83](https://github.com/regal/regal/pull/83))
+
 ## v1.0.0 - "Beacon" (2019-02-01)
 
 *First Stable Release* :tada:

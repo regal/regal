@@ -101,7 +101,7 @@ Start with an empty folder. Create a `package.json` file in your project's root 
 ```json
 {
     "name": "my-first-game",
-    "version": "1.0.0"
+    "author": "Your Name Here"
 }
 ```
 
@@ -225,84 +225,36 @@ One last thing: the line `if (POSSIBLE_MOVES.includes(playerMove)) {` uses `Arra
 
 Before your game can be played, it must be bundled. *Bundling* is the process of converting a Regal game's **development source** (i.e. the TypeScript or JavaScript source files that the game developer writes) into a **game bundle**, which is a self-contained file that contains all the code necessary to play the game via a single API.
 
-Game bundles are the form through which Regal games are shared, downloaded, and played.
+You can use the [**Regal CLI**](https://github.com/regal/regal-cli) to create Regal game bundles from the command line. Install it like so:
 
-[**regal-bundler**](https://github.com/regal/regal-bundler) is a tool for creating Regal game bundles. Install it like so:
 ```
-npm install --save-dev regal-bundler
-```
-
-Create a file in your root directory called `build.js` and paste the following code:
-```js
-const bundle = require("regal-bundler").bundle;
-
-bundle();
+npm install -g regal-cli regal
 ```
 
-This imports the `bundle` function from **regal-bundler** and executes it. See the bundler's [documentation](https://github.com/regal/regal-bundler#configuration) for a list of the configuration options you can use.
+To bundle your game, execute this command in your project's root directory:
 
-Run your build script:
 ```
-node build.js
+regal bundle
 ```
 
-This should generate a new file in your project's directory called `my-first-game.regal.js`. *Your first game is bundled and ready to be played!*
+This should generate a new file in your project's directory, called `my-first-game.regal.js`. *Your first game is bundled and ready to be played!*
+
+For a list of configuration options you can use, consult the CLI's [documentation](https://github.com/regal/regal-cli/#bundle).
 
 ### Step 4. Play game
 
-Currently, there isn't a standard way to load a Regal game bundle for playing, although one is coming soon. For now, create a file in your project's root directory called `play.js` with the following contents:
+To load a Regal game bundle for playing, use the [**Regal CLI**](https://github.com/regal/regal-cli) `play` command.
 
-```js
-// Import required modules
-const game = require("./my-first-game.regal");
-const readline = require("readline").createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: false
-});
-
-// Helper function to print output lines
-const printLines = gameResponse => {
-    console.log("");
-    if (gameResponse.output.wasSuccessful) {
-        for (const line of gameResponse.output.log) {
-            console.log(line.data);
-        }
-    } else {
-        console.log(gameResponse);
-    }
-};
-
-// Global to store the current game instance
-let GAME_INSTANCE;
-
-// Start game
-const start = game.postStartCommand();
-printLines(start);
-GAME_INSTANCE = start.instance;
-
-// Send each command to the game
-readline.on("line", command => {
-    const resp = game.postPlayerCommand(GAME_INSTANCE, command);
-    printLines(resp);
-    if (resp.output.wasSuccessful) {
-        GAME_INSTANCE = resp.instance;
-    }
-});
+```
+regal play my-first-game.regal.js
 ```
 
-This script allows you to play your game via the Node terminal. Note that it requires the `readline` module, which should be installed like so:
-```
-npm install --save-dev readline
-```
+The game should open in your terminal. Enter `rock`, `paper`, or `scissors` to play, or `:quit` to exit the game. The sequence should look something like this:
 
-Finally, start your game with the following command:
 ```
-node play.js
-```
+Now Playing: my-first-game by Your Name Here
+Type :quit to exit the game.
 
-This starts the game in the Node terminal. Enter `rock`, `paper`, or `scissors` to play, or press `Ctrl+C` to quit the game. The sequence should look something like this:
-```
 Play rock, paper, or scissors:
 paper
 
@@ -1639,15 +1591,32 @@ In order for a Regal game to be played by clients, it must be bundled first. *Bu
 
 > Game bundles are the form through which Regal games are shared, downloaded, and played.
 
-The official tool for creating Regal game bundles is [**regal-bundler**](https://github.com/regal/regal-bundler).
+#### Using the CLI
 
-To bundle a game, first install `regal-bundler`:
+The easiest way to bundle a game is with the [**Regal CLI**](https://github.com/regal/regal-cli).
+
+Once you have the CLI installed, use the `bundle` command to generate a game bundle.
+
+```
+$ regal bundle
+Created a game bundle for 'my-first-game' at /Users/user/myDir/my-first-game.regal.js
+```
+
+This creates a JavaScript file, which contains all the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for [playing](#playing-a-bundled-game) the game. By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
+
+For a list of configuration options you can use, consult the CLI's [documentation](https://github.com/regal/regal-cli/#bundle).
+
+#### Using `regal-bundler`
+
+You can access the bundling API directly with [**regal-bundler**](https://github.com/regal/regal-bundler).
+
+First, install `regal-bundler`:
 
 ```
 npm install --save-dev regal-bundler
 ```
 
-Generate a game bundle with the `bundle()` function. This creates a JavaScript file, which contains all of the game's dependencies (including the Game Library) and exports an implementation of [`GameApi`](#gameapi) for playing the game.
+Generate a game bundle with the asynchronous `bundle()` function. 
 
 ```ts
 import { bundle } from "regal-bundler";
@@ -1655,32 +1624,41 @@ import { bundle } from "regal-bundler";
 bundle(); // Creates a bundle file
 ```
 
-By default, the generated bundle file will be named `my-game.regal.js`, where `my-game` is a sanitized version of the game's name, as specified in [`GameMetadata`](#gamemetadata).
+[`bundle()`](https://github.com/regal/regal-bundler/blob/master/README.md#configuration) accepts an optional configuration object that can be used to control certain behaviors of the bundler, such as the location of [`input`](https://github.com/regal/regal-bundler#bundlerinputfile-string) or [`output`](https://github.com/regal/regal-bundler#bundleroutputfile-string) files, the module [`format`](https://github.com/regal/regal-bundler#bundleroutputformat-string) of the bundle, or whether [minification](https://github.com/regal/regal-bundler#bundleroutputminify-boolean) should be done on the bundle after it's generated.
 
-A standard game bundle can be consumed like so:
+This configuration object can either be passed into the [`bundle()`](https://github.com/regal/regal-bundler/blob/master/README.md#configuration) function itself or included under the `"bundler"` property in [`regal.json`](#using-configuration-files).
+
+#### Playing a Bundled Game
+
+A standard game bundle exports an implementation of [`GameApi`](#gameapi), which is used to play the game.
+
+The [**Regal CLI**](https://github.com/regal/regal-cli) can be used to play a game bundle from the terminal via the [`play`](https://github.com/regal/regal-cli#play) command:
+
+```
+$ regal play my-first-game.regal.js
+Now Playing: my-first-game by Your Name Here
+Type :quit to exit the game.
+
+Hello, World!
+```
+
+Alternatively, the bundle's [`GameApi`](#gameapi) can be imported as a JavaScript module and accessed programmatically:
 
 ```ts
 const myGame: GameApi = await import("./my-game.regal.js");
 
 let resp = myGame.postStartCommand();
-resp = myGame.postPlayerCommand(resp.instance, "command");
+resp = myGame.postPlayerCommand(resp.instance, "Hello, World!");
 ```
 
 *Note: This example is available [here](https://github.com/regal/demos/blob/master/snippets/external-snippets/bundler-demo.ts).*
 
 Once your game is bundled, only the bundle file is needed to play it.
 
-#### Configuring the Bundler
-
-`bundle()` accepts an optional configuration object that can be used to control certain behaviors of the bundler, such as the location of `input` or `output` files, the module `format` of the bundle, or whether minification should be done on the bundle after it's generated.
-
-This configuration object can either be passed into the `bundle()` function itself or included under the `"bundler"` property in `regal.json`.
-
-See the [`regal-bundler` documentation](https://github.com/regal/regal-bundler/blob/master/README.md) for more details.
-
 ## API Reference
 
 * [`Agent`](#agent)
+* [`AgentMeta`](#agentmeta)
 * [`Charsets`](#charsets)
 * [`EventFunction`](#eventfunction)
 * [`EventQueue`](#eventqueue)
@@ -1699,6 +1677,7 @@ See the [`regal-bundler` documentation](https://github.com/regal/regal-bundler/b
 * [`InstanceRandom`](#instancerandom)
 * [`OutputLine`](#outputline)
 * [`OutputLineType`](#outputlinetype)
+* [`PK`](#pk)
 * [`RegalError`](#regalerror)
 * [`TrackedEvent`](#trackedevent)
 * [`enqueue`](#enqueue-1)
@@ -1717,7 +1696,7 @@ A game object.
 
 ```ts
 class Agent {
-    id: number
+    meta: AgentMeta
     constructor()
 }
 ```
@@ -1762,7 +1741,31 @@ If called in the game's static context (i.e. outside of a game cycle), a static 
 
 Property | Description
 --- | ---
-`id: number` | The agent's unique identifier in the context of the current game.
+`meta: AgentMeta` | The agent's metadata, such as its agent id and prototype id.
+
+### `AgentMeta`
+
+**_Interface_**
+
+A special object associated with every [`Agent`](#agent) which contains important metadata related to that [`Agent`](#agent).
+
+```ts
+interface AgentMeta {
+    id: PK<Agent>
+    protoId: PK<"AgentProto">
+}
+```
+
+#### Description
+
+Properties in `AgentMeta` do not have their changes tracked through [`InstanceEvents`](#instanceevents) like all other agent properties.
+
+#### Properties
+
+Property | Description
+--- | ---
+`id: PK<Agent>` | The agent's unique identifier in the context of the current game.
+`protoId: PK<"AgentProto">` | The unique identifier for the agent's prototype.
 
 ### `Charsets`
 
@@ -2213,14 +2216,15 @@ Metadata about the game, such as its title and author.
 
 ```ts
 interface GameMetadata {
-    readonly name: string
-    readonly author: string
-    readonly headline?: string
-    readonly description?: string
-    readonly homepage?: string
-    readonly repository?: string
-    readonly options?: Partial<GameOptions>
-    readonly regalVersion?: string
+    name: string
+    author: string
+    headline?: string
+    description?: string
+    homepage?: string
+    repository?: string
+    options?: Partial<GameOptions>
+    regalVersion?: string
+    gameVersion?: string
 }
 ```
 
@@ -2240,7 +2244,10 @@ Metadata values can be specified in the optional `regal.json` file or `regal` pr
 }
 ```
 
-If any of the metadata properties `name`, `author`, `description`, `homepage`, or `repository` aren't specified, the values of each property with the same name in `package.json` will be used. `regalVersion` should not be specified, as it is set by the library automatically. If a value is passed for `regalVersion`, an error will be thrown.
+Property Rules:
+* If any of the metadata properties `name`, `author`, `description`,  `homepage`, or `repository` aren't specified, the values of each property with the same name in `package.json` will be used.
+* `gameVersion` will be loaded from `package.json` only.
+* `regalVersion` should not be specified, as it is set by the library automatically. If a value is passed for `regalVersion`, an error will be thrown.
 
 A configuration loading tool like [**regal-bundler**](https://github.com/regal/regal-bundler) is needed if using `regal.json` or the `regal` property in `package.json`. Alternatively, metadata values can be passed explicitly via [`GameApiExtended.init()`](#init). Either way, a metadata object with at least the `name` and `author` properties specified is required before a game can receive commands.
 
@@ -2250,13 +2257,14 @@ This metadata is defined in the game's static context, meaning that it is the sa
 
 Property | Description
 --- | ---
-`readonly name: string` | The game's title.
-`readonly author: string` | The game's author.
-`readonly headline?: string` | The full description of the game.
-`readonly homepage?: string` | The URL of the project's homepage.
-`readonly repository?: string` | The URL of the project's repository.
-`readonly options?: Partial<GameOptions>` | Any options overrides for the game.
-`readonly regalVersion?: string` | The version of the Regal Game Library used by the game.
+`name: string` | The game's title.
+`author: string` | The game's author.
+`headline?: string` | The full description of the game.
+`homepage?: string` | The URL of the project's homepage.
+`repository?: string` | The URL of the project's repository.
+`options?: Partial<GameOptions>` | Any options overrides for the game.
+`regalVersion?: string` | The version of the Regal Game Library used by the game.
+`gameVersion?: string` | The game's version.
 
 ### `GameOptions`
 
@@ -2640,7 +2648,7 @@ A line of text that is sent to the client and is meant to notify the player of s
 
 ```ts
 interface OutputLine {
-    id: number
+    id: PK<OutputLine>
     data: string
     type: OutputLineType
 }
@@ -2650,7 +2658,7 @@ interface OutputLine {
 
 Property | Description
 --- | ---
-`id: number` | The `OutputLine`'s unique identifier.
+`id: PK<OutputLine>` | The `OutputLine`'s unique identifier.
 `data: string` | The text string.
 `type: OutputLineType` | The line's semantic type. (see [`OutputLineType`](#outputlinetype))
 
@@ -2679,6 +2687,122 @@ Member | Description
 `MINOR = "MINOR"` | Non-important line; emphasized less than `OutputLineType.NORMAL` lines, and won't always be shown to the player. <br> Use for repetitive/flavor text that might add a bit to the game experience, but won't be missed if it isn't seen.
 `DEBUG = "DEBUG"` | Meant for debugging purposes; only visible when the `debug` option is enabled.
 `SECTION_TITLE = "SECTION_TITLE"` | Signifies the start of a new section or scene in the game. (i.e. **West of House**)
+
+### `PK`
+
+**_Interface_**
+
+Primary key for an indexed class, a class of which there are many instances that each need a unique identifier.
+
+```ts
+interface PK<T> {
+    plus(n: number): PK<T>
+    minus(n: number): PK<T>
+    equals(key: PK<T>): boolean
+    value(): string
+    index(): number
+}
+```
+
+#### Description
+
+The `PK` interface is mainly for internal use, but as there are other interfaces within the public API which depend on `PK` (such as `Agent` and `OutputLine`), it is part of the public API as well.
+
+#### Generic Type Parameters
+
+Parameter | Description
+--- | ---
+`T` | An identifier for the class referenced by this `PK` type.
+
+#### Methods
+
+##### `plus()`
+
+Generates the primary key that would be generated `n` keys after this one. The result of this function should never be used to assign a key to an object. It's only for comparison.
+
+```ts
+plus(n: number): PK<T>
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`n: number` | The number of times the returned key should be incremented
+
+**Returns**
+
+`PK<T>`: The generated primary key
+
+##### `minus()`
+
+Generates the primary key that would be generated `n` keys before this one. The result of this function should never be used to assign a key to an object. It's only for comparison.
+
+```ts
+minus(n: number): PK<T>
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`n: number` | The number of times the returned key should be decremented
+
+**Returns**
+
+`PK<T>`: The generated primary key
+
+##### `equals()`
+
+Calculates whether this key is equivalent to the given one.
+
+```ts
+equals(key: PK<T>): boolean
+```
+
+**Parameters**
+
+Parameter | Description
+--- | ---
+`key: PK<T>` | The key to test
+
+**Returns**
+
+`boolean`: Whether they are equivalent
+
+##### `value()`
+
+Generates a string value representative of this key.
+
+```ts
+value(): string
+```
+
+**Description**
+
+This is used for the `equals` method, which is strongly preferred for testing the equality of two keys.
+
+**Returns**
+
+`string`: A hash value representative of the key.
+
+##### `index()`
+
+Returns the placement of this key in the list of all keys.
+
+```ts
+index(): number
+```
+
+**Description**
+
+For example, an index of 2 means this was the second key generated.
+
+This includes reserved keys; if a set of reserved keys was used to generate this key's `PKProvider`, the entry with the lowest value will have an index of 0.
+
+**Returns**
+
+`number`: The index of this key.
 
 ### `RegalError`
 

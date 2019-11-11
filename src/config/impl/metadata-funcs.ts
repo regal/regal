@@ -36,6 +36,7 @@ const copyOptions = (opts: Partial<GameOptions>): Partial<GameOptions> => {
 export const copyMetadata = (md: GameMetadata): GameMetadata => ({
     author: md.author,
     description: md.description,
+    gameVersion: md.gameVersion,
     headline: md.headline,
     homepage: md.homepage,
     name: md.name,
@@ -48,7 +49,8 @@ const optionalStringProps: Array<keyof GameMetadata> = [
     "headline",
     "description",
     "homepage",
-    "repository"
+    "repository",
+    "gameVersion"
 ];
 
 /**

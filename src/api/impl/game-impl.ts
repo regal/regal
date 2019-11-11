@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { StaticAgentRegistry } from "../../agents";
+import { StaticAgentRegistry, StaticPrototypeRegistry } from "../../agents";
 import { GameMetadata, GameOptions, MetadataManager } from "../../config";
 import { RegalError } from "../../error";
 import {
@@ -127,6 +127,7 @@ export const Game = {
         HookManager.reset();
         StaticAgentRegistry.reset();
         MetadataManager.reset();
+        StaticPrototypeRegistry.reset();
     },
 
     getMetadataCommand() {

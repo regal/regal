@@ -1,20 +1,49 @@
 import { expect } from "chai";
 import "mocha";
 
-import { getDemoMetadata, log, Dummy, makeAgents } from "../test-utils";
-import { Game } from "../../src/api";
+import {
+    getDemoMetadata,
+    log,
+    Dummy,
+    makeAgents,
+    smartObjectEquals,
+    TestProperty,
+    aPKs,
+    ePKs,
+    testMeta,
+    smartObj,
+    aprPKs
+} from "../test-utils";
+import { Game, onStartCommand } from "../../src/api";
 import {
     Agent,
     PropertyOperation,
-    StaticAgentRegistry
+    StaticAgentRegistry,
+    getGameInstancePK,
+    StaticPrototypeRegistry
 } from "../../src/agents";
 import { RegalError } from "../../src/error";
 import {
-    DEFAULT_EVENT_ID,
-    DEFAULT_EVENT_NAME
-} from "../../src/events/event-record";
+    DEFAULT_EVENT_NAME,
+    getUntrackedEventPK,
+    TrackedEvent,
+    EventFunction,
+    isEventQueue
+} from "../../src/events";
 import { on } from "../../src/events";
 import { buildGameInstance } from "../../src/state";
+import {
+    STATIC_AGENT_PK_PROVIDER,
+    getInactiveAgentPK
+} from "../../src/agents/impl";
+import { ReservedAgentProperty } from "../../src/agents/agent-meta";
+import {
+    defaultAgentMeta,
+    staticAgentMeta,
+    inactiveAgentMeta,
+    agentMetaWithID
+} from "../../src/agents/impl/agent-meta-transformers";
+import { getInstanceStateAgentProtoPK } from "../../src/agents/impl/prototype/agent-proto-keys";
 
 class Parent extends Agent {
     constructor(public child: Dummy) {
@@ -199,7 +228,6 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
             const parent = myGame.using(new Parent(new Dummy("D1", 10)));
-
             expect(parent.child.name).to.equal("D1");
             expect(parent.child.health).to.equal(10);
         });
@@ -376,6 +404,27 @@ describe("Agents", function() {
             expect(parent2.child.health).to.equal(1);
         });
 
+        it("test repro", function() {
+            const CHILD = new Dummy("Bab", 1);
+            StaticPrototypeRegistry;
+
+            // 1
+            Game.init(MD);
+
+            const myGame = buildGameInstance();
+
+            const parentInactive = new Parent(CHILD);
+            // 2
+
+            const parent = myGame.using(parentInactive);
+            // 3
+
+            parent.child.health += 15;
+            // 4
+
+            expect(parent.child.health).to.equal(16);
+        });
+
         it("Activating an agent multiple times returns a reference to the same agent", function() {
             Game.init(MD);
 
@@ -481,7 +530,11 @@ describe("Agents", function() {
             const myGame1 = buildGameInstance<S>();
             newChild(PARENT)(myGame1);
 
-            expect(myGame1.state.parent.child.id).to.equal(3);
+            expect(
+                myGame1.state.parent.child.meta.id.equals(
+                    getGameInstancePK().plus(3)
+                )
+            ).to.be.true;
             expect(myGame1.state.parent.child.name).to.equal("D1");
             expect(myGame1.state.parent.child.health).to.equal(10);
 
@@ -490,7 +543,11 @@ describe("Agents", function() {
             const myParent = myGame2.using(new Parent(new Dummy("D2", 2)));
             newChild(myParent)(myGame2);
 
-            expect(myGame2.state.parent.child.id).to.equal(5);
+            expect(
+                myGame2.state.parent.child.meta.id.equals(
+                    getGameInstancePK().plus(5)
+                )
+            ).to.be.true;
             expect(myGame2.state.parent.child.name).to.equal("D1");
             expect(myGame2.state.parent.child.health).to.equal(10);
 
@@ -499,7 +556,11 @@ describe("Agents", function() {
             const myParent2 = new Parent(undefined);
             newChild(myParent2)(myGame3);
 
-            expect(myGame3.state.parent.child.id).to.equal(4);
+            expect(
+                myGame3.state.parent.child.meta.id.equals(
+                    getGameInstancePK().plus(4)
+                )
+            ).to.be.true;
             expect(myGame3.state.parent.child.name).to.equal("D1");
             expect(myGame3.state.parent.child.health).to.equal(10);
         });
@@ -524,54 +585,58 @@ describe("Agents", function() {
                     game.state.arr = [];
                 })(myGame);
 
-                expect(myGame.agents).to.deep.equal({
-                    _nextId: 2,
+                const [pk0, pk1] = aPKs(1);
+                const epk1 = getUntrackedEventPK().plus(1);
+
+                smartObjectEquals(myGame.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: myGame,
-                    0: {
-                        id: 0,
+                    [pk0.value()]: smartObj({
+                        meta: testMeta(pk0),
                         game: myGame,
                         arr: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { arRefId: 1 }
+                                final: { arRefId: pk1 }
                             }
                         ]
-                    },
-                    1: {
-                        id: 1,
+                    }),
+                    [pk1.value()]: smartObj({
+                        meta: testMeta(pk1),
                         game: myGame,
                         length: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 0
                             }
                         ]
-                    }
+                    })
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
-                        id: 1,
+                        id: epk1,
                         name: "MOD",
                         changes: [
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 property: "length",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 0
                             },
                             {
-                                agentId: 0,
+                                agentId: pk0,
                                 property: "arr",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { arRefId: 1 }
+                                final: { arRefId: pk1 }
                             }
                         ]
                     }
@@ -597,28 +662,32 @@ describe("Agents", function() {
                     game.state.arr = [1, false, "foo"];
                 })(myGame);
 
-                expect(myGame.agents).to.deep.equal({
-                    _nextId: 2,
+                const [pk0, pk1] = aPKs(1);
+                const epk1 = getUntrackedEventPK().plus(1);
+
+                smartObjectEquals(myGame.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: myGame,
-                    0: {
-                        id: 0,
+                    [pk0.value()]: smartObj({
+                        meta: testMeta(pk0),
                         game: myGame,
                         arr: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { arRefId: 1 }
+                                final: { arRefId: pk1 }
                             }
                         ]
-                    },
-                    1: {
-                        id: 1,
+                    }),
+                    [pk1.value()]: smartObj({
+                        meta: testMeta(pk1),
                         game: myGame,
                         length: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -627,7 +696,7 @@ describe("Agents", function() {
                         ],
                         0: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -636,7 +705,7 @@ describe("Agents", function() {
                         ],
                         1: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -645,54 +714,54 @@ describe("Agents", function() {
                         ],
                         2: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: "foo"
                             }
                         ]
-                    }
+                    })
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
-                        id: 1,
+                        id: epk1,
                         name: "MOD",
                         changes: [
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 property: "0",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 1
                             },
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 property: "1",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: false
                             },
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 property: "2",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: "foo"
                             },
                             {
-                                agentId: 1,
+                                agentId: pk1,
                                 property: "length",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 3
                             },
                             {
-                                agentId: 0,
+                                agentId: pk0,
                                 property: "arr",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { arRefId: 1 }
+                                final: { arRefId: pk1 }
                             }
                         ]
                     }
@@ -728,29 +797,33 @@ describe("Agents", function() {
                     game.state.arr = [d1, d2, d3];
                 })(myGame);
 
-                expect(myGame.agents).to.deep.equal({
-                    _nextId: 5,
+                const [pk0, pk1, pk2, pk3, pk4] = aPKs(4);
+                const [epk0, epk1] = ePKs(1);
+
+                smartObjectEquals(myGame.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: myGame,
-                    0: {
-                        id: 0,
+                    [pk0.value()]: smartObj({
+                        meta: testMeta(pk0),
                         game: myGame,
                         arr: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { arRefId: 4 }
+                                final: { arRefId: pk4 }
                             }
                         ]
-                    },
-                    1: {
-                        id: 1,
+                    }),
+                    [pk1.value()]: smartObj({
+                        meta: testMeta(pk1),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: "D1"
@@ -758,21 +831,21 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 5
                             }
                         ]
-                    },
-                    2: {
-                        id: 2,
+                    }),
+                    [pk2.value()]: smartObj({
+                        meta: testMeta(pk2),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: "D2"
@@ -780,21 +853,21 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 10
                             }
                         ]
-                    },
-                    3: {
-                        id: 3,
+                    }),
+                    [pk3.value()]: smartObj({
+                        meta: testMeta(pk3),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: "D3"
@@ -802,20 +875,20 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 15
                             }
                         ]
-                    },
-                    4: {
-                        id: 4,
+                    }),
+                    [pk4.value()]: smartObj({
+                        meta: testMeta(pk4),
                         game: myGame,
                         length: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
@@ -824,72 +897,72 @@ describe("Agents", function() {
                         ],
                         0: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { refId: 1 }
+                                final: { refId: pk1 }
                             }
                         ],
                         1: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { refId: 2 }
+                                final: { refId: pk2 }
                             }
                         ],
                         2: [
                             {
-                                eventId: 1,
+                                eventId: epk1,
                                 eventName: "MOD",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { refId: 3 }
+                                final: { refId: pk3 }
                             }
                         ]
-                    }
+                    })
                 });
                 expect(myGame.events.history).to.deep.equal([
                     {
-                        id: 1,
+                        id: epk1,
                         name: "MOD",
                         changes: [
                             {
-                                agentId: 4,
+                                agentId: pk4,
                                 property: "0",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { refId: 1 }
+                                final: { refId: pk1 }
                             },
                             {
-                                agentId: 4,
+                                agentId: pk4,
                                 property: "1",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { refId: 2 }
+                                final: { refId: pk2 }
                             },
                             {
-                                agentId: 4,
+                                agentId: pk4,
                                 property: "2",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { refId: 3 }
+                                final: { refId: pk3 }
                             },
                             {
-                                agentId: 4,
+                                agentId: pk4,
                                 property: "length",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
                                 final: 3
                             },
                             {
-                                agentId: 0,
+                                agentId: pk0,
                                 property: "arr",
                                 op: PropertyOperation.ADDED,
                                 init: undefined,
-                                final: { arRefId: 4 }
+                                final: { arRefId: pk4 }
                             }
                         ]
                     }
@@ -911,10 +984,12 @@ describe("Agents", function() {
                 const d1 = myGame.state.arr[0];
                 const d2 = myGame.state.arr[1];
 
-                expect(d1.id).to.equal(2);
+                const [_pk0, _pk1, pk2, pk3] = aPKs(3);
+
+                expect(d1.meta.id.equals(pk2)).to.be.true;
                 expect(d1.name).to.equal("D1");
                 expect(d1.health).to.equal(10);
-                expect(d2.id).to.equal(3);
+                expect(d2.meta.id.equals(pk3)).to.be.true;
                 expect(d2.name).to.equal("D2");
                 expect(d2.health).to.equal(15);
             });
@@ -935,8 +1010,8 @@ describe("Agents", function() {
                     myGame.using(d1)
                 );
                 expect(myGame.state.dummy.dummies[1].name).to.equal("D2");
-                expect(myGame.state.dummy.dummies[1].dummies[0]).to.deep.equal({
-                    id: 1,
+                smartObjectEquals(myGame.state.dummy.dummies[1].dummies[0], {
+                    meta: testMeta(getGameInstancePK().plus(1)),
                     name: "D1",
                     health: 10
                 });
@@ -953,10 +1028,15 @@ describe("Agents", function() {
                     game.state.dummies = [d1, d2];
                 })(myGame);
 
-                expect(myGame.state.dummies).to.deep.equal([
-                    { id: 1, name: "D1", health: 10 },
-                    { id: 2, name: "D2", health: 15 }
-                ]);
+                const [_pk0, pk1, pk2] = aPKs(2);
+
+                const expectedVal = [
+                    smartObj({ meta: testMeta(pk1), name: "D1", health: 10 }),
+                    smartObj({ meta: testMeta(pk2), name: "D2", health: 15 })
+                ];
+                (expectedVal as any).meta = TestProperty.REQUIRE_BUT_SKIP;
+
+                smartObjectEquals(myGame.state.dummies, expectedVal);
             });
 
             it("Array.prototype.unshift is functional on agent arrays", function() {
@@ -969,16 +1049,18 @@ describe("Agents", function() {
                 ];
                 myGame.state.dummies.unshift(new Dummy("D3", 15));
 
+                const [_pk0, _pk1, pk2, pk3, pk4] = aPKs(4);
+
                 expect(
                     myGame.state.dummies.map(dummy => ({
-                        id: dummy.id,
+                        id: dummy.meta.id,
                         name: dummy.name,
                         health: dummy.health
                     }))
                 ).to.deep.equal([
-                    { id: 4, name: "D3", health: 15 },
-                    { id: 2, name: "D1", health: 10 },
-                    { id: 3, name: "D2", health: 15 }
+                    { id: pk4, name: "D3", health: 15 },
+                    { id: pk2, name: "D1", health: 10 },
+                    { id: pk3, name: "D2", health: 15 }
                 ]);
             });
 
@@ -996,25 +1078,31 @@ describe("Agents", function() {
                     myGame.state.vals2
                 );
 
-                expect(myGame.state.allVals).to.deep.equal([
-                    true,
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    },
-                    "hello",
-                    {
-                        id: 4,
-                        name: "D2",
-                        health: 15
-                    },
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    }
-                ]);
+                const pk2 = getGameInstancePK().plus(2);
+                const pk4 = pk2.plus(2);
+
+                smartObjectEquals(
+                    [...myGame.state.allVals],
+                    [
+                        true,
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        }),
+                        "hello",
+                        smartObj({
+                            meta: testMeta(pk4),
+                            name: "D2",
+                            health: 15
+                        }),
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        })
+                    ]
+                );
             });
 
             it("Length property of agent arrays is functional", function() {
@@ -1044,13 +1132,16 @@ describe("Agents", function() {
                     game.state.arr = arr;
                 })(myGame);
 
-                expect(myGame.state.arr).to.deep.equal([
-                    {
-                        id: 2,
-                        health: 30,
-                        foo: true
-                    }
-                ]);
+                smartObjectEquals(
+                    [...myGame.state.arr],
+                    [
+                        smartObj({
+                            meta: testMeta(getGameInstancePK().plus(2)),
+                            health: 30,
+                            foo: true
+                        })
+                    ]
+                );
             });
 
             it("Multi-dimensional agent arrays are functional", function() {
@@ -1059,50 +1150,57 @@ describe("Agents", function() {
 
                 const arr = myGame.using([makeAgents(10, 5)]);
 
-                expect(arr).to.deep.equal([
-                    [
-                        {
-                            id: 3,
-                            name: "D10",
-                            health: 10
-                        },
-                        {
-                            id: 4,
-                            name: "D11",
-                            health: 11
-                        },
-                        {
-                            id: 5,
-                            name: "D12",
-                            health: 12
-                        },
-                        {
-                            id: 6,
-                            name: "D13",
-                            health: 13
-                        },
-                        {
-                            id: 7,
-                            name: "D14",
-                            health: 14
-                        }
-                    ]
-                ]);
+                const [_pk0, pk1, pk2, pk3, pk4, pk5, pk6, pk7, pk8] = aPKs(8);
+
+                const expectedInnerArray = [
+                    smartObj({
+                        meta: testMeta(pk3),
+                        name: "D10",
+                        health: 10
+                    }),
+                    smartObj({
+                        meta: testMeta(pk4),
+                        name: "D11",
+                        health: 11
+                    }),
+                    smartObj({
+                        meta: testMeta(pk5),
+                        name: "D12",
+                        health: 12
+                    }),
+                    smartObj({
+                        meta: testMeta(pk6),
+                        name: "D13",
+                        health: 13
+                    }),
+                    smartObj({
+                        meta: testMeta(pk7),
+                        name: "D14",
+                        health: 14
+                    })
+                ] as any;
+                expectedInnerArray.meta = testMeta(pk2);
+                const expectedOuterArray = [
+                    smartObj(expectedInnerArray)
+                ] as any;
+                expectedOuterArray.meta = testMeta(pk1);
+
+                smartObjectEquals(arr, expectedOuterArray);
                 expect(arr.length).to.equal(1);
                 expect(arr[0].length).to.equal(5);
-                expect((arr as any).id).to.equal(1);
+                expect((arr as any).meta.id.equals(pk1)).to.be.true;
 
                 arr.push(makeAgents(16, 10));
 
-                expect(myGame.agents.getAgentManager(1)).to.deep.equal({
-                    id: 1,
+                smartObjectEquals(myGame.agents.getAgentManager(pk1), {
+                    meta: testMeta(pk1),
                     game: myGame,
                     0: [
                         {
-                            eventId: 0,
+                            eventId: getUntrackedEventPK(),
                             eventName: "DEFAULT",
                             final: {
-                                arRefId: 2
+                                arRefId: pk2
                             },
                             init: undefined,
                             op: PropertyOperation.ADDED
@@ -1110,10 +1208,10 @@ describe("Agents", function() {
                     ],
                     1: [
                         {
-                            eventId: 0,
+                            eventId: getUntrackedEventPK(),
                             eventName: "DEFAULT",
                             final: {
-                                arRefId: 8
+                                arRefId: pk8
                             },
                             init: undefined,
                             op: PropertyOperation.ADDED
@@ -1121,7 +1219,7 @@ describe("Agents", function() {
                     ],
                     length: [
                         {
-                            eventId: 0,
+                            eventId: getUntrackedEventPK(),
                             eventName: "DEFAULT",
                             final: 2,
                             init: 1,
@@ -1130,10 +1228,8 @@ describe("Agents", function() {
                     ]
                 });
 
-                expect(
-                    arr[1].find(dummy => dummy.health % 9 == 0)
-                ).to.deep.equal({
-                    id: 11,
+                smartObjectEquals(arr[1].find(dummy => dummy.health % 9 == 0), {
+                    meta: testMeta(pk8.plus(3)),
                     name: "D18",
                     health: 18
                 });
@@ -1147,44 +1243,50 @@ describe("Agents", function() {
                 arr.unshift(makeAgents(3, 4));
                 myGame.state.arr = arr;
 
-                expect(myGame.agents).to.deep.equal({
-                    _nextId: 10,
+                const [pk0, pk1, pk2, pk3, pk4, pk5, pk6, pk7, pk8, pk9] = aPKs(
+                    9
+                );
+                const epk0 = getUntrackedEventPK();
+
+                smartObjectEquals(myGame.agents, {
+                    _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                    _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                     game: myGame,
-                    0: {
-                        id: 0,
+                    [pk0.value()]: smartObj({
+                        meta: testMeta(pk0),
                         game: myGame,
                         arr: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: {
-                                    arRefId: 1
+                                    arRefId: pk1
                                 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    1: {
-                        id: 1,
+                    }),
+                    [pk1.value()]: smartObj({
+                        meta: testMeta(pk1),
                         game: myGame,
                         0: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: {
-                                    arRefId: 5
+                                    arRefId: pk5
                                 },
                                 init: {
-                                    arRefId: 2
+                                    arRefId: pk2
                                 },
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: {
-                                    arRefId: 2
+                                    arRefId: pk2
                                 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1192,10 +1294,10 @@ describe("Agents", function() {
                         ],
                         1: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: {
-                                    arRefId: 2
+                                    arRefId: pk2
                                 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1203,59 +1305,59 @@ describe("Agents", function() {
                         ],
                         length: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 2,
                                 init: 1,
                                 op: PropertyOperation.MODIFIED
                             },
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 1,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    2: {
-                        id: 2,
+                    }),
+                    [pk2.value()]: smartObj({
+                        meta: testMeta(pk2),
                         game: myGame,
                         0: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
-                                final: { refId: 3 },
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
+                                final: { refId: pk3 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ],
                         1: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
-                                final: { refId: 4 },
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
+                                final: { refId: pk4 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ],
                         length: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 2,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    3: {
-                        id: 3,
+                    }),
+                    [pk3.value()]: smartObj({
+                        meta: testMeta(pk3),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D0",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1263,21 +1365,21 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 0,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    4: {
-                        id: 4,
+                    }),
+                    [pk4.value()]: smartObj({
+                        meta: testMeta(pk4),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D1",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1285,70 +1387,70 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 1,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    5: {
-                        id: 5,
+                    }),
+                    [pk5.value()]: smartObj({
+                        meta: testMeta(pk5),
                         game: myGame,
                         0: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
-                                final: { refId: 6 },
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
+                                final: { refId: pk6 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ],
                         1: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
-                                final: { refId: 7 },
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
+                                final: { refId: pk7 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ],
                         2: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
-                                final: { refId: 8 },
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
+                                final: { refId: pk8 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ],
                         3: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
-                                final: { refId: 9 },
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
+                                final: { refId: pk9 },
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ],
                         length: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 4,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    6: {
-                        id: 6,
+                    }),
+                    [pk6.value()]: smartObj({
+                        meta: testMeta(pk6),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D3",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1356,21 +1458,21 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 3,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    7: {
-                        id: 7,
+                    }),
+                    [pk7.value()]: smartObj({
+                        meta: testMeta(pk7),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D4",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1378,21 +1480,21 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 4,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    8: {
-                        id: 8,
+                    }),
+                    [pk8.value()]: smartObj({
+                        meta: testMeta(pk8),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D5",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1400,21 +1502,21 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 5,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    },
-                    9: {
-                        id: 9,
+                    }),
+                    [pk9.value()]: smartObj({
+                        meta: testMeta(pk9),
                         game: myGame,
                         name: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: "D6",
                                 init: undefined,
                                 op: PropertyOperation.ADDED
@@ -1422,14 +1524,14 @@ describe("Agents", function() {
                         ],
                         health: [
                             {
-                                eventId: 0,
-                                eventName: "DEFAULT",
+                                eventId: epk0,
+                                eventName: DEFAULT_EVENT_NAME,
                                 final: 6,
                                 init: undefined,
                                 op: PropertyOperation.ADDED
                             }
                         ]
-                    }
+                    })
                 });
             });
 
@@ -1438,18 +1540,23 @@ describe("Agents", function() {
                 const p = new MultiParent([new Dummy("D1", 10), d2]);
                 const q = new MultiParent(p.children);
 
-                expect(p.children).to.deep.equal([
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    },
-                    {
-                        id: 1,
-                        name: "D2",
-                        health: 10
-                    }
-                ]);
+                const [pk0, pk1, pk2] = aPKs(2);
+
+                smartObjectEquals(
+                    [...p.children],
+                    [
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        }),
+                        smartObj({
+                            meta: testMeta(pk1),
+                            name: "D2",
+                            health: 10
+                        })
+                    ]
+                );
 
                 Game.init(MD);
 
@@ -1459,22 +1566,28 @@ describe("Agents", function() {
 
                 c.pop().name += " Jr.";
 
-                expect(p1.children).to.deep.equal([
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    }
-                ]);
-                expect(myGame1.using(q).children).to.deep.equal([
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    }
-                ]);
-                expect(myGame1.using(d2)).to.deep.equal({
-                    id: 1,
+                smartObjectEquals(
+                    [...p1.children],
+                    [
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        })
+                    ]
+                );
+                smartObjectEquals(
+                    [...myGame1.using(q).children],
+                    [
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        })
+                    ]
+                );
+                smartObjectEquals(myGame1.using(d2), {
+                    meta: testMeta(pk1),
                     name: "D2 Jr.",
                     health: 10
                 });
@@ -1483,62 +1596,76 @@ describe("Agents", function() {
                 const p2 = myGame2.using(p);
                 p2.children.push(new Dummy("D3", 5), d2);
 
-                expect(p2.children).to.deep.equal([
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    },
-                    {
-                        id: 1,
-                        name: "D2",
-                        health: 10
-                    },
-                    {
-                        id: 6,
-                        name: "D3",
-                        health: 5
-                    },
-                    {
-                        id: 1,
-                        name: "D2",
-                        health: 10
-                    }
-                ]);
+                smartObjectEquals(
+                    [...p2.children],
+                    [
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        }),
+                        smartObj({
+                            meta: testMeta(pk1),
+                            name: "D2",
+                            health: 10
+                        }),
+                        smartObj({
+                            meta: testMeta(pk0.plus(6)),
+                            name: "D3",
+                            health: 5
+                        }),
+                        smartObj({
+                            meta: testMeta(pk1),
+                            name: "D2",
+                            health: 10
+                        })
+                    ]
+                );
                 expect(myGame2.using(q).children).to.deep.equal(p2.children);
 
                 // Verify that initial conditions still hold
-                expect(buildGameInstance().using(p).children).to.deep.equal([
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    },
-                    {
-                        id: 1,
-                        name: "D2",
-                        health: 10
-                    }
-                ]);
-                expect(buildGameInstance().using(q).children).to.deep.equal([
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    },
-                    {
-                        id: 1,
-                        name: "D2",
-                        health: 10
-                    }
-                ]);
+                smartObjectEquals(
+                    [...buildGameInstance().using(p).children],
+                    [
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        }),
+                        smartObj({
+                            meta: testMeta(pk1),
+                            name: "D2",
+                            health: 10
+                        })
+                    ]
+                );
+                smartObjectEquals(
+                    [...buildGameInstance().using(q).children],
+                    [
+                        smartObj({
+                            meta: testMeta(pk2),
+                            name: "D1",
+                            health: 10
+                        }),
+                        smartObj({
+                            meta: testMeta(pk1),
+                            name: "D2",
+                            health: 10
+                        })
+                    ]
+                );
             });
 
             it("An agent array's keys enumerate properly", function() {
                 Game.init(MD);
 
                 const a = buildGameInstance().using([1, 2, 3]);
-                expect(Object.keys(a)).to.deep.equal(["0", "1", "2", "id"]);
+                expect(Object.keys(a)).to.deep.equal([
+                    "0",
+                    "1",
+                    "2",
+                    ReservedAgentProperty.META
+                ]);
             });
 
             it("Adding an agent to an array via Array.prototype.push activates the agent", function() {
@@ -1551,16 +1678,388 @@ describe("Agents", function() {
                 const myGame = buildGameInstance();
                 myEvent(myGame);
 
-                expect(myGame.state.list).to.deep.equal([
-                    {
-                        id: 2,
-                        name: "D1",
-                        health: 10
-                    }
-                ]);
-                expect(myGame.agents.getAgentProperty(2, "name")).to.equal(
-                    "D1"
+                smartObjectEquals(
+                    [...myGame.state.list],
+                    [
+                        smartObj({
+                            meta: testMeta(getGameInstancePK().plus(2)),
+                            name: "D1",
+                            health: 10
+                        })
+                    ]
                 );
+                expect(
+                    myGame.agents.getAgentProperty(
+                        getGameInstancePK().plus(2),
+                        "name"
+                    )
+                ).to.equal("D1");
+            });
+        });
+
+        describe("Methods and Inheritance", function() {
+            class ArrayGetterAgent extends Agent {
+                public dummy1 = new Dummy("D1", 10);
+                public dummy2 = new Dummy("D2", 20);
+
+                public getList() {
+                    return [this.dummy1, this.dummy2];
+                }
+            }
+
+            class MethodAgent extends Agent {
+                constructor(private name: string) {
+                    super();
+                }
+
+                public getName() {
+                    return this.name;
+                }
+
+                public setName(name: string) {
+                    this.name = name;
+                }
+            }
+
+            it("An agent subclass may have a method which returns an array of its properties, which are also agents", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const ag = myGame.using(new ArrayGetterAgent());
+
+                const props = [];
+                for (const d of ag.getList()) {
+                    props.push(d.name);
+                }
+
+                expect(props).to.deep.equal(["D1", "D2"]);
+            });
+
+            it("The instance state does not have any functions, but accessing its prototype is still functional", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                myGame.state.foo = "foo";
+                myGame.state.ref = myGame.state;
+                myGame.state.ref.bar = "bar";
+
+                expect(myGame.state.ref.foo).to.equal("foo");
+                expect(myGame.state.bar).to.equal("bar");
+            });
+
+            it("An agent with a getter/setter is functional", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const lars = myGame.using(new MethodAgent(name1));
+
+                expect(lars.getName()).to.equal(name1);
+
+                lars.setName(name2);
+
+                expect(lars.getName()).to.equal(name2);
+            });
+
+            it("A static agent with a getter/setter is functional outside the game cycle", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                const LARS = new MethodAgent(name1);
+
+                expect(LARS.getName()).to.equal(name1);
+
+                LARS.setName(name2);
+                expect(LARS.getName()).to.equal(name2);
+            });
+
+            it("A static agent's method can't be used inside a game cycle", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                const LARS = new MethodAgent(name1);
+
+                Game.init(MD);
+
+                expect(() => LARS.setName(name2)).to.throw(RegalError);
+            });
+
+            it("A static agent's getter/setter is functional inside the game cycle", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                const LARS = new MethodAgent(name1);
+
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const lars = myGame.using(LARS);
+
+                expect(lars.getName()).to.equal(name1);
+
+                lars.setName(name2);
+                expect(lars.getName()).to.equal(name2);
+            });
+
+            it("When multiple instances use the same static agent prototype, their respective states are separate", function() {
+                const name1 = "Lars";
+                const name2 = "Bobbort";
+
+                const LARS = new MethodAgent(name1);
+
+                Game.init(MD);
+
+                const game1 = buildGameInstance();
+                const lars1 = game1.using(LARS);
+
+                const game2 = buildGameInstance();
+                const lars2 = game2.using(LARS);
+
+                lars2.setName(name2);
+                expect(lars1.getName()).to.equal(name1);
+                expect(lars2.getName()).to.equal(name2);
+
+                const lars3 = buildGameInstance().using(LARS);
+                expect(lars1.getName()).to.equal(name1);
+                expect(lars2.getName()).to.equal(name2);
+                expect(lars3.getName()).to.equal(name1);
+            });
+
+            it("Separate instances' prototype registries are entirely separate and therefore do not have key conflicts", function() {
+                Game.init(MD);
+
+                const myGame1 = buildGameInstance();
+                const agent1ForBothGames = myGame1.using(new Dummy("Door", 1));
+                const protoPK1ForBothGames = agent1ForBothGames.meta.protoId;
+
+                const myGame2 = myGame1.recycle();
+                const agent2ForGame2 = myGame2.using(new MethodAgent("Lars"));
+                const protoPK2ForGame2 = agent2ForGame2.meta.protoId;
+
+                const agent2ForGame1 = myGame1.using(new ArrayGetterAgent());
+                const protoPK2ForGame1 = agent2ForGame1.meta.protoId;
+
+                expect(protoPK1ForBothGames.plus(1).equals(protoPK2ForGame2)).to
+                    .be.true;
+                expect(protoPK1ForBothGames.plus(1).equals(protoPK2ForGame1)).to
+                    .be.true;
+                expect(agent2ForGame2.getName()).to.equal("Lars");
+                expect(agent2ForGame1.getList()[0].name).to.equal("D1");
+            });
+
+            it("The instance state has a reserved proto ID", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                expect(
+                    myGame.state.meta.protoId.equals(
+                        getInstanceStateAgentProtoPK()
+                    )
+                ).to.be.true;
+            });
+
+            it("Activating an agent reserves a proto ID for it", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const d1 = myGame.using(new Dummy("D1", 1));
+                expect(
+                    d1.meta.protoId.equals(
+                        getInstanceStateAgentProtoPK().plus(1)
+                    )
+                ).to.be.true;
+            });
+
+            it("Agents of the same class get the same proto ID", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const [d1, d2] = myGame.using([
+                    new Dummy("D1", 1),
+                    new Dummy("D2", 2)
+                ]);
+
+                expect(d1.meta.protoId.equals(d2.meta.protoId)).to.be.true;
+            });
+
+            it("Agents of differing classes receive new proto IDs incrementally", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const [a1, a2] = myGame.using([
+                    new Dummy("D1", 1),
+                    new MethodAgent("foo")
+                ]);
+
+                expect(a1.meta.protoId.plus(1).equals(a2.meta.protoId)).to.be
+                    .true;
+            });
+
+            class MethodAgentChild extends MethodAgent {
+                constructor(name: string, private suffix: string) {
+                    super(name);
+                }
+
+                // New method
+                public getSuffix() {
+                    return this.suffix;
+                }
+
+                // Override method
+                public getName() {
+                    return `${super.getName()} ${this.suffix}`;
+                }
+            }
+
+            it("A child class of a custom Agent class is functional", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const mac = myGame.using(new MethodAgentChild("Mac", "Jr."));
+
+                expect(mac.getSuffix()).to.equal("Jr.");
+                expect(mac.getName()).to.equal("Mac Jr.");
+
+                mac.setName("Lars");
+                expect(mac.getName()).to.equal("Lars Jr.");
+            });
+
+            it("Proto IDs are assigned properly with inheritance", function() {
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const agents = myGame.using([
+                    new MethodAgentChild("Mac", "Jr."),
+                    new Dummy("D1", 10),
+                    new MethodAgent("Lars")
+                ]);
+
+                const agentProtoIDs = agents.map(agent => agent.meta.protoId);
+                const [_appk0, appk1, appk2, appk3] = aprPKs(3);
+
+                expect(agentProtoIDs[0].equals(appk1)).to.be.true;
+                expect(agentProtoIDs[1].equals(appk2)).to.be.true;
+                expect(agentProtoIDs[2].equals(appk3)).to.be.true;
+            });
+
+            it("Instances of Agents instantiated in the static context reuse the proto id", function() {
+                const DUMMY = new Dummy("D", 10);
+                expect(
+                    DUMMY.meta.protoId.equals(
+                        getInstanceStateAgentProtoPK().plus(1)
+                    )
+                ).to.be.true;
+
+                Game.init(MD);
+
+                const game1 = buildGameInstance();
+                const d1 = game1.using(new Dummy("D1", 1));
+                expect(d1.meta.protoId.equals(DUMMY.meta.protoId)).to.be.true;
+
+                const game2 = buildGameInstance();
+                const ma = game2.using(new MethodAgent("Ma"));
+                const d2 = game2.using(new Dummy("D2", 2));
+                expect(d2.meta.protoId.equals(DUMMY.meta.protoId)).to.be.true;
+                expect(ma.meta.protoId.equals(d2.meta.protoId.plus(1))).to.be
+                    .true;
+            });
+
+            it("When a new Agent's prototype does not exist in the static context, it is added to the game instance", function() {
+                Game.init(MD);
+                const myGame = buildGameInstance();
+                const dummy = myGame.using(new Dummy("D1", 1));
+
+                expect(
+                    myGame.agents
+                        .getPrototypeRegistry()
+                        .newInstance(dummy.meta.protoId)
+                ).to.not.be.undefined;
+            });
+
+            it("When a new Agent's prototype already exists in the static context, it is added to the static registry and not the game instance", function() {
+                const _D = new Dummy("D", 10);
+                Game.init(MD);
+
+                const myGame = buildGameInstance();
+                const d1 = myGame.using(new Dummy("D1", 1));
+
+                expect(StaticPrototypeRegistry.newInstance(d1.meta.protoId)).to
+                    .not.be.undefined;
+                expect(() =>
+                    myGame.agents
+                        .getPrototypeRegistry()
+                        .newInstance(d1.meta.protoId)
+                ).to.throw(RegalError);
+            });
+
+            it("The StaticPrototypeRegistry cannot be copied", function() {
+                expect(() => StaticPrototypeRegistry.copy()).to.throw(
+                    RegalError
+                );
+            });
+
+            it("Throws a RegalError if an agent's protoId is forced to some value", function() {
+                Game.init(MD);
+                const myGame = buildGameInstance();
+
+                const _d = new Dummy("D1", 1);
+                _d.meta.protoId = "foo" as any;
+
+                expect(() => myGame.using(_d)).to.throw(RegalError);
+            });
+
+            class ArrowFuncAgent extends Agent {
+                constructor(public func: () => {}) {
+                    super();
+                }
+            }
+
+            it("Agent properties can be arrow functions", function() {
+                Game.init(MD);
+                const myGame = buildGameInstance();
+                const dummy = myGame.using(new ArrowFuncAgent(() => "yo"));
+
+                expect(dummy.func()).to.equal("yo");
+            });
+
+            class TrackedEventAgent extends Agent {
+                public fn: TrackedEvent;
+                constructor(_fn: EventFunction) {
+                    super();
+                    this.fn = on("AGENT METHOD", _fn);
+                }
+            }
+
+            it("Agent properties can be tracked events with event queues as their second argument", function() {
+                Game.init(MD);
+
+                const first = on("first", game => {
+                    game.output.write("first");
+                });
+
+                const second = on("second", game => {
+                    game.output.write("second");
+                });
+
+                const myGame = buildGameInstance();
+                const agent = myGame.using(
+                    new TrackedEventAgent(first.then(second))
+                );
+
+                agent.fn(myGame);
+                expect(myGame.output.lines.map(l => l.data)).to.deep.equal([
+                    "first",
+                    "second"
+                ]);
+            });
+
+            it("Setting complex tracked events as agent properties is okay", function() {
+                Game.init(MD);
+                const func = on("1", on("2", () => {}).then(on("3", () => {})));
+                const myGame = buildGameInstance();
+                myGame.using(new TrackedEventAgent(func)).fn(myGame);
             });
         });
     });
@@ -1572,9 +2071,9 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
 
             const d = myGame.using(new Dummy("D1", 15));
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
-            expect(d.id).to.equal(dr.id);
+            expect(d.meta.id).to.equal(dr.meta.id);
         });
 
         it("The AgentManager's id matches the game instance", function() {
@@ -1583,7 +2082,7 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
 
             const d = myGame.using(new Dummy("D1", 15));
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
             expect(dr.game).to.equal(myGame);
         });
@@ -1594,7 +2093,7 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
 
             const d = myGame.using(new Dummy("D1", 15));
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
             delete d.health;
 
@@ -1613,7 +2112,7 @@ describe("Agents", function() {
             const d = myGame.using(DUMMY);
             d.health += 15;
 
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
             expect(dr.hasPropertyRecord("name")).to.be.false;
             expect(dr.hasPropertyRecord("health")).to.be.true;
@@ -1623,7 +2122,7 @@ describe("Agents", function() {
             Game.init(MD);
             expect(
                 buildGameInstance()
-                    .agents.getAgentManager(0)
+                    .agents.getAgentManager(getGameInstancePK())
                     .hasPropertyRecord("constructor")
             ).to.be.false;
         });
@@ -1636,7 +2135,7 @@ describe("Agents", function() {
             const d = myGame.using(new Dummy("D1", 15));
             d.health += 15;
 
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
             expect(dr.getProperty("name")).to.equal("D1");
             expect(dr.getProperty("health")).to.equal(30);
@@ -1648,7 +2147,8 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 15));
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
+            const [epk0, epk1] = ePKs(1);
 
             const addHealth = (dummy: Dummy) =>
                 on("ADD HEALTH", game => {
@@ -1659,7 +2159,7 @@ describe("Agents", function() {
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: epk0,
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
@@ -1669,14 +2169,14 @@ describe("Agents", function() {
 
             expect(dr.getPropertyHistory("health")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID + 1,
+                    eventId: epk1,
                     eventName: "ADD HEALTH",
                     op: PropertyOperation.MODIFIED,
                     init: 15,
                     final: 30
                 },
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: epk0,
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
@@ -1703,12 +2203,13 @@ describe("Agents", function() {
 
             addHealth(d)(myGame);
 
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
+            const [epk0, epk1] = ePKs(1);
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([]);
             expect(dr.getPropertyHistory("health")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID + 1,
+                    eventId: epk1,
                     eventName: "ADD HEALTH",
                     op: PropertyOperation.MODIFIED,
                     init: 15,
@@ -1717,7 +2218,7 @@ describe("Agents", function() {
             ]);
             expect(dr.getPropertyHistory("foo")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: epk0,
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.DELETED,
                     init: "bar",
@@ -1746,7 +2247,7 @@ describe("Agents", function() {
 
             delete (d as any).foo3;
 
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
             expect(dr.propertyWasDeleted("name")).to.be.true;
             expect(dr.propertyWasDeleted("health")).to.be.false;
@@ -1763,11 +2264,11 @@ describe("Agents", function() {
 
             d.name = "D1";
 
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: getUntrackedEventPK(),
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
@@ -1786,7 +2287,7 @@ describe("Agents", function() {
 
             d.name = "D1";
 
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([]);
         });
@@ -1801,24 +2302,35 @@ describe("Agents", function() {
             delete d.name;
             delete d.name;
 
-            const dr = myGame.agents.getAgentManager(d.id);
+            const dr = myGame.agents.getAgentManager(d.meta.id);
 
             expect(dr.getPropertyHistory("name")).to.deep.equal([
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: getUntrackedEventPK(),
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.DELETED,
                     init: "D1",
                     final: undefined
                 },
                 {
-                    eventId: DEFAULT_EVENT_ID,
+                    eventId: getUntrackedEventPK(),
                     eventName: DEFAULT_EVENT_NAME,
                     op: PropertyOperation.ADDED,
                     init: undefined,
                     final: "D1"
                 }
             ]);
+        });
+
+        it("AgentManager.id is a getter for AgentManager.meta.id", function() {
+            Game.init(MD);
+
+            const myGame = buildGameInstance();
+
+            const d = myGame.using(new Dummy("D1", 15));
+            const dr = myGame.agents.getAgentManager(d.meta.id);
+
+            expect(dr.id).to.equal(dr.meta.id);
         });
     });
 
@@ -1837,47 +2349,51 @@ describe("Agents", function() {
                 });
             })(myGame);
 
+            const [pk0, pk1] = aPKs(1);
+            const [epk0, epk1, epk2] = ePKs(2);
+
             // Verify initial condition
-            expect(myGame.agents).to.deep.equal({
-                _nextId: 2,
+            smartObjectEquals(myGame.agents, {
+                _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: myGame,
-                0: {
-                    id: 0,
+                [pk0.value()]: smartObj({
+                    meta: testMeta(pk0),
                     game: myGame,
                     dummy: [
                         {
-                            eventId: 1,
+                            eventId: epk1,
                             eventName: "INIT",
                             init: undefined,
                             final: {
-                                refId: 1
+                                refId: pk1
                             },
                             op: PropertyOperation.ADDED
                         }
                     ],
                     foo: [
                         {
-                            eventId: 2,
+                            eventId: epk2,
                             eventName: "MOD",
                             init: undefined,
                             final: true,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                },
-                1: {
-                    id: 1,
+                }),
+                [pk1.value()]: smartObj({
+                    meta: testMeta(pk1),
                     game: myGame,
                     name: [
                         {
-                            eventId: 2,
+                            eventId: epk2,
                             eventName: "MOD",
                             init: "D1",
                             final: "Jimmy",
                             op: PropertyOperation.MODIFIED
                         },
                         {
-                            eventId: 1,
+                            eventId: epk1,
                             eventName: "INIT",
                             init: undefined,
                             final: "D1",
@@ -1886,52 +2402,53 @@ describe("Agents", function() {
                     ],
                     health: [
                         {
-                            eventId: 1,
+                            eventId: epk1,
                             eventName: "INIT",
                             init: undefined,
                             final: 10,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                }
+                })
             });
 
             const myGame2 = myGame.recycle();
 
-            expect(myGame2.agents).to.deep.equal({
-                _nextId: 2,
+            smartObjectEquals(myGame2.agents, {
+                _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: myGame2,
-                0: {
-                    id: 0,
+                [pk0.value()]: smartObj({
+                    meta: testMeta(pk0),
                     game: myGame2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
-                                refId: 1
+                                refId: pk1
                             },
                             op: PropertyOperation.ADDED
                         }
                     ],
                     foo: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: true,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                },
-                1: {
-                    id: 1,
+                }),
+                [pk1.value()]: smartObj({
+                    meta: testMeta(pk1),
                     game: myGame2,
                     name: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: "Jimmy",
                             op: PropertyOperation.ADDED
@@ -1939,14 +2456,14 @@ describe("Agents", function() {
                     ],
                     health: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: 10,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                }
+                })
             });
         });
 
@@ -1964,40 +2481,44 @@ describe("Agents", function() {
                 });
             })(myGame);
 
+            const [pk0, pk1] = aPKs(1);
+            const [epk0, epk1, epk2] = ePKs(2);
+
             // Verify initial condition
-            expect(myGame.agents).to.deep.equal({
-                _nextId: 2,
+            smartObjectEquals(myGame.agents, {
+                _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: myGame,
-                0: {
-                    id: 0,
+                [pk0.value()]: smartObj({
+                    meta: testMeta(pk0),
                     game: myGame,
                     dummy: [
                         {
-                            eventId: 1,
+                            eventId: epk1,
                             eventName: "INIT",
                             init: undefined,
                             final: {
-                                refId: 1
+                                refId: pk1
                             },
                             op: PropertyOperation.ADDED
                         }
                     ],
                     foo: [
                         {
-                            eventId: 2,
+                            eventId: epk2,
                             eventName: "MOD",
                             init: undefined,
                             final: true,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                },
-                1: {
-                    id: 1,
+                }),
+                [pk1.value()]: smartObj({
+                    meta: testMeta(pk1),
                     game: myGame,
                     name: [
                         {
-                            eventId: 2,
+                            eventId: epk2,
                             eventName: "MOD",
                             init: "D1",
                             final: "Jimmy",
@@ -2006,52 +2527,53 @@ describe("Agents", function() {
                     ],
                     health: [
                         {
-                            eventId: 1,
+                            eventId: epk1,
                             eventName: "INIT",
                             init: undefined,
                             final: 10,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                }
+                })
             });
 
             const myGame2 = myGame.recycle();
 
-            expect(myGame2.agents).to.deep.equal({
-                _nextId: 2,
+            smartObjectEquals(myGame2.agents, {
+                _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: myGame2,
-                0: {
-                    id: 0,
+                [pk0.value()]: smartObj({
+                    meta: testMeta(pk0),
                     game: myGame2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
-                                refId: 1
+                                refId: pk1
                             },
                             op: PropertyOperation.ADDED
                         }
                     ],
                     foo: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: true,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                },
-                1: {
-                    id: 1,
+                }),
+                [pk1.value()]: smartObj({
+                    meta: testMeta(pk1),
                     game: myGame2,
                     name: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: "Jimmy",
                             op: PropertyOperation.ADDED
@@ -2059,14 +2581,14 @@ describe("Agents", function() {
                     ],
                     health: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: 10,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                }
+                })
             });
         });
 
@@ -2086,48 +2608,52 @@ describe("Agents", function() {
                 });
             })(myGame);
 
+            const [pk0, pk1] = aPKs(1);
+            const epk0 = getUntrackedEventPK();
+
             const game2 = myGame.recycle();
 
-            expect(game2.agents).to.deep.equal({
-                _nextId: 2,
+            smartObjectEquals(game2.agents, {
+                _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: game2,
-                0: {
-                    id: 0,
+                [pk0.value()]: smartObj({
+                    meta: testMeta(pk0),
                     game: game2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
-                                refId: 1
+                                refId: pk1
                             },
                             op: PropertyOperation.ADDED
                         }
                     ],
                     foo: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: true,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                },
-                1: {
-                    id: 1,
+                }),
+                [pk1.value()]: smartObj({
+                    meta: testMeta(pk1),
                     game: game2,
                     name: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: epk0,
+                            eventName: DEFAULT_EVENT_NAME,
                             init: "D1",
                             final: "Jimmy",
                             op: PropertyOperation.MODIFIED
                         }
                     ]
-                }
+                })
             });
         });
 
@@ -2147,37 +2673,40 @@ describe("Agents", function() {
 
             const game2 = myGame.recycle();
 
-            expect(game2.agents).to.deep.equal({
-                _nextId: 2,
+            const [pk0, pk1] = aPKs(1);
+
+            smartObjectEquals(game2.agents, {
+                _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: game2,
-                0: {
-                    id: 0,
+                [pk0.value()]: smartObj({
+                    meta: testMeta(pk0),
                     game: game2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: getUntrackedEventPK(),
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
-                                refId: 1
+                                refId: pk1
                             },
                             op: PropertyOperation.ADDED
                         }
                     ]
-                },
-                1: {
-                    id: 1,
+                }),
+                [pk1.value()]: smartObj({
+                    meta: testMeta(pk1),
                     game: game2,
                     health: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: getUntrackedEventPK(),
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: 10,
                             op: PropertyOperation.ADDED
                         }
                     ]
-                }
+                })
             });
         });
 
@@ -2198,37 +2727,40 @@ describe("Agents", function() {
 
             const game2 = myGame.recycle();
 
-            expect(game2.agents).to.deep.equal({
-                _nextId: 2,
+            const [pk0, pk1] = aPKs(1);
+
+            smartObjectEquals(game2.agents, {
+                _pkProvider: TestProperty.REQUIRE_BUT_SKIP,
+                _prototypeRegistry: TestProperty.REQUIRE_BUT_SKIP,
                 game: game2,
-                0: {
-                    id: 0,
+                [pk0.value()]: smartObj({
+                    meta: testMeta(pk0),
                     game: game2,
                     dummy: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: getUntrackedEventPK(),
+                            eventName: DEFAULT_EVENT_NAME,
                             init: undefined,
                             final: {
-                                refId: 1
+                                refId: pk1
                             },
                             op: PropertyOperation.ADDED
                         }
                     ]
-                },
-                1: {
-                    id: 1,
+                }),
+                [pk1.value()]: smartObj({
+                    meta: testMeta(pk1),
                     game: game2,
                     name: [
                         {
-                            eventId: 0,
-                            eventName: "DEFAULT",
+                            eventId: getUntrackedEventPK(),
+                            eventName: DEFAULT_EVENT_NAME,
                             init: "D1",
                             final: undefined,
                             op: PropertyOperation.DELETED
                         }
                     ]
-                }
+                })
             });
         });
 
@@ -2239,8 +2771,10 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
 
-            expect(myGame.agents.reserveNewId()).to.equal(2);
-            expect(myGame.agents.reserveNewId()).to.equal(3);
+            expect(myGame.agents.reserveNewId().equals(DUMMY.meta.id.plus(1)))
+                .to.be.true;
+            expect(myGame.agents.reserveNewId().equals(DUMMY.meta.id.plus(2)))
+                .to.be.true;
         });
 
         it("InstanceAgents.getAgentProperty gets the correct property from either the instance or static registry", function() {
@@ -2255,9 +2789,13 @@ describe("Agents", function() {
             d.health += 5;
             (d as any).foo = true;
 
-            expect(myGame.agents.getAgentProperty(d.id, "name")).to.equal("D1");
-            expect(myGame.agents.getAgentProperty(d.id, "health")).to.equal(5);
-            expect(myGame.agents.getAgentProperty(d.id, "foo")).to.be.true;
+            expect(myGame.agents.getAgentProperty(d.meta.id, "name")).to.equal(
+                "D1"
+            );
+            expect(
+                myGame.agents.getAgentProperty(d.meta.id, "health")
+            ).to.equal(5);
+            expect(myGame.agents.getAgentProperty(d.meta.id, "foo")).to.be.true;
         });
 
         it("If the static agent hasn't been modified, InstanceAgents.getAgentProperty will call the static registry directly", function() {
@@ -2269,13 +2807,16 @@ describe("Agents", function() {
 
             const d = myGame.using(DUMMY);
 
-            expect(myGame.agents.getAgentProperty(d.id, "name")).to.equal("D1");
-            expect(myGame.agents.getAgentProperty(d.id, "bad")).to.be.undefined;
+            expect(myGame.agents.getAgentProperty(d.meta.id, "name")).to.equal(
+                "D1"
+            );
+            expect(myGame.agents.getAgentProperty(d.meta.id, "bad")).to.be
+                .undefined;
             expect(
                 myGame.agents
                     .agentManagers()
-                    .map(manager => manager.id)
-                    .includes(d.id)
+                    .map(manager => manager.meta.id)
+                    .includes(d.meta.id)
             ).to.be.false; // There isn't an agent manager for this agent
         });
 
@@ -2284,9 +2825,11 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
 
-            expect(() => myGame.agents.getAgentProperty(1, "foo")).to.throw(
+            const pk1 = getGameInstancePK().plus(1);
+
+            expect(() => myGame.agents.getAgentProperty(pk1, "foo")).to.throw(
                 RegalError,
-                "No agent with the id <1> exists."
+                `No agent with the id <${pk1.value()}> exists.`
             );
         });
 
@@ -2296,7 +2839,12 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 10));
 
-            expect(myGame.agents.getAgentProperty(1, "foo")).to.be.undefined;
+            expect(
+                myGame.agents.getAgentProperty(
+                    getGameInstancePK().plus(1),
+                    "foo"
+                )
+            ).to.be.undefined;
         });
 
         it("InstanceAgents.getAgentProperty returns an agent proxy when the value of the static agent's property is an agent", function() {
@@ -2308,13 +2856,16 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
             const p = myGame.using(PARENT);
 
-            const child = myGame.agents.getAgentProperty(2, "child");
-            expect(child).to.deep.equal({
-                id: 1,
+            const child = myGame.agents.getAgentProperty(
+                getGameInstancePK().plus(2),
+                "child"
+            );
+            smartObjectEquals(child, {
+                meta: testMeta(getGameInstancePK().plus(1)),
                 name: "D1",
                 health: 10
             });
-            expect(child.id).to.equal(DUMMY.id);
+            expect(child.meta.id).to.equal(DUMMY.meta.id);
             expect(child.name).to.equal("D1");
         });
 
@@ -2324,7 +2875,7 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 10));
 
-            myGame.agents.setAgentProperty(d.id, "name", "Lars");
+            myGame.agents.setAgentProperty(d.meta.id, "name", "Lars");
 
             expect(d.name).to.equal("Lars");
         });
@@ -2337,7 +2888,7 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
 
             myGame.agents.setAgentProperty(
-                1,
+                getGameInstancePK().plus(1),
                 "sibling",
                 new Sibling("Bob", SIB)
             );
@@ -2347,15 +2898,21 @@ describe("Agents", function() {
             expect(buildGameInstance().using(SIB).sibling).to.be.undefined;
         });
 
-        it("Error check InstanceAgents.setAgentProperty with id", function() {
+        it("Error check InstanceAgents.setAgentProperty with meta", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
             myGame.using(new Dummy("D1", 10));
 
-            expect(() => myGame.agents.setAgentProperty(1, "id", 2)).to.throw(
+            expect(() =>
+                myGame.agents.setAgentProperty(
+                    getGameInstancePK().plus(1),
+                    ReservedAgentProperty.META,
+                    2
+                )
+            ).to.throw(
                 RegalError,
-                "The agent's <id> property cannot be set."
+                "The agent's <meta> property cannot be set."
             );
         });
 
@@ -2366,7 +2923,11 @@ describe("Agents", function() {
             myGame.using(new Dummy("D1", 10));
 
             expect(() =>
-                myGame.agents.setAgentProperty(1, "game", buildGameInstance())
+                myGame.agents.setAgentProperty(
+                    getGameInstancePK().plus(1),
+                    ReservedAgentProperty.GAME,
+                    buildGameInstance()
+                )
             ).to.throw(
                 RegalError,
                 "The agent's <game> property cannot be set."
@@ -2376,10 +2937,12 @@ describe("Agents", function() {
         it("Error check InstanceAgents.setAgentProperty with an invalid id", function() {
             Game.init(MD);
 
+            const pk1 = getGameInstancePK().plus(1);
+
             const myGame = buildGameInstance();
             expect(() =>
-                myGame.agents.setAgentProperty(1, "foo", true)
-            ).to.throw("No agent with the id <1> exists.");
+                myGame.agents.setAgentProperty(pk1, "foo", true)
+            ).to.throw(`No agent with the id <${pk1.value()}> exists.`);
         });
 
         it("InstanceAgents.hasAgentProperty works properly with static agents", function() {
@@ -2389,10 +2952,12 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
 
-            expect(myGame.agents.hasAgentProperty(DUMMY.id, "name")).to.be.true;
-            expect(myGame.agents.hasAgentProperty(DUMMY.id, "health")).to.be
+            expect(myGame.agents.hasAgentProperty(DUMMY.meta.id, "name")).to.be
                 .true;
-            expect(myGame.agents.hasAgentProperty(DUMMY.id, "foo")).to.be.false;
+            expect(myGame.agents.hasAgentProperty(DUMMY.meta.id, "health")).to
+                .be.true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.meta.id, "foo")).to.be
+                .false;
         });
 
         it("InstanceAgents.hasAgentProperty works properly with static agents that have been modified in the cycle", function() {
@@ -2404,10 +2969,12 @@ describe("Agents", function() {
 
             myGame.using(DUMMY).health += 15;
 
-            expect(myGame.agents.hasAgentProperty(DUMMY.id, "name")).to.be.true;
-            expect(myGame.agents.hasAgentProperty(DUMMY.id, "health")).to.be
+            expect(myGame.agents.hasAgentProperty(DUMMY.meta.id, "name")).to.be
                 .true;
-            expect(myGame.agents.hasAgentProperty(DUMMY.id, "foo")).to.be.false;
+            expect(myGame.agents.hasAgentProperty(DUMMY.meta.id, "health")).to
+                .be.true;
+            expect(myGame.agents.hasAgentProperty(DUMMY.meta.id, "foo")).to.be
+                .false;
         });
 
         it("InstanceAgents.hasAgentProperty works properly with nonstatic agents", function() {
@@ -2416,20 +2983,23 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
             const dummy = myGame.using(new Dummy("D1", 10));
 
-            expect(myGame.agents.hasAgentProperty(dummy.id, "name")).to.be.true;
-            expect(myGame.agents.hasAgentProperty(dummy.id, "health")).to.be
+            expect(myGame.agents.hasAgentProperty(dummy.meta.id, "name")).to.be
                 .true;
-            expect(myGame.agents.hasAgentProperty(dummy.id, "foo")).to.be.false;
+            expect(myGame.agents.hasAgentProperty(dummy.meta.id, "health")).to
+                .be.true;
+            expect(myGame.agents.hasAgentProperty(dummy.meta.id, "foo")).to.be
+                .false;
         });
 
         it("Error check for InstanceAgents.hasAgentProperty with an invalid id", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const pk1 = getGameInstancePK().plus(1);
 
-            expect(() => myGame.agents.hasAgentProperty(1, "foo")).to.throw(
+            expect(() => myGame.agents.hasAgentProperty(pk1, "foo")).to.throw(
                 RegalError,
-                "No agent with the id <1> exists."
+                `No agent with the id <${pk1.value()}> exists.`
             );
         });
 
@@ -2441,8 +3011,8 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
             const d = myGame.using(DUMMY);
 
-            myGame.agents.deleteAgentProperty(d.id, "name");
-            myGame.agents.deleteAgentProperty(d.id, "foo");
+            myGame.agents.deleteAgentProperty(d.meta.id, "name");
+            myGame.agents.deleteAgentProperty(d.meta.id, "foo");
 
             expect("name" in d).to.be.false;
             expect(d.name).to.be.undefined;
@@ -2457,15 +3027,15 @@ describe("Agents", function() {
             const myGame = buildGameInstance();
             const d = myGame.using(new Dummy("D1", 10));
 
-            myGame.agents.deleteAgentProperty(d.id, "name");
-            myGame.agents.deleteAgentProperty(d.id, "foo");
+            myGame.agents.deleteAgentProperty(d.meta.id, "name");
+            myGame.agents.deleteAgentProperty(d.meta.id, "foo");
 
             expect("name" in d).to.be.false;
             expect(d.name).to.be.undefined;
             expect("health" in d).to.be.true;
         });
 
-        it("Error check for InstanceAgents.deleteAgentProperty refuse delete of id", function() {
+        it("Error check for InstanceAgents.deleteAgentProperty refuse delete of meta", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
@@ -2473,10 +3043,13 @@ describe("Agents", function() {
             const dummy = myGame.using(new Dummy("D1", 10));
 
             expect(() =>
-                myGame.agents.deleteAgentProperty(dummy.id, "id")
+                myGame.agents.deleteAgentProperty(
+                    dummy.meta.id,
+                    ReservedAgentProperty.META
+                )
             ).to.throw(
                 RegalError,
-                "The agent's <id> property cannot be deleted."
+                "The agent's <meta> property cannot be deleted."
             );
         });
 
@@ -2488,7 +3061,7 @@ describe("Agents", function() {
             const dummy = myGame.using(new Dummy("D1", 10));
 
             expect(() =>
-                myGame.agents.deleteAgentProperty(dummy.id, "game")
+                myGame.agents.deleteAgentProperty(dummy.meta.id, "game")
             ).to.throw(
                 RegalError,
                 "The agent's <game> property cannot be deleted."
@@ -2499,10 +3072,13 @@ describe("Agents", function() {
             Game.init(MD);
 
             const myGame = buildGameInstance();
+            const pk1 = getGameInstancePK().plus(1);
 
-            expect(() => myGame.agents.deleteAgentProperty(1, "foo")).to.throw(
+            expect(() =>
+                myGame.agents.deleteAgentProperty(pk1, "foo")
+            ).to.throw(
                 RegalError,
-                "No agent with the id <1> exists."
+                `No agent with the id <${pk1.value()}> exists.`
             );
         });
 
@@ -2513,7 +3089,7 @@ describe("Agents", function() {
             const d = myGame.using(new Dummy("D1", 10));
 
             expect(
-                myGame.agents.getAgentManager(d.id).getProperty("name")
+                myGame.agents.getAgentManager(d.meta.id).getProperty("name")
             ).to.equal("D1");
         });
 
@@ -2522,32 +3098,52 @@ describe("Agents", function() {
 
             const myGame = buildGameInstance();
 
-            expect(myGame.agents.getAgentManager(-1)).to.be.undefined;
+            expect(myGame.agents.getAgentManager(getGameInstancePK().minus(1)))
+                .to.be.undefined;
+        });
+
+        it("InstanceAgents.recycle breaks the connection between Agent PK providers", function() {
+            Game.init(MD);
+
+            const baseGame = buildGameInstance();
+            const baseAgent = baseGame.using(new Dummy("D1", 1));
+
+            const newGame = baseGame.recycle();
+
+            const agent2ForBase = baseGame.using(new Dummy("D2", 2));
+            const agent2ForNew = newGame.using(new Dummy("D3", 3));
+
+            expect(baseAgent.meta.id.plus(1).equals(agent2ForBase.meta.id)).to
+                .be.true;
+            expect(agent2ForBase.meta.id.equals(agent2ForNew.meta.id)).to.be
+                .true;
         });
     });
 
     describe("StaticAgentRegistry", function() {
-        it("StaticAgentRegistry.getNextAvailableId increments by 1 for each static agent", function() {
-            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+        it("STATIC_AGENT_PK_PROVIDER increments by 1 for each static agent added to the static registry", function() {
+            const [_pk0, pk1, pk2, pk3, _pk4, pk5] = aPKs(5);
+
+            expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk1)).to.be.true;
 
             const D = new Dummy("D1", 10);
-            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(2);
+            expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk2)).to.be.true;
 
             const P = new Parent(D);
-            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(3);
+            expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk3)).to.be.true;
 
             const P2 = new Parent(new Dummy("D2", 5));
-            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(5);
+            expect(STATIC_AGENT_PK_PROVIDER.peek().equals(pk5)).to.be.true;
         });
 
         it("StaticAgentRegistry.hasAgentProperty works properly", function() {
             const D = new Dummy("D1", 10);
 
-            expect(StaticAgentRegistry.hasAgentProperty(D.id, "name")).to.be
-                .true;
-            expect(StaticAgentRegistry.hasAgentProperty(D.id, "health")).to.be
-                .true;
-            expect(StaticAgentRegistry.hasAgentProperty(D.id, "foo")).to.be
+            expect(StaticAgentRegistry.hasAgentProperty(D.meta.id, "name")).to
+                .be.true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.meta.id, "health")).to
+                .be.true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.meta.id, "foo")).to.be
                 .false;
         });
 
@@ -2560,13 +3156,13 @@ describe("Agents", function() {
 
             (d as any).bar = true;
 
-            expect(StaticAgentRegistry.hasAgentProperty(D.id, "name")).to.be
+            expect(StaticAgentRegistry.hasAgentProperty(D.meta.id, "name")).to
+                .be.true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.meta.id, "health")).to
+                .be.true;
+            expect(StaticAgentRegistry.hasAgentProperty(D.meta.id, "foo")).to.be
                 .true;
-            expect(StaticAgentRegistry.hasAgentProperty(D.id, "health")).to.be
-                .true;
-            expect(StaticAgentRegistry.hasAgentProperty(D.id, "foo")).to.be
-                .true;
-            expect(StaticAgentRegistry.hasAgentProperty(D.id, "bar")).to.be
+            expect(StaticAgentRegistry.hasAgentProperty(D.meta.id, "bar")).to.be
                 .false;
         });
 
@@ -2574,72 +3170,86 @@ describe("Agents", function() {
             const D = new Dummy("D1", 10);
             const P = new Parent(D);
 
-            expect(StaticAgentRegistry.getAgentProperty(D.id, "name")).to.equal(
-                "D1"
-            );
             expect(
-                StaticAgentRegistry.getAgentProperty(D.id, "health")
+                StaticAgentRegistry.getAgentProperty(D.meta.id, "name")
+            ).to.equal("D1");
+            expect(
+                StaticAgentRegistry.getAgentProperty(D.meta.id, "health")
             ).to.equal(10);
-            expect(StaticAgentRegistry.getAgentProperty(D.id, "foo")).to.be
+            expect(StaticAgentRegistry.getAgentProperty(D.meta.id, "foo")).to.be
                 .undefined;
             expect(
-                StaticAgentRegistry.getAgentProperty(P.id, "child")
+                StaticAgentRegistry.getAgentProperty(P.meta.id, "child")
             ).to.equal(D);
         });
 
         it("Error check for StaticAgentRegistry.getAgentProperty with an invalid id", function() {
             expect(() =>
-                StaticAgentRegistry.getAgentProperty(0, "foo")
+                StaticAgentRegistry.getAgentProperty(getGameInstancePK(), "foo")
             ).to.throw(
                 RegalError,
-                "No agent with the id <0> exists in the static registry."
+                `No agent with the id <${getGameInstancePK().value()}> exists in the static registry.`
             );
         });
 
         it("StaticAgentRegistry.hasAgent works properly", function() {
-            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(getGameInstancePK().plus(1))).to
+                .be.false;
 
             const D = new Dummy("D1", 10);
 
-            expect(StaticAgentRegistry.hasAgent(1)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(getGameInstancePK().plus(1))).to
+                .be.true;
 
             Game.init(MD);
 
             const p = buildGameInstance().using(new Parent(D));
 
-            expect(StaticAgentRegistry.hasAgent(p.id)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(p.meta.id)).to.be.false;
         });
 
         it("StaticAgentRegistry.addAgent is called implicitly", function() {
-            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
+            const pk1 = getGameInstancePK().plus(1);
+            expect(StaticAgentRegistry.hasAgent(pk1)).to.be.false;
 
             const D = new Dummy("D1", 10);
 
-            expect(StaticAgentRegistry[1]).to.deep.equal(D);
+            expect(StaticAgentRegistry[pk1.value()]).to.deep.equal(D);
         });
 
         it("StaticAgentRegistry.addAgent blocks an illegal id", function() {
-            expect(() => StaticAgentRegistry.addAgent({ id: 23 })).to.throw(
+            const pk = getGameInstancePK().plus(22);
+            expect(() =>
+                StaticAgentRegistry.addAgent({
+                    meta: {
+                        id: pk,
+                        protoId: undefined
+                    }
+                })
+            ).to.throw(
                 RegalError,
-                "Expected an agent with id <1>."
+                `Only inactive agents can be added to the static registry. This one already has an id of <${pk.value()}>.`
             );
         });
 
-        it("StaticAgentRegistry.reset removes all agents and resets the agent count", function() {
+        it("StaticAgentRegistry.reset removes all agents and resets the static agent PK provider", function() {
             const D = new Dummy("D1", 10);
             const P = new Parent(new Dummy("D2", 25));
 
-            expect(StaticAgentRegistry.hasAgent(1)).to.be.true;
-            expect(StaticAgentRegistry.hasAgent(2)).to.be.true;
-            expect(StaticAgentRegistry.hasAgent(3)).to.be.true;
-            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(4);
+            const [_pk0, pk1, pk2, pk3] = aPKs(3);
+
+            expect(StaticAgentRegistry.hasAgent(pk1)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(pk2)).to.be.true;
+            expect(StaticAgentRegistry.hasAgent(pk3)).to.be.true;
+            expect(STATIC_AGENT_PK_PROVIDER.next().equals(pk3.plus(1))).to.be
+                .true;
 
             StaticAgentRegistry.reset();
 
-            expect(StaticAgentRegistry.hasAgent(1)).to.be.false;
-            expect(StaticAgentRegistry.hasAgent(2)).to.be.false;
-            expect(StaticAgentRegistry.hasAgent(3)).to.be.false;
-            expect(StaticAgentRegistry.getNextAvailableId()).to.equal(1);
+            expect(StaticAgentRegistry.hasAgent(pk1)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(pk2)).to.be.false;
+            expect(StaticAgentRegistry.hasAgent(pk3)).to.be.false;
+            expect(STATIC_AGENT_PK_PROVIDER.next().equals(pk1)).to.be.true;
         });
     });
 
@@ -2651,36 +3261,42 @@ describe("Agents", function() {
             myGame.state.dummy = new Parent(new Dummy("D1", 10));
             const float = myGame.using(new Dummy("D2", 15));
 
+            const pks0_3 = aPKs(3);
+
             expect(
-                myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3]);
-            expect(myGame.state.dummy).to.deep.equal({
-                id: 1,
-                child: {
-                    id: 2,
+                myGame.agents.agentManagers().map(am => am.meta.id)
+            ).to.deep.equal(pks0_3);
+            smartObjectEquals(myGame.state.dummy, {
+                meta: testMeta(pks0_3[1]),
+                child: smartObj({
+                    meta: testMeta(pks0_3[2]),
                     name: "D1",
                     health: 10
-                }
+                })
             });
-            expect(myGame.agents.getAgentProperty(3, "name")).to.equal("D2");
+            expect(myGame.agents.getAgentProperty(pks0_3[3], "name")).to.equal(
+                "D2"
+            );
 
             myGame.agents.scrubAgents();
 
             expect(
-                myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2]);
-            expect(myGame.state.dummy).to.deep.equal({
-                id: 1,
-                child: {
-                    id: 2,
+                myGame.agents.agentManagers().map(am => am.meta.id)
+            ).to.deep.equal(aPKs(2));
+            smartObjectEquals(myGame.state.dummy, {
+                meta: testMeta(pks0_3[1]),
+                child: smartObj({
+                    meta: testMeta(pks0_3[2]),
                     name: "D1",
                     health: 10
-                }
+                })
             });
 
-            expect(() => myGame.agents.getAgentProperty(3, "name")).to.throw(
+            expect(() =>
+                myGame.agents.getAgentProperty(pks0_3[3], "name")
+            ).to.throw(
                 RegalError,
-                "No agent with the id <3> exists."
+                `No agent with the id <${pks0_3[3].value()}> exists.`
             );
         });
 
@@ -2693,31 +3309,73 @@ describe("Agents", function() {
             );
             myGame.state.arr = [true, new Dummy("D3", 3), p, p.children[0]];
 
+            const pks0_6 = aPKs(6);
+
             expect(
-                myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
-            expect(myGame.state.arr[3]).to.deep.equal({
-                id: 3,
+                myGame.agents.agentManagers().map(am => am.meta.id)
+            ).to.deep.equal(pks0_6);
+            smartObjectEquals(myGame.state.arr[3], {
+                meta: testMeta(pks0_6[3]),
                 name: "D1",
                 health: 1
             });
 
             myGame.agents.scrubAgents();
             expect(
-                myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 1, 2, 3, 4, 5, 6]);
+                myGame.agents.agentManagers().map(am => am.meta.id)
+            ).to.deep.equal(pks0_6);
 
             myGame.state.arr.splice(2, 1);
             myGame.agents.scrubAgents();
 
             expect(
-                myGame.agents.agentManagers().map(am => am.id)
-            ).to.deep.equal([0, 3, 5, 6]);
-            expect(myGame.state.arr[2]).to.deep.equal({
-                id: 3,
+                myGame.agents.agentManagers().map(am => am.meta.id)
+            ).to.deep.equal([pks0_6[0], pks0_6[3], pks0_6[5], pks0_6[6]]);
+            smartObjectEquals(myGame.state.arr[2], {
+                meta: testMeta(pks0_6[3]),
                 name: "D1",
                 health: 1
             });
+        });
+    });
+
+    describe("AgentMeta", function() {
+        it("defaultAgentMeta transformer", function() {
+            expect(defaultAgentMeta()).to.deep.equal({
+                id: undefined,
+                protoId: undefined
+            });
+        });
+
+        it("staticAgentMeta transformer", function() {
+            const expectedId = STATIC_AGENT_PK_PROVIDER.peek();
+            expect(staticAgentMeta(defaultAgentMeta()).id.equals(expectedId)).to
+                .be.true;
+        });
+
+        it("inactiveAgentMeta transformer", function() {
+            expect(
+                inactiveAgentMeta(defaultAgentMeta()).id.equals(
+                    getInactiveAgentPK()
+                )
+            ).to.be.true;
+        });
+
+        it("agentMetaWithID transformer", function() {
+            const id = getGameInstancePK();
+            expect(agentMetaWithID(id)(defaultAgentMeta()).id.equals(id)).to.be
+                .true;
+        });
+
+        it("Agent meta transformers are pure functions", function() {
+            const meta1 = defaultAgentMeta();
+
+            const id2 = getGameInstancePK();
+            const meta2 = agentMetaWithID(id2)(meta1);
+
+            expect(meta1).to.not.deep.equal(meta2);
+            expect(meta1.id).equals(undefined);
+            expect(meta2.id.equals(id2)).to.be.true;
         });
     });
 });

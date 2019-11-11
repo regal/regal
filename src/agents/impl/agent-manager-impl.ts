@@ -6,9 +6,10 @@
  */
 
 import { RegalError } from "../../error";
-import { DEFAULT_EVENT_ID, EventRecord } from "../../events";
-import { GameInstance, GameInstanceInternal } from "../../state";
+import { EventRecord, getUntrackedEventPK } from "../../events";
+import { GameInstanceInternal } from "../../state";
 import { AgentManager } from "../agent-manager";
+import { AgentId, AgentMeta, AgentProtoId } from "../agent-meta";
 import {
     pcForAgentManager,
     pcForEventRecord,
@@ -17,16 +18,29 @@ import {
 } from "../agent-properties";
 import { isAgentReference } from "../agent-reference";
 import { StaticAgentRegistry } from "../static-agent-registry";
+import {
+    agentMetaWithID,
+    agentMetaWithProtoID,
+    defaultAgentMeta
+} from "./agent-meta-transformers";
 
 /** Builds an implementation of `AgentManager` for the given `Agent` id and `GameInstance`. */
 export const buildAgentManager = (
-    id: number,
+    id: AgentId,
     game: GameInstanceInternal
 ): AgentManager => new AgentManagerImpl(id, game);
 
 /** Implementation of `AgentManager`. */
 class AgentManagerImpl implements AgentManager {
-    constructor(public id: number, public game: GameInstanceInternal) {}
+    public meta: AgentMeta;
+
+    constructor(id: AgentId, public game: GameInstanceInternal) {
+        this.meta = agentMetaWithID(id)(defaultAgentMeta());
+    }
+
+    public get id(): AgentId {
+        return this.meta.id;
+    }
 
     public hasPropertyRecord(property: PropertyKey): boolean {
         if (property === "constructor") {
@@ -151,6 +165,10 @@ class AgentManagerImpl implements AgentManager {
         this.recordChange(event, propChange, history);
     }
 
+    public setProtoId(protoId: AgentProtoId): void {
+        this.meta = agentMetaWithProtoID(protoId)(this.meta);
+    }
+
     /**
      * Internal helper method to record a change in the `AgentManager`'s property
      * history and the `EventRecord` appropriately, depending on the value of the
@@ -181,7 +199,8 @@ class AgentManagerImpl implements AgentManager {
             // A change should be replaced if it happened during the same event,
             // or if the change happened after any potential recycling
             const shouldReplaceSingle = (pc: PropertyChange) =>
-                pc.eventId === event.id || pc.eventId > DEFAULT_EVENT_ID;
+                pc.eventId.equals(event.id) ||
+                pc.eventId.index() > getUntrackedEventPK().index();
 
             // If the property history has two changes, update the more recent one.
             // If property history has only change, check when the change happened.

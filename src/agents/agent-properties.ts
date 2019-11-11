@@ -5,6 +5,8 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
+import { AgentId } from "./agent-meta";
+
 /** Type of modification done to an agent's property. */
 export enum PropertyOperation {
     /** The property was added to the agent. */
@@ -21,14 +23,14 @@ export enum PropertyOperation {
  * Describes a single operation on an active agent's property.
  */
 export interface PropertyChange {
-    /** The numeric id of the `TrackedEvent` during which the change took place (optional). */
-    eventId?: number;
+    /** The id of the `TrackedEvent` during which the change took place (optional). */
+    eventId?: AgentId;
 
     /** The name of the `TrackedEvent` during which the change took place (optional). */
     eventName?: string;
 
-    /** The numeric id of the registered `Agent` (optional). */
-    agentId?: number;
+    /** The id of the registered `Agent` (optional). */
+    agentId?: AgentId;
 
     /** The operation performed on the agent's property. */
     op: PropertyOperation;

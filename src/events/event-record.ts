@@ -6,21 +6,20 @@
  */
 
 import { PropertyChange } from "../agents";
-import { OutputLine } from "../output";
+import { PK } from "../common";
+import { OutputLine, OutputLineId } from "../output";
 import { RandomRecord } from "../random";
 import { TrackedEvent } from "./event-types";
 
-/** Event ID for untracked `EventFunction`s. */
-export const DEFAULT_EVENT_ID: number = 0;
-/** Name of untracked `EventFunction`s. */
-export const DEFAULT_EVENT_NAME: string = "DEFAULT";
+/** An event primary key. */
+export type EventId = PK<EventRecord>;
 
 /**
  * Record of a `TrackedEvent`'s effects in a game cycle.
  */
 export interface EventRecord {
-    /* The event's unique numeric ID. */
-    id: number;
+    /* The event's unique ID. */
+    id: EventId;
 
     /* The event's name. */
     name: string;
@@ -29,13 +28,13 @@ export interface EventRecord {
     func: TrackedEvent;
 
     /** The IDs of the `OutputLine`s emitted by the event. */
-    output?: number[];
+    output?: OutputLineId[];
 
     /** The ID of the event that caused this event. */
-    causedBy?: number;
+    causedBy?: EventId;
 
     /** The IDs of the events that were caused by this event. */
-    caused?: number[];
+    caused?: EventId[];
 
     /** The records of all changes to registered agents that were caused by this event. */
     changes?: PropertyChange[];

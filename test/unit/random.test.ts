@@ -11,7 +11,7 @@ import {
 } from "../../src/random";
 import { buildGameInstance } from "../../src/state";
 import { RegalError } from "../../src/error";
-import { log, getDemoMetadata } from "../test-utils";
+import { log, getDemoMetadata, ePKs, rPKs } from "../test-utils";
 import { Game } from "../../src/api";
 import { Agent, isAgent } from "../../src/agents";
 import { on } from "../../src/events";
@@ -117,6 +117,28 @@ describe("Random", function() {
                 RegalError,
                 "Seed must be defined before an InstanceRandom can be constructed."
             );
+        });
+
+        it("InstanceRandom.recycle breaks the connection between RandomRecord PK providers", function() {
+            const rand = on("GEN", game => {
+                game.random.boolean();
+            });
+
+            const baseGame = buildGameInstance();
+            rand(baseGame);
+
+            const newGame = baseGame.recycle();
+
+            rand(baseGame);
+            rand(newGame);
+
+            const basePKs = baseGame.events.history.map(
+                eventRecord => eventRecord.randoms[0].id
+            );
+
+            expect(basePKs[0].minus(1).equals(basePKs[1])).to.be.true;
+            expect(basePKs[0].equals(newGame.events.history[0].randoms[0].id))
+                .to.be.true;
         });
 
         describe("InstanceRandom.int()", function() {
@@ -287,20 +309,26 @@ describe("Random", function() {
             });
 
             it("Can choose a random agent from an agent array", function() {
+                class TestAgent extends Agent {
+                    constructor(public n: number) {
+                        super();
+                    }
+                }
+
                 const myGame = buildGameInstance();
                 const arr = myGame.using([
-                    new Agent(),
-                    new Agent(),
-                    new Agent()
+                    new TestAgent(2),
+                    new TestAgent(3),
+                    new TestAgent(4)
                 ]);
 
                 const result = myGame.random.choice(arr);
                 expect(isAgent(result)).to.be.true;
-                expect(result.id > 1 && result.id <= 4).to.be.true;
+                expect(result.n > 1 && result.n <= 4).to.be.true;
             });
         });
 
-        describe("InstanceAgents.boolean()", function() {
+        describe("InstanceRandom.boolean()", function() {
             it("Picks either true or false", function() {
                 const myGame = buildGameInstance();
                 let result = myGame.random.boolean();
@@ -345,6 +373,9 @@ describe("Random", function() {
             const myGame = buildGameInstance<S>({ seed: "wooof" });
             rand1.then(rand2)(myGame);
 
+            const [_epk0, epk1, epk2] = ePKs(2);
+            const [rpk0, rpk1, rpk2, rpk3, rpk4] = rPKs(4);
+
             expect(myGame.state.randos).to.deep.equal([
                 false,
                 0.0217038414025921,
@@ -355,20 +386,20 @@ describe("Random", function() {
 
             expect(myGame.events.history).to.deep.equal([
                 {
-                    id: 2,
+                    id: epk2,
                     name: "RAND2",
                     randoms: [
-                        { id: 2, value: 10 },
-                        { id: 3, value: "IcR*G" },
-                        { id: 4, value: 0 } // InstanceRandom.choice records the index of the selected element, not the element itself
+                        { id: rpk2, value: 10 },
+                        { id: rpk3, value: "IcR*G" },
+                        { id: rpk4, value: 0 } // InstanceRandom.choice records the index of the selected element, not the element itself
                     ]
                 },
                 {
-                    id: 1,
+                    id: epk1,
                     name: "RAND1",
                     randoms: [
-                        { id: 0, value: false },
-                        { id: 1, value: 0.0217038414025921 }
+                        { id: rpk0, value: false },
+                        { id: rpk1, value: 0.0217038414025921 }
                     ]
                 }
             ]);
