@@ -71,9 +71,9 @@ const regal = require("regal");
 
 ## Project Roadmap
 
-The Regal Game Library has been in development since June 2018.
+The Regal Game Library has been in development since June 2018. The first stable version, alias **Beacon**, was released on February 1st, 2019.
 
-Version `1.0.0` of the package, alias **Beacon**, was released on February 1st, 2019. This was the first stable release. :tada:
+Regal `2.0.0`, alias **Dakota**, was released on November 11th, 2019. This version included some sweeping refactors that fixed bugs in the initial release, namely adding the [Agent Prototype Registry](https://github.com/regal/regal/issues/104) to support class methods for Agents.
 
 Moving forward, the most pressing features that should be added to the Game Library are the [player command](https://github.com/regal/regal/issues/86) and [plugin](https://github.com/regal/regal/issues/96) interfaces.
 
