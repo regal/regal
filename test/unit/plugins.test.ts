@@ -4,6 +4,12 @@ import "mocha";
 import { definePlugin, InstancePluginBase } from "../../src/plugins";
 import { GameInstance } from "../../src";
 import { EventId } from "../../src/events";
+import {
+    SimplifiedPlugin,
+    WithPlugin,
+    PluginArgs
+} from "../../src/plugins/plugin-types";
+import { InstancePluginsInternal } from "../../src/plugins/instance-plugins";
 
 describe("Plugins", function() {
     interface TestOptions {
@@ -27,20 +33,39 @@ describe("Plugins", function() {
 
         revert = (revertTo: EventId, game: GameInstance<TestGameType>) =>
             this.recycle(game);
+
+        /** my docs */
+        myCustomFunction = (input: string) => {
+            this.game.output.write(input);
+        };
     }
 
     it("Using definePlugin", function() {
+        // const testPlugin = definePlugin<
+        //     InstanceTestPlugin,
+        //     "test",
+        //     TestOptions
+        // >({
         const testPlugin = definePlugin({
             name: "Test Plugin",
             version: "v0.0.1",
             key: "test",
-            options: { foo: { defaultValue: "bar" } },
-            onConstructApi: args => new InstanceTestPlugin(args)
+            options: {
+                foo: {
+                    defaultValue: "bar",
+                    description: "my really cool option"
+                }
+            },
+            onConstructApi: (args: PluginArgs<InstanceTestPlugin>) =>
+                new InstanceTestPlugin(args)
         });
 
         const key = testPlugin.key;
         const options = testPlugin.options;
         const api = testPlugin.onConstructApi({} as any);
-        const tp = new InstanceTestPlugin({} as any);
+
+        let withP: WithPlugin<typeof testPlugin>;
+
+        let testInstancePlugins: InstancePluginsInternal<typeof withP>;
     });
 });

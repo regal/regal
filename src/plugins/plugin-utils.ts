@@ -5,7 +5,7 @@ export const definePlugin: <
     Api extends InstancePlugin<Options, GameType>,
     Key extends PropertyKey,
     Options,
-    GameType extends GameInstance
+    GameType extends GameInstance = GameInstance
 >(
     plugin: RegalPlugin<Api, Key, Options, GameType>
 ) => RegalPlugin<Api, Key, Options, GameType> = plugin => {
