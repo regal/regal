@@ -1,6 +1,10 @@
 {
     "defaultSeverity": "error",
-    "extends": ["tslint:recommended", "tslint-plugin-prettier", "tslint-config-prettier"],
+    "extends": [
+        "tslint:recommended",
+        "tslint-plugin-prettier",
+        "tslint-config-prettier"
+    ],
     "linterOptions": {
         "exclude": "test/**/*.ts"
     },
@@ -13,6 +17,7 @@
                 "allow-leading-underscore"
             ]
         },
-        "prettier": true
+        "prettier": true,
+        "object-literal-sort-keys": false
     }
 }

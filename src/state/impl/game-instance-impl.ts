@@ -34,6 +34,12 @@ import {
 } from "../../events";
 import { buildInstanceOutput, InstanceOutputInternal } from "../../output";
 import {
+    buildInstancePluginsInternal,
+    InstancePlugins,
+    InstancePluginsInternal,
+    RegisteredPlugins
+} from "../../plugins";
+import {
     buildInstanceRandom,
     InstanceRandomInternal,
     RandomRecord
@@ -69,20 +75,26 @@ interface GameInstanceCtor {
     outputBuilder: (game: GameInstanceInternal) => InstanceOutputInternal;
     optionsBuilder: (game: GameInstanceInternal) => InstanceOptionsInternal;
     randomBuilder: (game: GameInstanceInternal) => InstanceRandomInternal;
+    pluginsInternalBuilder: (
+        game: GameInstanceInternal
+    ) => InstancePluginsInternal;
 }
 
 /**
  * Implementation of `GameInstanceInternal`.
  * @template StateType The state property's type. Optional, defaults to `any`.
  */
-class GameInstanceImpl<StateType = any>
-    implements GameInstanceInternal<StateType> {
+class GameInstanceImpl<StateType = any, Plugins extends RegisteredPlugins = {}>
+    implements GameInstanceInternal<StateType, Plugins> {
     public agents: InstanceAgentsInternal;
     public events: InstanceEventsInternal;
     public output: InstanceOutputInternal;
     public options: InstanceOptionsInternal;
     public random: InstanceRandomInternal;
+    public pluginsInternal: InstancePluginsInternal;
+
     public state: StateType;
+    public plugins: InstancePlugins<Plugins>;
 
     /**
      * Constructs a `GameInstanceImpl` with the given `InstanceX` constructor functions.
@@ -92,7 +104,8 @@ class GameInstanceImpl<StateType = any>
         eventsBuilder = buildInstanceEvents,
         outputBuilder = buildInstanceOutput,
         optionsBuilder = buildInstanceOptions,
-        randomBuilder = buildInstanceRandom
+        randomBuilder = buildInstanceRandom,
+        pluginsInternalBuilder = buildInstancePluginsInternal
     }: Partial<GameInstanceCtor> = {}) {
         if (ContextManager.isContextStatic()) {
             throw new RegalError(
@@ -105,10 +118,13 @@ class GameInstanceImpl<StateType = any>
         this.agents = agentsBuilder(this);
         this.output = outputBuilder(this);
         this.random = randomBuilder(this);
+        this.pluginsInternal = pluginsInternalBuilder(this);
+
         this.state = (buildActiveAgentProxy(
             getGameInstancePK(),
             this
         ) as unknown) as StateType;
+        this.plugins = this.pluginsInternal.buildExternal();
     }
 
     public recycle(newOptions?: Partial<GameOptions>): GameInstanceImpl {
@@ -184,7 +200,8 @@ class GameInstanceImpl<StateType = any>
             eventsBuilder: game => this.events.recycle(game),
             optionsBuilder: game => buildInstanceOptions(game, opts, genSeed),
             outputBuilder: game => this.output.recycle(game),
-            randomBuilder: game => this.random.recycle(game)
+            randomBuilder: game => this.random.recycle(game),
+            pluginsInternalBuilder: game => this.pluginsInternal.recycle(game)
         };
     }
 

@@ -8,6 +8,7 @@
 import { InstanceOptions } from "../config";
 import { InstanceEvents } from "../events";
 import { InstanceOutput } from "../output";
+import { InstancePlugins, RegisteredPlugins } from "../plugins";
 import { InstanceRandom } from "../random";
 
 /**
@@ -23,7 +24,10 @@ import { InstanceRandom } from "../random";
  *
  * @template StateType The state property's type. Optional, defaults to `any`.
  */
-export interface GameInstance<StateType = any> {
+export interface GameInstance<
+    StateType = any,
+    Plugins extends RegisteredPlugins = {}
+> {
     /** The manager for all events in the instance. */
     events: InstanceEvents;
 
@@ -35,6 +39,8 @@ export interface GameInstance<StateType = any> {
 
     /** The manager for generating repeatable random numbers through the game instance. */
     random: InstanceRandom;
+
+    plugins: InstancePlugins<Plugins>;
 
     /**
      * Free-form agent to contain any instance state desired by the game developer.

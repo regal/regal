@@ -39,10 +39,11 @@ export {
     PluginArgs,
     WithPlugin,
     SimplifiedPlugin,
-    definePlugin,
     InstancePluginBase,
     InstancePlugins,
     PluginOptionSchema,
+    RegisteredPlugins,
+    definePlugin,
     registerPlugin
 } from "./plugins";
 export { PK } from "./common";

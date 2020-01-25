@@ -2,7 +2,6 @@ import {
     definePlugin,
     InstancePluginBase,
     GameInstance,
-    InstancePlugin,
     PluginArgs,
     EventId
 } from "../../../dist/src";

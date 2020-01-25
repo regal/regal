@@ -1,8 +1,18 @@
-import { InstancePlugins, WithPlugin, registerPlugin } from "../../../dist/src";
+import { WithPlugin, registerPlugin, GameInstance } from "../../../dist/src";
 import Complex from "./regal-plugin-complex";
 import Simple from "./regal-plugin-simple";
 
 registerPlugin(Complex);
 registerPlugin(Simple);
 
-let ip: InstancePlugins<WithPlugin<typeof Complex> & WithPlugin<typeof Simple>>;
+interface MyState {
+    myStateProp: boolean;
+}
+
+type MyGameInstance = GameInstance<
+    MyState,
+    WithPlugin<typeof Complex> & WithPlugin<typeof Simple>
+>;
+
+let myGame: MyGameInstance;
+const { simple, complex } = myGame.plugins;

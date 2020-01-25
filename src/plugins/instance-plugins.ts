@@ -1,18 +1,16 @@
 import { GameInstanceInternal } from "../state";
 import { InstancePlugin, SimplifiedPlugin } from "./plugin-types";
 
-interface GameInstancePlugins {
+export interface RegisteredPlugins {
     [k: string]: SimplifiedPlugin<InstancePlugin<any>>;
 }
 
-export type InstancePlugins<Plugins extends GameInstancePlugins> = {
+export type InstancePlugins<Plugins extends RegisteredPlugins> = {
     [P in keyof Plugins]: SimplifiedPlugin<Plugins[P]>
 };
 
-interface InstancePluginsInternalMethods {
-    recycle(game: GameInstanceInternal): GameInstanceInternal;
+export interface InstancePluginsInternal {
+    readonly game: GameInstanceInternal;
+    recycle(game: GameInstanceInternal): InstancePluginsInternal;
+    buildExternal(): InstancePlugins<any>;
 }
-
-export type InstancePluginsInternal<
-    Plugins extends GameInstancePlugins
-> = InstancePlugins<Plugins> & InstancePluginsInternalMethods;

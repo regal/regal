@@ -9,6 +9,7 @@ import { InstanceAgentsInternal } from "../agents";
 import { GameOptions, InstanceOptionsInternal } from "../config";
 import { EventId, InstanceEventsInternal } from "../events";
 import { InstanceOutputInternal } from "../output";
+import { InstancePluginsInternal, RegisteredPlugins } from "../plugins";
 import { InstanceRandomInternal } from "../random";
 import { GameInstance } from "./game-instance";
 
@@ -16,8 +17,10 @@ import { GameInstance } from "./game-instance";
  * Internal interface for `GameInstance`.
  * @template StateType The state property's type. Optional, defaults to `any`.
  */
-export interface GameInstanceInternal<StateType = any>
-    extends GameInstance<StateType> {
+export interface GameInstanceInternal<
+    StateType = any,
+    Plugins extends RegisteredPlugins = {}
+> extends GameInstance<StateType, Plugins> {
     /** The internal interface to the manager for all agents in the instance. */
     agents: InstanceAgentsInternal;
 
@@ -32,6 +35,8 @@ export interface GameInstanceInternal<StateType = any>
 
     /** The internal interface to the manager for generating repeatable random numbers through the game instance. */
     random: InstanceRandomInternal;
+
+    pluginsInternal: InstancePluginsInternal;
 
     /**
      * Creates a new `GameInstanceInternal` for the new game cycle, leaving this object unchanged.

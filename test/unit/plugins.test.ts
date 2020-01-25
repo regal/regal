@@ -65,7 +65,5 @@ describe("Plugins", function() {
         const api = testPlugin.onConstructApi({} as any);
 
         let withP: WithPlugin<typeof testPlugin>;
-
-        let testInstancePlugins: InstancePluginsInternal<typeof withP>;
     });
 });
