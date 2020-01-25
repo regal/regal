@@ -21,15 +21,4 @@ export const registerPlugin: <
     GameType extends GameInstance = GameInstance
 >(
     plugin: RP
-) => WithPlugin<RP> = plugin => {
-    return new Proxy(
-        {},
-        {
-            get: () => {
-                throw new RegalError(
-                    "The object returned by registerPlugin is for typing convenience only."
-                );
-            }
-        }
-    ) as WithPlugin<typeof plugin>;
-};
+) => void = plugin => {};
