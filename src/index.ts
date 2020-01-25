@@ -16,7 +16,8 @@ export {
     enqueue,
     nq,
     on,
-    GameEventBuilder
+    GameEventBuilder,
+    EventId
 } from "./events";
 export {
     Game,
@@ -32,4 +33,16 @@ export { GameOptions, GameMetadata, InstanceOptions } from "./config";
 export { GameInstance } from "./state";
 export { OutputLineType, OutputLine, InstanceOutput } from "./output";
 export { InstanceRandom, Charsets } from "./random";
+export {
+    RegalPlugin,
+    InstancePlugin,
+    PluginArgs,
+    WithPlugin,
+    SimplifiedPlugin,
+    definePlugin,
+    InstancePluginBase,
+    InstancePlugins,
+    PluginOptionSchema,
+    registerPlugin
+} from "./plugins";
 export { PK } from "./common";

@@ -1,7 +1,7 @@
 import { GameInstanceInternal } from "../state";
 import { InstancePlugin, SimplifiedPlugin } from "./plugin-types";
 
-export interface GameInstancePlugins {
+interface GameInstancePlugins {
     [k: string]: SimplifiedPlugin<InstancePlugin<any>>;
 }
 
