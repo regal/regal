@@ -8,3 +8,4 @@
 export { PK, ReservedPKSet, PKProvider } from "./keys";
 export { buildPKProvider } from "./impl";
 export { Mutable } from "./type-utils";
+export { mapObject } from "./data-utils";

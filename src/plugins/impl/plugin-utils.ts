@@ -1,6 +1,6 @@
-import { RegalError } from "../error";
-import { GameInstance } from "../state";
-import { InstancePlugin, RegalPlugin, WithPlugin } from "./plugin-types";
+import { GameInstance } from "../../state";
+import { PluginManager } from "../plugin-manager";
+import { InstancePlugin, RegalPlugin } from "../plugin-types";
 
 export const definePlugin: <
     Api extends InstancePlugin<Options, GameType>,
@@ -10,6 +10,7 @@ export const definePlugin: <
 >(
     plugin: RegalPlugin<Api, Key, Options, GameType>
 ) => RegalPlugin<Api, Key, Options, GameType> = plugin => {
+    PluginManager.validatePlugin(plugin);
     return plugin;
 };
 
@@ -21,4 +22,6 @@ export const registerPlugin: <
     GameType extends GameInstance = GameInstance
 >(
     plugin: RP
-) => void = plugin => {};
+) => void = plugin => {
+    PluginManager.registerPlugin(plugin);
+};

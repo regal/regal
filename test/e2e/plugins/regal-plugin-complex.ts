@@ -17,6 +17,7 @@ interface ComplexPluginRequiredState {
 
 interface ComplexPluginOptions {
     optionStr: string;
+    /** option enum `woo` */
     optionEnum: MyEnum;
 }
 

@@ -42,6 +42,7 @@ export {
     InstancePluginBase,
     InstancePlugins,
     PluginOptionSchema,
+    PluginOptionSchemaEntry,
     RegisteredPlugins,
     definePlugin,
     registerPlugin

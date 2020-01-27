@@ -8,6 +8,7 @@
 import { StaticAgentRegistry, StaticPrototypeRegistry } from "../../agents";
 import { GameMetadata, GameOptions, MetadataManager } from "../../config";
 import { RegalError } from "../../error";
+import { PluginManager } from "../../plugins";
 import {
     buildGameInstance,
     ContextManager,
@@ -119,6 +120,7 @@ export const Game = {
 
         ContextManager.init();
         MetadataManager.setMetadata(metadata);
+        PluginManager.init();
     },
 
     reset(): void {
@@ -128,6 +130,7 @@ export const Game = {
         StaticAgentRegistry.reset();
         MetadataManager.reset();
         StaticPrototypeRegistry.reset();
+        PluginManager.reset();
     },
 
     getMetadataCommand() {
