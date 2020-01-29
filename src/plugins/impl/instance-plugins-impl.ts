@@ -24,7 +24,7 @@ class InstancePluginsImpl implements InstancePluginsInternal {
     public recycle(game: GameInstanceInternal): InstancePluginsInternal {
         const recycled = mapObject<InstancePlugin, InstancePlugin>(
             this.game.plugins,
-            plugin => plugin.recycle(game)
+            plugin => plugin.recycle({ game, options: plugin.options })
         );
         return new InstancePluginsImpl(game, recycled);
     }

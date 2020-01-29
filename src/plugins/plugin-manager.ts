@@ -30,11 +30,14 @@ export class PluginManager {
             game: GameInstanceInternal,
             options: object
         ) =>
-            mapObject<any, any>(
+            mapObject<((args: PluginArgs) => InstancePlugin), InstancePlugin>(
                 pluginConstructors,
                 (pluginConstructor, pluginKey) => {
                     const optionOverrides = options[pluginKey] || {};
-                    return pluginConstructor(game, optionOverrides);
+                    return pluginConstructor({
+                        game,
+                        options: optionOverrides
+                    });
                 }
             );
     }
@@ -110,13 +113,13 @@ export class PluginManager {
 
     private static _getPluginConstructor(
         plugin: RegalPluginAny
-    ): ((args: PluginArgs<InstancePlugin>) => InstancePlugin) {
+    ): ((args: PluginArgs) => InstancePlugin) {
         const defaultOptions = mapObject(
             plugin.options,
             (entry: PluginOptionSchemaEntry) => entry.defaultValue
         );
 
-        return (args: PluginArgs<InstancePlugin>) =>
+        return (args: PluginArgs) =>
             plugin.onConstructApi({
                 game: args.game,
                 options: { ...defaultOptions, ...args.options }

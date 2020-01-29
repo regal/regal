@@ -12,7 +12,7 @@ export interface RegalPlugin<
     key: Key;
     version?: string;
     options: PluginOptionSchema<Options>;
-    onConstructApi: (pluginArgs: PluginArgs<Api>) => Api;
+    onConstructApi: (pluginArgs: PluginArgs<Options, GameType>) => Api;
 }
 
 export interface InstancePlugin<
@@ -25,20 +25,30 @@ export interface InstancePlugin<
 interface InstancePluginControls<Options, GameType extends GameInstance> {
     game: GameType;
 
-    recycle: (game: GameType) => InstancePlugin<Options, GameType>;
+    recycle: (
+        pluginArgs: PluginArgs<Options, GameType>
+    ) => InstancePlugin<Options, GameType>;
 
     revert: (
         revertTo: EventId,
-        game: GameType
+        pluginArgs: PluginArgs<Options, GameType>
     ) => InstancePlugin<Options, GameType>;
 }
 
-export type PluginArgs<IP> = IP extends InstancePlugin<
-    infer Options,
-    infer GameType
->
-    ? { options: Options; game: GameType }
-    : never;
+// export type PluginArgs<IP = InstancePlugin> = IP extends InstancePlugin<
+//     infer Options,
+//     infer GameType
+// >
+//     ? { options: Options; game: GameType }
+//     : never;
+
+export interface PluginArgs<
+    Options = object,
+    GameType extends GameInstance = GameInstance
+> {
+    options: Options;
+    game: GameType;
+}
 
 export type WithPlugin<RP> = RP extends RegalPlugin<
     infer Api,

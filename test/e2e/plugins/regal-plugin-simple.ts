@@ -1,7 +1,6 @@
 import {
     definePlugin,
     InstancePluginBase,
-    GameInstance,
     PluginArgs,
     EventId
 } from "../../../dist/src";
@@ -12,11 +11,11 @@ interface SimplePluginOptions {
 }
 
 export class SimplePlugin extends InstancePluginBase<SimplePluginOptions> {
-    recycle: (game: GameInstance<any>) => SimplePlugin;
+    recycle: (args: PluginArgs<SimplePluginOptions>) => SimplePlugin;
 
-    revert: (revertTo: EventId, game: GameInstance<any>) => SimplePlugin;
+    revert: (revertTo: EventId, args: PluginArgs) => SimplePlugin;
 
-    constructor(args: PluginArgs<SimplePlugin>) {
+    constructor(args: PluginArgs<SimplePluginOptions>) {
         super(args);
     }
 
@@ -34,5 +33,6 @@ export default definePlugin({
             description: "hi"
         }
     },
-    onConstructApi: (args: PluginArgs<SimplePlugin>) => new SimplePlugin(args)
+    onConstructApi: (args: PluginArgs<SimplePluginOptions>) =>
+        new SimplePlugin(args)
 });

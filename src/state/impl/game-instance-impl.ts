@@ -54,15 +54,18 @@ import { GameInstanceInternal } from "../game-instance-internal";
  * @param optOverrides Any option overrides preferred for this specific instance.
  * Must be allowed by the static configuration's `allowOverrides` option.
  */
-export const buildGameInstance = <StateType = any>(
+export const buildGameInstance = <
+    StateType = any,
+    Plugins extends RegisteredPlugins = {}
+>(
     optOverrides?: Partial<GameOptions>
-): GameInstanceInternal<StateType> => {
+): GameInstanceInternal<StateType, Plugins> => {
     if (optOverrides !== undefined) {
-        return new GameInstanceImpl<StateType>({
+        return new GameInstanceImpl<StateType, Plugins>({
             optionsBuilder: game => buildInstanceOptions(game, optOverrides)
         });
     }
-    return new GameInstanceImpl<StateType>();
+    return new GameInstanceImpl<StateType, Plugins>();
 };
 
 /**

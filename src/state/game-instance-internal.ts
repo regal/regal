@@ -46,7 +46,7 @@ export interface GameInstanceInternal<
      *
      * @returns The new `GameInstanceInternal`, with each manager cycled.
      */
-    recycle(newOptions?: Partial<GameOptions>): GameInstanceInternal<StateType>;
+    recycle(newOptions?: Partial<GameOptions>): this;
 
     /**
      * Generates a new `GameInstanceInternal` that is a deep copy of the current instance
@@ -58,5 +58,5 @@ export interface GameInstanceInternal<
      * Defaults to `EVENT_RESERVED_KEYS.UNTRACKED`. If an argument is given and the
      * `trackAgentChanges` option is disabled, an error will throw.
      */
-    revert(revertTo?: EventId): GameInstanceInternal<StateType>;
+    revert(revertTo?: EventId): this;
 }

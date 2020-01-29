@@ -1,12 +1,11 @@
 import { GameMetadata, GameOptions } from "../src/config";
 import { version as regalVersion } from "../package.json";
 import { expect } from "chai";
-import { getGameInstancePK, Agent } from "../src/agents";
-import { buildPKProvider, PK } from "../src/common";
-import { OutputLine } from "../src/output";
-import { getUntrackedEventPK } from "../src/events";
+import { Game, Agent, OutputLine, PK, AgentId } from "../src";
+import { buildPKProvider } from "../src/common";
 import { RandomRecord } from "../src/random";
-import { AgentId } from "../src/agents/agent-meta";
+import { getGameInstancePK } from "../src/agents";
+import { getUntrackedEventPK } from "../src/events";
 import { getInstanceStateAgentProtoPK } from "../src/agents/impl/prototype/agent-proto-keys";
 
 // log had to be moved to its own file to eliminate circular dependencies
@@ -41,6 +40,8 @@ export const metadataWithVersion = (metadata: GameMetadata): GameMetadata => ({
     regalVersion,
     repository: metadata.repository
 });
+
+export const gameInit = () => Game.init(getDemoMetadata());
 
 export const libraryVersion = regalVersion;
 

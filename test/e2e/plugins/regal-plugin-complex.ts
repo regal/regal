@@ -3,7 +3,8 @@ import {
     InstancePluginBase,
     GameInstance,
     PluginArgs,
-    EventId
+    EventId,
+    InstancePlugin
 } from "../../../dist/src";
 
 enum MyEnum {
@@ -27,14 +28,14 @@ export class ComplexPlugin extends InstancePluginBase<
     ComplexPluginOptions,
     ComplexPluginGameInstance
 > {
-    recycle: (game: ComplexPluginGameInstance) => ComplexPlugin;
+    recycle: (args: PluginArgs<ComplexPluginOptions>) => ComplexPlugin;
 
     revert: (
         revertTo: EventId,
-        game: ComplexPluginGameInstance
+        args: PluginArgs<ComplexPluginOptions>
     ) => ComplexPlugin;
 
-    constructor(args: PluginArgs<ComplexPlugin>) {
+    constructor(args: PluginArgs<ComplexPluginOptions>) {
         super(args);
         this.game.state.complexStateProp = "bar";
     }
@@ -55,5 +56,6 @@ export default definePlugin({
             defaultValue: MyEnum.Bar
         }
     },
-    onConstructApi: (args: PluginArgs<ComplexPlugin>) => new ComplexPlugin(args)
+    onConstructApi: (args: PluginArgs<ComplexPluginOptions>) =>
+        new ComplexPlugin(args)
 });
