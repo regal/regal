@@ -130,7 +130,9 @@ class GameInstanceImpl<StateType = any, Plugins extends RegisteredPlugins = {}>
         this.plugins = this.pluginsInternal.buildExternal();
     }
 
-    public recycle(newOptions?: Partial<GameOptions>): GameInstanceImpl {
+    public recycle(
+        newOptions?: Partial<GameOptions>
+    ): GameInstanceImpl<StateType, Plugins> {
         return new GameInstanceImpl(this._buildRecycleCtor(newOptions));
     }
 
@@ -162,7 +164,9 @@ class GameInstanceImpl<StateType = any, Plugins extends RegisteredPlugins = {}>
         return returnObj;
     }
 
-    public revert(revertTo: EventId = getUntrackedEventPK()): GameInstanceImpl {
+    public revert(
+        revertTo: EventId = getUntrackedEventPK()
+    ): GameInstanceImpl<StateType, Plugins> {
         if (!revertTo.equals(getUntrackedEventPK())) {
             if (revertTo.index() < getUntrackedEventPK().index()) {
                 throw new RegalError(
@@ -179,7 +183,7 @@ class GameInstanceImpl<StateType = any, Plugins extends RegisteredPlugins = {}>
         const ctor = this._buildRecycleCtor();
         ctor.randomBuilder = this._buildRandomRevertCtor(revertTo); // Revert random value stream
 
-        const newInstance = new GameInstanceImpl(ctor);
+        const newInstance = new GameInstanceImpl<StateType, Plugins>(ctor);
         this._buildAgentRevertFunc(revertTo)(newInstance); // Revert agent changes
 
         return newInstance;
