@@ -13,10 +13,11 @@ export type PluginsConstructor = (
 
 export class PluginManager {
     public static init(): void {
-        if (this._pluginsConstructor) {
+        if (this._isInitialized) {
             throw new RegalError("PluginManager has already been initialized");
         }
 
+        this._isInitialized = true;
         const pluginConstructors = {};
 
         for (const regalPlugin of this._plugins) {
@@ -29,18 +30,22 @@ export class PluginManager {
             game: GameInstanceInternal,
             options: object
         ) =>
-            mapObject(pluginConstructors, (pluginConstructor, pluginKey) => {
-                const optionOverrides = options[pluginKey] || {};
-                pluginConstructor(game, optionOverrides);
-            });
+            mapObject<any, any>(
+                pluginConstructors,
+                (pluginConstructor, pluginKey) => {
+                    const optionOverrides = options[pluginKey] || {};
+                    return pluginConstructor(game, optionOverrides);
+                }
+            );
     }
 
     public static reset(): void {
         this._plugins = [];
+        this._isInitialized = false;
     }
 
-    public static getPluginsConstructor() {
-        if (!this._pluginsConstructor) {
+    public static getPluginsConstructor(): PluginsConstructor {
+        if (!this._isInitialized) {
             throw new RegalError("PluginManager has not been initialized");
         }
 
@@ -87,21 +92,25 @@ export class PluginManager {
             );
         }
 
-        if (plugin.version && !RegExp("^v?d+.d+.d+$").test(plugin.version)) {
+        if (
+            plugin.version &&
+            !RegExp(/^v?\d+\.\d+\.\d+$/).test(plugin.version)
+        ) {
             throw new RegalError(
-                `The provided version <${
+                `The provided version "${
                     plugin.version
-                }> is not a valid version string.`
+                }" is not a valid version string.`
             );
         }
     }
 
+    private static _isInitialized: boolean = false;
     private static _plugins: RegalPluginAny[] = [];
     private static _pluginsConstructor: PluginsConstructor;
 
-    private static _getPluginConstructor = (
+    private static _getPluginConstructor(
         plugin: RegalPluginAny
-    ): ((args: PluginArgs<InstancePlugin>) => InstancePlugin) => {
+    ): ((args: PluginArgs<InstancePlugin>) => InstancePlugin) {
         const defaultOptions = mapObject(
             plugin.options,
             (entry: PluginOptionSchemaEntry) => entry.defaultValue
@@ -112,5 +121,5 @@ export class PluginManager {
                 game: args.game,
                 options: { ...defaultOptions, ...args.options }
             });
-    };
+    }
 }

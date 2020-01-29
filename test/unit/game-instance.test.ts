@@ -6,13 +6,16 @@ import {
     Dummy,
     makeAgents,
     log,
-    ePKAtNum
+    ePKAtNum,
+    smartObjectEquals,
+    TestProperty
 } from "../test-utils";
 import { Game } from "../../src/api";
 import { RegalError } from "../../src/error";
 import { buildGameInstance } from "../../src/state";
 import { on, nq, getUntrackedEventPK } from "../../src/events";
 import { getGameInstancePK } from "../../src/agents";
+import { inspect } from "util";
 
 describe("GameInstance", function() {
     beforeEach(function() {
@@ -49,11 +52,29 @@ describe("GameInstance", function() {
     });
 
     describe("Recycle", function() {
-        it("Cycling a new GameInstance is equivalent to instantiating a new one", function() {
-            const game = buildGameInstance({ seed: "foo" });
-            expect(game.recycle()).to.deep.equal(
-                buildGameInstance({ seed: "foo" })
+        it("Cycling a GameInstance does not modify the old one", function() {
+            const firstGame = buildGameInstance({ seed: "foo" });
+            const firstGameString = JSON.stringify(inspect(firstGame));
+
+            const secondGame = firstGame.recycle();
+
+            const firstGameRecycledString = JSON.stringify(inspect(firstGame));
+
+            expect(firstGameRecycledString).to.equal(firstGameString);
+
+            secondGame.events.invoke(
+                on("FOO", game => {
+                    game.state.foo = "bar";
+                })
             );
+
+            const secondGameString = JSON.stringify(inspect(secondGame));
+            secondGame.recycle();
+            const secondGameRecycledString = JSON.stringify(
+                inspect(secondGame)
+            );
+
+            expect(secondGameRecycledString).to.equal(secondGameString);
         });
 
         it("A cycled GameInstance is not equal to its former instance", function() {
@@ -71,7 +92,11 @@ describe("GameInstance", function() {
             const current = former.recycle();
 
             expect(former.options).to.not.equal(current.options);
-            expect(current.options).to.deep.equal(former.options);
+
+            smartObjectEquals(current.options, {
+                ...former.options,
+                game: TestProperty.REQUIRE_BUT_SKIP
+            });
         });
     });
 

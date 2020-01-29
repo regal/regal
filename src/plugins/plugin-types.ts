@@ -20,10 +20,11 @@ export interface InstancePlugin<
     GameType extends GameInstance = GameInstance
 > extends InstancePluginControls<Options, GameType> {
     options: Options;
-    game: GameType;
 }
 
 interface InstancePluginControls<Options, GameType extends GameInstance> {
+    game: GameType;
+
     recycle: (game: GameType) => InstancePlugin<Options, GameType>;
 
     revert: (
