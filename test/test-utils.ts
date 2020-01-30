@@ -1,7 +1,19 @@
-import { GameMetadata, GameOptions } from "../src/config";
+import {
+    GameMetadata,
+    GameOptions,
+    GeneratedGameMetadata
+} from "../src/config";
 import { version as regalVersion } from "../package.json";
 import { expect } from "chai";
-import { Game, Agent, OutputLine, PK, AgentId } from "../src";
+import {
+    Game,
+    Agent,
+    OutputLine,
+    PK,
+    AgentId,
+    definePlugin,
+    InstancePluginBase
+} from "../src";
 import { buildPKProvider } from "../src/common";
 import { RandomRecord } from "../src/random";
 import { getGameInstancePK } from "../src/agents";
@@ -29,7 +41,9 @@ export const metadataWithOptions = (opts: Partial<GameOptions>) => {
     return metadata;
 };
 
-export const metadataWithVersion = (metadata: GameMetadata): GameMetadata => ({
+export const metadataWithGeneratedValues = (
+    metadata: GameMetadata
+): GeneratedGameMetadata => ({
     author: metadata.author,
     description: metadata.description,
     gameVersion: metadata.gameVersion,
@@ -38,7 +52,8 @@ export const metadataWithVersion = (metadata: GameMetadata): GameMetadata => ({
     name: metadata.name,
     options: metadata.options,
     regalVersion,
-    repository: metadata.repository
+    repository: metadata.repository,
+    plugins: []
 });
 
 export const gameInit = () => Game.init(getDemoMetadata());
@@ -141,3 +156,19 @@ export const testMeta = (id: AgentId) => {
     };
     return smartObj(meta);
 };
+
+export const defineDummyPlugin = (key: string, version?: string) =>
+    definePlugin({
+        name: "Dummy Plugin",
+        key,
+        options: {},
+        version,
+        onConstructApi: args =>
+            new class extends InstancePluginBase {
+                constructor(args) {
+                    super(args);
+                }
+                recycle = () => this;
+                revert = () => this;
+            }(args)
+    });

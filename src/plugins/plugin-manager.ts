@@ -48,10 +48,7 @@ export class PluginManager {
     }
 
     public static getPluginsConstructor(): PluginsConstructor {
-        if (!this._isInitialized) {
-            throw new RegalError("PluginManager has not been initialized");
-        }
-
+        this._verifyInit();
         return this._pluginsConstructor;
     }
 
@@ -107,6 +104,11 @@ export class PluginManager {
         }
     }
 
+    public static getPlugins(): RegalPluginAny[] {
+        this._verifyInit();
+        return this._plugins;
+    }
+
     private static _isInitialized: boolean = false;
     private static _plugins: RegalPluginAny[] = [];
     private static _pluginsConstructor: PluginsConstructor;
@@ -124,5 +126,11 @@ export class PluginManager {
                 game: args.game,
                 options: { ...defaultOptions, ...args.options }
             });
+    }
+
+    private static _verifyInit() {
+        if (!this._isInitialized) {
+            throw new RegalError("PluginManager has not been initialized");
+        }
     }
 }

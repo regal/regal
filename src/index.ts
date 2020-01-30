@@ -29,7 +29,13 @@ export {
     GameApi,
     GameApiExtended
 } from "./api";
-export { GameOptions, GameMetadata, InstanceOptions } from "./config";
+export {
+    GameOptions,
+    GameMetadata,
+    PluginMetadata,
+    GeneratedGameMetadata,
+    InstanceOptions
+} from "./config";
 export { GameInstance } from "./state";
 export { OutputLineType, OutputLine, InstanceOutput } from "./output";
 export { InstanceRandom, Charsets } from "./random";

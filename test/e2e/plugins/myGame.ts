@@ -1,11 +1,11 @@
 import { WithPlugin, registerPlugin, GameInstance } from "../../../dist/src";
-import Complex from "./regal-plugin-complex";
+import Complex, { ComplexPluginRequiredState } from "./regal-plugin-complex";
 import Simple from "./regal-plugin-simple";
 
 registerPlugin(Complex);
 registerPlugin(Simple);
 
-interface MyState {
+interface MyState extends ComplexPluginRequiredState {
     myStateProp: boolean;
 }
 

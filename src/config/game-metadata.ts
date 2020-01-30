@@ -73,3 +73,13 @@ export const METADATA_KEYS = [
     "regalVersion",
     "gameVersion"
 ];
+
+export interface PluginMetadata {
+    name: string;
+    key: PropertyKey;
+    version?: string;
+}
+
+export interface GeneratedGameMetadata extends GameMetadata {
+    plugins: PluginMetadata[];
+}

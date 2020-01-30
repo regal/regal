@@ -6,7 +6,12 @@
  */
 
 import { RegalError } from "../error";
-import { GameMetadata } from "./game-metadata";
+import { PluginManager } from "../plugins";
+import {
+    GameMetadata,
+    GeneratedGameMetadata,
+    PluginMetadata
+} from "./game-metadata";
 import { copyMetadata, validateMetadata } from "./impl";
 
 /**
@@ -19,14 +24,27 @@ export class MetadataManager {
      * If it hasn't been set (i.e. the static configuration was never loaded),
      * an error will be thrown.
      */
-    public static getMetadata(): GameMetadata {
+    public static getMetadata(): GeneratedGameMetadata {
         if (MetadataManager._metadata === undefined) {
             throw new RegalError(
                 "Metadata is not defined. Did you remember to load the config?"
             );
         }
 
-        return copyMetadata(this._metadata);
+        const plugins: PluginMetadata[] = PluginManager.getPlugins().map(
+            plugin => ({
+                name: plugin.name,
+                key: plugin.key,
+                version: plugin.version
+            })
+        );
+
+        const metadata: GeneratedGameMetadata = Object.assign(
+            copyMetadata(this._metadata),
+            { plugins }
+        );
+
+        return metadata;
     }
 
     /**

@@ -15,7 +15,7 @@ import {
     log,
     getDemoMetadata,
     metadataWithOptions,
-    metadataWithVersion,
+    metadataWithGeneratedValues,
     Dummy,
     aPKs,
     getInitialOutputPK,
@@ -74,7 +74,7 @@ describe("Game API", function() {
 
         it("Game.init sets the game's metadata", function() {
             expect(MetadataManager.getMetadata()).to.deep.equal(
-                metadataWithVersion(getDemoMetadata())
+                metadataWithGeneratedValues(getDemoMetadata())
             );
         });
 
@@ -810,7 +810,7 @@ describe("Game API", function() {
             expect(response.instance).to.be.undefined;
             expect(response.output.wasSuccessful).to.be.true;
             expect(response.output.metadata).to.deep.equal(
-                metadataWithVersion(getDemoMetadata())
+                metadataWithGeneratedValues(getDemoMetadata())
             );
         });
 

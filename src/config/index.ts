@@ -8,7 +8,11 @@
 export { InstanceOptions } from "./instance-options";
 export { InstanceOptionsInternal } from "./instance-options-internal";
 export { GameOptions, DEFAULT_GAME_OPTIONS, OPTION_KEYS } from "./game-options";
-export { GameMetadata } from "./game-metadata";
+export {
+    GameMetadata,
+    PluginMetadata,
+    GeneratedGameMetadata
+} from "./game-metadata";
 export { MetadataManager } from "./metadata-manager";
 export {
     buildInstanceOptions,

@@ -5,7 +5,7 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameMetadata } from "../config";
+import { GeneratedGameMetadata } from "../config";
 import { RegalError } from "../error";
 import { OutputLine } from "../output";
 import { GameInstance } from "../state";
@@ -44,5 +44,5 @@ export interface GameResponseOutput {
     log?: OutputLine[];
 
     /** Contains the game's metadata if `getMetdataCommand` was called. */
-    metadata?: GameMetadata;
+    metadata?: GeneratedGameMetadata;
 }

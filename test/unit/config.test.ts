@@ -15,7 +15,7 @@ import {
     metadataWithOptions,
     log,
     libraryVersion,
-    metadataWithVersion,
+    metadataWithGeneratedValues,
     Dummy,
     smartObjectEquals,
     TestProperty,
@@ -23,13 +23,15 @@ import {
     getInitialOutputPK,
     ePKs,
     smartObj,
-    testMeta
+    testMeta,
+    defineDummyPlugin
 } from "../test-utils";
 import { on, DEFAULT_EVENT_NAME } from "../../src/events";
 import { Agent, PropertyOperation, getGameInstancePK } from "../../src/agents";
 import { Game, onStartCommand, onPlayerCommand } from "../../src/api";
 import { buildGameInstance, GameInstanceInternal } from "../../src/state";
 import { SEED_LENGTH, DEFAULT_SEED_CHARSET } from "../../src/random";
+import { registerPlugin } from "../../src";
 
 describe("Config", function() {
     beforeEach(function() {
@@ -1022,8 +1024,29 @@ describe("Config", function() {
 
             expect(MetadataManager.getMetadata()).to.deep.equal({
                 ...metadata,
-                regalVersion: libraryVersion
+                regalVersion: libraryVersion,
+                plugins: []
             });
+        });
+
+        it("Registered plugins appear at GeneratedGameMetadata.plugins", function() {
+            Game.reset();
+            const plugin1 = defineDummyPlugin("dummy1", "v0.0.1");
+            const plugin2 = defineDummyPlugin("dummy2", "v0.0.2");
+            const plugin3 = defineDummyPlugin("dummy3");
+
+            registerPlugin(plugin1);
+            registerPlugin(plugin2);
+            registerPlugin(plugin3);
+
+            Game.init(getDemoMetadata());
+
+            const metadata = MetadataManager.getMetadata();
+            expect(metadata.plugins).to.deep.equal([
+                { name: plugin1.name, key: "dummy1", version: "v0.0.1" },
+                { name: plugin2.name, key: "dummy2", version: "v0.0.2" },
+                { name: plugin3.name, key: "dummy3", version: undefined }
+            ]);
         });
 
         describe("Validate Metadata", function() {
@@ -1194,12 +1217,22 @@ describe("Config", function() {
                 MetadataManager.reset();
                 expect(() =>
                     MetadataManager.setMetadata(
-                        metadataWithVersion(getDemoMetadata())
+                        metadataWithGeneratedValues(getDemoMetadata())
                     )
                 ).to.throw(
                     RegalError,
                     "regalVersion is specified internally and may not be modified."
                 );
+            });
+
+            it("MetadataManager.setMetadata throws an error if passed a value for plugins", function() {
+                expect(() =>
+                    MetadataManager.setMetadata({
+                        name: "test",
+                        author: "blah",
+                        plugins: []
+                    } as any)
+                ).to.throw(RegalError);
             });
         });
     });

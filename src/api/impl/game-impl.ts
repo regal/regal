@@ -6,7 +6,12 @@
  */
 
 import { StaticAgentRegistry, StaticPrototypeRegistry } from "../../agents";
-import { GameMetadata, GameOptions, MetadataManager } from "../../config";
+import {
+    GameMetadata,
+    GameOptions,
+    GeneratedGameMetadata,
+    MetadataManager
+} from "../../config";
 import { RegalError } from "../../error";
 import { PluginManager } from "../../plugins";
 import {
@@ -134,7 +139,7 @@ export const Game = {
     },
 
     getMetadataCommand() {
-        let metadata: GameMetadata;
+        let metadata: GeneratedGameMetadata;
         let err: RegalError;
 
         try {

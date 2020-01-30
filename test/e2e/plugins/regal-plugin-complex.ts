@@ -12,7 +12,7 @@ enum MyEnum {
     Bar = 2
 }
 
-interface ComplexPluginRequiredState {
+export interface ComplexPluginRequiredState {
     complexStateProp: string;
 }
 
