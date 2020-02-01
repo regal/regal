@@ -168,7 +168,5 @@ export const defineDummyPlugin = (key: string, version?: string) =>
                 constructor(args) {
                     super(args);
                 }
-                recycle = () => this;
-                revert = () => this;
             }(args)
     });

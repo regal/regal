@@ -11,11 +11,14 @@ import {
     RegalError,
     registerPlugin,
     WithPlugin,
-    InstancePlugin
+    InstancePlugin,
+    Agent,
+    on
 } from "../../src";
-import { gameInit } from "../test-utils";
+import { gameInit, ePKAtNum } from "../test-utils";
 import { buildGameInstance } from "../../src/state";
 import { PluginManager } from "../../src/plugins";
+import { inspect } from "util";
 
 interface TestOptions {
     option1: string;
@@ -30,15 +33,7 @@ class InstanceTestPlugin extends InstancePluginBase<
     TestOptions,
     GameInstance<TestPluginRequiredState>
 > {
-    public recycle = (args: PluginArgs<TestOptions>) =>
-        new InstanceTestPlugin(args, true);
-
-    public revert: (
-        revertTo: EventId,
-        pluginArgs: PluginArgs
-    ) => InstanceTestPlugin;
-
-    constructor(args, public wasRecycled = false) {
+    constructor(args) {
         super(args);
     }
 
@@ -46,25 +41,6 @@ class InstanceTestPlugin extends InstancePluginBase<
     customFunction = (input: string) => {
         this.game.state.pluginStateVar = input;
     };
-}
-
-class InstanceRecycleTestPlugin extends InstancePluginBase {
-    constructor(args, public allTimeCalls = []) {
-        super(args);
-    }
-
-    public recycle = args =>
-        new InstanceRecycleTestPlugin(args, [
-            ...this.allTimeCalls,
-            ...this.thisTimeCalls
-        ]);
-
-    public revert = (revertTo: EventId, args) =>
-        new InstanceRecycleTestPlugin(args, [...this.allTimeCalls]);
-
-    public thisTimeCalls = [];
-
-    public add = (s: string) => this.thisTimeCalls.push(s);
 }
 
 const TestPlugin = definePlugin({
@@ -84,12 +60,87 @@ const TestPlugin = definePlugin({
         new InstanceTestPlugin(args)
 });
 
-const RecycleTestPlugin = definePlugin({
-    name: "Recycle Test Plugin",
+class AdvancedTestPluginAgent extends Agent {
+    private _maxKey = undefined;
+    private _maxCount = 0;
+
+    public add(key: string, amount: number) {
+        if (!this[key]) {
+            this[key] = [];
+        }
+        const arr = this[key] as number[];
+
+        arr.push(amount);
+
+        const total = arr.reduce((prev, current) => prev + current, 0);
+        if (this._maxKey === undefined || total > this._maxCount) {
+            this._maxKey = key;
+            this._maxCount = total;
+        }
+    }
+
+    public max() {
+        return { key: this._maxKey, count: this._maxCount };
+    }
+
+    public getCount(key: string) {
+        return this[key]
+            ? this[key].reduce((prev, current) => prev + current, 0)
+            : undefined;
+    }
+}
+
+interface AdvancedTestPluginRequiredState {
+    advanced: AdvancedTestPluginAgent;
+}
+
+interface AdvancedTestPluginOptions {
+    multiplier: number;
+}
+
+class InstanceAdvancedTestPlugin extends InstancePluginBase<
+    AdvancedTestPluginOptions,
+    GameInstance<AdvancedTestPluginRequiredState>
+> {
+    private _state: AdvancedTestPluginAgent;
+    public tempValue: string;
+
+    constructor(args) {
+        super(args);
+        if (!this.game.state.advanced) {
+            this.game.state.advanced = new AdvancedTestPluginAgent();
+        }
+        this._state = this.game.state.advanced;
+    }
+
+    public add(key: string, amount: number) {
+        this._state.add(key, amount * this.options.multiplier);
+    }
+
+    public getMax() {
+        return this._state.max();
+    }
+
+    public getCount(key: string) {
+        return this._state.getCount(key);
+    }
+}
+
+const AdvancedTestPlugin = definePlugin({
+    name: "Advanced Test Plugin",
     version: "23.2.12",
-    key: "recycleTest",
-    options: {},
-    onConstructApi: (args: PluginArgs) => new InstanceRecycleTestPlugin(args)
+    key: "advanced",
+    options: {
+        multiplier: {
+            defaultValue: 1
+        }
+    },
+    onConstructApi: (
+        args: PluginArgs<
+            AdvancedTestPluginOptions,
+            GameInstance<AdvancedTestPluginRequiredState>
+        >
+    ) => new InstanceAdvancedTestPlugin(args)
 });
 
 const defineTestPlugin = (overrides: Partial<typeof TestPlugin> = {}) =>
@@ -97,12 +148,6 @@ const defineTestPlugin = (overrides: Partial<typeof TestPlugin> = {}) =>
 
 const buildTestPluginGameInstance = () =>
     buildGameInstance<TestPluginRequiredState, WithPlugin<typeof TestPlugin>>();
-
-const buildAllTestPluginsGameInstance = () =>
-    buildGameInstance<
-        TestPluginRequiredState,
-        WithPlugin<typeof TestPlugin> & WithPlugin<typeof RecycleTestPlugin>
-    >();
 
 describe("Plugins", function() {
     beforeEach(function() {
@@ -193,57 +238,189 @@ describe("Plugins", function() {
 
         it("game.plugins has keys for every registered plugin", function() {
             registerPlugin(TestPlugin);
-            registerPlugin(RecycleTestPlugin);
+            registerPlugin(AdvancedTestPlugin);
 
             gameInit();
             const myGame = buildGameInstance();
 
             expect(Object.keys(myGame.plugins).sort()).deep.equals([
-                "recycleTest",
+                "advanced",
                 "test"
             ]);
         });
     });
 
     describe("Other registered plugin behavior", function() {
-        it("Recycling the gameInstance runs every plugin's recycle function", function() {
-            registerPlugin(TestPlugin);
-            registerPlugin(RecycleTestPlugin);
-
+        it("Registered plugins can use game state to function", function() {
+            registerPlugin(AdvancedTestPlugin);
             gameInit();
 
-            const myGame = buildAllTestPluginsGameInstance();
-            myGame.plugins.recycleTest.add("lars");
-            myGame.plugins.recycleTest.add("foo");
+            const myGame = buildGameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >();
 
-            // Test plugins' initial states
-            expect(myGame.plugins.test.wasRecycled).to.be.false;
-            expect(myGame.plugins.recycleTest.thisTimeCalls).to.deep.equal([
-                "lars",
-                "foo"
-            ]);
-            expect(myGame.plugins.recycleTest.allTimeCalls).to.deep.equal([]);
+            myGame.plugins.advanced.add("foo", 1);
+            myGame.plugins.advanced.add("bar", 3);
+            myGame.plugins.advanced.add("foo", 6);
+
+            expect(myGame.plugins.advanced.getMax()).to.deep.equal({
+                key: "foo",
+                count: 7
+            });
+            expect(myGame.plugins.advanced.getCount("bar")).to.equal(3);
+        });
+
+        it("Plugins function despite being recycled if they depend on state data", function() {
+            registerPlugin(AdvancedTestPlugin);
+            gameInit();
+
+            const myGame = buildGameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >();
+
+            myGame.plugins.advanced.add("foo", 1);
+            myGame.plugins.advanced.add("bar", 3);
+
+            expect(myGame.plugins.advanced.getMax()).to.deep.equal({
+                key: "bar",
+                count: 3
+            });
+            expect(myGame.plugins.advanced.getCount("foo")).to.equal(1);
 
             const newGame = myGame.recycle();
-            newGame.plugins.recycleTest.add("bar");
+            newGame.plugins.advanced.add("foo", 4);
 
-            // Confirm plugins' initial states hold after recycling on the old instance
-            expect(myGame.plugins.test.wasRecycled).to.be.false;
-            expect(myGame.plugins.recycleTest.thisTimeCalls).to.deep.equal([
-                "lars",
-                "foo"
-            ]);
-            expect(myGame.plugins.recycleTest.allTimeCalls).to.deep.equal([]);
+            expect(newGame.plugins.advanced.getMax()).to.deep.equal({
+                key: "foo",
+                count: 5
+            });
+        });
 
-            // Test plugins' post-recycle states on the new instance
-            expect(newGame.plugins.test.wasRecycled).to.be.true;
-            expect(newGame.plugins.recycleTest.thisTimeCalls).to.deep.equal([
-                "bar"
-            ]);
-            expect(newGame.plugins.recycleTest.allTimeCalls).to.deep.equal([
-                "lars",
-                "foo"
-            ]);
+        it("Plugins are re-constructed every game cycle, clearing all data not in the game state", function() {
+            registerPlugin(AdvancedTestPlugin);
+            gameInit();
+
+            const myGame = buildGameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >();
+
+            myGame.plugins.advanced.tempValue = "lars";
+            expect(myGame.plugins.advanced.tempValue).to.equal("lars");
+
+            const newGame = myGame.recycle();
+
+            expect(newGame.plugins.advanced.tempValue).to.be.undefined;
+            expect(myGame.plugins.advanced.tempValue).to.equal("lars");
+        });
+
+        it("Plugins are re-constructed every game cycle, so modifying one does not modify others", function() {
+            registerPlugin(AdvancedTestPlugin);
+            gameInit();
+
+            const myGame = buildGameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >();
+
+            myGame.plugins.advanced.tempValue = "lars";
+            const newGame = myGame.recycle();
+            newGame.plugins.advanced.tempValue = "boo";
+
+            expect(newGame.plugins.advanced.tempValue).to.equal("boo");
+            expect(myGame.plugins.advanced.tempValue).to.equal("lars");
+        });
+
+        it("Plugins are re-constructed every game cycle, so modifying one does not modify others (even when dependent on game state)", function() {
+            registerPlugin(AdvancedTestPlugin);
+            gameInit();
+
+            const myGame = buildGameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >();
+
+            myGame.plugins.advanced.add("lars", 1);
+            const newGame = myGame.recycle();
+            newGame.plugins.advanced.add("boo", 3);
+
+            expect(myGame.plugins.advanced.getMax()).to.deep.equal({
+                key: "lars",
+                count: 1
+            });
+            expect(myGame.plugins.advanced.getCount("boo")).to.be.undefined;
+
+            expect(newGame.plugins.advanced.getMax()).to.deep.equal({
+                key: "boo",
+                count: 3
+            });
+            expect(newGame.plugins.advanced.getCount("lars")).to.equal(1);
+        });
+
+        it("Reverting a game instance reverts the game state depended on by plugins when trackAgentChanges is false", function() {
+            registerPlugin(AdvancedTestPlugin);
+            gameInit();
+
+            type CustomGame = GameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >;
+
+            const myGame = buildGameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >();
+
+            const add = on("ADD", (game: CustomGame) => {
+                game.plugins.advanced.add("foo", 1);
+            });
+
+            expect(myGame.plugins.advanced.getCount("foo")).to.be.undefined;
+
+            for (let i = 0; i < 10; i++) {
+                add(myGame);
+            }
+
+            expect(myGame.plugins.advanced.getCount("foo")).to.equal(10);
+
+            const newGame = myGame.revert();
+            expect(newGame.plugins.advanced.getCount("foo")).to.be.undefined;
+        });
+
+        it("Reverting a game instance reverts the game state depended on by plugins when trackAgentChanges is true", function() {
+            registerPlugin(AdvancedTestPlugin);
+            gameInit();
+
+            type CustomGame = GameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >;
+
+            const myGame = buildGameInstance<
+                AdvancedTestPluginRequiredState,
+                WithPlugin<typeof AdvancedTestPlugin>
+            >({ trackAgentChanges: true });
+
+            const add = on("ADD", (game: CustomGame) => {
+                game.plugins.advanced.add("foo", 1);
+            });
+
+            expect(myGame.plugins.advanced.getCount("foo")).to.be.undefined;
+
+            for (let i = 0; i < 10; i++) {
+                add(myGame);
+            }
+
+            expect(myGame.plugins.advanced.getCount("foo")).to.equal(10);
+
+            expect(
+                myGame.revert(ePKAtNum(3)).plugins.advanced.getCount("foo")
+            ).to.equal(3);
+            expect(
+                myGame.revert(ePKAtNum(7)).plugins.advanced.getCount("foo")
+            ).to.equal(7);
         });
     });
 

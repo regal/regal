@@ -24,23 +24,7 @@ export interface InstancePlugin<
 
 interface InstancePluginControls<Options, GameType extends GameInstance> {
     game: GameType;
-
-    recycle: (
-        pluginArgs: PluginArgs<Options, GameType>
-    ) => InstancePlugin<Options, GameType>;
-
-    revert: (
-        revertTo: EventId,
-        pluginArgs: PluginArgs<Options, GameType>
-    ) => InstancePlugin<Options, GameType>;
 }
-
-// export type PluginArgs<IP = InstancePlugin> = IP extends InstancePlugin<
-//     infer Options,
-//     infer GameType
-// >
-//     ? { options: Options; game: GameType }
-//     : never;
 
 export interface PluginArgs<
     Options = object,
