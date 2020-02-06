@@ -1,3 +1,5 @@
+import { PluginOptionsOverrides, RegisteredPlugins } from "../plugins";
+
 /*
  * Options for configuring a game instance's behavior.
  *
@@ -64,3 +66,9 @@ export const DEFAULT_GAME_OPTIONS: GameOptions = {
 
 /** The names of every game option. */
 export const OPTION_KEYS = Object.keys(DEFAULT_GAME_OPTIONS);
+
+export interface GameOptionsOverrides<
+    Plugins extends RegisteredPlugins = RegisteredPlugins
+> extends GameOptions {
+    plugins: PluginOptionsOverrides<Plugins>;
+}

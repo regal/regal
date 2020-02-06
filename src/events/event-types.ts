@@ -7,16 +7,20 @@
 
 import { GameInstance } from "../state";
 
+type TypedGameInstance<InstanceConfig> = InstanceConfig extends GameInstance
+    ? InstanceConfig
+    : GameInstance<InstanceConfig>;
+
 /**
  * A function that modifies a game instance.
  *
- * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
+ * @template InstanceConfig
  * @param game The game instance to be modified.
  * @returns The next `EventFunction` to be executed, or `void` if there are no more events.
  */
-export type EventFunction<StateType = any> = (
-    game: GameInstance<StateType>
-) => EventFunction<StateType> | void;
+export type EventFunction<InstanceConfig = any> = (
+    game: TypedGameInstance<InstanceConfig>
+) => EventFunction<InstanceConfig> | void;
 
 /**
  * An `EventFunction` that is tracked by the game instance.
@@ -31,18 +35,18 @@ export type EventFunction<StateType = any> = (
  * @param game The game instance to be modified.
  * @returns The next `TrackedEvent` or `EventFunction` to be invoked on the `GameInstance`.
  */
-export interface TrackedEvent<StateType = any>
-    extends EventFunction<StateType> {
+export interface TrackedEvent<InstanceConfig = any>
+    extends EventFunction<InstanceConfig> {
     // Overload function signature
-    (game: GameInstance<StateType>):
-        | TrackedEvent<StateType>
-        | EventFunction<StateType>;
+    (game: TypedGameInstance<InstanceConfig>):
+        | TrackedEvent<InstanceConfig>
+        | EventFunction<InstanceConfig>;
 
     /** The name of the event. */
     eventName: string;
 
     /** The `EventFunction` that is wrapped by the `TrackedEvent`. */
-    target: EventFunction<StateType>;
+    target: EventFunction<InstanceConfig>;
 
     /**
      * Adds events to the front of the event queue.
@@ -50,7 +54,9 @@ export interface TrackedEvent<StateType = any>
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
      */
-    then(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
+    then(
+        ...events: Array<TrackedEvent<InstanceConfig>>
+    ): EventQueue<InstanceConfig>;
 
     /**
      * Adds events to the end of the event queue.
@@ -60,33 +66,40 @@ export interface TrackedEvent<StateType = any>
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
      */
-    thenq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
+    thenq(
+        ...events: Array<TrackedEvent<InstanceConfig>>
+    ): EventQueue<InstanceConfig>;
 }
 
 /**
  * Contains a queue of `TrackedEvent`s to be executed sequentially.
- * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
+ * @template InstanceConfig The `GameInstance` state type. Optional, defaults to `any`.
  */
-export interface EventQueue<StateType = any> extends TrackedEvent<StateType> {
+export interface EventQueue<InstanceConfig = any>
+    extends TrackedEvent<InstanceConfig> {
     /** The events to be added to the beginning of the game's event queue. */
-    immediateEvents: Array<TrackedEvent<StateType>>;
+    immediateEvents: Array<TrackedEvent<InstanceConfig>>;
 
     /** The events to be added to the end of the game's event queue. */
-    delayedEvents: Array<TrackedEvent<StateType>>;
+    delayedEvents: Array<TrackedEvent<InstanceConfig>>;
 
     /**
      * Adds events to the end of the event queue.
      * @param events The events to be added.
      * @returns A new `EventQueue` with the new events added to the queue.
      */
-    enqueue(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
+    enqueue(
+        ...events: Array<TrackedEvent<InstanceConfig>>
+    ): EventQueue<InstanceConfig>;
 
     /**
      * Adds events to the end of the event queue. (Alias of `EventQueue.enqueue`)
      * @param events The events to be added.
      * @returns An `EventQueue` with the new events.
      */
-    nq(...events: Array<TrackedEvent<StateType>>): EventQueue<StateType>;
+    nq(
+        ...events: Array<TrackedEvent<InstanceConfig>>
+    ): EventQueue<InstanceConfig>;
 }
 
 /** Ensures the object is a `TrackedEvent`. */
@@ -126,7 +139,7 @@ export const noop: TrackedEvent = (() => {
  *
  * @template StateType The `GameInstance` state type. Optional, defaults to `any`.
  */
-export type GameEventBuilder<StateType = any> = (
+export type GameEventBuilder<InstanceConfig = any> = (
     eventName: string,
-    eventFunc: EventFunction<StateType>
-) => TrackedEvent<StateType>;
+    eventFunc: EventFunction<InstanceConfig>
+) => TrackedEvent<InstanceConfig>;

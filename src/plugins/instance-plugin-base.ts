@@ -2,7 +2,7 @@ import { GameInstance } from "../state";
 import { InstancePlugin, PluginArgs } from "./plugin-types";
 
 export abstract class InstancePluginBase<
-    Options = object,
+    Options = {},
     GameType extends GameInstance = GameInstance
 > implements InstancePlugin<Options, GameType> {
     public options: Options;

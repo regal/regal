@@ -12,7 +12,10 @@ import {
     PK,
     AgentId,
     definePlugin,
-    InstancePluginBase
+    InstancePluginBase,
+    RegalPlugin,
+    GameInstance,
+    PluginArgs
 } from "../src";
 import { buildPKProvider } from "../src/common";
 import { RandomRecord } from "../src/random";
@@ -157,6 +160,8 @@ export const testMeta = (id: AgentId) => {
     return smartObj(meta);
 };
 
+// PLUGINS
+
 export const defineDummyPlugin = (key: string, version?: string) =>
     definePlugin({
         name: "Dummy Plugin",
@@ -170,3 +175,48 @@ export const defineDummyPlugin = (key: string, version?: string) =>
                 }
             }(args)
     });
+
+export interface TestOptions {
+    option1: string;
+    option2: boolean;
+}
+
+export interface TestPluginRequiredState {
+    pluginStateVar: string;
+}
+
+export class InstanceTestPlugin extends InstancePluginBase<
+    TestOptions,
+    GameInstance<TestPluginRequiredState>
+> {
+    constructor(args) {
+        super(args);
+    }
+
+    /** my docs */
+    customFunction = (input: string) => {
+        this.game.state.pluginStateVar = input;
+    };
+}
+
+export const TestPlugin: RegalPlugin<
+    InstanceTestPlugin,
+    "test",
+    TestOptions,
+    GameInstance<TestPluginRequiredState>
+> = {
+    name: "Test Plugin",
+    version: "v0.0.1",
+    key: "test",
+    options: {
+        option1: {
+            defaultValue: "foo",
+            description: "my really cool option"
+        },
+        option2: {
+            defaultValue: true
+        }
+    },
+    onConstructApi: (args: PluginArgs<TestOptions>) =>
+        new InstanceTestPlugin(args)
+};

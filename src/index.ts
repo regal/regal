@@ -51,6 +51,7 @@ export {
     PluginOptionSchemaEntry,
     RegisteredPlugins,
     definePlugin,
-    registerPlugin
+    registerPlugin,
+    PluginOptionsOverrides
 } from "./plugins";
-export { PK } from "./common";
+export { PK, DeepPartial } from "./common";

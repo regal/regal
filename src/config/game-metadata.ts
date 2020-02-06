@@ -5,7 +5,9 @@
  * Licensed under MIT License (see https://github.com/regal/regal)
  */
 
-import { GameOptions } from "./game-options";
+import { DeepPartial } from "../common";
+import { RegisteredPlugins } from "../plugins";
+import { GameOptionsOverrides } from "./game-options";
 
 /**
  * Metadata about the game, such as its title and author.
@@ -32,7 +34,9 @@ import { GameOptions } from "./game-options";
  * This metadata is defined in the game's static context, meaning that it is
  * the same for all instances of the game.
  */
-export interface GameMetadata {
+export interface GameMetadata<
+    Plugins extends RegisteredPlugins = RegisteredPlugins
+> {
     /** The game's title. */
     name: string;
 
@@ -52,7 +56,7 @@ export interface GameMetadata {
     repository?: string;
 
     /** Any options overrides for the game. */
-    options?: Partial<GameOptions>;
+    options?: DeepPartial<GameOptionsOverrides<Plugins>>;
 
     /** The version of the Regal Game Library used by the game. */
     regalVersion?: string;

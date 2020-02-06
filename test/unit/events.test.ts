@@ -11,7 +11,8 @@ import {
     isEventQueue,
     enqueue,
     GameEventBuilder,
-    getUntrackedEventPK
+    getUntrackedEventPK,
+    EventFunction
 } from "../../src/events";
 import {
     log,
@@ -20,7 +21,8 @@ import {
     aPKs,
     oPKs,
     getInitialOutputPK,
-    ePKs
+    ePKs,
+    TestPlugin
 } from "../test-utils";
 import {
     Agent,
@@ -30,7 +32,8 @@ import {
 } from "../../src/agents";
 import { OutputLineType } from "../../src/output";
 import { Game } from "../../src/api";
-import { buildGameInstance } from "../../src/state";
+import { buildGameInstance, GameInstance } from "../../src/state";
+import { WithPlugin } from "../../src";
 
 const MD = getDemoMetadata();
 
@@ -171,6 +174,29 @@ describe("Events", function() {
         on<Custom>("ADD", game => {
             game.state.count++;
             game.state.arr.unshift("foo");
+        });
+    });
+
+    it("Compile Check: event types can be typed with a complete game instance", function() {
+        type MyGameInstance = GameInstance<
+            { foo: boolean },
+            WithPlugin<typeof TestPlugin>
+        >;
+
+        const eventFunc: EventFunction<MyGameInstance> = game => {
+            game.state.foo = true;
+            game.plugins.test.customFunction("test");
+        };
+
+        on<MyGameInstance>("TEST", game => {
+            game.plugins.test.options.option1;
+            game.state.foo = false;
+        });
+
+        const fn: GameEventBuilder<MyGameInstance> = on;
+        fn("TEST2", game => {
+            game.state.foo = true;
+            game.plugins.test.options.option2;
         });
     });
 

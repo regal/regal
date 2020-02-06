@@ -26,9 +26,9 @@ import { buildEventQueue, buildThenMethod } from "./event-queue-impl";
  * @param events The events to be added.
  * @returns An `EventQueue` that place all events in the `delayedEvent` array when invoked.
  */
-export const enqueue = <StateType = any>(
-    ...events: Array<TrackedEvent<StateType>>
-): EventQueue<StateType> => {
+export const enqueue = <InstanceConfig = any>(
+    ...events: Array<TrackedEvent<InstanceConfig>>
+): EventQueue<InstanceConfig> => {
     const argImmediateEvents: TrackedEvent[] = [];
     const argDelayedEvents: TrackedEvent[] = [];
 
@@ -70,10 +70,10 @@ export const nq = enqueue;
  *
  * @returns The generated `TrackedEvent`.
  */
-export const on = <StateType = any>(
+export const on = <InstanceConfig = any>(
     eventName: string,
-    eventFunc: EventFunction<StateType>
-): TrackedEvent<StateType> => {
+    eventFunc: EventFunction<InstanceConfig>
+): TrackedEvent<InstanceConfig> => {
     // Make the TrackedEvent callable like a function.
     const event = ((game: GameInstance) => {
         if (isEventQueue(eventFunc)) {

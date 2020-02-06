@@ -1,4 +1,9 @@
-import { WithPlugin, registerPlugin, GameInstance } from "../../../dist/src";
+import {
+    WithPlugin,
+    registerPlugin,
+    GameInstance,
+    GameMetadata
+} from "../../../dist/src";
 import Complex, { ComplexPluginRequiredState } from "./regal-plugin-complex";
 import Simple from "./regal-plugin-simple";
 
@@ -9,10 +14,10 @@ interface MyState extends ComplexPluginRequiredState {
     myStateProp: boolean;
 }
 
-type MyGameInstance = GameInstance<
-    MyState,
-    WithPlugin<typeof Complex> & WithPlugin<typeof Simple>
->;
+type MyGamePlugins = WithPlugin<typeof Complex> & WithPlugin<typeof Simple>;
+type MyGameInstance = GameInstance<MyState, MyGamePlugins>;
 
 let myGame: MyGameInstance;
 const { simple, complex } = myGame.plugins;
+
+let metadata: GameMetadata<MyGamePlugins>;

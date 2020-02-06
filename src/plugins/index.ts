@@ -11,7 +11,11 @@ export {
     InstancePluginsInternal,
     RegisteredPlugins
 } from "./instance-plugins";
-export { PluginOptionSchema, PluginOptionSchemaEntry } from "./plugin-options";
+export {
+    PluginOptionSchema,
+    PluginOptionSchemaEntry,
+    PluginOptionsOverrides
+} from "./plugin-options";
 export {
     buildInstancePluginsInternal,
     definePlugin,
